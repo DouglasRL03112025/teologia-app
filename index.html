@@ -308,6 +308,7 @@ body::before {
     <button class="menu-btn" onclick="ir('admin-livros')"><span class="icon">📚</span><span class="label">Controle Livros</span></button>
     <button class="menu-btn" onclick="ir('admin-notas')"><span class="icon">Lançar Notas</span><span class="label">📝 Notas</span></button>
     <button class="menu-btn" onclick="ir('admin-provas')"><span class="icon">📄</span><span class="label">Controle Provas</span></button>
+    <button class="menu-btn" onclick="ir('admin-historico')"><span class="icon">🔍</span><span class="label">Histórico Aluno</span></button>
     <button class="menu-btn sair" onclick="sair()"><span class="icon">🚪</span><span class="label">Sair</span></button>
   </div>
 </div>
@@ -354,6 +355,19 @@ body::before {
 <div class="tela" id="tela-provas-aluno">
   <div class="header"><button class="header-back" onclick="voltar()">←</button><div class="header-titulo"><h2>Minhas Provas</h2><p>Situação das avaliações</p></div><span class="header-icon">📄</span></div>
   <div class="conteudo" id="c-provas-aluno"><div class="loading-area"><span>⏳</span>Carregando...</div></div>
+</div>
+
+<!-- Admin: Histórico do Aluno -->
+<div class="tela" id="tela-admin-historico">
+  <div class="header"><button class="header-back" onclick="voltar()">←</button><div class="header-titulo"><h2>Histórico do Aluno</h2><p>Consulta completa</p></div><span class="header-icon">🔍</span></div>
+  <div class="conteudo">
+    <div class="card">
+      <label class="form-label">Selecionar Aluno</label>
+      <select class="form-select" id="sel-aluno-hist"><option>Carregando...</option></select>
+      <button class="btn-primary" onclick="carregarHistorico()" style="margin-top:4px">🔍 VER HISTÓRICO COMPLETO</button>
+    </div>
+    <div id="resultado-historico"></div>
+  </div>
 </div>
 
 <!-- ══════════════ TELAS ADMIN ══════════════ -->
@@ -520,7 +534,7 @@ body::before {
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbyngYTLy5cyAFgpPcs6rZxPwCwwjSMQU9JqPKg0M6zfLMvHCMtI1kHwn5DwofW7Wt691w/exec";
+const API = "https://script.google.com/macros/s/AKfycbzl1fAt3Emlq8CLGZ5kcWiEujzRZ5oRbr471lifrlrZUOM_wkjpKPYXEa6bpNfl0HkRiw/exec";
 let sessao = null;
 let telaAtual = "login";
 let telaAnterior = null;
@@ -762,7 +776,7 @@ async function carregarSelectsAdmin() {
     });
     opAu += '</optgroup>';
   });
-  ['sel-aluno-pag','sel-aluno-livro','sel-aluno-nota','sel-aluno-prova'].forEach(id => {
+  ['sel-aluno-pag','sel-aluno-livro','sel-aluno-nota','sel-aluno-prova','sel-aluno-hist'].forEach(id => {
     const el = document.getElementById(id); if (el) el.innerHTML = opA;
   });
   const sp = document.getElementById('sel-aula-pres'); if (sp) sp.innerHTML = opAu;
@@ -847,13 +861,28 @@ function setPres(id, val) {
 async function salvarPresenca() {
   const aulaId = document.getElementById('sel-aula-pres').value;
   const msg = document.getElementById('msg-pres');
-  mostrarMsg(msg, '⏳ Salvando...', true);
-  const promessas = todosAlunos.map(a => {
-    const presente = presencaEstado[a.id] === 'Sim';
-    return api({ action: "lancarPresenca", alunoId: a.id, aulaId, presente });
-  });
-  await Promise.all(promessas);
-  mostrarMsg(msg, '✅ Presença salva para todos os alunos!', true);
+  if (!aulaId || aulaId === '—' || aulaId === '') {
+    mostrarMsg(msg, '⚠️ Selecione uma aula primeiro!', false); return;
+  }
+  if (Object.keys(presencaEstado).length === 0) {
+    mostrarMsg(msg, '⚠️ Marque a presença de pelo menos um aluno!', false); return;
+  }
+  mostrarMsg(msg, '⏳ Salvando... aguarde', true);
+  let salvos = 0;
+  let erros = 0;
+  for (const a of todosAlunos) {
+    if (presencaEstado[a.id]) {
+      const presente = presencaEstado[a.id] === 'Sim';
+      const res = await api({ action: "lancarPresenca", alunoId: a.id, aulaId, presente });
+      if (res.ok) salvos++; else erros++;
+    }
+  }
+  if (erros === 0) {
+    mostrarMsg(msg, '✅ Presença salva! ' + salvos + ' alunos registrados.', true);
+    presencaEstado = {};
+  } else {
+    mostrarMsg(msg, '⚠️ Salvo com ' + erros + ' erro(s). Tente novamente.', false);
+  }
 }
 
 // ── ADMIN: PAGAMENTO ──────────────────────────────────────────────────────────
@@ -895,6 +924,82 @@ async function lancarNota() {
   if (!nota) { mostrarMsg(msg, 'Informe a nota', false); return; }
   const res = await api({ action: "lancarNota", alunoId, nomeAluno: aluno?.nome || '', trimestre, nota, comentario });
   mostrarMsg(msg, res.ok ? '✅ Nota lançada!' : 'Erro: ' + res.erro, res.ok);
+}
+
+// ── ADMIN: HISTÓRICO ─────────────────────────────────────────────────────────
+async function carregarHistorico() {
+  const alunoId = document.getElementById('sel-aluno-hist').value;
+  const el = document.getElementById('resultado-historico');
+  const aluno = todosAlunos.find(a => String(a.id) === String(alunoId));
+  if (!aluno) { el.innerHTML = '<div class="vazio"><span>⚠️</span><p>Selecione um aluno</p></div>'; return; }
+  el.innerHTML = '<div class="loading-area"><span>⏳</span>Carregando histórico...</div>';
+  const [presencas, aulas, pags, livros, notas, provas] = await Promise.all([
+    api({ action: "getPresenca", alunoId }),
+    api({ action: "getAulas" }),
+    api({ action: "getPagamentos", alunoId }),
+    api({ action: "getLivros", alunoId }),
+    api({ action: "getNotas", alunoId }),
+    api({ action: "getProvas", alunoId })
+  ]);
+  const mapAulas = {};
+  if (Array.isArray(aulas)) aulas.forEach(a => mapAulas[a.id] = a);
+  const presentes = Array.isArray(presencas) ? presencas.filter(p => String(p.presente).toLowerCase() === 'sim').length : 0;
+  const totalAulas = Array.isArray(presencas) ? presencas.length : 0;
+  const pct = totalAulas > 0 ? Math.round(presentes/totalAulas*100) : 0;
+  let html = `<div class="card" style="border-color:var(--dourado);margin-top:4px">
+    <div class="card-titulo">👤 ${aluno.nome}</div>
+    <div class="dado"><span class="dado-label">📞 Telefone</span><span class="dado-valor">${aluno.telefone || '—'}</span></div>
+  </div>`;
+  // Presença
+  html += `<div class="sep">✅ FREQUÊNCIA</div><div class="card">
+    <div class="dado"><span class="dado-label">Presenças</span><span class="badge ${pct>=75?'badge-verde':'badge-vermelho'}">${presentes} de ${totalAulas} (${pct}%)</span></div>`;
+  if (Array.isArray(presencas)) {
+    presencas.forEach(p => {
+      const a = mapAulas[p.aulaId] || {};
+      const sim = String(p.presente).toLowerCase() === 'sim';
+      html += `<div class="dado"><span class="dado-label" style="font-size:11px">${a.data || p.aulaId} — ${(a.descricao||'').substring(0,25)}</span><span class="badge ${sim?'badge-verde':'badge-vermelho'}" style="font-size:10px">${sim?'✅':'❌'}</span></div>`;
+    });
+  }
+  html += '</div>';
+  // Pagamentos
+  if (Array.isArray(pags) && pags.length) {
+    html += `<div class="sep">💳 PAGAMENTOS</div><div class="card">`;
+    pags.forEach(p => {
+      const pago = String(p.pago).toLowerCase() === 'sim';
+      html += `<div class="dado"><span class="dado-label">${p.livro}</span><span class="badge ${pago?'badge-verde':'badge-vermelho'}">${pago?'✅ Pago':'❌ Pendente'}</span></div>`;
+    });
+    html += '</div>';
+  }
+  // Livros
+  if (Array.isArray(livros) && livros.length) {
+    html += `<div class="sep">📚 LIVROS ENTREGUES</div><div class="card">`;
+    livros.forEach(l => {
+      const ok = String(l.entregue).toLowerCase() === 'sim';
+      html += `<div class="dado"><span class="dado-label">${l.livro}</span><span class="badge ${ok?'badge-verde':'badge-cinza'}">${ok?'✅ Entregue':'⏳ Pendente'}</span></div>`;
+    });
+    html += '</div>';
+  }
+  // Notas
+  if (Array.isArray(notas) && notas.filter(n=>n.nota).length) {
+    html += `<div class="sep">📝 NOTAS</div><div class="card">`;
+    notas.filter(n=>n.nota).forEach(n => {
+      const nota = parseFloat(n.nota);
+      const cor = nota>=7?'badge-verde':nota>=5?'badge-dourado':'badge-vermelho';
+      html += `<div class="dado"><span class="dado-label">${n.trimestre}</span><span class="badge ${cor}" style="font-size:15px;font-weight:800">${nota.toFixed(1)}</span></div>`;
+    });
+    html += '</div>';
+  }
+  // Provas
+  if (Array.isArray(provas) && provas.length) {
+    html += `<div class="sep">📄 PROVAS</div><div class="card">`;
+    provas.forEach(p => {
+      const fez = String(p.fez).toLowerCase() === 'sim';
+      const dev = String(p.devolvida).toLowerCase() === 'sim';
+      html += `<div class="dado"><span class="dado-label">${p.prova}</span><span style="display:flex;gap:6px"><span class="badge ${fez?'badge-verde':'badge-vermelho'}" style="font-size:10px">${fez?'✔ Fez':'✗ Fez'}</span><span class="badge ${dev?'badge-verde':'badge-cinza'}" style="font-size:10px">${dev?'✔ Dev':'⏳ Dev'}</span></span></div>`;
+    });
+    html += '</div>';
+  }
+  el.innerHTML = html;
 }
 
 // ── ADMIN: PROVA ──────────────────────────────────────────────────────────────
