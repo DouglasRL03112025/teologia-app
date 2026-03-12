@@ -612,9 +612,9 @@ async function carregarAgenda() {
   if (!aulas.length) { el.innerHTML = '<div class="vazio"><span>📅</span><p>Nenhuma aula cadastrada</p></div>'; return; }
   el.innerHTML = aulas.map(a => `
     <div class="card">
-      <div class="dado"><span class="dado-label">📅 Data</span><span class="badge badge-dourado">${a.data}</span></div>
+      <div class="dado"><span class="dado-label">📚 Livro</span><span class="badge badge-dourado">${a.livro || '—'}</span></div>
+      <div class="dado"><span class="dado-label">📅 Data</span><span class="dado-valor">${a.data}</span></div>
       <div class="dado"><span class="dado-label">📖 Tema</span><span class="dado-valor">${a.descricao}</span></div>
-      <div class="dado"><span class="dado-label">📚 Livro</span><span class="dado-valor">${a.livro || '—'}</span></div>
       <div class="dado"><span class="dado-label">🗓️ Trimestre</span><span class="badge badge-cinza">${a.trimestre || '—'}</span></div>
     </div>`).join('');
 }
@@ -730,7 +730,7 @@ async function carregarSelectsAdmin() {
   todosAlunos = Array.isArray(alunos) ? alunos : [];
   todasAulas = Array.isArray(aulas) ? aulas : [];
   const opA = todosAlunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
-  const opAu = todasAulas.map(a => `<option value="${a.id}">${a.data} — ${a.descricao}</option>`).join('');
+  const opAu = todasAulas.map(a => `<option value="${a.id}">${a.data} — [${a.livro}] ${a.descricao}</option>`).join('');
   ['sel-aluno-pag','sel-aluno-livro','sel-aluno-nota','sel-aluno-prova'].forEach(id => {
     const el = document.getElementById(id); if (el) el.innerHTML = opA;
   });
