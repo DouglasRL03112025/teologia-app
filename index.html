@@ -610,13 +610,30 @@ async function carregarAgenda() {
   const el = document.getElementById('c-agenda');
   const aulas = await api({ action: "getAulas" });
   if (!aulas.length) { el.innerHTML = '<div class="vazio"><span>📅</span><p>Nenhuma aula cadastrada</p></div>'; return; }
-  el.innerHTML = aulas.map(a => `
-    <div class="card">
-      <div class="dado"><span class="dado-label">📚 Livro</span><span class="badge badge-dourado">${a.livro || '—'}</span></div>
-      <div class="dado"><span class="dado-label">📅 Data</span><span class="dado-valor">${a.data}</span></div>
-      <div class="dado"><span class="dado-label">📖 Tema</span><span class="dado-valor">${a.descricao}</span></div>
-      <div class="dado"><span class="dado-label">🗓️ Trimestre</span><span class="badge badge-cinza">${a.trimestre || '—'}</span></div>
-    </div>`).join('');
+  // Agrupar por livro
+  const livrosMap = {};
+  aulas.forEach(a => {
+    const livro = a.livro || 'Sem livro';
+    if (!livrosMap[livro]) livrosMap[livro] = [];
+    livrosMap[livro].push(a);
+  });
+  let html = '';
+  Object.keys(livrosMap).forEach(livro => {
+    html += `<div style="margin-bottom:6px;margin-top:16px">
+      <div style="background:linear-gradient(135deg,var(--azul3),var(--azul2));border:1px solid var(--borda);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:22px">📚</span>
+        <span style="font-family:'Cinzel',serif;font-size:13px;color:var(--dourado);letter-spacing:1px;font-weight:600">${livro}</span>
+      </div>
+    </div>`;
+    livrosMap[livro].forEach(a => {
+      html += `<div class="card" style="margin-left:12px;border-left:3px solid var(--borda)">
+        <div class="dado"><span class="dado-label">📅 Data</span><span class="badge badge-cinza">${a.data}</span></div>
+        <div class="dado"><span class="dado-label">📖 Tema</span><span class="dado-valor" style="font-size:13px">${a.descricao}</span></div>
+        <div class="dado"><span class="dado-label">🗓️ Trimestre</span><span class="badge badge-dourado">${a.trimestre || '—'}</span></div>
+      </div>`;
+    });
+  });
+  el.innerHTML = html;
 }
 
 // ── ALUNO: PRESENÇA ───────────────────────────────────────────────────────────
@@ -730,7 +747,21 @@ async function carregarSelectsAdmin() {
   todosAlunos = Array.isArray(alunos) ? alunos : [];
   todasAulas = Array.isArray(aulas) ? aulas : [];
   const opA = todosAlunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
-  const opAu = todasAulas.map(a => `<option value="${a.id}">${a.data} — [${a.livro}] ${a.descricao}</option>`).join('');
+  // Agrupar aulas por livro
+  const livrosMap = {};
+  todasAulas.forEach(a => {
+    const livro = a.livro || 'Sem livro';
+    if (!livrosMap[livro]) livrosMap[livro] = [];
+    livrosMap[livro].push(a);
+  });
+  let opAu = '';
+  Object.keys(livrosMap).forEach(livro => {
+    opAu += `<optgroup label="📚 ${livro}">`;
+    livrosMap[livro].forEach(a => {
+      opAu += `<option value="${a.id}">${a.data} — ${a.descricao}</option>`;
+    });
+    opAu += '</optgroup>';
+  });
   ['sel-aluno-pag','sel-aluno-livro','sel-aluno-nota','sel-aluno-prova'].forEach(id => {
     const el = document.getElementById(id); if (el) el.innerHTML = opA;
   });
