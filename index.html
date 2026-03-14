@@ -561,15 +561,31 @@ let todasAulas = [];
 // ── API ──────────────────────────────────────────────────────────────────────
 async function api(dados) {
   try {
+    // Google Apps Script exige content-type text/plain e redirect follow
     const r = await fetch(API, {
       method: "POST",
       body: JSON.stringify(dados),
-      redirect: "follow",
-      headers: { "Content-Type": "text/plain;charset=utf-8" }
+      redirect: "follow"
     });
+    // Pegar a URL final após redirecionamento e buscar o conteúdo
     const txt = await r.text();
-    return JSON.parse(txt);
-  } catch(e) { return { erro: "Sem conexão com o servidor: " + e.message }; }
+    // Tentar parsear direto
+    try { return JSON.parse(txt); } catch(_) {}
+    // Se falhou, pode ser HTML de erro — tentar extrair JSON
+    const match = txt.match(/\{.*\}/s);
+    if (match) return JSON.parse(match[0]);
+    return { erro: "Resposta inválida da API" };
+  } catch(e) {
+    // Fallback: tentar via GET com parâmetros
+    try {
+      const params = encodeURIComponent(JSON.stringify(dados));
+      const r2 = await fetch(API + "?dados=" + params, { redirect: "follow" });
+      const txt2 = await r2.text();
+      return JSON.parse(txt2);
+    } catch(e2) {
+      return { erro: "Sem conexão: " + e2.message };
+    }
+  }
 }
 
 // ── NAVEGAÇÃO ────────────────────────────────────────────────────────────────
