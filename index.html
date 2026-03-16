@@ -20,6 +20,16 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',sans-serif;background:var(--fnd);color:var(--txt);font-size:16px;line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
 
+/* ── LOADING ── */
+#loading-overlay{position:fixed;inset:0;background:var(--azul);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
+#loading-overlay.hide{opacity:0;pointer-events:none}
+.loading-logo{text-align:center;margin-bottom:32px}
+.loading-titulo{font-family:'Lora',serif;font-size:32px;font-weight:700;color:var(--dou);margin-bottom:6px}
+.loading-sub{font-size:14px;color:rgba(255,255,255,.6)}
+.loading-bar{width:200px;height:4px;background:rgba(255,255,255,.15);border-radius:99px;overflow:hidden;margin-top:24px}
+.loading-fill{height:100%;background:var(--dou);border-radius:99px;width:0%;transition:width .3s ease}
+.loading-msg{font-size:13px;color:rgba(255,255,255,.5);margin-top:12px;min-height:20px}
+
 /* ── HEADER ── */
 header{background:var(--azul);color:#fff;padding:0 18px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.2)}
 .logo{display:flex;align-items:center;gap:9px}
@@ -34,8 +44,6 @@ nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid 
 .nb.on{color:var(--azul)}
 .nb.on::after{content:'';position:absolute;top:0;left:20%;right:20%;height:2.5px;background:var(--azul);border-radius:0 0 3px 3px}
 .nb svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-/* badge no nav */
-.nb-badge{position:absolute;top:4px;right:calc(50% - 18px);background:var(--vm);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;min-width:16px;text-align:center}
 
 /* ── MAIN ── */
 main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
@@ -58,10 +66,10 @@ main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
 .sub{font-size:14px;color:var(--cin);margin-bottom:18px}
 
 /* ── CARD ── */
-.card{background:#fff;border-radius:var(--rl);padding:18px;margin-bottom:14px;box-shadow:var(--s);border:1px solid var(--brd);transition:box-shadow .2s}
+.card{background:#fff;border-radius:var(--rl);padding:18px;margin-bottom:14px;box-shadow:var(--s);border:1px solid var(--brd)}
 .card-t{font-size:15px;font-weight:600;color:var(--azul);margin-bottom:14px;display:flex;align-items:center;gap:7px}
 
-/* ── MÉTRICAS ADMIN ── */
+/* ── MÉTRICAS ── */
 .g4{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:16px}
 .mc{background:#fff;border-radius:var(--r);padding:16px 14px;border:1px solid var(--brd);box-shadow:var(--s);position:relative;overflow:hidden;cursor:pointer;transition:all .2s}
 .mc:hover{transform:translateY(-2px);box-shadow:var(--sh)}
@@ -72,7 +80,6 @@ main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
 .ml{font-size:11px;color:var(--cin);margin-top:4px;font-weight:500;text-transform:uppercase;letter-spacing:.4px}
 .mc-sub{font-size:11px;color:var(--cin);margin-top:6px;padding-top:6px;border-top:1px solid var(--brd)}
 
-/* ── MÉTRICAS ALUNO ── */
 .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
 .mc3{background:#fff;border-radius:var(--r);border:1px solid var(--brd);padding:14px 8px;text-align:center;box-shadow:var(--s)}
 .mc3n{font-size:28px;font-weight:700;font-family:'Lora',serif}
@@ -109,13 +116,11 @@ select.inp{cursor:pointer}
 .bsm{display:inline-block;width:auto;padding:9px 18px;font-size:14px}
 
 /* ── BUSCA ── */
-.bw{position:relative;margin-bottom:15px}
+.bw{position:relative;margin-bottom:10px}
 .bi{position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none;opacity:.4}
 .busca{width:100%;padding:13px 15px 13px 42px;border:1.5px solid var(--brd);border-radius:var(--r);font-size:16px;font-family:'Inter',sans-serif;background:#fff;transition:border-color .2s}
 .busca:focus{outline:none;border-color:var(--azul)}
-
-/* SUGESTÕES BUSCA */
-.busca-sugs{background:#fff;border:1.5px solid var(--azul);border-radius:var(--r);margin-top:-10px;margin-bottom:14px;overflow:hidden;box-shadow:var(--sh);display:none}
+.busca-sugs{background:#fff;border:1.5px solid var(--azul);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--sh);display:none}
 .busca-sugs.on{display:block}
 .sug-item{padding:11px 15px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:10px;transition:background .15s}
 .sug-item:last-child{border-bottom:none}
@@ -124,6 +129,12 @@ select.inp{cursor:pointer}
 .sug-info{flex:1;min-width:0}
 .sug-nome{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sug-sub{font-size:12px;color:var(--cin)}
+
+/* FILTROS */
+.filtros-rapidos{display:flex;gap:7px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px}
+.filtros-rapidos::-webkit-scrollbar{display:none}
+.fr-chip{padding:7px 14px;border-radius:99px;font-size:13px;font-weight:500;border:1.5px solid var(--brd);background:#fff;cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif;transition:all .2s;flex-shrink:0;color:var(--cin)}
+.fr-chip.on{background:var(--azul);color:#fff;border-color:var(--azul)}
 
 /* ── LISTA ALUNOS ── */
 .ar{display:flex;align-items:center;gap:13px;padding:14px;background:#fff;border-radius:var(--r);margin-bottom:9px;border:1px solid var(--brd);box-shadow:var(--s);cursor:pointer;transition:all .2s}
@@ -135,20 +146,12 @@ select.inp{cursor:pointer}
 .bdg{font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;flex-shrink:0}
 .bv{background:var(--vd-c);color:var(--vd)}.br{background:var(--vm-c);color:var(--vm)}.ba{background:var(--am-c);color:var(--am)}
 
-/* FILTROS RÁPIDOS */
-.filtros-rapidos{display:flex;gap:7px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px}
-.filtros-rapidos::-webkit-scrollbar{display:none}
-.fr-chip{padding:7px 14px;border-radius:99px;font-size:13px;font-weight:500;border:1.5px solid var(--brd);background:#fff;cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif;transition:all .2s;flex-shrink:0;color:var(--cin)}
-.fr-chip.on{background:var(--azul);color:#fff;border-color:var(--azul)}
-
 /* ── PERFIL ── */
 .ph{background:var(--azul);color:#fff;border-radius:var(--rl);padding:22px 18px;margin-bottom:15px;text-align:center}
 .pav{width:70px;height:70px;border-radius:50%;background:var(--dou);color:var(--azul);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;font-family:'Lora',serif;margin:0 auto 12px}
 .pn{font-family:'Lora',serif;font-size:21px;font-weight:700}
 .pt{font-size:13px;opacity:.75;margin-top:4px}
 .vb{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--azul);font-size:15px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;padding:0;margin-bottom:15px}
-
-/* PERFIL COMPLETO — seções */
 .perfil-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .perfil-stat{background:#fff;border-radius:var(--r);border:1px solid var(--brd);padding:14px 12px;text-align:center;box-shadow:var(--s)}
 .perfil-stat .val{font-size:26px;font-weight:700;font-family:'Lora',serif;display:block;line-height:1.1;margin-bottom:3px}
@@ -163,12 +166,10 @@ select.inp{cursor:pointer}
 .prnm{flex:1;font-size:16px;font-weight:500}
 .prch{font-size:13px;font-weight:600;padding:6px 14px;border-radius:99px;background:var(--brd);color:var(--cin);min-width:82px;text-align:center}
 .pr.P .prch{background:var(--vd);color:#fff}.pr.F .prch{background:var(--vm);color:#fff}
-/* contador presença */
 .pres-contador{display:flex;gap:10px;margin-bottom:14px}
 .pres-cnt{flex:1;text-align:center;padding:10px;border-radius:var(--r);border:1px solid var(--brd);background:#fff;box-shadow:var(--s)}
 .pres-cnt .num{font-size:22px;font-weight:700;font-family:'Lora',serif}
 .pres-cnt .leg{font-size:11px;color:var(--cin);text-transform:uppercase;letter-spacing:.3px;margin-top:2px}
-/* aluno: presença só leitura */
 .pres-ro{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#fff;border-radius:var(--r);margin-bottom:8px;border:1px solid var(--brd)}
 .pres-ro-d{font-size:14px;color:var(--cin)}
 .pres-ro-s{font-size:13px;font-weight:600;padding:4px 12px;border-radius:99px}
@@ -243,31 +244,47 @@ select.inp{cursor:pointer}
 .empty{text-align:center;padding:36px 20px;color:var(--cin)}
 .empty-ic{font-size:40px;margin-bottom:12px}.empty-tx{font-size:15px;margin-bottom:16px}
 
-/* ── CONFIG / FIREBASE ── */
-.fb{background:linear-gradient(135deg,#1a3a5c,#0f2540);border-radius:var(--rl);padding:20px;margin-bottom:16px;color:#fff}
-.fbt{font-family:'Lora',serif;font-size:17px;font-weight:700;margin-bottom:6px;color:var(--dou)}
-.fbi{padding:11px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-size:13px;font-family:'Inter',sans-serif;width:100%;margin-bottom:8px}
-.fbi::placeholder{color:rgba(255,255,255,.4)}.fbi:focus{outline:none;border-color:var(--dou)}
-.fbb{padding:11px 20px;border-radius:8px;border:none;background:var(--dou);color:var(--azul);font-size:14px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;width:100%}
+/* ── AVISO RO ── */
+.aviso-ro{background:var(--am-c);border:1px solid rgba(160,108,0,.3);border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--am);display:flex;align-items:center;gap:8px;margin-bottom:14px}
 
-/* ── BANNER PERFIL ALUNO ── */
+/* ── BANNER ALUNO ── */
 .meu-perfil-banner{background:linear-gradient(135deg,var(--azul),var(--azul-e));border-radius:var(--rl);padding:24px 18px;margin-bottom:16px;color:#fff;text-align:center}
 .mpb-av{width:72px;height:72px;border-radius:50%;background:var(--dou);color:var(--azul);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;font-family:'Lora',serif;margin:0 auto 12px}
 .mpb-nome{font-family:'Lora',serif;font-size:22px;font-weight:700}
 .mpb-sub{font-size:13px;opacity:.75;margin-top:4px}
 
-/* ── AVISO SOMENTE LEITURA ── */
-.aviso-ro{background:var(--am-c);border:1px solid rgba(160,108,0,.3);border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--am);display:flex;align-items:center;gap:8px;margin-bottom:14px}
+/* ── SYNC STATUS ── */
+.sync-bar{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--r);margin-bottom:12px;font-size:13px}
+.sync-bar.ok{background:var(--vd-c);color:var(--vd)}
+.sync-bar.err{background:var(--vm-c);color:var(--vm)}
+.sync-bar.load{background:var(--am-c);color:var(--am)}
 
 @media(min-width:500px){main{padding:22px 22px 80px}}
 </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════
-     TELA DE LOGIN
-══════════════════════════════════════════ -->
-<div id="pg-login">
+<!-- LOADING -->
+<div id="loading-overlay">
+  <div class="loading-logo">
+    <svg width="72" height="72" viewBox="0 0 72 72" fill="none" style="display:block;margin:0 auto 12px">
+      <circle cx="36" cy="36" r="34" fill="rgba(201,168,76,.15)"/>
+      <circle cx="36" cy="36" r="20" fill="rgba(201,168,76,.3)"/>
+      <circle cx="36" cy="36" r="9" fill="#c9a84c"/>
+      <line x1="36" y1="2" x2="36" y2="14" stroke="#c9a84c" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="36" y1="58" x2="36" y2="70" stroke="#c9a84c" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="2" y1="36" x2="14" y2="36" stroke="#c9a84c" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="58" y1="36" x2="70" y2="36" stroke="#c9a84c" stroke-width="3.5" stroke-linecap="round"/>
+    </svg>
+    <div class="loading-titulo">IBICAMP</div>
+    <div class="loading-sub">Sistema de Teologia</div>
+  </div>
+  <div class="loading-bar"><div class="loading-fill" id="loading-fill"></div></div>
+  <div class="loading-msg" id="loading-msg">Conectando ao banco de dados...</div>
+</div>
+
+<!-- LOGIN -->
+<div id="pg-login" style="display:none">
   <div class="login-box">
     <div class="login-logo">
       <svg width="72" height="72" viewBox="0 0 72 72" fill="none" style="display:block;margin:0 auto 12px">
@@ -278,8 +295,6 @@ select.inp{cursor:pointer}
         <line x1="36" y1="58" x2="36" y2="70" stroke="#c9a84c" stroke-width="3.5" stroke-linecap="round"/>
         <line x1="2" y1="36" x2="14" y2="36" stroke="#c9a84c" stroke-width="3.5" stroke-linecap="round"/>
         <line x1="58" y1="36" x2="70" y2="36" stroke="#c9a84c" stroke-width="3.5" stroke-linecap="round"/>
-        <line x1="10" y1="10" x2="19" y2="19" stroke="#c9a84c" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
-        <line x1="53" y1="10" x2="44" y2="19" stroke="#c9a84c" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
       </svg>
     </div>
     <div class="login-titulo">IBICAMP</div>
@@ -287,7 +302,7 @@ select.inp{cursor:pointer}
     <div class="login-card">
       <div class="campo">
         <label style="font-size:15px">Seu telefone <span style="font-size:12px;color:var(--cin)">(somente números)</span></label>
-        <input class="inp" id="login-tel" type="tel" placeholder="Ex: 62986225615" inputmode="numeric" autocomplete="tel" style="font-size:18px;letter-spacing:.5px">
+        <input class="inp" id="login-tel" type="tel" placeholder="Ex: 62986225615" inputmode="numeric" style="font-size:18px;letter-spacing:.5px">
       </div>
       <div class="campo" style="margin-bottom:20px">
         <label style="font-size:15px">Senha <span style="font-size:12px;color:var(--cin)">(últimos 4 dígitos do tel.)</span></label>
@@ -295,7 +310,7 @@ select.inp{cursor:pointer}
       </div>
       <button class="btn bp" onclick="fazerLogin()" style="font-size:17px;padding:16px">Entrar</button>
       <div class="login-divider">ou</div>
-      <button onclick="abrirModAdmin()" style="background:none;border:1.5px solid var(--brd);border-radius:var(--r);width:100%;padding:12px;font-size:14px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;color:var(--cin);transition:all .2s" onmouseover="this.style.borderColor='var(--azul)';this.style.color='var(--azul)'" onmouseout="this.style.borderColor='var(--brd)';this.style.color='var(--cin)'">
+      <button onclick="abrirModAdmin()" style="background:none;border:1.5px solid var(--brd);border-radius:var(--r);width:100%;padding:12px;font-size:14px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;color:var(--cin);transition:all .2s">
         🔐 Acesso Administrador
       </button>
     </div>
@@ -303,31 +318,21 @@ select.inp{cursor:pointer}
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     APP (ADMIN)
-══════════════════════════════════════════ -->
+<!-- APP ADMIN -->
 <div id="pg-admin" style="display:none">
   <header>
     <div class="logo">
-      <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-        <circle cx="15" cy="15" r="14" fill="rgba(201,168,76,.2)"/>
-        <circle cx="15" cy="15" r="7" fill="rgba(201,168,76,.45)"/>
-        <circle cx="15" cy="15" r="3.5" fill="#c9a84c"/>
-        <line x1="15" y1="1" x2="15" y2="6" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="15" y1="24" x2="15" y2="29" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="1" y1="15" x2="6" y2="15" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="24" y1="15" x2="29" y2="15" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/>
-      </svg>
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none"><circle cx="15" cy="15" r="14" fill="rgba(201,168,76,.2)"/><circle cx="15" cy="15" r="7" fill="rgba(201,168,76,.45)"/><circle cx="15" cy="15" r="3.5" fill="#c9a84c"/><line x1="15" y1="1" x2="15" y2="6" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/><line x1="15" y1="24" x2="15" y2="29" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/><line x1="1" y1="15" x2="6" y2="15" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/><line x1="24" y1="15" x2="29" y2="15" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/></svg>
       <div><span class="logo-t">IBICAMP</span><span class="logo-s">Administrador</span></div>
     </div>
     <button class="btn-sair-hdr" onclick="sair()">Sair</button>
   </header>
   <main>
-
-    <!-- INÍCIO ADMIN -->
+    <!-- INÍCIO -->
     <div class="tela on" id="a-inicio">
       <div class="tit" id="a-bv">Painel Admin</div>
       <p class="sub" id="a-data"></p>
+      <div id="sync-status"></div>
       <div class="g4" id="a-metricas"></div>
       <div class="sl">Ações rápidas</div>
       <div class="ga">
@@ -336,89 +341,66 @@ select.inp{cursor:pointer}
         <button class="ac" onclick="irAdmin('alunos')"><span class="ac-ic">👥</span>Ver Alunos</button>
         <button class="ac" onclick="irAdmin('relatorios')"><span class="ac-ic">📊</span>Relatórios</button>
       </div>
-      <div class="sl">Alertas do sistema</div>
+      <div class="sl">Alertas</div>
       <div id="a-alertas"></div>
     </div>
 
-    <!-- ALUNOS ADMIN -->
+    <!-- ALUNOS -->
     <div class="tela" id="a-alunos">
       <div class="sh"><div class="tit">Alunos <span id="contador-alunos" style="font-size:15px;color:var(--cin);font-weight:400"></span></div><button class="badd" onclick="abrirModAluno()">+ Novo</button></div>
-
-      <!-- BUSCA INTELIGENTE -->
       <div class="bw">
         <span class="bi"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-        <input class="busca" id="busca-admin" type="search" placeholder="Buscar aluno por nome..." oninput="onBusca(this.value)" onfocus="onBusca(this.value)" autocomplete="off">
+        <input class="busca" id="busca-admin" type="search" placeholder="Buscar por nome ou telefone..." oninput="onBusca(this.value)" onfocus="onBusca(this.value)" autocomplete="off">
       </div>
       <div class="busca-sugs" id="busca-sugs"></div>
-
-      <!-- FILTROS RÁPIDOS -->
-      <div class="filtros-rapidos" id="filtros-rapidos">
+      <div class="filtros-rapidos">
         <button class="fr-chip on" onclick="setFiltro('todos',this)">Todos</button>
         <button class="fr-chip" onclick="setFiltro('pag-pendente',this)">💰 Pag. pendente</button>
         <button class="fr-chip" onclick="setFiltro('faltas',this)">⚠ Com faltas</button>
         <button class="fr-chip" onclick="setFiltro('ativos',this)">✓ Ativos</button>
       </div>
-
-      <select class="inp" id="filtro-turma-alunos" onchange="renderAlunosAdmin()" style="margin-bottom:14px;font-size:14px">
-        <option value="">🎓 Todas as turmas</option>
-      </select>
       <div id="lista-alunos-admin"></div>
     </div>
 
-    <!-- PERFIL COMPLETO DO ALUNO (ADMIN) -->
+    <!-- PERFIL -->
     <div class="tela" id="a-perfil">
-      <button class="vb" onclick="irAdmin('alunos')">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Voltar
-      </button>
+      <button class="vb" onclick="irAdmin('alunos')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Voltar</button>
       <div id="a-perfil-conteudo"></div>
     </div>
 
-    <!-- PRESENÇA ADMIN -->
+    <!-- PRESENÇA -->
     <div class="tela" id="a-presenca">
       <div class="tit">Lançar Presença</div>
       <div class="dn">
-        <button class="dnb" onclick="mudarData(-1)">‹</button>
-        <span class="dnt" id="a-data-pres"></span>
-        <button class="dnb" onclick="mudarData(1)">›</button>
+        <button class="dnb" onclick="mudarAula(-1)">‹</button>
+        <span class="dnt" id="a-aula-atual">Selecione uma aula</span>
+        <button class="dnb" onclick="mudarAula(1)">›</button>
       </div>
-      <div class="card" style="padding:14px 16px;margin-bottom:14px">
-        <div class="card-t" style="margin-bottom:10px">📚 Aula do dia</div>
-        <div class="campo" style="margin-bottom:10px"><label>Módulo</label>
-          <select class="inp" id="sel-mod" onchange="renderAulas()">
-            <option value="">— Selecione o módulo —</option>
-            <option>📜 Pentateuco</option><option>🏛 Históricos</option><option>🎵 Poéticos</option>
-            <option>🗣 Proféticos</option><option>✝️ Evangelhos</option><option>📮 Atos e Cartas</option>
-            <option>📖 Apocalipse</option><option>📐 Teologia Sistemática</option>
-            <option>🔍 Hermenêutica</option><option>🎤 Homilética</option>
-          </select>
-        </div>
-        <div class="campo" style="margin-bottom:0"><label>Aula</label>
-          <select class="inp" id="sel-aula"><option value="">— Selecione a aula —</option></select>
-        </div>
-      </div>
-      <!-- Contador em tempo real -->
-      <div class="pres-contador" id="pres-contador">
+      <div class="card" style="padding:12px 14px;margin-bottom:14px" id="card-aula-info" style="display:none"></div>
+      <div class="pres-contador">
         <div class="pres-cnt"><div class="num" id="cnt-p" style="color:var(--vd)">0</div><div class="leg">Presentes</div></div>
         <div class="pres-cnt"><div class="num" id="cnt-f" style="color:var(--vm)">0</div><div class="leg">Faltas</div></div>
         <div class="pres-cnt"><div class="num" id="cnt-n" style="color:var(--cin)">0</div><div class="leg">Não marcados</div></div>
       </div>
       <p style="font-size:14px;color:var(--cin);margin-bottom:13px">Toque para alternar: <strong>Presente → Falta → limpar</strong></p>
       <div id="a-lista-pres"></div>
-      <button class="btn bp" onclick="salvarPres()">✓ Confirmar Presenças</button>
+      <button class="btn bp" onclick="salvarPres()" id="btn-salvar-pres">✓ Salvar Presenças no Sheets</button>
     </div>
 
-    <!-- PAGAMENTOS ADMIN -->
+    <!-- PAGAMENTOS -->
     <div class="tela" id="a-pagamentos">
       <div class="tit">Pagamentos</div>
-      <div class="dn">
-        <button class="dnb" onclick="mudarMes(-1)">‹</button>
-        <span class="dnt" id="a-mes-pag"></span>
-        <button class="dnb" onclick="mudarMes(1)">›</button>
+      <div class="campo" style="margin-bottom:14px">
+        <label>Selecionar Livro/Módulo</label>
+        <select class="inp" id="sel-livro-pag" onchange="renderPagAdmin()">
+          <option value="">— Selecione o módulo —</option>
+        </select>
       </div>
+      <div id="pag-resumo" style="margin-bottom:14px"></div>
       <div id="a-lista-pag"></div>
     </div>
 
-    <!-- MATERIAL ADMIN -->
+    <!-- MATERIAL -->
     <div class="tela" id="a-material">
       <div class="tit">Livros e Provas</div>
       <div class="tabs" id="tabs-mat">
@@ -432,8 +414,10 @@ select.inp{cursor:pointer}
         <div class="campo" style="margin-bottom:14px"><label>Selecionar Prova</label>
           <select class="inp" id="sel-prova" onchange="renderNotas()">
             <option value="">— Selecione —</option>
-            <option value="p1">Prova 1</option><option value="p2">Prova 2</option>
-            <option value="p3">Prova 3</option><option value="p4">Prova 4</option>
+            <option value="Prova 1">Prova 1</option>
+            <option value="Prova 2">Prova 2</option>
+            <option value="Prova 3">Prova 3</option>
+            <option value="Prova 4">Prova 4</option>
           </select>
         </div>
         <div id="lista-notas"></div>
@@ -441,15 +425,9 @@ select.inp{cursor:pointer}
       </div>
     </div>
 
-    <!-- RELATÓRIOS ADMIN -->
+    <!-- RELATÓRIOS -->
     <div class="tela" id="a-relatorios">
       <div class="tit">Relatórios</div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;background:#fff;border-radius:var(--r);padding:10px 14px;border:1px solid var(--brd)">
-        <span style="font-size:13px;font-weight:600;color:var(--cin);white-space:nowrap">🎓 Turma:</span>
-        <select class="inp" id="filtro-turma" onchange="renderRelAtual()" style="margin:0;padding:8px 12px;font-size:14px;flex:1">
-          <option value="">Todas as turmas</option>
-        </select>
-      </div>
       <div class="tabs">
         <button class="tab on" onclick="abaRel('geral',this)">Geral</button>
         <button class="tab" onclick="abaRel('presenca',this)">Presenças</button>
@@ -467,28 +445,8 @@ select.inp{cursor:pointer}
         <button class="btn bs" onclick="exportarCSV()">📊 Exportar CSV</button>
       </div>
     </div>
-
-    <!-- CONFIG ADMIN -->
-    <div class="tela" id="a-config">
-      <div class="tit">Configurações</div>
-      <p class="sub">Sistema e dados</p>
-      <div class="fb">
-        <div class="fbt">🔥 Conectar Firebase</div>
-        <p style="font-size:13px;opacity:.85;line-height:1.6;margin-bottom:14px">Salve os dados na nuvem para acessar de qualquer dispositivo.<br><a href="https://console.firebase.google.com" target="_blank" style="color:var(--dou)">console.firebase.google.com</a> → Criar projeto → App web → copiar credenciais</p>
-        <input class="fbi" id="fb-key" placeholder="apiKey">
-        <input class="fbi" id="fb-pid" placeholder="projectId">
-        <input class="fbi" id="fb-url" placeholder="databaseURL">
-        <button class="fbb" onclick="salvarFB()">Salvar credenciais Firebase</button>
-        <p style="font-size:12px;opacity:.6;margin-top:8px" id="fb-st">Não conectado — armazenamento local</p>
-      </div>
-      <div class="card" style="border-color:var(--vm-c)">
-        <div class="card-t" style="color:var(--vm)">⚠ Zona de perigo</div>
-        <p style="font-size:14px;color:var(--cin);margin-bottom:12px">Apagar todos os dados registrados. Irreversível.</p>
-        <button class="btn bd bsm" onclick="apagarTudo()">Apagar todos os dados</button>
-      </div>
-    </div>
-
   </main>
+
   <nav id="nav-admin">
     <button class="nb on" id="nb-inicio" onclick="irAdmin('inicio')">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Início
@@ -508,21 +466,11 @@ select.inp{cursor:pointer}
   </nav>
 </div>
 
-<!-- ══════════════════════════════════════════
-     APP (ALUNO)
-══════════════════════════════════════════ -->
+<!-- APP ALUNO -->
 <div id="pg-aluno" style="display:none">
   <header>
     <div class="logo">
-      <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-        <circle cx="15" cy="15" r="14" fill="rgba(201,168,76,.2)"/>
-        <circle cx="15" cy="15" r="7" fill="rgba(201,168,76,.45)"/>
-        <circle cx="15" cy="15" r="3.5" fill="#c9a84c"/>
-        <line x1="15" y1="1" x2="15" y2="6" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="15" y1="24" x2="15" y2="29" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="1" y1="15" x2="6" y2="15" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="24" y1="15" x2="29" y2="15" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/>
-      </svg>
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none"><circle cx="15" cy="15" r="14" fill="rgba(201,168,76,.2)"/><circle cx="15" cy="15" r="7" fill="rgba(201,168,76,.45)"/><circle cx="15" cy="15" r="3.5" fill="#c9a84c"/><line x1="15" y1="1" x2="15" y2="6" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/><line x1="15" y1="24" x2="15" y2="29" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/><line x1="1" y1="15" x2="6" y2="15" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/><line x1="24" y1="15" x2="29" y2="15" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/></svg>
       <div><span class="logo-t">IBICAMP</span><span class="logo-s" id="aluno-header-nome">Teologia</span></div>
     </div>
     <button class="btn-sair-hdr" onclick="sair()">Sair</button>
@@ -554,13 +502,11 @@ select.inp{cursor:pointer}
     </div>
     <div class="tela" id="al-pagamentos">
       <div class="tit">Meus Pagamentos</div>
-      <p class="sub">Situação mensal</p>
+      <p class="sub">Situação por livro/módulo</p>
       <div class="aviso-ro">🔒 Apenas o administrador registra pagamentos.</div>
       <div id="al-pag-lista"></div>
     </div>
-    <div class="tela" id="al-livros">
-      <div id="al-livros-conteudo"></div>
-    </div>
+    <div class="tela" id="al-livros"><div id="al-livros-conteudo"></div></div>
     <div class="tela" id="al-notas">
       <div class="tit">Minhas Notas</div>
       <p class="sub">Avaliações realizadas</p>
@@ -568,25 +514,15 @@ select.inp{cursor:pointer}
     </div>
   </main>
   <nav id="nav-aluno">
-    <button class="nb on" id="aln-cadastro" onclick="irAluno('cadastro')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Cadastro
-    </button>
-    <button class="nb" id="aln-agenda" onclick="irAluno('agenda')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agenda
-    </button>
-    <button class="nb" id="aln-presenca" onclick="irAluno('presenca')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Presença
-    </button>
-    <button class="nb" id="aln-pagamentos" onclick="irAluno('pagamentos')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Pagamentos
-    </button>
-    <button class="nb" id="aln-notas" onclick="irAluno('notas')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Notas
-    </button>
+    <button class="nb on" id="aln-cadastro" onclick="irAluno('cadastro')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Cadastro</button>
+    <button class="nb" id="aln-agenda" onclick="irAluno('agenda')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agenda</button>
+    <button class="nb" id="aln-presenca" onclick="irAluno('presenca')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Presença</button>
+    <button class="nb" id="aln-pagamentos" onclick="irAluno('pagamentos')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Pagamentos</button>
+    <button class="nb" id="aln-notas" onclick="irAluno('notas')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Notas</button>
   </nav>
 </div>
 
-<!-- ══ MODAL ADMIN LOGIN ══ -->
+<!-- MODAIS -->
 <div class="ov" id="mod-admin">
   <div class="mod">
     <button class="mf" onclick="fecharMod('mod-admin')">×</button>
@@ -598,34 +534,32 @@ select.inp{cursor:pointer}
   </div>
 </div>
 
-<!-- ══ MODAL NOVO/EDITAR ALUNO (admin) ══ -->
 <div class="ov" id="mod-aluno">
   <div class="mod">
     <button class="mf" onclick="fecharMod('mod-aluno')">×</button>
     <div class="mt" id="mod-aluno-tit">Novo Aluno</div>
     <input type="hidden" id="aid">
     <div class="campo"><label>Nome completo *</label><input class="inp" id="a-nome" type="text" autocomplete="off"></div>
-    <div class="campo"><label>Telefone <span style="font-size:12px;color:var(--cin)">(usado como login)</span></label><input class="inp" id="a-tel" type="tel" placeholder="Ex: 62986225615"></div>
+    <div class="campo"><label>Telefone (login)</label><input class="inp" id="a-tel" type="tel" placeholder="Ex: 62986225615"></div>
+    <div class="campo"><label>Endereço</label><input class="inp" id="a-end" type="text"></div>
     <div class="campo"><label>E-mail</label><input class="inp" id="a-email" type="email"></div>
-    <div class="campo"><label>Turma</label>
-      <select class="inp" id="a-turma"><option>Turma Única</option><option>Turma 1</option><option>Turma 2</option><option>Turma 3</option></select>
+    <div class="campo"><label>Senha App</label><input class="inp" id="a-senha" type="text" maxlength="6" placeholder="1234"></div>
+    <div class="campo"><label>Ativo</label>
+      <select class="inp" id="a-ativo"><option value="Sim">Sim</option><option value="Nao">Não</option></select>
     </div>
-    <div class="campo"><label>Mensalidade (R$)</label><input class="inp" id="a-valor" type="number" min="0"></div>
-    <div class="campo"><label>Senha <span style="font-size:12px;color:var(--cin)">(padrão: últimos 4 dígitos do tel.)</span></label><input class="inp" id="a-senha" type="text" maxlength="6" placeholder="1234"></div>
-    <button class="btn bp" onclick="salvarAluno()">Salvar</button>
+    <button class="btn bp" onclick="salvarAluno()">Salvar no Sheets</button>
     <button class="btn bd" id="btn-del" onclick="delAluno()" style="display:none">Excluir aluno</button>
   </div>
 </div>
 
-<!-- ══ MODAL EDITAR PRÓPRIOS DADOS (aluno) ══ -->
 <div class="ov" id="mod-editar-aluno">
   <div class="mod">
     <button class="mf" onclick="fecharMod('mod-editar-aluno')">×</button>
     <div class="mt">✏️ Editar meus dados</div>
-    <div class="aviso-ro" style="margin-bottom:14px">🔒 Nome e turma só podem ser alterados pelo administrador.</div>
+    <div class="aviso-ro">🔒 Nome e turma só podem ser alterados pelo administrador.</div>
     <div class="campo"><label>Telefone</label><input class="inp" id="ea-tel" type="tel"></div>
     <div class="campo"><label>E-mail</label><input class="inp" id="ea-email" type="email"></div>
-    <div class="campo"><label>Nova senha <span style="font-size:12px;color:var(--cin)">(deixe em branco para manter)</span></label><input class="inp" id="ea-senha" type="text" maxlength="6" placeholder="••••"></div>
+    <div class="campo"><label>Nova senha</label><input class="inp" id="ea-senha" type="text" maxlength="6" placeholder="••••"></div>
     <button class="btn bp" onclick="salvarEdicaoAluno()">Salvar alterações</button>
   </div>
 </div>
@@ -633,104 +567,201 @@ select.inp{cursor:pointer}
 <div id="toast"></div>
 
 <script>
-/* ════════════════════════════════════════════
-   DADOS INICIAIS
-════════════════════════════════════════════ */
-const ALUNOS_BASE = [
-  {id:'1',nome:'ADRIANO DE SENA ROSA',tel:'62986225615',senha:'5615',turma:'Turma Única',ativo:true},
-  {id:'2',nome:'ALDENIR PEREIRA',tel:'',senha:'1234',turma:'Turma Única',ativo:true},
-  {id:'3',nome:'ALEX RODRIGUES FREITAS',tel:'62993192156',senha:'2156',turma:'Turma Única',ativo:true},
-  {id:'4',nome:'ALEXANDRE ARAUJO GUEDES',tel:'62992931449',senha:'1449',turma:'Turma Única',ativo:true},
-  {id:'5',nome:'ANTONIA CANDIDO DE SOUZA',tel:'62983168699',senha:'8699',turma:'Turma Única',ativo:true},
-  {id:'6',nome:'CATIA SOUZA DA SILVA RODRIGUES',tel:'62992038797',senha:'8797',turma:'Turma Única',ativo:true},
-  {id:'7',nome:'CRISTIANE DA SILVA LIMA',tel:'62981350208',senha:'0208',turma:'Turma Única',ativo:true},
-  {id:'8',nome:'DENIS MAICON SOUZA FERREIRA',tel:'62981043171',senha:'3171',turma:'Turma Única',ativo:true},
-  {id:'9',nome:'DENNYS ALEXANDRE REIS DE LUCENA',tel:'',senha:'1234',turma:'Turma Única',ativo:true},
-  {id:'10',nome:'DIANA PRISCILA SILVA SANTOS',tel:'62991266727',senha:'6727',turma:'Turma Única',ativo:true},
-  {id:'11',nome:'ETIENNE MOURA SANTOS',tel:'62992459763',senha:'9763',turma:'Turma Única',ativo:true},
-  {id:'12',nome:'EVALDO DE PAULA BARBOSA',tel:'62985210383',senha:'0383',turma:'Turma Única',ativo:true},
-  {id:'13',nome:'GABRIELA MOREIRA HONORATO',tel:'62984857872',senha:'7872',turma:'Turma Única',ativo:true},
-  {id:'14',nome:'IVENS MOREIRA PARAISO',tel:'62991856985',senha:'6985',turma:'Turma Única',ativo:true},
-  {id:'15',nome:'JACQUELINE ALVES DE ARAUJO',tel:'62992302112',senha:'2112',turma:'Turma Única',ativo:true},
-  {id:'16',nome:'JAILTON DIAS XAVIER',tel:'62993583386',senha:'3386',turma:'Turma Única',ativo:true},
-  {id:'17',nome:'JAIRO DA SILVA FAVACHO',tel:'62998620439',senha:'0439',turma:'Turma Única',ativo:true},
-  {id:'18',nome:'JHONATAN JUNIOR EVANGELISTA LEITE',tel:'62991062209',senha:'2209',turma:'Turma Única',ativo:true},
-  {id:'19',nome:'JOÃO VYCTOR RODRIGUES DE SOUZA',tel:'62992566176',senha:'6176',turma:'Turma Única',ativo:true},
-  {id:'20',nome:'JORDANIA LIMA DOS SANTOS',tel:'62991531226',senha:'1226',turma:'Turma Única',ativo:true},
-  {id:'21',nome:'JOSE LUIZ QUEIROZ PINHEIRO',tel:'62985325361',senha:'5361',turma:'Turma Única',ativo:true},
-  {id:'22',nome:'KAROLLINE ELIAS DOS SANTOS BERNAZZOLLI',tel:'62994768383',senha:'8383',turma:'Turma Única',ativo:true},
-  {id:'23',nome:'LEONIDAS RODRIGUES DE SOUZA JUNIOR',tel:'62991984473',senha:'4473',turma:'Turma Única',ativo:true},
-  {id:'24',nome:'LORENA LEOCARDIO DE MORAES',tel:'62991200111',senha:'0111',turma:'Turma Única',ativo:true},
-  {id:'25',nome:'LUCIANE BARBOSA RODRIGUES',tel:'62996259672',senha:'9672',turma:'Turma Única',ativo:true},
-  {id:'26',nome:'LUNA LEOCARDIO DE MORAES',tel:'62992966208',senha:'6208',turma:'Turma Única',ativo:true},
-  {id:'27',nome:'MARIA CONCEIÇÃO DA SILVA',tel:'62982211266',senha:'1266',turma:'Turma Única',ativo:true},
-  {id:'28',nome:'MARIA JUCILEIDE LISBOA LIMA',tel:'62985739860',senha:'9860',turma:'Turma Única',ativo:true},
-  {id:'29',nome:'MARIA LEOCARDIO AMORIM MORAES',tel:'62993161376',senha:'1376',turma:'Turma Única',ativo:true},
-  {id:'30',nome:'MARIA VITORIA LISBOA LIMA',tel:'62985160451',senha:'0451',turma:'Turma Única',ativo:true},
-  {id:'31',nome:'MICAEL DE SOUSA',tel:'62992484375',senha:'4375',turma:'Turma Única',ativo:true},
-  {id:'32',nome:'NEILSON PEREIRA',tel:'62983379454',senha:'9454',turma:'Turma Única',ativo:true},
-  {id:'33',nome:'RONEIK FERREIRA SANTOS',tel:'62985161279',senha:'1279',turma:'Turma Única',ativo:true},
-  {id:'34',nome:'RUBENS SENA DA SILVA',tel:'62994157569',senha:'7569',turma:'Turma Única',ativo:true},
-  {id:'35',nome:'TIAGO CARDOSO BRAGA',tel:'62993020696',senha:'0696',turma:'Turma Única',ativo:true},
-  {id:'36',nome:'WELLINGTON NASCIMENTO FONSECA',tel:'62982585510',senha:'5510',turma:'Turma Única',ativo:true},
-  {id:'37',nome:'ANA BRUNA ALVES CARDOSO DE OLIVEIRA',tel:'62985573220',senha:'3220',turma:'Turma Única',ativo:true},
-  {id:'38',nome:'ELIDIANE DIAS DE SOUSA RAMOS',tel:'62992266437',senha:'6437',turma:'Turma Única',ativo:true}
-];
-
-const AULAS_MOD = {
-  '📜 Pentateuco':['Introdução ao Pentateuco','Gênesis 1–11: Origens','Gênesis 12–50: Patriarcas','Êxodo: A Libertação','Levítico: A Santidade','Números: No Deserto','Deuteronômio: A Aliança'],
-  '🏛 Históricos':['Josué: A Conquista','Juízes: Ciclo da Apostasia','Rute: A Fidelidade','1 e 2 Samuel','1 e 2 Reis','1 e 2 Crônicas','Esdras e Neemias','Ester'],
-  '🎵 Poéticos':['Jó: O Sofrimento','Salmos','Provérbios','Eclesiastes','Cantares'],
-  '🗣 Proféticos':['Introdução à Profecia','Isaías','Jeremias e Lamentações','Ezequiel','Daniel','Profetas Menores'],
-  '✝️ Evangelhos':['Introdução','Mateus','Marcos','Lucas','João','Harmonização'],
-  '📮 Atos e Cartas':['Atos dos Apóstolos','Romanos','1 e 2 Coríntios','Gálatas e Efésios','Filipenses e Colossenses','Tessalonicenses','Epístolas Pastorais','Hebreus','Epístolas Gerais'],
-  '📖 Apocalipse':['Introdução','As Sete Igrejas','Selos e Trombetas','Grande Tribulação','Milênio e Nova Criação'],
-  '📐 Teologia Sistemática':['Bibliologia','Teologia Própria','Cristologia','Pneumatologia','Soteriologia','Eclesiologia','Escatologia'],
-  '🔍 Hermenêutica':['Princípios de Interpretação','Tipos Literários','Contexto Histórico','Exegese Prática'],
-  '🎤 Homilética':['Tipos de Sermão','Estrutura Homilética','Pregação Expositiva','Pregação Prática']
-};
-
+/* ══════════════════════════════════════════
+   CONFIGURAÇÃO — GOOGLE SHEETS
+══════════════════════════════════════════ */
+const API_URL = 'https://script.google.com/macros/s/AKfycbw_jvcKQzA9oyBDWMAFHENpOaBF3fEQVaVF0023B2lVi2_3pzEEm9nuTyJxCMPPOgvbLQ/exec';
 const ADMIN_PW = 'ibicamp2025';
-const DB_KEY = 'teologia_v4';
 
-/* ════ DB ════ */
-let D, usuAtual = null;
+/* ══════════════════════════════════════════
+   ESTADO GLOBAL
+══════════════════════════════════════════ */
+let D = {
+  alunos: [], aulas: [], presencas: [],
+  pagamentos: [], entregas: [], notas: [], provas: []
+};
+let usuAtual = null;
+let _aulaIdx = 0;
 let _filtroAtual = 'todos';
+let _abaRelAtual = 'geral';
 
-function ddp(){ return { alunos: JSON.parse(JSON.stringify(ALUNOS_BASE)), presencas:{}, pagamentos:{}, livros_ent:{}, provas:{}, notas:{}, livros_curso:[{id:'l1',nome:'Livro 1 – Introdução Bíblica'},{id:'l2',nome:'Livro 2 – Pentateuco e Históricos'},{id:'l3',nome:'Livro 3 – Poéticos e Proféticos'},{id:'l4',nome:'Livro 4 – Novo Testamento'}], aulas_log:{} }; }
-function carregarDB(){ try{ return JSON.parse(localStorage.getItem(DB_KEY))||ddp(); } catch{ return ddp(); } }
-function salvar(){ localStorage.setItem(DB_KEY, JSON.stringify(D)); }
+/* ══════════════════════════════════════════
+   API — LER E ESCREVER NO SHEETS
+══════════════════════════════════════════ */
+async function lerAba(aba) {
+  const r = await fetch(`${API_URL}?aba=${encodeURIComponent(aba)}`);
+  const dados = await r.json();
+  // Remove linhas de cabeçalho (linha 1 título, linha 2 subtítulo, linha 3 colunas)
+  return dados.slice(3).filter(l => l[0] !== '' && l[0] !== null && l[0] !== undefined);
+}
 
-/* ════ UTILS ════ */
+async function escreverLinha(aba, linha) {
+  await fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({ aba, acao: 'append', linha })
+  });
+}
+
+async function atualizarCelula(aba, linhaNum, coluna, valor) {
+  await fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({ aba, acao: 'update', linha: linhaNum, coluna, valor })
+  });
+}
+
+/* ══════════════════════════════════════════
+   CARREGAMENTO INICIAL
+══════════════════════════════════════════ */
+async function carregarTudo() {
+  const fill = document.getElementById('loading-fill');
+  const msg  = document.getElementById('loading-msg');
+
+  try {
+    msg.textContent = 'Carregando alunos...';
+    fill.style.width = '15%';
+    const rawAlunos = await lerAba('Alunos');
+    D.alunos = rawAlunos.map(r => ({
+      id:    String(r[0]),
+      nome:  String(r[1]||'').toUpperCase(),
+      tel:   String(r[2]||'').replace(/\D/g,''),
+      end:   String(r[3]||''),
+      email: String(r[4]||''),
+      senha: String(r[5]||'1234'),
+      ativo: String(r[6]||'Sim').toLowerCase().includes('sim')
+    }));
+
+    msg.textContent = 'Carregando aulas...';
+    fill.style.width = '30%';
+    const rawAulas = await lerAba('Aulas');
+    D.aulas = rawAulas.map(r => ({
+      id:       String(r[0]),
+      data:     String(r[1]||''),
+      tema:     String(r[2]||''),
+      modulo:   String(r[3]||''),
+      trimestre:String(r[4]||'')
+    }));
+
+    msg.textContent = 'Carregando presenças...';
+    fill.style.width = '50%';
+    const rawPres = await lerAba('Presença');
+    D.presencas = rawPres.map(r => ({
+      idAluno: String(r[0]),
+      idAula:  String(r[1]),
+      presente:String(r[2]||'').toLowerCase().includes('sim'),
+      obs:     String(r[3]||'')
+    }));
+
+    msg.textContent = 'Carregando pagamentos...';
+    fill.style.width = '65%';
+    const rawPag = await lerAba('Pagamentos');
+    D.pagamentos = rawPag.map(r => ({
+      idAluno: String(r[0]),
+      nome:    String(r[1]||''),
+      livro:   String(r[2]||''),
+      pago:    String(r[3]||'').toLowerCase().includes('sim'),
+      data:    String(r[4]||''),
+      forma:   String(r[5]||''),
+      valor:   String(r[6]||'')
+    }));
+
+    msg.textContent = 'Carregando entregas e notas...';
+    fill.style.width = '80%';
+    const rawEnt = await lerAba('Entregas');
+    D.entregas = rawEnt.map(r => ({
+      idAluno: String(r[0]),
+      livro:   String(r[1]||''),
+      entregue:String(r[2]||'').toLowerCase().includes('sim'),
+      data:    String(r[3]||'')
+    }));
+
+    const rawNotas = await lerAba('Notas');
+    D.notas = rawNotas.map(r => ({
+      idAluno: String(r[0]),
+      prova:   String(r[1]||''),
+      nota:    parseFloat(r[2])||0
+    }));
+
+    const rawProvas = await lerAba('Provas');
+    D.provas = rawProvas.map(r => ({
+      idAluno:  String(r[0]),
+      prova:    String(r[1]||''),
+      realizada:String(r[2]||'').toLowerCase().includes('sim')
+    }));
+
+    fill.style.width = '100%';
+    msg.textContent = 'Tudo carregado!';
+
+    // Cache local para não perder dados
+    localStorage.setItem('ibicamp_cache', JSON.stringify({ts: Date.now(), data: D}));
+
+    setTimeout(() => {
+      document.getElementById('loading-overlay').classList.add('hide');
+      document.getElementById('pg-login').style.display = 'flex';
+    }, 500);
+
+  } catch(e) {
+    // Tenta usar cache se existir
+    const cache = localStorage.getItem('ibicamp_cache');
+    if (cache) {
+      try {
+        const c = JSON.parse(cache);
+        D = c.data;
+        msg.textContent = '⚠ Usando dados em cache (offline)';
+        fill.style.width = '100%';
+        setTimeout(() => {
+          document.getElementById('loading-overlay').classList.add('hide');
+          document.getElementById('pg-login').style.display = 'flex';
+        }, 1000);
+      } catch(e2) {
+        msg.textContent = '❌ Erro ao carregar. Verifique sua conexão.';
+      }
+    } else {
+      msg.textContent = '❌ Erro ao conectar ao Sheets. Verifique sua internet.';
+    }
+  }
+}
+
+/* ══════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════ */
 const M=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const DS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 function hj(){ return new Date(); }
-function chD(d){ return d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0'); }
-function chM(d){ return d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0'); }
-function fmtD(d){ return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear(); }
-function ini(n){ return n.split(' ').filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join(''); }
-function ativos(){ return D.alunos.filter(a=>a.ativo!==false); }
-function fmtNome(n){ return n.split(' ').map(p=>p.charAt(0)+p.slice(1).toLowerCase()).join(' '); }
+function fmtNome(n){ return String(n).split(' ').map(p=>p.charAt(0).toUpperCase()+p.slice(1).toLowerCase()).join(' '); }
 function fmtTel(t){ return t?t.replace(/^(\d{2})(\d{5})(\d{4})$/,'($1) $2-$3'):t; }
+function ini(n){ return String(n).split(' ').filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join(''); }
+function ativos(){ return D.alunos.filter(a=>a.ativo!==false); }
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),3200); }
 function fecharMod(id){ document.getElementById(id).classList.remove('on'); }
 function abrirMod(id){ document.getElementById(id).classList.add('on'); }
+function fmtDataBR(s){
+  if(!s) return '';
+  // Tenta converter data do Sheets (pode vir como "26/08/2025" ou "2025-08-26" ou objeto Date)
+  if(typeof s === 'object') { try { const d=new Date(s); return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear(); } catch{} }
+  if(String(s).includes('/')) return String(s);
+  if(String(s).includes('-')){ const p=s.split('-'); if(p.length===3) return p[2]+'/'+p[1]+'/'+p[0]; }
+  return String(s);
+}
 
-/* ════ LOGIN ════ */
-document.getElementById('login-senha').addEventListener('keydown',e=>{ if(e.key==='Enter') fazerLogin(); });
-document.getElementById('admin-pw').addEventListener('keydown',e=>{ if(e.key==='Enter') verificarAdmin(); });
+/* ══════════════════════════════════════════
+   LOGIN
+══════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('login-senha').addEventListener('keydown', e=>{ if(e.key==='Enter') fazerLogin(); });
+  document.getElementById('admin-pw').addEventListener('keydown', e=>{ if(e.key==='Enter') verificarAdmin(); });
+});
 
 function fazerLogin(){
-  const tel = document.getElementById('login-tel').value.replace(/\D/g,'').trim();
+  const tel   = document.getElementById('login-tel').value.replace(/\D/g,'').trim();
   const senha = document.getElementById('login-senha').value.trim();
   if(!tel){ toast('⚠ Digite seu telefone'); return; }
   if(!senha){ toast('⚠ Digite sua senha'); return; }
-  const aluno = D.alunos.find(a=>a.tel && a.tel.replace(/\D/g,'')===tel && a.ativo!==false);
+  const aluno = D.alunos.find(a => a.tel === tel && a.ativo !== false);
   if(!aluno){ toast('⚠ Telefone não encontrado'); return; }
   if(aluno.senha && senha !== aluno.senha){ toast('⚠ Senha incorreta'); return; }
   usuAtual = aluno;
-  document.getElementById('pg-login').style.display='none';
-  document.getElementById('pg-aluno').style.display='block';
+  document.getElementById('pg-login').style.display = 'none';
+  document.getElementById('pg-aluno').style.display = 'block';
   document.getElementById('aluno-header-nome').textContent = fmtNome(aluno.nome).split(' ')[0];
   irAluno('cadastro');
 }
@@ -738,7 +769,7 @@ function fazerLogin(){
 function abrirModAdmin(){ abrirMod('mod-admin'); setTimeout(()=>document.getElementById('admin-pw').focus(),100); }
 
 function verificarAdmin(){
-  if(document.getElementById('admin-pw').value===ADMIN_PW){
+  if(document.getElementById('admin-pw').value === ADMIN_PW){
     fecharMod('mod-admin'); document.getElementById('admin-pw').value='';
     usuAtual = {id:'admin',nome:'Administrador',isAdmin:true};
     document.getElementById('pg-login').style.display='none';
@@ -749,16 +780,18 @@ function verificarAdmin(){
 }
 
 function sair(){
-  usuAtual=null;
+  usuAtual = null;
   ['pg-admin','pg-aluno'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('pg-login').style.display='flex';
   document.getElementById('login-tel').value='';
   document.getElementById('login-senha').value='';
 }
 
-/* ════ NAV ADMIN ════ */
-const TELAS_ADMIN=['inicio','alunos','perfil','presenca','pagamentos','material','relatorios','config'];
-const NB_MAP={inicio:'nb-inicio',alunos:'nb-alunos',perfil:'nb-alunos',presenca:'nb-presenca',material:'nb-material',relatorios:'nb-relatorios'};
+/* ══════════════════════════════════════════
+   NAV
+══════════════════════════════════════════ */
+const TELAS_ADMIN=['inicio','alunos','perfil','presenca','pagamentos','material','relatorios'];
+const NB_MAP={inicio:'nb-inicio',alunos:'nb-alunos',perfil:'nb-alunos',presenca:'nb-presenca',material:'nb-material',relatorios:'nb-relatorios',pagamentos:'nb-inicio'};
 
 function irAdmin(t){
   TELAS_ADMIN.forEach(id=>{ const el=document.getElementById('a-'+id); if(el) el.classList.remove('on'); });
@@ -766,16 +799,14 @@ function irAdmin(t){
   const el=document.getElementById('a-'+t); if(el) el.classList.add('on');
   const nb=NB_MAP[t]?document.getElementById(NB_MAP[t]):null; if(nb) nb.classList.add('on');
   window.scrollTo(0,0);
-  if(t==='inicio') renderDashAdmin();
-  if(t==='alunos') renderAlunosAdmin();
-  if(t==='presenca') renderPresAdmin();
-  if(t==='pagamentos') renderPagAdmin();
-  if(t==='material') renderMatAdmin('livros');
-  if(t==='relatorios') renderRelAdmin('geral');
-  if(t==='config') initConfig();
+  if(t==='inicio')    renderDashAdmin();
+  if(t==='alunos')    renderAlunosAdmin();
+  if(t==='presenca')  renderPresAdmin();
+  if(t==='pagamentos')renderPagAdmin();
+  if(t==='material')  renderMatAdmin('livros');
+  if(t==='relatorios')renderRelAdmin('geral');
 }
 
-/* ════ NAV ALUNO ════ */
 const TELAS_ALUNO=['cadastro','agenda','presenca','pagamentos','livros','notas'];
 function irAluno(t){
   TELAS_ALUNO.forEach(id=>{ const el=document.getElementById('al-'+id); if(el) el.classList.remove('on'); });
@@ -783,757 +814,740 @@ function irAluno(t){
   const el=document.getElementById('al-'+t); if(el) el.classList.add('on');
   const nb=document.getElementById('aln-'+t); if(nb) nb.classList.add('on');
   window.scrollTo(0,0);
-  if(t==='cadastro') renderAlunoCadastro();
-  if(t==='agenda') renderAlunoAgenda();
-  if(t==='presenca') renderAlunoPresenca();
-  if(t==='pagamentos') renderAlunoPagamentos();
-  if(t==='livros') renderAlunoLivros();
-  if(t==='notas') renderAlunoNotas();
+  if(t==='cadastro')  renderAlunoCadastro();
+  if(t==='agenda')    renderAlunoAgenda();
+  if(t==='presenca')  renderAlunoPresenca();
+  if(t==='pagamentos')renderAlunoPagamentos();
+  if(t==='livros')    renderAlunoLivros();
+  if(t==='notas')     renderAlunoNotas();
 }
 
-/* ════ DASHBOARD ADMIN ════ */
+/* ══════════════════════════════════════════
+   DASHBOARD ADMIN
+══════════════════════════════════════════ */
 function renderDashAdmin(){
-  const h=hj(); const cm=chM(h); const al=ativos(); const tot=al.length;
+  const h=hj(); const al=ativos(); const tot=al.length;
   document.getElementById('a-data').textContent=DS[h.getDay()]+', '+h.getDate()+' de '+M[h.getMonth()]+' de '+h.getFullYear();
-  const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
-  let tp=0; pk.forEach(k=>Object.values(D.presencas[k]).forEach(v=>{ if(v==='P') tp++; }));
-  const mp=pk.length*tot; const pp=mp>0?Math.round(tp/mp*100):0;
-  const pagM=D.pagamentos[cm]||{}; const pagos=al.filter(a=>pagM[a.id]===true).length;
-  const pend=tot-pagos;
 
-  // Badge no nav de relatórios se houver alertas
-  let numAlertas = 0;
+  // Frequência geral
+  const totalPres = D.presencas.filter(p=>p.presente).length;
+  const totalReg  = D.presencas.length;
+  const pp = totalReg>0 ? Math.round(totalPres/totalReg*100) : 0;
+
+  // Pagamentos — alunos com pelo menos 1 pago
+  const alunosPagos = new Set(D.pagamentos.filter(p=>p.pago).map(p=>p.idAluno));
+  const pagos = alunosPagos.size;
+  const pend  = tot - pagos;
 
   document.getElementById('a-metricas').innerHTML=`
     <div class="mc" onclick="irAdmin('alunos')">
-      <div class="mn">${tot}</div>
-      <div class="ml">Alunos ativos</div>
+      <div class="mn">${tot}</div><div class="ml">Alunos ativos</div>
       <div class="mc-sub">Toque para ver lista</div>
     </div>
     <div class="mc vd" onclick="irAdmin('relatorios')">
-      <div class="mn">${pp}%</div>
-      <div class="ml">Frequência mensal</div>
-      <div class="mc-sub">${pk.length} aula${pk.length!==1?'s':''} registrada${pk.length!==1?'s':''}</div>
+      <div class="mn">${pp}%</div><div class="ml">Frequência geral</div>
+      <div class="mc-sub">${D.aulas.length} aulas registradas</div>
     </div>
     <div class="mc do" onclick="irAdmin('pagamentos')">
-      <div class="mn">${pagos}</div>
-      <div class="ml">Pagamentos OK</div>
-      <div class="mc-sub">De ${tot} alunos</div>
+      <div class="mn">${pagos}</div><div class="ml">Alunos em dia</div>
+      <div class="mc-sub">Com pelo menos 1 pagamento</div>
     </div>
     <div class="mc vm" onclick="irAdmin('pagamentos')">
-      <div class="mn">${pend}</div>
-      <div class="ml">Pag. pendentes</div>
+      <div class="mn">${pend}</div><div class="ml">Sem pagamento</div>
       <div class="mc-sub">Toque para ver quem</div>
     </div>`;
 
-  let alerts=[];
+  // Alertas
+  let alerts = [];
   al.forEach(a=>{
-    let f=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='F') f++; });
-    if(f>=2){
-      numAlertas++;
-      alerts.push(`<div class="al vm"><span>⚠️</span><span><strong>${fmtNome(a.nome)}</strong> — ${f} falta${f>1?'s':''} este mês <button class="al-link" onclick="verPerfilAdmin('${a.id}')">ver perfil →</button></span></div>`);
+    const presA = D.presencas.filter(p=>p.idAluno===a.id);
+    const faltas = presA.filter(p=>!p.presente).length;
+    const total  = presA.length;
+    if(total>0 && faltas>=3){
+      alerts.push(`<div class="al vm"><span>⚠️</span><span><strong>${fmtNome(a.nome)}</strong> — ${faltas} faltas registradas <button class="al-link" onclick="verPerfilAdmin('${a.id}')">ver perfil →</button></span></div>`);
     }
   });
-  if(pend>0){
-    numAlertas++;
-    const pendNomes=al.filter(a=>(pagM[a.id]!==true)).map(a=>`<button class="al-link" onclick="irAdmin('pagamentos')">${fmtNome(a.nome).split(' ')[0]}</button>`).join(', ');
-    alerts.push(`<div class="al am"><span>💰</span><span><strong>${pend} aluno${pend>1?'s':''}</strong> com pagamento pendente em ${M[h.getMonth()]}: ${pendNomes}</span></div>`);
-  }
-  const semNota=['p1','p2','p3','p4'].filter(p=>Object.keys(D.notas[p]||{}).length===0);
-  if(semNota.length){
-    numAlertas++;
-    alerts.push(`<div class="al am"><span>📝</span><span>Prova${semNota.length>1?'s':''} sem notas lançadas: ${semNota.map((_,i)=>'Prova '+(parseInt(_.replace('p',''))).toString()).join(', ')} <button class="al-link" onclick="irAdmin('material')">lançar notas →</button></span></div>`);
-  }
+  const semPag = al.filter(a=>!D.pagamentos.find(p=>p.idAluno===a.id && p.pago));
+  if(semPag.length) alerts.push(`<div class="al am"><span>💰</span><span><strong>${semPag.length} aluno${semPag.length>1?'s':''}</strong> sem nenhum pagamento registrado</span></div>`);
   if(!alerts.length) alerts.push('<div class="al vd"><span>✅</span><span>Tudo em dia! Nenhum alerta no momento.</span></div>');
   document.getElementById('a-alertas').innerHTML=alerts.join('');
+
+  // Status sync
+  const cache = localStorage.getItem('ibicamp_cache');
+  if(cache){
+    const c = JSON.parse(cache);
+    const mins = Math.round((Date.now()-c.ts)/60000);
+    document.getElementById('sync-status').innerHTML=`<div class="sync-bar ok">✅ Dados sincronizados com Google Sheets há ${mins<1?'menos de 1':mins} minuto${mins!==1?'s':''}</div>`;
+  }
 }
 
-/* ════════════════════════════════════════════
-   BUSCA INTELIGENTE COM SUGESTÕES
-════════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   BUSCA INTELIGENTE
+══════════════════════════════════════════ */
 function onBusca(q){
-  const sugs = document.getElementById('busca-sugs');
-  const trimmed = q.trim().toLowerCase();
-
-  if(!trimmed){ sugs.classList.remove('on'); sugs.innerHTML=''; renderAlunosAdmin(); return; }
-
-  // Filtrar alunos pelo texto
-  const resultados = D.alunos.filter(a=>
-    fmtNome(a.nome).toLowerCase().includes(trimmed) ||
-    a.nome.toLowerCase().includes(trimmed) ||
-    (a.tel||'').includes(trimmed)
-  ).slice(0,6);
-
-  if(!resultados.length){ sugs.classList.remove('on'); renderAlunosAdmin(); return; }
-
-  // Mostrar sugestões dropdown
-  sugs.innerHTML = resultados.map(a=>`
+  const sugs=document.getElementById('busca-sugs');
+  const t=q.trim().toLowerCase();
+  if(!t){ sugs.classList.remove('on'); sugs.innerHTML=''; renderAlunosAdmin(); return; }
+  const res=D.alunos.filter(a=>fmtNome(a.nome).toLowerCase().includes(t)||a.tel.includes(t)).slice(0,6);
+  if(!res.length){ sugs.classList.remove('on'); renderAlunosAdmin(); return; }
+  sugs.innerHTML=res.map(a=>`
     <div class="sug-item" onclick="selecionarSugestao('${a.id}')">
       <div class="sug-av">${ini(a.nome)}</div>
       <div class="sug-info">
-        <div class="sug-nome">${destacar(fmtNome(a.nome), trimmed)}</div>
-        <div class="sug-sub">${a.turma||'Turma Única'}${a.tel?' · '+fmtTel(a.tel):''}</div>
+        <div class="sug-nome">${destacar(fmtNome(a.nome),t)}</div>
+        <div class="sug-sub">${a.tel?fmtTel(a.tel):'Sem telefone'}</div>
       </div>
     </div>`).join('');
   sugs.classList.add('on');
-
-  // Atualizar lista principal
   renderAlunosAdmin();
 }
-
-function destacar(texto, q){
-  const re = new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')', 'gi');
-  return texto.replace(re, '<mark style="background:var(--dou-c);color:var(--azul);border-radius:2px;padding:0 2px">$1</mark>');
+function destacar(texto,q){
+  const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+  return texto.replace(re,'<mark style="background:var(--dou-c);color:var(--azul);border-radius:2px;padding:0 2px">$1</mark>');
 }
+function selecionarSugestao(id){ document.getElementById('busca-sugs').classList.remove('on'); document.getElementById('busca-admin').value=''; verPerfilAdmin(id); }
+document.addEventListener('click',e=>{ if(!e.target.closest('.bw')&&!e.target.closest('.busca-sugs')){ const s=document.getElementById('busca-sugs'); if(s) s.classList.remove('on'); } });
 
-function selecionarSugestao(id){
-  document.getElementById('busca-sugs').classList.remove('on');
-  document.getElementById('busca-admin').value='';
-  verPerfilAdmin(id);
-}
+function setFiltro(tipo,btn){ _filtroAtual=tipo; document.querySelectorAll('.fr-chip').forEach(c=>c.classList.remove('on')); btn.classList.add('on'); renderAlunosAdmin(); }
 
-// Fechar sugestões ao clicar fora
-document.addEventListener('click', e=>{
-  if(!e.target.closest('.bw') && !e.target.closest('.busca-sugs')){
-    const sugs = document.getElementById('busca-sugs');
-    if(sugs) sugs.classList.remove('on');
-  }
-});
-
-/* ════ FILTROS RÁPIDOS ════ */
-function setFiltro(tipo, btn){
-  _filtroAtual = tipo;
-  document.querySelectorAll('.fr-chip').forEach(c=>c.classList.remove('on'));
-  btn.classList.add('on');
-  renderAlunosAdmin();
-}
-
-/* ════ ALUNOS ADMIN ════ */
-function abrirModAluno(id){
-  ['a-nome','a-tel','a-email','a-valor','a-senha'].forEach(f=>document.getElementById(f).value='');
-  document.getElementById('a-turma').value='Turma Única';
-  document.getElementById('aid').value='';
-  document.getElementById('mod-aluno-tit').textContent='Novo Aluno';
-  document.getElementById('btn-del').style.display='none';
-  if(id){
-    const a=D.alunos.find(x=>x.id===id);
-    if(a){ document.getElementById('a-nome').value=a.nome; document.getElementById('a-tel').value=a.tel||''; document.getElementById('a-email').value=a.email||''; document.getElementById('a-turma').value=a.turma||'Turma Única'; document.getElementById('a-valor').value=a.valor||''; document.getElementById('a-senha').value=a.senha||''; document.getElementById('aid').value=a.id; document.getElementById('mod-aluno-tit').textContent='Editar Aluno'; document.getElementById('btn-del').style.display='block'; }
-  }
-  abrirMod('mod-aluno');
-}
-function salvarAluno(){
-  const nome=document.getElementById('a-nome').value.trim().toUpperCase(); if(!nome){ toast('⚠ Digite o nome'); return; }
-  const eid=document.getElementById('aid').value;
-  const a={id:eid||Date.now().toString(),nome,tel:document.getElementById('a-tel').value.replace(/\D/g,''),email:document.getElementById('a-email').value.trim(),turma:document.getElementById('a-turma').value,valor:document.getElementById('a-valor').value,senha:document.getElementById('a-senha').value||'1234',ativo:true};
-  if(eid){ const i=D.alunos.findIndex(x=>x.id===eid); if(i>=0) D.alunos[i]={...D.alunos[i],...a}; }
-  else D.alunos.push(a);
-  salvar(); fecharMod('mod-aluno'); renderAlunosAdmin(); toast('✓ Aluno '+(eid?'atualizado':'cadastrado')+'!');
-}
-function delAluno(){
-  const id=document.getElementById('aid').value; if(!id||!confirm('Excluir este aluno?')) return;
-  D.alunos=D.alunos.filter(a=>a.id!==id); salvar(); fecharMod('mod-aluno'); renderAlunosAdmin(); toast('Aluno removido.');
-}
-
+/* ══════════════════════════════════════════
+   LISTA DE ALUNOS
+══════════════════════════════════════════ */
 function renderAlunosAdmin(){
-  popularFiltroTurma();
   const busca=(document.getElementById('busca-admin')?.value||'').toLowerCase().trim();
-  const turmaFilt=document.getElementById('filtro-turma-alunos')?.value||'';
-  const h=hj(); const cm=chM(h);
-  const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
-  const pagM=D.pagamentos[cm]||{};
+  let lista=D.alunos.filter(a=>fmtNome(a.nome).toLowerCase().includes(busca)||a.tel.includes(busca));
 
-  let lista = D.alunos.filter(a=>
-    (fmtNome(a.nome).toLowerCase().includes(busca)||a.nome.toLowerCase().includes(busca)) &&
-    (!turmaFilt || (a.turma||'Turma Única')===turmaFilt)
-  );
-
-  // Aplicar filtro rápido
-  if(_filtroAtual==='pag-pendente') lista=lista.filter(a=>pagM[a.id]!==true && a.ativo!==false);
-  else if(_filtroAtual==='faltas') lista=lista.filter(a=>{
-    let f=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='F') f++; }); return f>=2;
-  });
+  if(_filtroAtual==='pag-pendente') lista=lista.filter(a=>!D.pagamentos.find(p=>p.idAluno===a.id&&p.pago));
+  else if(_filtroAtual==='faltas'){
+    lista=lista.filter(a=>{
+      const pres=D.presencas.filter(p=>p.idAluno===a.id);
+      return pres.filter(p=>!p.presente).length>=3;
+    });
+  }
   else if(_filtroAtual==='ativos') lista=lista.filter(a=>a.ativo!==false);
 
   const el=document.getElementById('lista-alunos-admin');
   const cont=document.getElementById('contador-alunos');
   if(cont) cont.textContent=`(${lista.length})`;
-
   if(!lista.length){ el.innerHTML='<div class="empty"><div class="empty-ic">👥</div><div class="empty-tx">Nenhum aluno encontrado.</div></div>'; return; }
 
-  el.innerHTML=lista.map(a=>{
-    const p=pagM[a.id]===true;
-    let ff=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='F') ff++; });
-    let pres=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') pres++; });
-    const perc=pk.length>0?Math.round(pres/pk.length*100):null;
-    const bClass = !a.ativo?'ba': ff>=2?'br': !p?'br':'bv';
-    const bLabel = !a.ativo?'Inativo': ff>=2?`${ff} faltas`: !p?'Pendente':'Em dia';
-    const nomeDisplay = busca ? destacar(fmtNome(a.nome), busca) : fmtNome(a.nome);
+  el.innerHTML=lista.map((a,i)=>{
+    const temPag=D.pagamentos.find(p=>p.idAluno===a.id&&p.pago);
+    const presA=D.presencas.filter(p=>p.idAluno===a.id);
+    const ff=presA.filter(p=>!p.presente).length;
+    const perc=presA.length>0?Math.round(presA.filter(p=>p.presente).length/presA.length*100):null;
+    const bClass=!a.ativo?'ba':ff>=3?'br':!temPag?'br':'bv';
+    const bLabel=!a.ativo?'Inativo':ff>=3?`${ff} faltas`:!temPag?'Sem pag.':'Em dia';
+    const nomeDisplay=busca?destacar(fmtNome(a.nome),busca):fmtNome(a.nome);
+    const cores=['#e8f0fd','#fdeaea','#e8f5ee','#fdf3e3','#f3e8fd'];
+    const txts=['#2d6dc9','#c94444','#2d9e6b','#c97a2d','#7c3aed'];
+    const ci=i%cores.length;
     return `<div class="ar" onclick="verPerfilAdmin('${a.id}')">
-      <div class="av">${ini(a.nome)}</div>
+      <div class="av" style="background:${cores[ci]};color:${txts[ci]}">${ini(a.nome)}</div>
       <div class="ai">
         <div class="an">${nomeDisplay}</div>
-        <div class="as2">${a.turma||'Turma Única'}${a.tel?' · '+fmtTel(a.tel):''}${perc!==null?' · '+perc+'% freq.':''}</div>
+        <div class="as2">${a.tel?fmtTel(a.tel):'Sem telefone'}${perc!==null?' · '+perc+'% freq.':''}</div>
       </div>
       <span class="bdg ${bClass}">${bLabel}</span>
     </div>`;
   }).join('');
 }
 
-/* ════════════════════════════════════════════
+/* ══════════════════════════════════════════
    PERFIL COMPLETO DO ALUNO (ADMIN)
-════════════════════════════════════════════ */
+══════════════════════════════════════════ */
 function verPerfilAdmin(id){
   const a=D.alunos.find(x=>x.id===id); if(!a) return;
   irAdmin('perfil'); document.getElementById('nb-alunos').classList.add('on');
-  const h=hj(); const cm=chM(h);
 
-  // Calcular todas as estatísticas
-  let tp=0,tf=0;
-  Object.values(D.presencas).forEach(v=>{ if(v[id]==='P') tp++; if(v[id]==='F') tf++; });
-  const totalAulas = Object.keys(D.presencas).length;
-  const freqPerc = totalAulas>0 ? Math.round(tp/totalAulas*100) : 0;
-  const mp=Object.keys(D.pagamentos).filter(m=>D.pagamentos[m][id]===true).length;
-  const pagA=(D.pagamentos[cm]||{})[id]===true;
+  const presA=D.presencas.filter(p=>p.idAluno===id);
+  const tp=presA.filter(p=>p.presente).length;
+  const tf=presA.filter(p=>!p.presente).length;
+  const totalA=presA.length;
+  const freqPerc=totalA>0?Math.round(tp/totalA*100):0;
+
+  const pagA=D.pagamentos.filter(p=>p.idAluno===id);
+  const pagos=pagA.filter(p=>p.pago).length;
+
+  // Média de notas
+  const notasA=D.notas.filter(n=>n.idAluno===id);
+  const media=notasA.length>0?(notasA.reduce((s,n)=>s+n.nota,0)/notasA.length).toFixed(1):null;
 
   // Calendário do mês atual
+  const h=hj();
   const dim=new Date(h.getFullYear(),h.getMonth()+1,0).getDate();
   const p1=new Date(h.getFullYear(),h.getMonth(),1).getDay();
   let cal=DS.map(d=>`<div class="cd hd">${d}</div>`).join('');
   for(let i=0;i<p1;i++) cal+='<div class="cd vz"></div>';
   for(let d=1;d<=dim;d++){
-    const k=`${h.getFullYear()}-${(h.getMonth()+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`;
-    const v=D.presencas[k];
-    const c=v&&v[id]==='P'?'cp':v&&v[id]==='F'?'cf':'';
-    cal+=`<div class="cd ${c}" title="${c==='cp'?'Presente':c==='cf'?'Falta':''}">${d}</div>`;
+    const dStr=d.toString().padStart(2,'0')+'/'+(h.getMonth()+1).toString().padStart(2,'0')+'/'+h.getFullYear();
+    const aula=D.aulas.find(a=>fmtDataBR(a.data)===dStr);
+    let c='';
+    if(aula){
+      const pres=D.presencas.find(p=>p.idAluno===id&&p.idAula===aula.id);
+      c=pres?(pres.presente?'cp':'cf'):'';
+    }
+    cal+=`<div class="cd ${c}">${d}</div>`;
   }
 
-  // Notas com média
-  const ns=['p1','p2','p3','p4'].map((p,i)=>{ const n=(D.notas[p]||{})[id]; if(n===undefined) return null; return n; }).filter(x=>x!==null);
-  const media = ns.length>0 ? (ns.reduce((a,b)=>a+b,0)/ns.length).toFixed(1) : null;
-  const notasH=['p1','p2','p3','p4'].map((p,i)=>{ const n=(D.notas[p]||{})[id]; if(n===undefined) return `<div class="sl2"><span class="slb">Prova ${i+1}</span><span class="bdg ba">Sem nota</span></div>`; return `<div class="sl2"><span class="slb">Prova ${i+1}</span><span class="bdg ${n>=7?'bv':n>=5?'ba':'br'}" style="font-size:14px">${n.toFixed(1)}</span></div>`; }).join('');
+  // Histórico de presenças
+  const presHist=presA.slice(-8).reverse().map(p=>{
+    const aula=D.aulas.find(a=>a.id===p.idAula)||{tema:'Aula',data:''};
+    return `<div class="pres-ro"><div><div style="font-size:13px;font-weight:500">${aula.tema}</div><div class="pres-ro-d">${fmtDataBR(aula.data)}</div></div><span class="pres-ro-s ${p.presente?'pres-p':'pres-f'}">${p.presente?'Presente':'Falta'}</span></div>`;
+  }).join('')||'<p style="font-size:13px;color:var(--cin)">Sem registros de presença.</p>';
+
+  // Pagamentos
+  const pagHTML=pagA.length?pagA.map(p=>`
+    <div class="sl2"><div><div style="font-weight:500;font-size:14px">${p.livro}</div><div style="font-size:12px;color:var(--cin)">${p.pago&&p.data?'Pago em '+fmtDataBR(p.data):p.pago?'Pago':'Pendente'}${p.forma?' · '+p.forma:''}${p.valor?' · R$ '+p.valor:''}</div></div><span class="bdg ${p.pago?'bv':'br'}">${p.pago?'✓ Pago':'✗ Pendente'}</span></div>`).join('')
+    :'<p style="font-size:13px;color:var(--cin)">Sem registros de pagamento.</p>';
+
+  // Notas
+  const notasHTML=notasA.length?notasA.map(n=>`<div class="sl2"><span class="slb">${n.prova}</span><span class="bdg ${n.nota>=7?'bv':n.nota>=5?'ba':'br'}">${n.nota.toFixed(1)}</span></div>`).join('')
+    +'<div class="sl2"><span class="slb" style="font-weight:600">Média</span><span style="font-size:18px;font-weight:700;font-family:\'Lora\',serif;color:var(--azul)">${media||\'—\'}</span></div>'
+    :'<p style="font-size:13px;color:var(--cin)">Sem notas lançadas.</p>';
 
   // Livros
-  const livH=D.livros_curso.map(l=>`<div class="sl2"><span class="slb">${l.nome}</span><span class="bdg ${(D.livros_ent[l.id]||{})[id]?'bv':'br'}">${(D.livros_ent[l.id]||{})[id]?'✓ Entregue':'Pendente'}</span></div>`).join('');
+  const livHTML=D.entregas.filter(e=>e.idAluno===id).map(e=>`<div class="sl2"><span class="slb">${e.livro}</span><span class="bdg ${e.entregue?'bv':'br'}">${e.entregue?'✓ Entregue':'Pendente'}</span></div>`).join('')
+    ||'<p style="font-size:13px;color:var(--cin)">Sem entregas registradas.</p>';
 
-  // Histórico de presenças (últimas 8 aulas)
-  const log=D.aulas_log||{};
-  const presHist=Object.keys(D.presencas).sort().reverse().slice(0,8).map(k=>{
-    const st=D.presencas[k][id]; const d=new Date(k+'T12:00:00');
-    const entry=log[k]||{};
-    if(!st) return '';
-    return `<div class="pres-ro"><div><div style="font-size:13px;font-weight:500">${entry.aula||'Aula'}</div><div class="pres-ro-d">${fmtD(d)}</div></div><span class="pres-ro-s ${st==='P'?'pres-p':'pres-f'}">${st==='P'?'Presente':'Falta'}</span></div>`;
-  }).filter(Boolean).join('') || '<p style="font-size:13px;color:var(--cin)">Sem registros de presença.</p>';
-
-  // Pagamentos por mês
-  const pagMeses=Object.keys(D.pagamentos).sort().reverse().slice(0,6).map(k=>{
-    const [ano,mes]=k.split('-');
-    const pago=(D.pagamentos[k]||{})[id]===true;
-    return `<div class="sl2"><span class="slb">${M[parseInt(mes)-1]} ${ano}</span><span class="bdg ${pago?'bv':'br'}">${pago?'✓ Pago':'✗ Pendente'}</span></div>`;
-  }).join('') || '<p style="font-size:13px;color:var(--cin)">Sem registros.</p>';
+  // Provas
+  const provHTML=D.provas.filter(p=>p.idAluno===id).map(p=>`<div class="sl2"><span class="slb">${p.prova}</span><span class="bdg ${p.realizada?'bv':'ba'}">${p.realizada?'✓ Realizada':'Pendente'}</span></div>`).join('')
+    ||'<p style="font-size:13px;color:var(--cin)">Sem provas registradas.</p>';
 
   document.getElementById('a-perfil-conteudo').innerHTML=`
     <div class="ph">
       <div class="pav">${ini(a.nome)}</div>
       <div class="pn">${fmtNome(a.nome)}</div>
-      <div class="pt">${a.turma||'Turma Única'}${a.tel?' · '+fmtTel(a.tel):''}</div>
+      <div class="pt">${a.tel?fmtTel(a.tel):'Sem telefone'}${a.email?' · '+a.email:''}</div>
     </div>
-
     <div class="perfil-grid">
-      <div class="perfil-stat">
-        <span class="val" style="color:var(--vd)">${tp}</span>
-        <span class="lbl">Presenças</span>
-      </div>
-      <div class="perfil-stat">
-        <span class="val" style="color:var(--vm)">${tf}</span>
-        <span class="lbl">Faltas</span>
-      </div>
-      <div class="perfil-stat">
-        <span class="val" style="color:var(--azul)">${freqPerc}%</span>
-        <span class="lbl">Frequência</span>
-      </div>
-      <div class="perfil-stat">
-        <span class="val" style="color:${media?(parseFloat(media)>=7?'var(--vd)':parseFloat(media)>=5?'var(--am)':'var(--vm)'):'var(--cin)'}">${media||'—'}</span>
-        <span class="lbl">Média geral</span>
-      </div>
+      <div class="perfil-stat"><span class="val" style="color:var(--vd)">${tp}</span><span class="lbl">Presenças</span></div>
+      <div class="perfil-stat"><span class="val" style="color:var(--vm)">${tf}</span><span class="lbl">Faltas</span></div>
+      <div class="perfil-stat"><span class="val" style="color:var(--azul)">${freqPerc}%</span><span class="lbl">Frequência</span></div>
+      <div class="perfil-stat"><span class="val" style="color:${media?(parseFloat(media)>=7?'var(--vd)':parseFloat(media)>=5?'var(--am)':'var(--vm)'):'var(--cin)'}">${media||'—'}</span><span class="lbl">Média geral</span></div>
     </div>
-
-    <div class="card">
-      <div class="card-t">📋 Situação geral</div>
-      <div class="sl2"><span class="slb">Pag. ${M[h.getMonth()]}</span><span class="bdg ${pagA?'bv':'br'}">${pagA?'Em dia':'Pendente'}</span></div>
-      <div class="sl2"><span class="slb">Meses pagos (total)</span><span class="slv">${mp}</span></div>
-      ${a.valor?`<div class="sl2"><span class="slb">Mensalidade</span><span class="slv">R$ ${a.valor}</span></div>`:''}
-      ${a.email?`<div class="sl2"><span class="slb">E-mail</span><span style="font-size:13px;color:var(--cin)">${a.email}</span></div>`:''}
-      <div class="sl2"><span class="slb">Senha app</span><span style="font-family:monospace;font-size:14px;background:var(--azul-c);padding:2px 8px;border-radius:4px;color:var(--azul)">${a.senha||'—'}</span></div>
-    </div>
-
     <div class="card">
       <div class="card-t">📅 Calendário — ${M[h.getMonth()]}</div>
-      <div style="display:flex;gap:10px;font-size:12px;margin-bottom:8px">
-        <span><span style="display:inline-block;width:12px;height:12px;background:var(--vd);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Presente</span>
-        <span><span style="display:inline-block;width:12px;height:12px;background:var(--vm);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Falta</span>
-      </div>
+      <div style="display:flex;gap:10px;font-size:12px;margin-bottom:8px"><span><span style="display:inline-block;width:12px;height:12px;background:var(--vd);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Presente</span><span><span style="display:inline-block;width:12px;height:12px;background:var(--vm);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Falta</span></div>
       <div class="cal">${cal}</div>
-      <div style="margin-top:14px"><div class="card-t" style="margin-bottom:8px">Histórico de presença</div>${presHist}</div>
+      <div style="margin-top:14px"><div class="card-t" style="margin-bottom:8px">Histórico recente</div>${presHist}</div>
     </div>
-
+    <div class="card"><div class="card-t">💰 Pagamentos</div>${pagHTML}</div>
+    <div class="card"><div class="card-t">🔢 Notas</div>${notasHTML.replace('${media||\'—\'}', media||'—')}</div>
+    <div class="card"><div class="card-t">📚 Livros entregues</div>${livHTML}</div>
+    <div class="card"><div class="card-t">📝 Provas realizadas</div>${provHTML}</div>
     <div class="card">
-      <div class="card-t">💰 Pagamentos por mês</div>
-      ${pagMeses}
+      <div class="card-t">🔑 Dados de acesso</div>
+      <div class="sl2"><span class="slb">Senha app</span><span style="font-family:monospace;font-size:14px;background:var(--azul-c);padding:2px 8px;border-radius:4px;color:var(--azul)">${a.senha||'—'}</span></div>
+      <div class="sl2"><span class="slb">Status</span><span class="bdg ${a.ativo?'bv':'ba'}">${a.ativo?'Ativo':'Inativo'}</span></div>
     </div>
-
-    <div class="card">
-      <div class="card-t">🔢 Notas</div>
-      ${notasH}
-      ${media?`<div class="sl2"><span class="slb" style="font-weight:600">Média geral</span><span style="font-size:20px;font-weight:700;font-family:'Lora',serif;color:${parseFloat(media)>=7?'var(--vd)':parseFloat(media)>=5?'var(--am)':'var(--vm)'}">${media}</span></div>`:''}
-    </div>
-
-    <div class="card">
-      <div class="card-t">📚 Livros</div>
-      ${livH}
-    </div>
-
-    <div class="card">
-      <div class="card-t">📝 Provas realizadas</div>
-      ${['p1','p2','p3','p4'].map((p,i)=>{ const f=(D.provas[p]||{})[id]===true; return `<div class="sl2"><span class="slb">Prova ${i+1}</span><span class="bdg ${f?'bv':'ba'}">${f?'✓ Realizada':'Pendente'}</span></div>`; }).join('')}
-    </div>
-
-    <button class="btn bs" onclick="abrirModAluno('${id}')">✏️ Editar dados deste aluno</button>
-  `;
+    <button class="btn bs" onclick="abrirModAluno('${id}')">✏️ Editar dados deste aluno</button>`;
 }
 
-/* ════ PRESENÇA ADMIN ════ */
-let _dp=new Date();
-function mudarData(d){ _dp.setDate(_dp.getDate()+d); renderPresAdmin(); }
-
+/* ══════════════════════════════════════════
+   PRESENÇA ADMIN — lê aulas do Sheets
+══════════════════════════════════════════ */
 function renderPresAdmin(){
-  document.getElementById('a-data-pres').textContent=DS[_dp.getDay()]+', '+_dp.getDate()+' de '+M[_dp.getMonth()]+' de '+_dp.getFullYear();
-  const ch=chD(_dp); const pD=D.presencas[ch]||{}; const al=ativos();
-  if(!al.length){ document.getElementById('a-lista-pres').innerHTML='<div class="empty"><div class="empty-ic">👥</div><div class="empty-tx">Sem alunos.</div></div>'; return; }
+  if(!D.aulas.length){ document.getElementById('a-lista-pres').innerHTML='<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Nenhuma aula cadastrada.</div></div>'; return; }
+  _aulaIdx = Math.max(0, Math.min(_aulaIdx, D.aulas.length-1));
+  const aula = D.aulas[_aulaIdx];
+  document.getElementById('a-aula-atual').textContent = fmtDataBR(aula.data)+' — '+aula.tema;
+  document.getElementById('card-aula-info').innerHTML=`<div style="font-size:12px;font-weight:600;color:var(--azul);text-transform:uppercase;letter-spacing:.5px">${aula.modulo}</div><div style="font-size:14px;font-weight:500;margin-top:4px">${aula.tema}</div>`;
   atualizarContador();
+  const al=ativos();
   document.getElementById('a-lista-pres').innerHTML=al.map(a=>{
-    const st=pD[a.id]||'';
+    const p=D.presencas.find(x=>x.idAluno===a.id&&x.idAula===aula.id);
+    const st=p?(p.presente?'P':'F'):'';
     return `<div class="pr ${st}" id="pr-${a.id}" onclick="tgPres('${a.id}')"><span class="prnm">${fmtNome(a.nome)}</span><span class="prch" id="pc-${a.id}">${st==='P'?'Presente':st==='F'?'Falta':'Tocar'}</span></div>`;
   }).join('');
 }
 
-function atualizarContador(){
-  const ch=chD(_dp); const pD=D.presencas[ch]||{}; const al=ativos();
-  let p=0,f=0,n=0;
-  al.forEach(a=>{ const st=pD[a.id]||''; if(st==='P') p++; else if(st==='F') f++; else n++; });
-  const cp=document.getElementById('cnt-p'); const cf=document.getElementById('cnt-f'); const cn=document.getElementById('cnt-n');
-  if(cp) cp.textContent=p; if(cf) cf.textContent=f; if(cn) cn.textContent=n;
+function mudarAula(d){
+  _aulaIdx = Math.max(0, Math.min(_aulaIdx+d, D.aulas.length-1));
+  renderPresAdmin();
 }
 
-function renderAulas(){
-  const mod=document.getElementById('sel-mod').value; const sa=document.getElementById('sel-aula');
-  sa.innerHTML='<option value="">— Selecione a aula —</option>';
-  if(!mod) return;
-  (AULAS_MOD[mod]||[]).forEach((a,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=(i+1)+'. '+a; sa.appendChild(o); });
+function atualizarContador(){
+  if(!D.aulas.length) return;
+  const aula=D.aulas[_aulaIdx]; const al=ativos();
+  let p=0,f=0;
+  al.forEach(a=>{ const x=D.presencas.find(x=>x.idAluno===a.id&&x.idAula===aula.id); if(x){ if(x.presente) p++; else f++; } });
+  document.getElementById('cnt-p').textContent=p;
+  document.getElementById('cnt-f').textContent=f;
+  document.getElementById('cnt-n').textContent=al.length-p-f;
 }
 
 function tgPres(id){
-  const ch=chD(_dp); if(!D.presencas[ch]) D.presencas[ch]={};
-  const c=D.presencas[ch][id]||''; const n=c===''?'P':c==='P'?'F':'';
-  if(n==='') delete D.presencas[ch][id]; else D.presencas[ch][id]=n;
-  document.getElementById('pr-'+id).className='pr '+n;
-  document.getElementById('pc-'+id).textContent=n==='P'?'Presente':n==='F'?'Falta':'Tocar';
+  if(!D.aulas.length) return;
+  const aula=D.aulas[_aulaIdx];
+  const idx=D.presencas.findIndex(x=>x.idAluno===id&&x.idAula===aula.id);
+  if(idx===-1){
+    D.presencas.push({idAluno:id,idAula:aula.id,presente:true,obs:''});
+  } else {
+    if(D.presencas[idx].presente){ D.presencas[idx].presente=false; }
+    else { D.presencas.splice(idx,1); }
+  }
+  const p=D.presencas.find(x=>x.idAluno===id&&x.idAula===aula.id);
+  const st=p?(p.presente?'P':'F'):'';
+  document.getElementById('pr-'+id).className='pr '+st;
+  document.getElementById('pc-'+id).textContent=st==='P'?'Presente':st==='F'?'Falta':'Tocar';
   atualizarContador();
 }
 
-function salvarPres(){
-  const mod=document.getElementById('sel-mod').value; const ai=document.getElementById('sel-aula').value;
-  if(mod && ai!==''){
-    const aulaName=(AULAS_MOD[mod]||[])[parseInt(ai)];
-    if(!D.aulas_log) D.aulas_log={};
-    D.aulas_log[chD(_dp)]={modulo:mod,aula:aulaName||''};
+async function salvarPres(){
+  if(!D.aulas.length){ toast('⚠ Nenhuma aula selecionada'); return; }
+  const aula=D.aulas[_aulaIdx]; const al=ativos();
+  const btn=document.getElementById('btn-salvar-pres');
+  btn.textContent='⏳ Salvando...'; btn.disabled=true;
+  try {
+    for(const a of al){
+      const p=D.presencas.find(x=>x.idAluno===a.id&&x.idAula===aula.id);
+      if(p){
+        await escreverLinha('Presença',[a.id,aula.id,p.presente?'Sim':'Nao','']);
+      }
+    }
+    // Atualiza cache
+    localStorage.setItem('ibicamp_cache',JSON.stringify({ts:Date.now(),data:D}));
+    toast('✓ Presenças salvas no Google Sheets!');
+  } catch(e){
+    toast('❌ Erro ao salvar. Tente novamente.');
   }
-  salvar(); toast('✓ Presenças salvas!');
+  btn.textContent='✓ Salvar Presenças no Sheets'; btn.disabled=false;
 }
 
-/* ════ PAGAMENTOS ADMIN ════ */
-let _mp=new Date();
-function mudarMes(d){ _mp.setMonth(_mp.getMonth()+d); renderPagAdmin(); }
+/* ══════════════════════════════════════════
+   PAGAMENTOS ADMIN
+══════════════════════════════════════════ */
 function renderPagAdmin(){
-  const cm=chM(_mp); document.getElementById('a-mes-pag').textContent=M[_mp.getMonth()]+' '+_mp.getFullYear();
-  const pagM=D.pagamentos[cm]||{}; const al=ativos();
-  const pagos=al.filter(a=>pagM[a.id]===true).length;
-  const rec=al.reduce((s,a)=>s+(pagM[a.id]===true?(parseFloat(a.valor)||0):0),0);
-  const resumo=`<div style="display:flex;gap:10px;margin-bottom:14px">
-    <div class="pres-cnt" style="flex:1;text-align:center;padding:10px;background:#fff;border-radius:var(--r);border:1px solid var(--brd);box-shadow:var(--s)">
-      <div class="num" style="font-size:20px;font-weight:700;font-family:'Lora',serif;color:var(--vd)">${pagos}</div>
-      <div style="font-size:11px;color:var(--cin);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">Pagaram</div>
-    </div>
-    <div class="pres-cnt" style="flex:1;text-align:center;padding:10px;background:#fff;border-radius:var(--r);border:1px solid var(--brd);box-shadow:var(--s)">
-      <div class="num" style="font-size:20px;font-weight:700;font-family:'Lora',serif;color:var(--vm)">${al.length-pagos}</div>
-      <div style="font-size:11px;color:var(--cin);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">Pendentes</div>
-    </div>
-    <div class="pres-cnt" style="flex:1;text-align:center;padding:10px;background:#fff;border-radius:var(--r);border:1px solid var(--brd);box-shadow:var(--s)">
-      <div class="num" style="font-size:16px;font-weight:700;font-family:'Lora',serif;color:var(--am)">R$${rec>0?rec.toFixed(0):0}</div>
-      <div style="font-size:11px;color:var(--cin);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">Arrecadado</div>
-    </div>
-  </div>`;
-  document.getElementById('a-lista-pag').innerHTML=resumo+al.map(a=>{ const p=pagM[a.id]===true;
-    return `<div class="pgr"><div class="pgi"><div class="pgn">${fmtNome(a.nome)}</div><div class="pgd">${M[_mp.getMonth()]+' '+_mp.getFullYear()}${a.valor?' · R$ '+a.valor:''}</div></div><button class="pgb ${p?'pg':'pe'}" onclick="tgPag('${a.id}')">${p?'✓ Pago':'✕ Pendente'}</button></div>`; }).join('');
-}
-function tgPag(id){
-  const cm=chM(_mp); if(!D.pagamentos[cm]) D.pagamentos[cm]={};
-  D.pagamentos[cm][id]=!D.pagamentos[cm][id]; salvar(); renderPagAdmin();
-  const a=D.alunos.find(x=>x.id===id); toast(D.pagamentos[cm][id]?'✓ Pagamento de '+fmtNome(a.nome)+' registrado!':'Marcado como pendente');
+  // Popula select de livros
+  const sel=document.getElementById('sel-livro-pag');
+  if(sel.options.length===1){
+    const livros=[...new Set(D.pagamentos.map(p=>p.livro).filter(Boolean))];
+    livros.forEach(l=>{ const o=document.createElement('option'); o.value=l; o.textContent=l; sel.appendChild(o); });
+  }
+  const livroFiltro=sel.value;
+  const al=ativos();
+  let pagsFiltradas = livroFiltro
+    ? D.pagamentos.filter(p=>p.livro===livroFiltro)
+    : D.pagamentos;
+
+  // Resumo
+  const pagos=pagsFiltradas.filter(p=>p.pago).length;
+  const tot=pagsFiltradas.length;
+  const rec=pagsFiltradas.filter(p=>p.pago).reduce((s,p)=>s+(parseFloat(p.valor)||0),0);
+  document.getElementById('pag-resumo').innerHTML=tot>0?`
+    <div style="display:flex;gap:10px;margin-bottom:4px">
+      <div class="pres-cnt" style="flex:1;text-align:center;padding:10px;background:#fff;border-radius:var(--r);border:1px solid var(--brd);box-shadow:var(--s)">
+        <div class="num" style="font-size:18px;font-weight:700;font-family:'Lora',serif;color:var(--vd)">${pagos}</div>
+        <div style="font-size:11px;color:var(--cin);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">Pagaram</div>
+      </div>
+      <div class="pres-cnt" style="flex:1;text-align:center;padding:10px;background:#fff;border-radius:var(--r);border:1px solid var(--brd);box-shadow:var(--s)">
+        <div class="num" style="font-size:18px;font-weight:700;font-family:'Lora',serif;color:var(--vm)">${tot-pagos}</div>
+        <div style="font-size:11px;color:var(--cin);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">Pendentes</div>
+      </div>
+      <div class="pres-cnt" style="flex:1;text-align:center;padding:10px;background:#fff;border-radius:var(--r);border:1px solid var(--brd);box-shadow:var(--s)">
+        <div class="num" style="font-size:16px;font-weight:700;font-family:'Lora',serif;color:var(--am)">R$${rec.toFixed(0)}</div>
+        <div style="font-size:11px;color:var(--cin);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">Arrecadado</div>
+      </div>
+    </div>`:'';
+
+  if(!pagsFiltradas.length){
+    document.getElementById('a-lista-pag').innerHTML='<div class="empty"><div class="empty-ic">💰</div><div class="empty-tx">Selecione um módulo para ver pagamentos.</div></div>';
+    return;
+  }
+  document.getElementById('a-lista-pag').innerHTML=pagsFiltradas.map(p=>{
+    const a=D.alunos.find(x=>x.id===p.idAluno)||{nome:p.nome||'Aluno'};
+    return `<div class="pgr">
+      <div class="pgi">
+        <div class="pgn">${fmtNome(a.nome)}</div>
+        <div class="pgd">${p.livro}${p.valor?' · R$ '+p.valor:''}${p.data&&p.pago?' · '+fmtDataBR(p.data):''}</div>
+      </div>
+      <span class="bdg ${p.pago?'bv':'br'}">${p.pago?'✓ Pago':'✗ Pendente'}</span>
+    </div>`;
+  }).join('');
 }
 
-/* ════ MATERIAL ADMIN ════ */
+/* ══════════════════════════════════════════
+   MATERIAL ADMIN
+══════════════════════════════════════════ */
 function abaMat(aba,btn){
   document.querySelectorAll('#tabs-mat .tab').forEach(t=>t.classList.remove('on')); btn.classList.add('on');
   ['livros','provas','notas'].forEach(a=>document.getElementById('mat-'+a).style.display=a===aba?'block':'none');
   renderMatAdmin(aba);
 }
 function renderMatAdmin(aba){ if(aba==='livros') renderLivrosAdmin(); if(aba==='provas') renderProvasAdmin(); if(aba==='notas') renderNotasAdmin(); }
+
 function renderLivrosAdmin(){
-  const al=ativos(); let h='';
-  D.livros_curso.forEach(l=>{ const e=D.livros_ent[l.id]||{}; const q=al.filter(a=>e[a.id]===true).length;
-    h+=`<div style="margin-bottom:14px"><div style="font-size:14px;font-weight:600;color:var(--azul);margin-bottom:8px;display:flex;justify-content:space-between"><span>📖 ${l.nome}</span><span style="color:var(--cin);font-weight:400">${q}/${al.length}</span></div>
-    ${al.map(a=>{ const ev=(D.livros_ent[l.id]||{})[a.id]===true; return `<div class="tr"><div><div class="tn">${fmtNome(a.nome)}</div><div class="ts2">${ev?'✓ Entregue':'Pendente'}</div></div><label class="tg"><input type="checkbox" ${ev?'checked':''} onchange="tgLivro('${l.id}','${a.id}',this.checked)"><span class="tsl"></span></label></div>`; }).join('')}</div>`; });
-  document.getElementById('mat-livros').innerHTML=h;
-}
-function tgLivro(lid,aid,v){ if(!D.livros_ent[lid]) D.livros_ent[lid]={}; D.livros_ent[lid][aid]=v; salvar(); const a=D.alunos.find(x=>x.id===aid); toast(v?`📚 Livro entregue a ${fmtNome(a.nome)}!`:'Marcado como pendente'); renderLivrosAdmin(); }
-function renderProvasAdmin(){
-  const al=ativos(); let h='';
-  ['p1','p2','p3','p4'].forEach((p,i)=>{ const pf=D.provas[p]||{}; const q=al.filter(a=>pf[a.id]===true).length;
-    h+=`<div style="margin-bottom:14px"><div style="font-size:14px;font-weight:600;color:var(--azul);margin-bottom:8px;display:flex;justify-content:space-between"><span>📝 Prova ${i+1}</span><span style="color:var(--cin);font-weight:400">${q}/${al.length}</span></div>
-    ${al.map(a=>{ const f=pf[a.id]===true; return `<div class="tr"><div><div class="tn">${fmtNome(a.nome)}</div><div class="ts2">${f?'✓ Realizada':'Pendente'}</div></div><label class="tg"><input type="checkbox" ${f?'checked':''} onchange="tgProva('${p}','${a.id}',this.checked)"><span class="tsl"></span></label></div>`; }).join('')}</div>`; });
-  document.getElementById('mat-provas').innerHTML=h;
-}
-function tgProva(pid,aid,v){ if(!D.provas[pid]) D.provas[pid]={}; D.provas[pid][aid]=v; salvar(); const a=D.alunos.find(x=>x.id===aid); toast(v?`📝 Prova registrada para ${fmtNome(a.nome)}!`:'Marcado como pendente'); renderProvasAdmin(); }
-function renderNotasAdmin(){
-  const pid=document.getElementById('sel-prova')?.value; const btn=document.getElementById('btn-sv-notas');
-  if(!pid){ document.getElementById('lista-notas').innerHTML=''; if(btn) btn.style.display='none'; return; }
-  if(btn) btn.style.display='block';
-  const al=ativos(); const np=D.notas[pid]||{};
-  document.getElementById('lista-notas').innerHTML=al.map(a=>{ const n=np[a.id]!==undefined?np[a.id]:'';
-    return `<div class="nr"><span class="nn">${fmtNome(a.nome)}</span><div class="niw"><input class="ni" id="nt-${a.id}" type="number" min="0" max="10" step="0.1" placeholder="—" value="${n}" oninput="updChip('${a.id}',this.value)"><span class="nc ${n!==''?(n>=7?'bv':n>=5?'ba':'br'):''}" id="chip-${a.id}">${n!==''?parseFloat(n).toFixed(1):''}</span></div></div>`; }).join('');
-}
-function updChip(id,v){ const c=document.getElementById('chip-'+id); if(!c) return; const n=parseFloat(v); if(isNaN(n)||v===''){ c.textContent=''; c.className='nc'; return; } c.textContent=n.toFixed(1); c.className='nc '+(n>=7?'bv':n>=5?'ba':'br'); }
-function salvarNotas(){
-  const pid=document.getElementById('sel-prova').value; if(!pid) return;
-  if(!D.notas[pid]) D.notas[pid]={};
-  ativos().forEach(a=>{ const el=document.getElementById('nt-'+a.id); if(!el) return; const v=parseFloat(el.value); if(!isNaN(v)&&el.value!=='') D.notas[pid][a.id]=Math.min(10,Math.max(0,v)); else delete D.notas[pid][a.id]; });
-  salvar(); toast('✓ Notas salvas!');
+  const al=ativos();
+  const livros=[...new Set(D.entregas.map(e=>e.livro))];
+  if(!livros.length){ document.getElementById('mat-livros').innerHTML='<div class="empty"><div class="empty-ic">📚</div><div class="empty-tx">Sem entregas registradas ainda.</div></div>'; return; }
+  document.getElementById('mat-livros').innerHTML=livros.map(l=>{
+    const entA=D.entregas.filter(e=>e.livro===l);
+    const q=entA.filter(e=>e.entregue).length;
+    return `<div style="margin-bottom:14px">
+      <div style="font-size:14px;font-weight:600;color:var(--azul);margin-bottom:8px;display:flex;justify-content:space-between"><span>📖 ${l}</span><span style="color:var(--cin);font-weight:400">${q}/${al.length}</span></div>
+      ${al.map(a=>{ const e=entA.find(x=>x.idAluno===a.id); const ev=e&&e.entregue;
+        return `<div class="tr"><div><div class="tn">${fmtNome(a.nome)}</div><div class="ts2">${ev?'✓ Entregue':'Pendente'}</div></div><span class="bdg ${ev?'bv':'br'}">${ev?'Entregue':'Pendente'}</span></div>`; }).join('')}
+    </div>`;
+  }).join('');
 }
 
-/* ════ RELATÓRIOS ════ */
-let _abaRelAtual = 'geral';
-function turmasFiltro(){ return [...new Set(D.alunos.filter(a=>a.ativo!==false).map(a=>a.turma||'Turma Única'))].sort(); }
-function popularFiltroTurma(){
-  const turmas = turmasFiltro();
-  ['filtro-turma','filtro-turma-alunos'].forEach(id=>{
-    const sel = document.getElementById(id); if(!sel) return;
-    const val = sel.value;
-    while(sel.options.length > 1) sel.remove(1);
-    turmas.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent='🎓 '+t; sel.appendChild(o); });
-    if(val) sel.value = val;
-  });
+function renderProvasAdmin(){
+  const al=ativos();
+  const provasNomes=[...new Set(D.provas.map(p=>p.prova))];
+  if(!provasNomes.length){ document.getElementById('mat-provas').innerHTML='<div class="empty"><div class="empty-ic">📝</div><div class="empty-tx">Sem provas registradas ainda.</div></div>'; return; }
+  document.getElementById('mat-provas').innerHTML=provasNomes.map(pn=>{
+    const pA=D.provas.filter(p=>p.prova===pn);
+    const q=pA.filter(p=>p.realizada).length;
+    return `<div style="margin-bottom:14px">
+      <div style="font-size:14px;font-weight:600;color:var(--azul);margin-bottom:8px;display:flex;justify-content:space-between"><span>📝 ${pn}</span><span style="color:var(--cin);font-weight:400">${q}/${al.length}</span></div>
+      ${al.map(a=>{ const p=pA.find(x=>x.idAluno===a.id); const f=p&&p.realizada;
+        return `<div class="tr"><div><div class="tn">${fmtNome(a.nome)}</div><div class="ts2">${f?'✓ Realizada':'Pendente'}</div></div><span class="bdg ${f?'bv':'ba'}">${f?'Realizada':'Pendente'}</span></div>`; }).join('')}
+    </div>`;
+  }).join('');
 }
-function alunosFiltrados(){ const turma = document.getElementById('filtro-turma')?.value || ''; return ativos().filter(a=> !turma || (a.turma||'Turma Única')===turma); }
-function renderRelAtual(){ renderRelAdmin(_abaRelAtual); }
+
+function renderNotasAdmin(){
+  const pid=document.getElementById('sel-prova')?.value;
+  const btn=document.getElementById('btn-sv-notas');
+  if(!pid){ document.getElementById('lista-notas').innerHTML=''; if(btn) btn.style.display='none'; return; }
+  if(btn) btn.style.display='block';
+  const al=ativos();
+  document.getElementById('lista-notas').innerHTML=al.map(a=>{
+    const n=D.notas.find(x=>x.idAluno===a.id&&x.prova===pid);
+    const v=n?n.nota:'';
+    return `<div class="nr"><span class="nn">${fmtNome(a.nome)}</span><div class="niw"><input class="ni" id="nt-${a.id}" type="number" min="0" max="10" step="0.1" placeholder="—" value="${v}" oninput="updChip('${a.id}',this.value)"><span class="nc ${v!==''?(v>=7?'bv':v>=5?'ba':'br'):''}" id="chip-${a.id}">${v!==''?parseFloat(v).toFixed(1):''}</span></div></div>`;
+  }).join('');
+}
+function updChip(id,v){ const c=document.getElementById('chip-'+id); if(!c) return; const n=parseFloat(v); if(isNaN(n)||v===''){ c.textContent=''; c.className='nc'; return; } c.textContent=n.toFixed(1); c.className='nc '+(n>=7?'bv':n>=5?'ba':'br'); }
+async function salvarNotas(){
+  const pid=document.getElementById('sel-prova').value; if(!pid) return;
+  const btn=document.getElementById('btn-sv-notas'); btn.textContent='⏳ Salvando...'; btn.disabled=true;
+  try{
+    for(const a of ativos()){
+      const el=document.getElementById('nt-'+a.id); if(!el||el.value==='') continue;
+      const v=Math.min(10,Math.max(0,parseFloat(el.value)));
+      await escreverLinha('Notas',[a.id,fmtNome(a.nome),pid,v]);
+      const idx=D.notas.findIndex(x=>x.idAluno===a.id&&x.prova===pid);
+      if(idx>=0) D.notas[idx].nota=v; else D.notas.push({idAluno:a.id,prova:pid,nota:v});
+    }
+    localStorage.setItem('ibicamp_cache',JSON.stringify({ts:Date.now(),data:D}));
+    toast('✓ Notas salvas no Sheets!');
+  }catch(e){ toast('❌ Erro ao salvar notas.'); }
+  btn.textContent='✓ Salvar Notas'; btn.disabled=false;
+}
+
+/* ══════════════════════════════════════════
+   RELATÓRIOS
+══════════════════════════════════════════ */
 function abaRel(aba,btn){
-  _abaRelAtual = aba;
+  _abaRelAtual=aba;
   document.querySelectorAll('#a-relatorios .tab').forEach(t=>t.classList.remove('on')); btn.classList.add('on');
   ['geral','presenca','por-aula','financeiro','avaliacao'].forEach(a=>document.getElementById('rel-'+a).style.display=a===aba?'block':'none');
   renderRelAdmin(aba);
 }
 function renderRelAdmin(aba){
-  popularFiltroTurma();
-  const h=hj(); const cm=chM(h);
-  const al=alunosFiltrados(); const tot=al.length;
-  const turmaLabel = document.getElementById('filtro-turma')?.value ? ` — ${document.getElementById('filtro-turma').value}` : '';
+  const al=ativos(); const tot=al.length;
   if(aba==='geral'){
-    const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
-    let tp=0; pk.forEach(k=>al.forEach(a=>{ if(D.presencas[k][a.id]==='P') tp++; }));
-    const mp=pk.length*tot; const pp=mp>0?Math.round(tp/mp*100):0;
-    const pagM=D.pagamentos[cm]||{}; const pagos=al.filter(a=>pagM[a.id]===true).length;
-    const rec=al.reduce((s,a)=>s+(pagM[a.id]===true?(parseFloat(a.valor)||0):0),0);
+    const tp=D.presencas.filter(p=>p.presente).length;
+    const tr=D.presencas.length;
+    const pp=tr>0?Math.round(tp/tr*100):0;
+    const pagos=new Set(D.pagamentos.filter(p=>p.pago).map(p=>p.idAluno)).size;
+    const rec=D.pagamentos.filter(p=>p.pago).reduce((s,p)=>s+(parseFloat(p.valor)||0),0);
     let criticos=[];
-    al.forEach(a=>{ let f=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='F') f++; }); if(f>=3) criticos.push(`<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--brd)">⚠️ <strong>${fmtNome(a.nome)}</strong> — ${f} faltas</div>`); });
-    const pagPend=al.filter(a=>(D.pagamentos[cm]||{})[a.id]!==true);
-    if(pagPend.length) criticos.push(`<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--brd)">💰 ${pagPend.length} aluno${pagPend.length>1?'s':''} com pagamento pendente: ${pagPend.map(a=>fmtNome(a.nome).split(' ')[0]).join(', ')}</div>`);
-    const semNota=['p1','p2','p3','p4'].filter(p=>Object.keys(D.notas[p]||{}).length===0);
-    if(semNota.length) criticos.push(`<div style="font-size:13px;padding:6px 0">📝 Prova${semNota.length>1?'s':''} sem notas lançadas</div>`);
+    al.forEach(a=>{ const f=D.presencas.filter(p=>p.idAluno===a.id&&!p.presente).length; if(f>=3) criticos.push(`<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--brd)">⚠️ <strong>${fmtNome(a.nome)}</strong> — ${f} faltas</div>`); });
+    const semPag=al.filter(a=>!D.pagamentos.find(p=>p.idAluno===a.id&&p.pago));
+    if(semPag.length) criticos.push(`<div style="font-size:13px;padding:6px 0">💰 ${semPag.length} aluno${semPag.length>1?'s':''} sem pagamento: ${semPag.map(a=>fmtNome(a.nome).split(' ')[0]).join(', ')}</div>`);
     document.getElementById('rel-geral').innerHTML=
-      `<div class="card"><div class="card-t">📈 Resumo — ${M[h.getMonth()]} ${h.getFullYear()}${turmaLabel}</div>
-        <div class="sl2"><span class="slb">Alunos</span><span class="slv">${tot}</span></div>
-        <div class="sl2"><span class="slb">Aulas registradas</span><span class="slv">${pk.length}</span></div>
-        <div class="sl2"><span class="slb">Frequência média</span><span class="slv">${pp}%</span></div>
-        <div class="sl2"><span class="slb">Pagamentos em dia</span><span class="slv">${pagos}/${tot}</span></div>
-        <div class="sl2"><span class="slb">Receita do mês</span><span class="slv">R$ ${rec.toFixed(2)}</span></div>
+      `<div class="card"><div class="card-t">📈 Resumo geral</div>
+        <div class="sl2"><span class="slb">Total de alunos</span><span class="slv">${tot}</span></div>
+        <div class="sl2"><span class="slb">Aulas registradas</span><span class="slv">${D.aulas.length}</span></div>
+        <div class="sl2"><span class="slb">Registros de presença</span><span class="slv">${D.presencas.length}</span></div>
+        <div class="sl2"><span class="slb">Frequência geral</span><span class="slv">${pp}%</span></div>
+        <div class="sl2"><span class="slb">Alunos com pagamento</span><span class="slv">${pagos}/${tot}</span></div>
+        <div class="sl2"><span class="slb">Receita total registrada</span><span class="slv">R$ ${rec.toFixed(2)}</span></div>
       </div>
       <div class="card"><div class="card-t">📊 Indicadores</div>
         <div class="bw2"><div class="bt"><span>Frequência</span><span>${pp}%</span></div><div class="ba2"><div class="bf vd" style="width:${pp}%"></div></div></div>
         <div class="bw2"><div class="bt"><span>Pagamentos</span><span>${tot>0?Math.round(pagos/tot*100):0}%</span></div><div class="ba2"><div class="bf do" style="width:${tot>0?Math.round(pagos/tot*100):0}%"></div></div></div>
-      </div>`
-      +(criticos.length?`<div class="card" style="border-color:var(--vm-c)"><div class="card-t" style="color:var(--vm)">⚠️ Alertas (${criticos.length})</div>${criticos.join('')}</div>`:'');
+      </div>`+(criticos.length?`<div class="card" style="border-color:var(--vm-c)"><div class="card-t" style="color:var(--vm)">⚠️ Alertas (${criticos.length})</div>${criticos.join('')}</div>`:'');
   }
   if(aba==='presenca'){
-    const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
     const linhas=al.map(a=>{
-      let p=0,f=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') p++; if(D.presencas[k][a.id]==='F') f++; });
-      const pc=pk.length>0?Math.round(p/pk.length*100):0;
-      return `<div class="sl2" style="cursor:pointer" onclick="verPerfilAdmin('${a.id}')"><div><div style="font-weight:500;font-size:14px">${fmtNome(a.nome)}</div><div style="font-size:12px;color:var(--cin)">${p} pres · ${f} faltas · ${pk.length-p-f} ausentes</div></div><span class="bdg ${pc>=75?'bv':pc>=50?'ba':'br'}">${pc}%</span></div>`;
+      const pA=D.presencas.filter(p=>p.idAluno===a.id);
+      const p=pA.filter(x=>x.presente).length; const f=pA.filter(x=>!x.presente).length;
+      const pc=pA.length>0?Math.round(p/pA.length*100):0;
+      return `<div class="sl2" style="cursor:pointer" onclick="verPerfilAdmin('${a.id}')"><div><div style="font-weight:500;font-size:14px">${fmtNome(a.nome)}</div><div style="font-size:12px;color:var(--cin)">${p} pres · ${f} faltas · ${pA.length} registros</div></div><span class="bdg ${pc>=75?'bv':pc>=50?'ba':'br'}">${pc}%</span></div>`;
     }).join('');
-    document.getElementById('rel-presenca').innerHTML=`<div class="card"><div class="card-t">👥 Frequência por aluno — ${M[h.getMonth()]}${turmaLabel}</div>${linhas||'<p style="color:var(--cin);font-size:14px">Sem aulas registradas.</p>'}</div>`;
+    document.getElementById('rel-presenca').innerHTML=`<div class="card"><div class="card-t">👥 Frequência por aluno</div>${linhas||'<p style="color:var(--cin);font-size:14px">Sem registros.</p>'}</div>`;
   }
   if(aba==='por-aula'){
-    const log=D.aulas_log||{};
-    const keys=Object.keys(D.presencas).sort().reverse();
-    if(!keys.length){ document.getElementById('rel-por-aula').innerHTML='<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Nenhuma aula registrada ainda.</div></div>'; return; }
-    const linhas=keys.map(k=>{
-      const d=new Date(k+'T12:00:00'); const entry=log[k]||{};
-      const presD=D.presencas[k]||{};
-      let presentes=0,faltas=0;
-      al.forEach(a=>{ if(presD[a.id]==='P') presentes++; if(presD[a.id]==='F') faltas++; });
-      const perc=tot>0?Math.round(presentes/tot*100):0;
+    if(!D.aulas.length){ document.getElementById('rel-por-aula').innerHTML='<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Nenhuma aula registrada.</div></div>'; return; }
+    const linhas=D.aulas.slice().reverse().map(aula=>{
+      const pA=D.presencas.filter(p=>p.idAula===aula.id);
+      const pr=pA.filter(p=>p.presente).length; const ft=pA.filter(p=>!p.presente).length;
+      const perc=tot>0?Math.round(pr/tot*100):0;
       return `<div class="card" style="padding:14px;margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-          <div style="flex:1">
-            <div style="font-size:12px;font-weight:600;color:var(--azul);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">${entry.modulo||'—'}</div>
-            <div style="font-size:15px;font-weight:500">${entry.aula||'Aula registrada'}</div>
-            <div style="font-size:12px;color:var(--cin);margin-top:3px">${DS[d.getDay()]}, ${fmtD(d)}</div>
-          </div>
-          <span class="bdg ${perc>=75?'bv':perc>=50?'ba':'br'}">${presentes}/${tot}</span>
+          <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--azul);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">${aula.modulo}</div><div style="font-size:15px;font-weight:500">${aula.tema}</div><div style="font-size:12px;color:var(--cin);margin-top:3px">${fmtDataBR(aula.data)}</div></div>
+          <span class="bdg ${perc>=75?'bv':perc>=50?'ba':'br'}">${pr}/${tot}</span>
         </div>
         <div style="margin-top:10px"><div class="bt"><span>Presença</span><span>${perc}%</span></div><div class="ba2"><div class="bf vd" style="width:${perc}%"></div></div></div>
-        <div style="display:flex;gap:16px;margin-top:8px;font-size:13px"><span style="color:var(--vd)">✓ ${presentes} presentes</span><span style="color:var(--vm)">✗ ${faltas} faltas</span><span style="color:var(--cin)">${tot-presentes-faltas} sem registro</span></div>
+        <div style="display:flex;gap:16px;margin-top:8px;font-size:13px"><span style="color:var(--vd)">✓ ${pr} presentes</span><span style="color:var(--vm)">✗ ${ft} faltas</span><span style="color:var(--cin)">${tot-pr-ft} sem registro</span></div>
       </div>`;
     }).join('');
-    document.getElementById('rel-por-aula').innerHTML=`<div style="font-size:13px;color:var(--cin);margin-bottom:12px">${keys.length} aula${keys.length>1?'s':''} registrada${keys.length>1?'s':''}</div>${linhas}`;
+    document.getElementById('rel-por-aula').innerHTML=`<div style="font-size:13px;color:var(--cin);margin-bottom:12px">${D.aulas.length} aulas registradas</div>${linhas}`;
   }
   if(aba==='financeiro'){
-    const keys=[...new Set([...Object.keys(D.pagamentos),cm])].sort().reverse().slice(0,12);
-    let h2=''; keys.forEach(k=>{
-      const [ano,mes]=k.split('-'); const pM=D.pagamentos[k]||{};
-      const p2=al.filter(a=>pM[a.id]===true).length;
-      const r=al.reduce((s,a)=>s+(pM[a.id]===true?(parseFloat(a.valor)||0):0),0);
-      const pend=al.filter(a=>pM[a.id]!==true);
-      h2+=`<div style="background:#fff;border-radius:var(--r);padding:14px;margin-bottom:9px;border:1px solid var(--brd);box-shadow:var(--s)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div><div style="font-weight:600;font-size:15px">${M[parseInt(mes)-1]} ${ano}</div><div style="font-size:12px;color:var(--cin)">${p2} de ${tot} pagaram</div></div>
-          <div style="font-weight:700;color:var(--vd);font-size:16px">R$ ${r.toFixed(2)}</div>
-        </div>
-        <div class="ba2" style="margin-bottom:8px"><div class="bf do" style="width:${tot>0?Math.round(p2/tot*100):0}%"></div></div>
-        ${pend.length?`<div style="font-size:12px;color:var(--vm)">Pendente: ${pend.map(a=>fmtNome(a.nome).split(' ')[0]).join(', ')}</div>`:'<div style="font-size:12px;color:var(--vd)">✓ Todos pagaram</div>'}
+    const livros=[...new Set(D.pagamentos.map(p=>p.livro))];
+    const linhas=livros.map(l=>{
+      const pL=D.pagamentos.filter(p=>p.livro===l);
+      const pagos=pL.filter(p=>p.pago).length;
+      const rec=pL.filter(p=>p.pago).reduce((s,p)=>s+(parseFloat(p.valor)||0),0);
+      const pend=pL.filter(p=>!p.pago);
+      return `<div style="background:#fff;border-radius:var(--r);padding:14px;margin-bottom:9px;border:1px solid var(--brd);box-shadow:var(--s)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-weight:600;font-size:15px">${l}</div><div style="font-size:12px;color:var(--cin)">${pagos} de ${pL.length} pagaram</div></div><div style="font-weight:700;color:var(--vd);font-size:16px">R$ ${rec.toFixed(2)}</div></div>
+        <div class="ba2" style="margin-bottom:8px"><div class="bf do" style="width:${pL.length>0?Math.round(pagos/pL.length*100):0}%"></div></div>
+        ${pend.length?`<div style="font-size:12px;color:var(--vm)">Pendente: ${pend.map(p=>fmtNome(p.nome||p.idAluno)).join(', ')}</div>`:'<div style="font-size:12px;color:var(--vd)">✓ Todos pagaram</div>'}
       </div>`;
-    });
-    document.getElementById('rel-financeiro').innerHTML=h2||'<p style="color:var(--cin)">Sem registros.</p>';
+    }).join('');
+    document.getElementById('rel-financeiro').innerHTML=linhas||'<p style="color:var(--cin)">Sem registros de pagamento.</p>';
   }
   if(aba==='avaliacao'){
-    let h2=['p1','p2','p3','p4'].map((p,i)=>{
-      const np=D.notas[p]||{};
-      const ns=al.map(a=>np[a.id]).filter(n=>n!==undefined);
+    const provas=[...new Set(D.notas.map(n=>n.prova))];
+    const h1=provas.map(p=>{
+      const ns=D.notas.filter(n=>n.prova===p).map(n=>n.nota);
       const med=ns.length>0?(ns.reduce((a,b)=>a+b,0)/ns.length).toFixed(1):'—';
       const apv=ns.filter(n=>n>=7).length; const rep=ns.filter(n=>n<5).length;
-      return `<div class="sl2"><div><div style="font-weight:500;font-size:14px">Prova ${i+1}</div><div style="font-size:12px;color:var(--cin)">${ns.length} lançadas · ✓${apv} apr · ✗${rep} rep</div></div><span class="slv" style="font-size:18px;font-family:'Lora',serif">${med}</span></div>`;
+      return `<div class="sl2"><div><div style="font-weight:500;font-size:14px">${p}</div><div style="font-size:12px;color:var(--cin)">${ns.length} notas · ✓${apv} apr · ✗${rep} rep</div></div><span class="slv" style="font-size:18px;font-family:'Lora',serif">${med}</span></div>`;
     }).join('');
-    let h3=al.map(a=>{
-      const na=['p1','p2','p3','p4'].map(p=>(D.notas[p]||{})[a.id]).filter(n=>n!==undefined);
+    const h2=al.map(a=>{
+      const na=D.notas.filter(n=>n.idAluno===a.id).map(n=>n.nota);
       const med=na.length>0?(na.reduce((x,y)=>x+y,0)/na.length).toFixed(1):'—';
-      const notas=['p1','p2','p3','p4'].map((p,i)=>{ const n=(D.notas[p]||{})[a.id]; return n!==undefined?`<span style="font-size:11px;background:${n>=7?'var(--vd-c)':n>=5?'var(--am-c)':'var(--vm-c)'};color:${n>=7?'var(--vd)':n>=5?'var(--am)':'var(--vm)'};padding:2px 6px;border-radius:4px">P${i+1}: ${n.toFixed(1)}</span>`:''; }).filter(Boolean).join(' ');
-      return `<div class="sl2" style="cursor:pointer" onclick="verPerfilAdmin('${a.id}')"><div><div style="font-weight:500;font-size:14px">${fmtNome(a.nome)}</div><div style="margin-top:3px">${notas||'<span style="font-size:12px;color:var(--cin)">Sem notas</span>'}</div></div><span class="bdg ${med!=='—'?(parseFloat(med)>=7?'bv':parseFloat(med)>=5?'ba':'br'):''}" style="font-size:15px">${med}</span></div>`;
+      const tags=D.notas.filter(n=>n.idAluno===a.id).map(n=>`<span style="font-size:11px;background:${n.nota>=7?'var(--vd-c)':n.nota>=5?'var(--am-c)':'var(--vm-c)'};color:${n.nota>=7?'var(--vd)':n.nota>=5?'var(--am)':'var(--vm)'};padding:2px 6px;border-radius:4px">${n.prova}: ${n.nota.toFixed(1)}</span>`).join(' ');
+      return `<div class="sl2" style="cursor:pointer" onclick="verPerfilAdmin('${a.id}')"><div><div style="font-weight:500;font-size:14px">${fmtNome(a.nome)}</div><div style="margin-top:3px">${tags||'<span style="font-size:12px;color:var(--cin)">Sem notas</span>'}</div></div><span class="bdg ${med!=='—'?(parseFloat(med)>=7?'bv':parseFloat(med)>=5?'ba':'br'):''}" style="font-size:15px">${med}</span></div>`;
     }).join('');
-    document.getElementById('rel-avaliacao').innerHTML=`<div class="card"><div class="card-t">📝 Médias por prova${turmaLabel}</div>${h2}</div><div class="card"><div class="card-t">👤 Desempenho por aluno</div>${h3||'<p style="color:var(--cin);font-size:14px">Sem dados.</p>'}</div>`;
+    document.getElementById('rel-avaliacao').innerHTML=`<div class="card"><div class="card-t">📝 Médias por prova</div>${h1||'<p style="color:var(--cin);font-size:14px">Sem dados.</p>'}</div><div class="card"><div class="card-t">👤 Desempenho por aluno</div>${h2}</div>`;
   }
 }
 
-/* ════ EXPORTAR PDF ════ */
-function exportarPDF(){
-  popularFiltroTurma();
-  const h=hj(); const cm=chM(h);
-  const al=alunosFiltrados(); const tot=al.length;
-  const turmaLabel = document.getElementById('filtro-turma')?.value || 'Todas as turmas';
-  const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
-  const pagM=D.pagamentos[cm]||{};
-  const log=D.aulas_log||{};
-  let linhasAlunos=al.map(a=>{
-    let p=0,f=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') p++; if(D.presencas[k][a.id]==='F') f++; });
-    const perc=pk.length>0?Math.round(p/pk.length*100):0;
-    const pago=(pagM[a.id]===true)?'<span style="color:#2d7a4a;font-weight:600">✓ Em dia</span>':'<span style="color:#b83232;font-weight:600">✗ Pendente</span>';
-    const notas=['p1','p2','p3','p4'].map((pi,i)=>{ const n=(D.notas[pi]||{})[a.id]; return `<span style="font-size:11px;background:${n!==undefined?(n>=7?'#e8f5ee':n>=5?'#fff8e6':'#fdeaea'):'#f5f4f0'};padding:2px 5px;border-radius:3px;margin-right:3px">P${i+1}: ${n!==undefined?n.toFixed(1):'—'}</span>`; }).join('');
-    return `<tr><td style="padding:9px 8px;border-bottom:1px solid #e0ddd5;font-size:13px">${fmtNome(a.nome)}</td><td style="padding:9px 8px;border-bottom:1px solid #e0ddd5;text-align:center;font-size:13px">${p}/${pk.length}</td><td style="padding:9px 8px;border-bottom:1px solid #e0ddd5;text-align:center;font-size:13px;color:${perc>=75?'#2d7a4a':perc>=50?'#a06c00':'#b83232'};font-weight:600">${perc}%</td><td style="padding:9px 8px;border-bottom:1px solid #e0ddd5;text-align:center;font-size:13px">${pago}</td><td style="padding:9px 8px;border-bottom:1px solid #e0ddd5;font-size:12px">${notas}</td></tr>`;
-  }).join('');
-  let linhasAulas=Object.keys(D.presencas).sort().reverse().slice(0,20).map(k=>{
-    const d=new Date(k+'T12:00:00'); const entry=log[k]||{};
-    const presD=D.presencas[k]||{};
-    let pr=0,ft=0; al.forEach(a=>{ if(presD[a.id]==='P') pr++; if(presD[a.id]==='F') ft++; });
-    return `<tr><td style="padding:7px 8px;border-bottom:1px solid #e0ddd5;font-size:13px">${fmtD(d)}</td><td style="padding:7px 8px;border-bottom:1px solid #e0ddd5;font-size:13px">${entry.modulo||'—'}</td><td style="padding:7px 8px;border-bottom:1px solid #e0ddd5;font-size:13px">${entry.aula||'Aula'}</td><td style="padding:7px 8px;border-bottom:1px solid #e0ddd5;text-align:center;font-size:13px;color:#2d7a4a;font-weight:600">${pr}</td><td style="padding:7px 8px;border-bottom:1px solid #e0ddd5;text-align:center;font-size:13px;color:#b83232;font-weight:600">${ft}</td></tr>`;
-  }).join('');
-  const pagos=al.filter(a=>(pagM[a.id]===true)).length;
-  const rec=al.reduce((s,a)=>s+(pagM[a.id]===true?(parseFloat(a.valor)||0):0),0);
-  const pk2=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
-  let tp2=0; pk2.forEach(k=>al.forEach(a=>{ if(D.presencas[k][a.id]==='P') tp2++; }));
-  const mp2=pk2.length*tot; const pp2=mp2>0?Math.round(tp2/mp2*100):0;
-  const htmlPDF=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório IBICAMP — ${M[h.getMonth()]} ${h.getFullYear()}</title><style>body{font-family:Arial,sans-serif;color:#1e1e1e;margin:0;padding:20px}h1{font-size:22px;color:#1a3a5c;margin:0 0 4px}h2{font-size:16px;color:#1a3a5c;margin:20px 0 10px;border-bottom:2px solid #1a3a5c;padding-bottom:4px}.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:3px solid #c9a84c}.logo-area{display:flex;align-items:center;gap:12px}.logo-circle{width:50px;height:50px;border-radius:50%;background:#1a3a5c;display:flex;align-items:center;justify-content:center;color:#c9a84c;font-weight:700;font-size:14px}.meta{text-align:right;font-size:12px;color:#6b6b6b}table{width:100%;border-collapse:collapse;margin-bottom:20px}th{background:#1a3a5c;color:#fff;padding:9px 8px;font-size:12px;text-align:left}.sumario{display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap}.sm{background:#f5f4f0;border-radius:8px;padding:12px 16px;flex:1;min-width:120px;text-align:center;border-left:4px solid #1a3a5c}.sm.vd{border-color:#2d7a4a}.sm.vm{border-color:#b83232}.sm.do{border-color:#c9a84c}.smn{font-size:24px;font-weight:700;color:#1a3a5c}.sm.vd .smn{color:#2d7a4a}.sm.vm .smn{color:#b83232}.sm.do .smn{color:#a06c00}.sml{font-size:11px;color:#6b6b6b;margin-top:2px}@media print{body{padding:10px}.pagebreak{page-break-before:always}}</style></head><body><div class="hdr"><div class="logo-area"><div class="logo-circle">IBI</div><div><h1>IBICAMP — Teologia</h1><div style="font-size:13px;color:#6b6b6b">${turmaLabel}</div></div></div><div class="meta"><strong>Relatório mensal</strong><br>${M[h.getMonth()]} ${h.getFullYear()}<br>Gerado em ${fmtD(h)}</div></div><div class="sumario"><div class="sm"><div class="smn">${tot}</div><div class="sml">Alunos</div></div><div class="sm vd"><div class="smn">${pp2}%</div><div class="sml">Frequência</div></div><div class="sm do"><div class="smn">${pagos}/${tot}</div><div class="sml">Pagamentos OK</div></div><div class="sm vm"><div class="smn">R$ ${rec.toFixed(2)}</div><div class="sml">Receita</div></div></div><h2>Alunos — Frequência, Pagamentos e Notas</h2><table><thead><tr><th>Nome</th><th style="text-align:center">Presenças</th><th style="text-align:center">Freq.</th><th style="text-align:center">Pagamento</th><th>Notas</th></tr></thead><tbody>${linhasAlunos||'<tr><td colspan="5" style="padding:12px;color:#6b6b6b">Sem dados.</td></tr>'}</tbody></table><div class="pagebreak"></div><h2>Histórico de Aulas</h2><table><thead><tr><th>Data</th><th>Módulo</th><th>Aula</th><th style="text-align:center">Presentes</th><th style="text-align:center">Faltas</th></tr></thead><tbody>${linhasAulas||'<tr><td colspan="5" style="padding:12px;color:#6b6b6b">Sem aulas registradas.</td></tr>'}</tbody></table><div style="margin-top:30px;padding-top:12px;border-top:1px solid #e0ddd5;font-size:11px;color:#6b6b6b;text-align:center">Relatório gerado automaticamente pelo Sistema Teologia IBICAMP · ${fmtD(h)}</div></body></html>`;
-  const w=window.open('','_blank','width=900,height=700');
-  w.document.write(htmlPDF); w.document.close();
-  setTimeout(()=>{ w.print(); }, 800);
-  toast('📄 Abrindo PDF para impressão...');
-}
-
-/* ════ EXPORTAR CSV ════ */
+/* ══════════════════════════════════════════
+   EXPORTAR
+══════════════════════════════════════════ */
 function exportarCSV(){
-  popularFiltroTurma();
-  const h=hj(); const cm=chM(h);
-  const al=alunosFiltrados();
-  const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
-  const pagM=D.pagamentos[cm]||{};
-  let csv='Nome,Turma,Telefone,Presencas,Faltas,Freq%,Pagamento,P1,P2,P3,P4,Media\n';
+  const al=ativos();
+  let csv='Nome,Telefone,Presencas,Faltas,Freq%,Pagamentos,Notas\n';
   al.forEach(a=>{
-    let p=0,f=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') p++; if(D.presencas[k][a.id]==='F') f++; });
-    const perc=pk.length>0?Math.round(p/pk.length*100):0;
-    const pago=(pagM[a.id]===true)?'Pago':'Pendente';
-    const notas=['p1','p2','p3','p4'].map(pi=>{ const n=(D.notas[pi]||{})[a.id]; return n!==undefined?n.toFixed(1):''; });
-    const ns=['p1','p2','p3','p4'].map(pi=>(D.notas[pi]||{})[a.id]).filter(n=>n!==undefined);
-    const med=ns.length>0?(ns.reduce((x,y)=>x+y,0)/ns.length).toFixed(1):'';
-    csv+=`"${fmtNome(a.nome)}","${a.turma||'Turma Única'}","${a.tel||''}",${p},${f},${perc}%,"${pago}",${notas.join(',')},${med}\n`;
+    const pA=D.presencas.filter(p=>p.idAluno===a.id);
+    const p=pA.filter(x=>x.presente).length; const f=pA.filter(x=>!x.presente).length;
+    const pc=pA.length>0?Math.round(p/pA.length*100):0;
+    const temPag=D.pagamentos.filter(x=>x.idAluno===a.id&&x.pago).map(x=>x.livro).join('; ');
+    const notasStr=D.notas.filter(x=>x.idAluno===a.id).map(x=>x.prova+': '+x.nota.toFixed(1)).join('; ');
+    csv+=`"${fmtNome(a.nome)}","${a.tel||''}",${p},${f},${pc}%,"${temPag}","${notasStr}"\n`;
   });
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob); const link=document.createElement('a');
-  link.href=url; link.download=`ibicamp-${cm}.csv`; link.click();
-  toast('📊 CSV exportado! Abre no Excel.');
+  link.href=url; link.download='ibicamp-relatorio.csv'; link.click();
+  toast('📊 CSV exportado!');
 }
 
-/* ════ CONFIG ════ */
-function initConfig(){
-  const c=localStorage.getItem('fb_cfg');
-  if(c){ try{ const{k,p,u}=JSON.parse(c); document.getElementById('fb-key').value=k||''; document.getElementById('fb-pid').value=p||''; document.getElementById('fb-url').value=u||''; document.getElementById('fb-st').textContent='Credenciais salvas.'; }catch{} }
+function exportarPDF(){
+  const al=ativos();
+  const linhas=al.map(a=>{
+    const pA=D.presencas.filter(p=>p.idAluno===a.id);
+    const p=pA.filter(x=>x.presente).length; const f=pA.filter(x=>!x.presente).length;
+    const pc=pA.length>0?Math.round(p/pA.length*100):0;
+    const temPag=D.pagamentos.find(x=>x.idAluno===a.id&&x.pago);
+    const na=D.notas.filter(x=>x.idAluno===a.id); const med=na.length>0?(na.reduce((s,n)=>s+n.nota,0)/na.length).toFixed(1):'—';
+    return `<tr><td style="padding:8px;border-bottom:1px solid #e0ddd5;font-size:13px">${fmtNome(a.nome)}</td><td style="padding:8px;border-bottom:1px solid #e0ddd5;text-align:center;font-size:13px">${p}/${pA.length}</td><td style="padding:8px;border-bottom:1px solid #e0ddd5;text-align:center;font-size:13px;color:${pc>=75?'#2d7a4a':pc>=50?'#a06c00':'#b83232'};font-weight:600">${pc}%</td><td style="padding:8px;border-bottom:1px solid #e0ddd5;text-align:center;font-size:13px">${temPag?'<span style="color:#2d7a4a;font-weight:600">✓ Em dia</span>':'<span style="color:#b83232;font-weight:600">✗ Sem pag.</span>'}</td><td style="padding:8px;border-bottom:1px solid #e0ddd5;text-align:center;font-size:13px">${med}</td></tr>`;
+  }).join('');
+  const h=hj();
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório IBICAMP</title><style>body{font-family:Arial,sans-serif;color:#1e1e1e;padding:20px}h1{font-size:22px;color:#1a3a5c;margin-bottom:4px}h2{font-size:16px;color:#1a3a5c;margin:20px 0 10px;border-bottom:2px solid #1a3a5c;padding-bottom:4px}.hdr{display:flex;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:3px solid #c9a84c}table{width:100%;border-collapse:collapse}th{background:#1a3a5c;color:#fff;padding:9px 8px;font-size:12px;text-align:left}@media print{.pagebreak{page-break-before:always}}</style></head><body><div class="hdr"><div><h1>IBICAMP — Teologia</h1><div style="font-size:13px;color:#6b6b6b">Relatório geral</div></div><div style="text-align:right;font-size:12px;color:#6b6b6b">Gerado em ${h.getDate()}/${h.getMonth()+1}/${h.getFullYear()}</div></div><h2>Alunos — Frequência, Pagamentos e Notas</h2><table><thead><tr><th>Nome</th><th style="text-align:center">Presenças</th><th style="text-align:center">Freq.</th><th style="text-align:center">Pagamento</th><th style="text-align:center">Média</th></tr></thead><tbody>${linhas}</tbody></table></body></html>`;
+  const w=window.open('','_blank','width=900,height=700'); w.document.write(html); w.document.close(); setTimeout(()=>w.print(),800);
+  toast('📄 Abrindo PDF...');
 }
-function salvarFB(){
-  const k=document.getElementById('fb-key').value.trim(); const p=document.getElementById('fb-pid').value.trim(); const u=document.getElementById('fb-url').value.trim();
-  if(!k||!p||!u){ toast('⚠ Preencha todos os campos'); return; }
-  localStorage.setItem('fb_cfg',JSON.stringify({k,p,u})); toast('✓ Credenciais salvas!');
-}
-function apagarTudo(){ if(!confirm('APAGAR TODOS OS DADOS? Irreversível!')) return; D=ddp(); salvar(); location.reload(); }
 
-/* ════════════════════════════════════════════
+/* ══════════════════════════════════════════
+   CRUD ALUNOS
+══════════════════════════════════════════ */
+function abrirModAluno(id){
+  ['a-nome','a-tel','a-end','a-email','a-senha'].forEach(f=>document.getElementById(f).value='');
+  document.getElementById('a-ativo').value='Sim';
+  document.getElementById('aid').value='';
+  document.getElementById('mod-aluno-tit').textContent='Novo Aluno';
+  document.getElementById('btn-del').style.display='none';
+  if(id){
+    const a=D.alunos.find(x=>x.id===id);
+    if(a){ document.getElementById('a-nome').value=a.nome; document.getElementById('a-tel').value=a.tel||''; document.getElementById('a-end').value=a.end||''; document.getElementById('a-email').value=a.email||''; document.getElementById('a-senha').value=a.senha||''; document.getElementById('a-ativo').value=a.ativo?'Sim':'Nao'; document.getElementById('aid').value=a.id; document.getElementById('mod-aluno-tit').textContent='Editar Aluno'; document.getElementById('btn-del').style.display='block'; }
+  }
+  abrirMod('mod-aluno');
+}
+
+async function salvarAluno(){
+  const nome=document.getElementById('a-nome').value.trim().toUpperCase();
+  if(!nome){ toast('⚠ Digite o nome'); return; }
+  const eid=document.getElementById('aid').value;
+  const newId=eid||String(Date.now());
+  const novoAluno={
+    id:newId, nome,
+    tel:document.getElementById('a-tel').value.replace(/\D/g,''),
+    end:document.getElementById('a-end').value.trim(),
+    email:document.getElementById('a-email').value.trim(),
+    senha:document.getElementById('a-senha').value||'1234',
+    ativo:document.getElementById('a-ativo').value==='Sim'
+  };
+  try{
+    await escreverLinha('Alunos',[newId,nome,novoAluno.tel,novoAluno.end,novoAluno.email,novoAluno.senha,novoAluno.ativo?'Sim':'Nao']);
+    if(eid){ const i=D.alunos.findIndex(x=>x.id===eid); if(i>=0) D.alunos[i]={...D.alunos[i],...novoAluno}; }
+    else D.alunos.push(novoAluno);
+    localStorage.setItem('ibicamp_cache',JSON.stringify({ts:Date.now(),data:D}));
+    fecharMod('mod-aluno'); renderAlunosAdmin(); toast('✓ Aluno '+(eid?'atualizado':'cadastrado')+' no Sheets!');
+  }catch(e){ toast('❌ Erro ao salvar no Sheets.'); }
+}
+
+async function delAluno(){
+  const id=document.getElementById('aid').value;
+  if(!id||!confirm('Excluir este aluno?')) return;
+  D.alunos=D.alunos.filter(a=>a.id!==id);
+  localStorage.setItem('ibicamp_cache',JSON.stringify({ts:Date.now(),data:D}));
+  fecharMod('mod-aluno'); renderAlunosAdmin(); toast('Aluno removido localmente. Remova também da planilha.');
+}
+
+/* ══════════════════════════════════════════
    ÁREA DO ALUNO — SOMENTE LEITURA
-════════════════════════════════════════════ */
+══════════════════════════════════════════ */
 function renderAlunoCadastro(){
   const a=usuAtual;
   document.getElementById('al-perfil-banner').innerHTML=`
     <div class="meu-perfil-banner">
       <div class="mpb-av">${ini(a.nome)}</div>
       <div class="mpb-nome">${fmtNome(a.nome)}</div>
-      <div class="mpb-sub">${a.turma||'Turma Única'}</div>
+      <div class="mpb-sub">Teologia IBICAMP</div>
     </div>`;
-  const h=hj(); const cm=chM(h);
-  const pagA=(D.pagamentos[cm]||{})[a.id]===true;
-  const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
-  let tp=0,tf=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') tp++; if(D.presencas[k][a.id]==='F') tf++; });
+  const presA=D.presencas.filter(p=>p.idAluno===a.id);
+  const tp=presA.filter(p=>p.presente).length;
+  const tf=presA.filter(p=>!p.presente).length;
+  const temPag=D.pagamentos.find(p=>p.idAluno===a.id&&p.pago);
   document.getElementById('al-dados').innerHTML=`
     <div class="sl2"><span class="slb">Telefone</span><span style="font-size:14px">${a.tel?fmtTel(a.tel):'Não cadastrado'}</span></div>
     <div class="sl2"><span class="slb">E-mail</span><span style="font-size:14px">${a.email||'Não cadastrado'}</span></div>
-    <div class="sl2"><span class="slb">Turma</span><span style="font-size:14px">${a.turma||'Turma Única'}</span></div>
-    <div class="sl2"><span class="slb">Mensalidade</span><span style="font-size:14px">${a.valor?'R$ '+a.valor:'—'}</span></div>
-    <div class="sl2"><span class="slb">Presenças este mês</span><span class="bdg bv">${tp}</span></div>
-    <div class="sl2"><span class="slb">Faltas este mês</span><span class="bdg ${tf>=2?'br':'ba'}">${tf}</span></div>
-    <div class="sl2"><span class="slb">Pagamento ${M[h.getMonth()]}</span><span class="bdg ${pagA?'bv':'br'}">${pagA?'Em dia':'Pendente'}</span></div>`;
+    <div class="sl2"><span class="slb">Endereço</span><span style="font-size:14px">${a.end||'Não informado'}</span></div>
+    <div class="sl2"><span class="slb">Presenças</span><span class="bdg bv">${tp}</span></div>
+    <div class="sl2"><span class="slb">Faltas</span><span class="bdg ${tf>=3?'br':'ba'}">${tf}</span></div>
+    <div class="sl2"><span class="slb">Frequência</span><span class="bdg ${presA.length>0&&Math.round(tp/presA.length*100)>=75?'bv':'ba'}">${presA.length>0?Math.round(tp/presA.length*100)+'%':'—'}</span></div>
+    <div class="sl2"><span class="slb">Situação pagamentos</span><span class="bdg ${temPag?'bv':'br'}">${temPag?'Em dia':'Sem pagamento'}</span></div>`;
 }
 
 function renderAlunoAgenda(){
-  const log=D.aulas_log||{};
-  const keys=Object.keys(log).sort().reverse().slice(0,20);
-  if(!keys.length){ document.getElementById('al-agenda-lista').innerHTML='<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Nenhuma aula registrada ainda.</div></div>'; return; }
-  document.getElementById('al-agenda-lista').innerHTML=keys.map(k=>{
-    const d=new Date(k+'T12:00:00'); const entry=log[k];
-    const meuStatus=(D.presencas[k]||{})[usuAtual.id];
-    const stBadge=meuStatus==='P'?'<span class="bdg bv">✓ Presente</span>':meuStatus==='F'?'<span class="bdg br">✗ Falta</span>':'<span class="bdg ba">Não reg.</span>';
-    return `<div class="aula-item"><div class="aula-mod">${entry.modulo||'Módulo'}</div><div class="aula-nome">${entry.aula||'Aula registrada'}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><span class="aula-data">${DS[d.getDay()]}, ${fmtD(d)}</span>${stBadge}</div></div>`;
+  if(!D.aulas.length){ document.getElementById('al-agenda-lista').innerHTML='<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Nenhuma aula registrada ainda.</div></div>'; return; }
+  document.getElementById('al-agenda-lista').innerHTML=D.aulas.slice().reverse().map(aula=>{
+    const p=D.presencas.find(x=>x.idAluno===usuAtual.id&&x.idAula===aula.id);
+    const st=p?(p.presente?'<span class="bdg bv">✓ Presente</span>':'<span class="bdg br">✗ Falta</span>'):'<span class="bdg ba">Não reg.</span>';
+    return `<div class="aula-item"><div class="aula-mod">${aula.modulo}</div><div class="aula-nome">${aula.tema}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><span class="aula-data">${fmtDataBR(aula.data)}</span>${st}</div></div>`;
   }).join('');
 }
 
 function renderAlunoPresenca(){
-  const a=usuAtual; const h=hj(); const cm=chM(h);
+  const a=usuAtual; const h=hj();
   document.getElementById('al-cal-mes').textContent=M[h.getMonth()]+' '+h.getFullYear();
-  const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
-  let tp=0,tf=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') tp++; if(D.presencas[k][a.id]==='F') tf++; });
-  const tot=pk.length; const perc=tot>0?Math.round(tp/tot*100):0;
+  const presA=D.presencas.filter(p=>p.idAluno===a.id);
+  const tp=presA.filter(p=>p.presente).length;
+  const tf=presA.filter(p=>!p.presente).length;
+  const perc=presA.length>0?Math.round(tp/presA.length*100):0;
   document.getElementById('al-pres-stats').innerHTML=`
     <div class="g3">
       <div class="mc3"><div class="mc3n" style="color:var(--vd)">${tp}</div><div class="mc3l">Presenças</div></div>
       <div class="mc3"><div class="mc3n" style="color:var(--vm)">${tf}</div><div class="mc3l">Faltas</div></div>
       <div class="mc3"><div class="mc3n" style="color:var(--azul)">${perc}%</div><div class="mc3l">Frequência</div></div>
     </div>`;
+  // Calendário
   const dim=new Date(h.getFullYear(),h.getMonth()+1,0).getDate();
   const p1=new Date(h.getFullYear(),h.getMonth(),1).getDay();
   let cal=DS.map(d=>`<div class="cd hd">${d}</div>`).join('');
   for(let i=0;i<p1;i++) cal+='<div class="cd vz"></div>';
-  for(let d=1;d<=dim;d++){ const k=`${h.getFullYear()}-${(h.getMonth()+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`; const v=D.presencas[k]; const c=v&&v[a.id]==='P'?'cp':v&&v[a.id]==='F'?'cf':''; cal+=`<div class="cd ${c}">${d}</div>`; }
+  for(let d=1;d<=dim;d++){
+    const dStr=d.toString().padStart(2,'0')+'/'+(h.getMonth()+1).toString().padStart(2,'0')+'/'+h.getFullYear();
+    const aula=D.aulas.find(x=>fmtDataBR(x.data)===dStr);
+    let c='';
+    if(aula){ const p=D.presencas.find(x=>x.idAluno===a.id&&x.idAula===aula.id); c=p?(p.presente?'cp':'cf'):''; }
+    cal+=`<div class="cd ${c}">${d}</div>`;
+  }
   document.getElementById('al-cal').innerHTML=cal;
-  const log=D.aulas_log||{};
-  const hist=pk.sort().reverse().map(k=>{
-    const st=D.presencas[k][a.id]; const d=new Date(k+'T12:00:00'); const entry=log[k];
-    return `<div class="pres-ro"><div><div style="font-size:14px;font-weight:500">${entry?entry.aula:'Aula'}</div><div class="pres-ro-d">${DS[d.getDay()]}, ${fmtD(d)}</div></div><span class="pres-ro-s ${st==='P'?'pres-p':st==='F'?'pres-f':'pres-n'}">${st==='P'?'Presente':st==='F'?'Falta':'—'}</span></div>`;
+  // Histórico
+  const hist=presA.slice().reverse().map(p=>{
+    const aula=D.aulas.find(x=>x.id===p.idAula)||{tema:'Aula',data:''};
+    return `<div class="pres-ro"><div><div style="font-size:14px;font-weight:500">${aula.tema}</div><div class="pres-ro-d">${fmtDataBR(aula.data)}</div></div><span class="pres-ro-s ${p.presente?'pres-p':'pres-f'}">${p.presente?'Presente':'Falta'}</span></div>`;
   }).join('');
   document.getElementById('al-pres-hist').innerHTML=hist||'<p style="color:var(--cin);font-size:14px;padding:8px 0">Sem registros.</p>';
 }
 
 function renderAlunoPagamentos(){
   const a=usuAtual;
-  const keys=[...new Set([...Object.keys(D.pagamentos),chM(hj())])].sort().reverse().slice(0,12);
-  const linhas=keys.map(k=>{ const [ano,mes]=k.split('-'); const p=(D.pagamentos[k]||{})[a.id]===true;
-    return `<div class="pgr"><div class="pgi"><div class="pgn">${M[parseInt(mes)-1]} ${ano}</div>${a.valor?`<div class="pgd">Mensalidade: R$ ${a.valor}</div>`:''}</div><span class="bdg ${p?'bv':'br'}">${p?'✓ Pago':'✗ Pendente'}</span></div>`; }).join('');
-  document.getElementById('al-pag-lista').innerHTML=linhas||'<div class="empty"><div class="empty-ic">💳</div><div class="empty-tx">Sem registros.</div></div>';
+  const pagA=D.pagamentos.filter(p=>p.idAluno===a.id);
+  document.getElementById('al-pag-lista').innerHTML=pagA.length?pagA.map(p=>`
+    <div class="pgr"><div class="pgi">
+      <div class="pgn">${p.livro}</div>
+      <div class="pgd">${p.pago&&p.data?'Pago em '+fmtDataBR(p.data):p.pago?'Pago':'Pendente'}${p.valor?' · R$ '+p.valor:''}</div>
+    </div><span class="bdg ${p.pago?'bv':'br'}">${p.pago?'✓ Pago':'✗ Pendente'}</span></div>`).join('')
+  :'<div class="empty"><div class="empty-ic">💳</div><div class="empty-tx">Sem registros de pagamento.</div></div>';
 }
 
 function renderAlunoLivros(){
   const a=usuAtual;
-  const livros=D.livros_curso.map(l=>{ const e=(D.livros_ent[l.id]||{})[a.id]===true;
-    return `<div class="pgr"><div class="pgi"><div class="pgn">📖 ${l.nome}</div></div><span class="bdg ${e?'bv':'br'}">${e?'✓ Recebido':'Pendente'}</span></div>`; }).join('');
-  const provas=['p1','p2','p3','p4'].map((p,i)=>{ const f=(D.provas[p]||{})[a.id]===true;
-    return `<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova ${i+1}</div></div><span class="bdg ${f?'bv':'br'}">${f?'✓ Realizada':'Pendente'}</span></div>`; }).join('');
+  const livros=D.entregas.filter(e=>e.idAluno===a.id).map(e=>`<div class="pgr"><div class="pgi"><div class="pgn">📖 ${e.livro}</div>${e.data?`<div class="pgd">Entregue em ${fmtDataBR(e.data)}</div>`:''}</div><span class="bdg ${e.entregue?'bv':'br'}">${e.entregue?'✓ Recebido':'Pendente'}</span></div>`).join('');
+  const provas=D.provas.filter(p=>p.idAluno===a.id).map(p=>`<div class="pgr"><div class="pgi"><div class="pgn">📝 ${p.prova}</div></div><span class="bdg ${p.realizada?'bv':'ba'}">${p.realizada?'✓ Realizada':'Pendente'}</span></div>`).join('');
   document.getElementById('al-livros-conteudo').innerHTML=`
     <div class="tit" style="font-size:19px;margin-bottom:4px">📚 Livros Recebidos</div>
     <p class="sub">Controle de material</p>
     <div class="aviso-ro">🔒 O registro de entrega é feito pelo administrador.</div>
-    ${livros}
+    ${livros||'<div class="empty"><div class="empty-ic">📚</div><div class="empty-tx">Sem entregas registradas.</div></div>'}
     <div class="tit" style="font-size:19px;margin:18px 0 4px">📝 Minhas Provas</div>
     <p class="sub" style="margin-bottom:14px">Provas realizadas</p>
-    ${provas}`;
+    ${provas||'<div class="empty"><div class="empty-ic">📝</div><div class="empty-tx">Sem provas registradas.</div></div>'}`;
 }
 
 function renderAlunoNotas(){
   const a=usuAtual;
-  const notas=['p1','p2','p3','p4'].map((p,i)=>{ const n=(D.notas[p]||{})[a.id];
-    if(n===undefined) return `<div class="pgr"><div class="pgi"><div class="pgn">Prova ${i+1}</div></div><span class="bdg ba">Sem nota</span></div>`;
-    return `<div class="pgr"><div class="pgi"><div class="pgn">Prova ${i+1}</div><div class="pgd">${n>=7?'✓ Aprovado':n>=5?'Em recuperação':'✗ Reprovado'}</div></div><span class="bdg ${n>=7?'bv':n>=5?'ba':'br'}" style="font-size:18px;padding:6px 14px">${n.toFixed(1)}</span></div>`; }).join('');
-  const ns=['p1','p2','p3','p4'].map(p=>(D.notas[p]||{})[a.id]).filter(n=>n!==undefined);
-  const media=ns.length>0?(ns.reduce((a,b)=>a+b,0)/ns.length).toFixed(1):'—';
-  document.getElementById('al-notas-lista').innerHTML=notas+`<div class="card" style="margin-top:6px"><div class="sl2"><span class="slb" style="font-weight:600">Média geral</span><span style="font-size:22px;font-weight:700;color:var(--azul);font-family:'Lora',serif">${media}</span></div></div>`;
+  const notasA=D.notas.filter(n=>n.idAluno===a.id);
+  const media=notasA.length>0?(notasA.reduce((s,n)=>s+n.nota,0)/notasA.length).toFixed(1):'—';
+  document.getElementById('al-notas-lista').innerHTML=(notasA.length?notasA.map(n=>`
+    <div class="pgr"><div class="pgi"><div class="pgn">${n.prova}</div><div class="pgd">${n.nota>=7?'✓ Aprovado':n.nota>=5?'Em recuperação':'✗ Reprovado'}</div></div><span class="bdg ${n.nota>=7?'bv':n.nota>=5?'ba':'br'}" style="font-size:18px;padding:6px 14px">${n.nota.toFixed(1)}</span></div>`).join('')
+    :'<div class="empty"><div class="empty-ic">📝</div><div class="empty-tx">Sem notas lançadas.</div></div>')
+    +(notasA.length?`<div class="card" style="margin-top:6px"><div class="sl2"><span class="slb" style="font-weight:600">Média geral</span><span style="font-size:22px;font-weight:700;color:var(--azul);font-family:'Lora',serif">${media}</span></div></div>`:'');
 }
 
-/* ════ EDITAR PRÓPRIOS DADOS ════ */
+/* ══════════════════════════════════════════
+   EDITAR PRÓPRIOS DADOS
+══════════════════════════════════════════ */
 function abrirModEditarAluno(){
   document.getElementById('ea-tel').value=usuAtual.tel||'';
   document.getElementById('ea-email').value=usuAtual.email||'';
   document.getElementById('ea-senha').value='';
   abrirMod('mod-editar-aluno');
 }
-function salvarEdicaoAluno(){
+async function salvarEdicaoAluno(){
   const idx=D.alunos.findIndex(a=>a.id===usuAtual.id); if(idx<0) return;
   const tel=document.getElementById('ea-tel').value.replace(/\D/g,'');
   const email=document.getElementById('ea-email').value.trim();
   const senha=document.getElementById('ea-senha').value.trim();
-  D.alunos[idx].tel=tel||D.alunos[idx].tel;
-  D.alunos[idx].email=email||D.alunos[idx].email;
+  if(tel) D.alunos[idx].tel=tel;
+  if(email) D.alunos[idx].email=email;
   if(senha) D.alunos[idx].senha=senha;
   usuAtual={...usuAtual,...D.alunos[idx]};
-  salvar(); fecharMod('mod-editar-aluno'); renderAlunoCadastro(); toast('✓ Dados atualizados!');
+  try{
+    await escreverLinha('Alunos',[D.alunos[idx].id,D.alunos[idx].nome,D.alunos[idx].tel,D.alunos[idx].end||'',D.alunos[idx].email,D.alunos[idx].senha,D.alunos[idx].ativo?'Sim':'Nao']);
+    localStorage.setItem('ibicamp_cache',JSON.stringify({ts:Date.now(),data:D}));
+    fecharMod('mod-editar-aluno'); renderAlunoCadastro(); toast('✓ Dados atualizados!');
+  }catch(e){ fecharMod('mod-editar-aluno'); renderAlunoCadastro(); toast('✓ Salvo localmente'); }
 }
 
-/* ════ FECHAR OVERLAYS ════ */
+/* ══════════════════════════════════════════
+   FECHAR OVERLAYS E INIT
+══════════════════════════════════════════ */
 document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('on'); }));
 
-/* ════ INIT ════ */
-D=carregarDB();
-if(!D.alunos||D.alunos.length===0){ D.alunos=JSON.parse(JSON.stringify(ALUNOS_BASE)); salvar(); }
-if(!D.aulas_log) { D.aulas_log={}; }
+// Inicia carregamento
+carregarTudo();
 </script>
 </body>
 </html>
