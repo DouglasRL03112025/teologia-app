@@ -270,8 +270,18 @@ select.inp{cursor:pointer}
                                            -->
 <div id="pg-login">
   <div class="login-box">
-    <div class="login-logo">
-      <img id="lg1" style="width:110px;height:110px;object-fit:contain;display:block;margin:0 auto 6px">
+    <div class="login-logo"><img id="lg-login" style="width:110px;height:110px;object-fit:contain;display:block;margin:0 auto 8px">
+      <svg width="72" height="72" viewBox="0 0 72 72" fill="none" style="display:block;margin:0 auto 12px">
+        <circle cx="36" cy="36" r="34" fill="rgba(201,168,76,.15)"/>
+        <circle cx="36" cy="36" r="20" fill="rgba(201,168,76,.3)"/>
+        <circle cx="36" cy="36" r="9" fill="#c9a84c"/>
+        <line x1="36" y1="2" x2="36" y2="14" stroke="#c9a84c" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="36" y1="58" x2="36" y2="70" stroke="#c9a84c" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="2" y1="36" x2="14" y2="36" stroke="#c9a84c" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="58" y1="36" x2="70" y2="36" stroke="#c9a84c" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="10" y1="10" x2="19" y2="19" stroke="#c9a84c" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
+        <line x1="53" y1="10" x2="44" y2="19" stroke="#c9a84c" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
+      </svg>
     </div>
     <div class="login-titulo">IBICAMP</div>
     <div class="login-sub" style="text-align:center;margin-bottom:24px"><strong>Nucleo 741 - A. D. Serra Dourada 3</strong></div>
@@ -313,7 +323,19 @@ select.inp{cursor:pointer}
     </div>
     <button class="btn-sair-hdr" onclick="sair()">Sair</button>
   </header>
-  <img id="lh1" style="width:32px;height:32px;object-fit:contain">'relatorios')"><span class="ac-ic">&#128202;</span>Relat&#243;rios</button>
+  <main>
+
+    <!-- IN CIO ADMIN -->
+    <div class="tela on" id="a-inicio">
+      <div class="tit" id="a-bv">Painel Admin</div>
+      <p class="sub" id="a-data"></p>
+      <div class="g4" id="a-metricas"></div>
+      <div class="sl">A&#231;&#245;es r&#225;pidas</div>
+      <div class="ga">
+        <button class="ac dest" onclick="irAdmin('presenca')"><span class="ac-ic">&#9989;</span>Lan&#231;ar Presen&#231;a</button>
+        <button class="ac" onclick="irAdmin('pagamentos')"><span class="ac-ic">&#128176;</span>Pagamentos</button>
+        <button class="ac" onclick="irAdmin('alunos')"><span class="ac-ic">&#128101;</span>Ver Alunos</button>
+        <button class="ac" onclick="irAdmin('relatorios')"><span class="ac-ic">&#128202;</span>Relat&#243;rios</button>
       </div>
       <div class="sl">Alertas do sistema</div>
       <div id="a-alertas"></div>
@@ -504,7 +526,22 @@ select.inp{cursor:pointer}
       </svg>
       <div><span class="logo-t">IBICAMP</span><span class="logo-s" id="aluno-header-nome">Teologia</span></div>
     </div>
-    <button class="btn-sair-hdr" onclick="sair()">Sair</butt<img id="lh2" style="width:32px;height:32px;object-fit:contain"> <div class="tit">Minha Presen&#231;a</div>
+    <button class="btn-sair-hdr" onclick="sair()">Sair</button>
+  </header>
+  <main>
+    <div class="tela on" id="al-cadastro">
+      <div id="al-perfil-banner"></div>
+      <div class="aviso-ro">&#128274; Somente o administrador pode alterar seus dados de matr&#237;cula.</div>
+      <div class="card"><div class="card-t">&#128204; Meus dados</div><div id="al-dados"></div></div>
+      <button class="btn bs" onclick="abrirModEditarAluno()">&#9999;&#65039; Editar telefone / e-mail / senha</button>
+    </div>
+    <div class="tela" id="al-agenda">
+      <div class="tit">Agenda de Aulas</div>
+      <p class="sub">Hist&#243;rico de aulas registradas</p>
+      <div id="al-agenda-lista"></div>
+    </div>
+    <div class="tela" id="al-presenca">
+      <div class="tit">Minha Presen&#231;a</div>
       <div id="al-pres-stats" style="margin-bottom:14px"></div>
       <div class="card">
         <div class="card-t">&#128197; Calend&#225;rio &#8212; <span id="al-cal-mes"></span></div>
@@ -1499,8 +1536,9 @@ D=carregarDB();
 if(!D.alunos||D.alunos.length===0){ D.alunos=JSON.parse(JSON.stringify(ALUNOS_BASE)); salvar(); }
 if(!D.aulas_log) { D.aulas_log={}; }
 
-// Logo
-['lg1','lg2','lh1','lh2'].forEach(function(id){var el=document.getElementById(id);if(el)el.src=_L;});
+// Logo apenas na tela de login
+var _el=document.getElementById('lg-login');
+if(_el) _el.src=_L;
 // Sheets sync
 var _API='https://script.google.com/macros/s/AKfycbw_jvcKQzA9oyBDWMAFHENpOaBF3fEQVaVF0023B2lVi2_3pzEEm9nuTyJxCMPPOgvbLQ/exec';
 function _lerAba(aba){return fetch(_API+'?aba='+encodeURIComponent(aba)).then(function(r){return r.json();}).then(function(d){return Array.isArray(d)?d.slice(3).filter(function(l){return l[0]!==''&&l[0]!==null;}):[]; });}
@@ -1508,10 +1546,10 @@ function _sync(){
   Promise.all([_lerAba('Alunos'),_lerAba('Presenca'),_lerAba('Pagamentos'),_lerAba('Aulas')])
   .then(function(res){
     var rA=res[0],rP=res[1],rPg=res[2],rAu=res[3];
-    rA.forEach(function(r){var id=String(r[0]),nome=String(r[1]||'').toUpperCase(),tel=String(r[2]||'').replace(/\D/g,''),end=String(r[3]||''),email=String(r[4]||''),senha=String(r[5]||'1234'),ativo=String(r[6]||'Sim').toLowerCase().indexOf('sim')>=0;var i=D.alunos.findIndex(function(a){return a.id===id||a.nome===nome;});if(i>=0){D.alunos[i].tel=tel||D.alunos[i].tel;D.alunos[i].email=email||D.alunos[i].email;D.alunos[i].senha=senha||D.alunos[i].senha;D.alunos[i].ativo=ativo;D.alunos[i].end=end||D.alunos[i].end;}else{D.alunos.push({id:id,nome:nome,tel:tel,end:end,email:email,senha:senha,ativo:ativo});}} );
+    rA.forEach(function(r){var id=String(r[0]),nome=String(r[1]||'').toUpperCase(),tel=String(r[2]||'').replace(/\D/g,''),end=String(r[3]||''),email=String(r[4]||''),senha=String(r[5]||'1234'),ativo=String(r[6]||'Sim').toLowerCase().indexOf('sim')>=0;var i=D.alunos.findIndex(function(a){return a.id===id||a.nome===nome;});if(i>=0){D.alunos[i].tel=tel||D.alunos[i].tel;D.alunos[i].email=email||D.alunos[i].email;D.alunos[i].senha=senha||D.alunos[i].senha;D.alunos[i].ativo=ativo;}else{D.alunos.push({id:id,nome:nome,tel:tel,end:end,email:email,senha:senha,ativo:ativo});}} );
     rP.forEach(function(r){var idA=String(r[0]),idAu=String(r[1]),pres=String(r[2]||'').toLowerCase().indexOf('sim')>=0;if(!D.presencas[idAu])D.presencas[idAu]={};D.presencas[idAu][idA]=pres?'P':'F';});
     rPg.forEach(function(r){var idA=String(r[0]),livro=String(r[2]||'geral'),pago=String(r[3]||'').toLowerCase().indexOf('sim')>=0;if(!D.pagamentos[livro])D.pagamentos[livro]={};D.pagamentos[livro][idA]=pago;});
-    rAu.forEach(function(r){var id=String(r[0]),data=String(r[1]||''),tema=String(r[2]||''),mod=String(r[3]||'');if(data){if(!D.aulas_log)D.aulas_log={};D.aulas_log[data]={modulo:mod,aula:tema};}});
+    rAu.forEach(function(r){var data=String(r[1]||''),tema=String(r[2]||''),mod=String(r[3]||'');if(data){if(!D.aulas_log)D.aulas_log={};D.aulas_log[data]={modulo:mod,aula:tema};}});
     salvar();
   }).catch(function(e){console.log('Sheets:',e);});
 }
