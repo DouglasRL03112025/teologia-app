@@ -1536,24 +1536,120 @@ D=carregarDB();
 if(!D.alunos||D.alunos.length===0){ D.alunos=JSON.parse(JSON.stringify(ALUNOS_BASE)); salvar(); }
 if(!D.aulas_log) { D.aulas_log={}; }
 
-// Logo apenas na tela de login
+// Logo
 var _el=document.getElementById('lg-login');
 if(_el) _el.src=_L;
-// Sheets sync
-var _API='https://script.google.com/macros/s/AKfycbw_jvcKQzA9oyBDWMAFHENpOaBF3fEQVaVF0023B2lVi2_3pzEEm9nuTyJxCMPPOgvbLQ/exec';
-function _lerAba(aba){return fetch(_API+'?aba='+encodeURIComponent(aba)).then(function(r){return r.json();}).then(function(d){return Array.isArray(d)?d.slice(3).filter(function(l){return l[0]!==''&&l[0]!==null;}):[]; });}
-function _sync(){
-  Promise.all([_lerAba('Alunos'),_lerAba('Presenca'),_lerAba('Pagamentos'),_lerAba('Aulas')])
-  .then(function(res){
-    var rA=res[0],rP=res[1],rPg=res[2],rAu=res[3];
-    rA.forEach(function(r){var id=String(r[0]),nome=String(r[1]||'').toUpperCase(),tel=String(r[2]||'').replace(/\D/g,''),end=String(r[3]||''),email=String(r[4]||''),senha=String(r[5]||'1234'),ativo=String(r[6]||'Sim').toLowerCase().indexOf('sim')>=0;var i=D.alunos.findIndex(function(a){return a.id===id||a.nome===nome;});if(i>=0){D.alunos[i].tel=tel||D.alunos[i].tel;D.alunos[i].email=email||D.alunos[i].email;D.alunos[i].senha=senha||D.alunos[i].senha;D.alunos[i].ativo=ativo;}else{D.alunos.push({id:id,nome:nome,tel:tel,end:end,email:email,senha:senha,ativo:ativo});}} );
-    rP.forEach(function(r){var idA=String(r[0]),idAu=String(r[1]),pres=String(r[2]||'').toLowerCase().indexOf('sim')>=0;if(!D.presencas[idAu])D.presencas[idAu]={};D.presencas[idAu][idA]=pres?'P':'F';});
-    rPg.forEach(function(r){var idA=String(r[0]),livro=String(r[2]||'geral'),pago=String(r[3]||'').toLowerCase().indexOf('sim')>=0;if(!D.pagamentos[livro])D.pagamentos[livro]={};D.pagamentos[livro][idA]=pago;});
-    rAu.forEach(function(r){var data=String(r[1]||''),tema=String(r[2]||''),mod=String(r[3]||'');if(data){if(!D.aulas_log)D.aulas_log={};D.aulas_log[data]={modulo:mod,aula:tema};}});
-    salvar();
-  }).catch(function(e){console.log('Sheets:',e);});
+
+// ===== GOOGLE SHEETS VIA CSV PUBLICO =====
+var _SID='1KBpgl9ejLndIlvjk73msoG1t9SqUolnbOoDpkNIaFDY';
+function _csvUrl(aba){
+  return 'https://docs.google.com/spreadsheets/d/'+_SID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(aba);
 }
-setTimeout(_sync,2000);
+
+function _parseCsv(txt){
+  var rows=[];
+  var lines=txt.split('\n');
+  for(var i=0;i<lines.length;i++){
+    var line=lines[i].trim();
+    if(!line) continue;
+    var cols=[];
+    var cur=''; var inQ=false;
+    for(var j=0;j<line.length;j++){
+      var c=line[j];
+      if(c==='"'){ inQ=!inQ; }
+      else if(c===',' && !inQ){ cols.push(cur); cur=''; }
+      else{ cur+=c; }
+    }
+    cols.push(cur);
+    rows.push(cols);
+  }
+  return rows;
+}
+
+function _lerCsv(aba){
+  return fetch(_csvUrl(aba))
+    .then(function(r){ return r.text(); })
+    .then(function(txt){
+      var rows=_parseCsv(txt);
+      // Pula linhas de cabecalho (linha 1=titulo, 2=subtitulo, 3=colunas)
+      return rows.slice(3).filter(function(r){ return r[0]&&r[0].trim()!==''; });
+    });
+}
+
+function _syncSheets(){
+  console.log('Sincronizando com Google Sheets...');
+  Promise.all([
+    _lerCsv('Alunos'),
+    _lerCsv('Presenca'),
+    _lerCsv('Pagamentos'),
+    _lerCsv('Aulas')
+  ]).then(function(res){
+    var rA=res[0], rP=res[1], rPg=res[2], rAu=res[3];
+    
+    // Atualiza alunos
+    rA.forEach(function(r){
+      var id=String(r[0]||'').trim();
+      var nome=String(r[1]||'').toUpperCase().trim();
+      var tel=String(r[2]||'').replace(/\D/g,'');
+      var end=String(r[3]||'').trim();
+      var email=String(r[4]||'').trim();
+      var senha=String(r[5]||'1234').trim();
+      var ativo=String(r[6]||'Sim').toLowerCase().indexOf('sim')>=0;
+      if(!id&&!nome) return;
+      var i=D.alunos.findIndex(function(a){
+        return a.id===id || a.nome===nome;
+      });
+      if(i>=0){
+        if(tel) D.alunos[i].tel=tel;
+        if(email) D.alunos[i].email=email;
+        if(senha) D.alunos[i].senha=senha;
+        if(end) D.alunos[i].end=end;
+        D.alunos[i].ativo=ativo;
+      } else {
+        D.alunos.push({id:id||String(Date.now()),nome:nome,tel:tel,end:end,email:email,senha:senha,ativo:ativo});
+      }
+    });
+    
+    // Presencas
+    rP.forEach(function(r){
+      var idA=String(r[0]||'').trim();
+      var idAu=String(r[1]||'').trim();
+      var pres=String(r[2]||'').toLowerCase().indexOf('sim')>=0;
+      if(!idA||!idAu) return;
+      if(!D.presencas[idAu]) D.presencas[idAu]={};
+      D.presencas[idAu][idA]=pres?'P':'F';
+    });
+    
+    // Pagamentos
+    rPg.forEach(function(r){
+      var idA=String(r[0]||'').trim();
+      var livro=String(r[2]||'geral').trim();
+      var pago=String(r[3]||'').toLowerCase().indexOf('sim')>=0;
+      if(!idA) return;
+      if(!D.pagamentos[livro]) D.pagamentos[livro]={};
+      D.pagamentos[livro][idA]=pago;
+    });
+    
+    // Aulas
+    rAu.forEach(function(r){
+      var data=String(r[1]||'').trim();
+      var tema=String(r[2]||'').trim();
+      var mod=String(r[3]||'').trim();
+      if(!data) return;
+      if(!D.aulas_log) D.aulas_log={};
+      D.aulas_log[data]={modulo:mod,aula:tema};
+    });
+    
+    salvar();
+    console.log('Sheets sincronizado! Alunos:'+rA.length+' Presencas:'+rP.length+' Pagamentos:'+rPg.length);
+    
+  }).catch(function(e){
+    console.log('Erro Sheets CSV:', e);
+  });
+}
+
+// Sincroniza 1 segundo apos abrir
+setTimeout(_syncSheets, 1000);
 
 </script>
 </body>
