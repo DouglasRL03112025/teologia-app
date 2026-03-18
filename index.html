@@ -48,7 +48,7 @@ main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
 #pg-login{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px 20px;background:var(--fnd)}
 .login-box{width:100%;max-width:400px}
 .login-logo{text-align:center;margin-bottom:28px}
-.login-titulo{font-family:'Lora',serif;font-size:30px;font-weight:700;color:#c9a84c;margin-bottom:4px;text-align:center}
+.login-titulo{font-family:'Lora',serif;font-size:32px;font-weight:700;color:#c9a84c;margin-bottom:6px;text-align:center}
 .login-sub{font-size:15px;color:var(--cin);margin-bottom:32px;text-align:center}
 .login-card{background:#fff;border-radius:var(--rl);padding:28px 22px;box-shadow:var(--sh);border:1px solid var(--brd)}
 .login-divider{display:flex;align-items:center;gap:10px;margin:18px 0;color:var(--cin);font-size:13px}
@@ -270,21 +270,11 @@ select.inp{cursor:pointer}
                                            -->
 <div id="pg-login">
   <div class="login-box">
-    <div class="login-logo"><img id="lg-login" style="width:110px;height:110px;object-fit:contain;display:block;margin:0 auto 8px">
-      <svg width="72" height="72" viewBox="0 0 72 72" fill="none" style="display:block;margin:0 auto 12px">
-        <circle cx="36" cy="36" r="34" fill="rgba(201,168,76,.15)"/>
-        <circle cx="36" cy="36" r="20" fill="rgba(201,168,76,.3)"/>
-        <circle cx="36" cy="36" r="9" fill="#c9a84c"/>
-        <line x1="36" y1="2" x2="36" y2="14" stroke="#c9a84c" stroke-width="3.5" stroke-linecap="round"/>
-        <line x1="36" y1="58" x2="36" y2="70" stroke="#c9a84c" stroke-width="3.5" stroke-linecap="round"/>
-        <line x1="2" y1="36" x2="14" y2="36" stroke="#c9a84c" stroke-width="3.5" stroke-linecap="round"/>
-        <line x1="58" y1="36" x2="70" y2="36" stroke="#c9a84c" stroke-width="3.5" stroke-linecap="round"/>
-        <line x1="10" y1="10" x2="19" y2="19" stroke="#c9a84c" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
-        <line x1="53" y1="10" x2="44" y2="19" stroke="#c9a84c" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
-      </svg>
+    <div class="login-logo">
+      <img id="lg-login" style="width:115px;height:115px;object-fit:contain;display:block;margin:0 auto 10px">
     </div>
     <div class="login-titulo">IBICAMP</div>
-    <div class="login-sub" style="text-align:center;margin-bottom:24px"><strong>Nucleo 741 - A. D. Serra Dourada 3</strong></div>
+    <div class="login-sub" style="text-align:center;margin-bottom:24px"><strong style="font-size:15px">Nucleo 741 - A. D. Serra Dourada 3</strong></div>
     <div class="login-card">
       <div class="campo">
         <label style="font-size:15px">Seu telefone <span style="font-size:12px;color:var(--cin)">(somente n&#250;meros)</span></label>
@@ -1540,53 +1530,40 @@ if(!D.aulas_log) { D.aulas_log={}; }
 var _el=document.getElementById('lg-login');
 if(_el) _el.src=_L;
 
-// ===== GOOGLE SHEETS VIA CSV PUBLICO =====
+// ===== GOOGLE SHEETS CSV =====
 var _SID='1KBpgl9ejLndIlvjk73msoG1t9SqUolnbOoDpkNIaFDY';
-function _csvUrl(aba){
-  return 'https://docs.google.com/spreadsheets/d/'+_SID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(aba);
-}
-
+function _csvUrl(aba){return 'https://docs.google.com/spreadsheets/d/'+_SID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(aba);}
 function _parseCsv(txt){
-  var rows=[];
-  var lines=txt.split('\n');
+  var rows=[]; var lines=txt.split('\n');
   for(var i=0;i<lines.length;i++){
-    var line=lines[i].trim();
-    if(!line) continue;
-    var cols=[];
-    var cur=''; var inQ=false;
+    var line=lines[i].trim(); if(!line) continue;
+    var cols=[]; var cur=''; var inQ=false;
     for(var j=0;j<line.length;j++){
       var c=line[j];
-      if(c==='"'){ inQ=!inQ; }
-      else if(c===',' && !inQ){ cols.push(cur); cur=''; }
-      else{ cur+=c; }
+      if(c==='"'){inQ=!inQ;}
+      else if(c===','&&!inQ){cols.push(cur.trim());cur='';}
+      else{cur+=c;}
     }
-    cols.push(cur);
-    rows.push(cols);
+    cols.push(cur.trim()); rows.push(cols);
   }
   return rows;
 }
-
 function _lerCsv(aba){
   return fetch(_csvUrl(aba))
-    .then(function(r){ return r.text(); })
+    .then(function(r){return r.text();})
     .then(function(txt){
       var rows=_parseCsv(txt);
-      // Pula linhas de cabecalho (linha 1=titulo, 2=subtitulo, 3=colunas)
-      return rows.slice(3).filter(function(r){ return r[0]&&r[0].trim()!==''; });
+      return rows.slice(3).filter(function(r){return r[0]&&r[0].trim()!=='';});
     });
 }
 
 function _syncSheets(){
-  console.log('Sincronizando com Google Sheets...');
-  Promise.all([
-    _lerCsv('Alunos'),
-    _lerCsv('Presenca'),
-    _lerCsv('Pagamentos'),
-    _lerCsv('Aulas')
-  ]).then(function(res){
-    var rA=res[0], rP=res[1], rPg=res[2], rAu=res[3];
+  console.log('Sincronizando Sheets...');
+  Promise.all([_lerCsv('Alunos'),_lerCsv('Presenca'),_lerCsv('Pagamentos'),_lerCsv('Aulas')])
+  .then(function(res){
+    var rA=res[0],rP=res[1],rPg=res[2],rAu=res[3];
     
-    // Atualiza alunos
+    // Alunos
     rA.forEach(function(r){
       var id=String(r[0]||'').trim();
       var nome=String(r[1]||'').toUpperCase().trim();
@@ -1596,60 +1573,82 @@ function _syncSheets(){
       var senha=String(r[5]||'1234').trim();
       var ativo=String(r[6]||'Sim').toLowerCase().indexOf('sim')>=0;
       if(!id&&!nome) return;
-      var i=D.alunos.findIndex(function(a){
-        return a.id===id || a.nome===nome;
-      });
+      var i=D.alunos.findIndex(function(a){return a.id===id||a.nome===nome;});
       if(i>=0){
-        if(tel) D.alunos[i].tel=tel;
-        if(email) D.alunos[i].email=email;
-        if(senha) D.alunos[i].senha=senha;
-        if(end) D.alunos[i].end=end;
+        if(tel)D.alunos[i].tel=tel;
+        if(email)D.alunos[i].email=email;
+        if(senha)D.alunos[i].senha=senha;
+        if(end)D.alunos[i].end=end;
         D.alunos[i].ativo=ativo;
-      } else {
+        D.alunos[i].id=id;
+      }else{
         D.alunos.push({id:id||String(Date.now()),nome:nome,tel:tel,end:end,email:email,senha:senha,ativo:ativo});
       }
     });
-    
-    // Presencas
+
+    // Mapa de aulas: idAula -> {data, mes}
+    var aulaMap={};
+    rAu.forEach(function(r){
+      var idAu=String(r[0]||'').trim();
+      var data=String(r[1]||'').trim();
+      var tema=String(r[2]||'').trim();
+      var mod=String(r[3]||'').trim();
+      if(idAu&&data){
+        // Converte data BR (dd/mm/yyyy) para mes YYYY-MM
+        var partes=data.split('/');
+        var mes=partes.length===3?partes[2]+'-'+partes[1]:data.substring(0,7);
+        aulaMap[idAu]={data:data,mes:mes,tema:tema,modulo:mod};
+        if(!D.aulas_log)D.aulas_log={};
+        D.aulas_log[data]={modulo:mod,aula:tema};
+        // Salva com chave mes+idAula para o sistema encontrar
+        var chave=mes+'-'+idAu;
+        D.aulas_log[chave]={modulo:mod,aula:tema,data:data};
+      }
+    });
+
+    // Presencas: usa mes da aula como prefixo da chave
     rP.forEach(function(r){
       var idA=String(r[0]||'').trim();
       var idAu=String(r[1]||'').trim();
       var pres=String(r[2]||'').toLowerCase().indexOf('sim')>=0;
       if(!idA||!idAu) return;
-      if(!D.presencas[idAu]) D.presencas[idAu]={};
-      D.presencas[idAu][idA]=pres?'P':'F';
+      var info=aulaMap[idAu];
+      var chave=info?info.mes+'-'+idAu:idAu;
+      if(!D.presencas[chave])D.presencas[chave]={};
+      D.presencas[chave][idA]=pres?'P':'F';
+      // Tambem salva com a chave simples do mes para o calculo de frequencia
+      var mesSim=info?info.mes:'2026-03';
+      if(!D.presencas[mesSim+'_cnt'])D.presencas[mesSim+'_cnt']={};
+      if(!D.presencas[mesSim+'_cnt'][idA])D.presencas[mesSim+'_cnt'][idA]={p:0,f:0};
+      if(pres)D.presencas[mesSim+'_cnt'][idA].p++;
+      else D.presencas[mesSim+'_cnt'][idA].f++;
     });
-    
-    // Pagamentos
+
+    // Pagamentos: usa mes atual E livro/modulo
+    var mesAtual=new Date().getFullYear()+'-'+(new Date().getMonth()+1).toString().padStart(2,'0');
+    var pagosIds={};
     rPg.forEach(function(r){
       var idA=String(r[0]||'').trim();
-      var livro=String(r[2]||'geral').trim();
+      var livro=String(r[2]||'').trim();
       var pago=String(r[3]||'').toLowerCase().indexOf('sim')>=0;
       if(!idA) return;
-      if(!D.pagamentos[livro]) D.pagamentos[livro]={};
+      // Salva por livro
+      if(!D.pagamentos[livro])D.pagamentos[livro]={};
       D.pagamentos[livro][idA]=pago;
+      // Se pagou qualquer livro, marca como pago no mes atual
+      if(pago)pagosIds[idA]=true;
     });
-    
-    // Aulas
-    rAu.forEach(function(r){
-      var data=String(r[1]||'').trim();
-      var tema=String(r[2]||'').trim();
-      var mod=String(r[3]||'').trim();
-      if(!data) return;
-      if(!D.aulas_log) D.aulas_log={};
-      D.aulas_log[data]={modulo:mod,aula:tema};
+    // Aplica pagamentos no mes atual para o dashboard encontrar
+    if(!D.pagamentos[mesAtual])D.pagamentos[mesAtual]={};
+    Object.keys(pagosIds).forEach(function(id){
+      D.pagamentos[mesAtual][id]=true;
     });
-    
-    salvar();
-    console.log('Sheets sincronizado! Alunos:'+rA.length+' Presencas:'+rP.length+' Pagamentos:'+rPg.length);
-    
-  }).catch(function(e){
-    console.log('Erro Sheets CSV:', e);
-  });
-}
 
-// Sincroniza 1 segundo apos abrir
-setTimeout(_syncSheets, 1000);
+    salvar();
+    console.log('OK! Alunos:'+rA.length+' Pres:'+rP.length+' Pags:'+rPg.length);
+  }).catch(function(e){console.log('Erro:',e);});
+}
+setTimeout(_syncSheets,1000);
 
 </script>
 </body>
