@@ -786,10 +786,21 @@ function irAluno(t){
 function renderDashAdmin(){
   const h=hj(); const cm=chM(h); const al=ativos(); const tot=al.length;
   document.getElementById('a-data').textContent=DS[h.getDay()]+', '+h.getDate()+' de '+M[h.getMonth()]+' de '+h.getFullYear();
-  const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
-  let tp=0; pk.forEach(k=>Object.values(D.presencas[k]).forEach(v=>{ if(v==='P') tp++; }));
-  const mp=pk.length*tot; const pp=mp>0?Math.round(tp/mp*100):0;
-  const pagM=D.pagamentos[cm]||{}; const pagos=al.filter(a=>pagM[a.id]===true).length;
+  // Frequencia: usa mes atual, se vazio usa todas as presencas
+  var pk=Object.keys(D.presencas).filter(function(k){return k.startsWith(cm)&&!k.endsWith('_cnt');});
+  if(pk.length===0){
+    pk=Object.keys(D.presencas).filter(function(k){return !k.endsWith('_cnt');});
+  }
+  var tp=0; pk.forEach(function(k){Object.values(D.presencas[k]).forEach(function(v){if(v==='P')tp++;});});
+  var mp=pk.length>0?pk.length*tot:0; var pp=mp>0?Math.round(tp/mp*100):0;
+  // Pagamentos: usa mes atual primeiro, senao qualquer livro
+  var pagM=D.pagamentos[cm]||{};
+  if(Object.keys(pagM).length===0){
+    var pagM2={};
+    Object.keys(D.pagamentos).forEach(function(k){Object.keys(D.pagamentos[k]).forEach(function(id){if(D.pagamentos[k][id]===true)pagM2[id]=true;});});
+    pagM=pagM2;
+  }
+  var pagos=al.filter(function(a){return pagM[a.id]===true;}).length;
   const pend=tot-pagos;
 
   // Badge no nav de relat\u00f3rios se houver alertas
