@@ -644,18 +644,22 @@ function verificarAdmin(){
     usuAtual = {id:'admin',nome:'Administrador',isAdmin:true};
     document.getElementById('pg-login').style.display='none';
     document.getElementById('pg-admin').style.display='block';
-    irAdmin('inicio');
-    // Mostra indicador de carregamento
-    var metEl=document.getElementById('a-metricas');
-    if(metEl) metEl.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--cin);font-size:14px">&#8635; Sincronizando dados da planilha...</div>';
-    var alertEl=document.getElementById('a-alertas');
-    if(alertEl) alertEl.innerHTML='';
-    // Sincroniza e atualiza dashboard após carregar dados da planilha
+    // Navega para início SEM renderizar ainda (skipRender=true)
+    irAdmin('inicio', true);
+    // Mostra tela de loading
+    document.getElementById('a-data').textContent='Carregando dados...';
+    document.getElementById('a-metricas').innerHTML=
+      '<div style="grid-column:1/-1;text-align:center;padding:30px 20px">'+
+      '<div style="font-size:28px;margin-bottom:10px">&#8635;</div>'+
+      '<div style="font-size:15px;color:var(--cin)">Sincronizando dados da planilha...</div>'+
+      '</div>';
+    document.getElementById('a-alertas').innerHTML='';
+    // Sincroniza PRIMEIRO, depois renderiza com dados completos
     _syncSheets().then(function(){
       renderDashAdmin();
-      toast('\u2713 Dados sincronizados!');
+      toast('\u2713 Dados atualizados!');
     }).catch(function(){
-      renderDashAdmin(); // usa dados locais se falhar
+      renderDashAdmin();
     });
   } else { toast('\u26a0 Senha incorreta'); }
 }
@@ -672,13 +676,14 @@ function sair(){
 const TELAS_ADMIN=['inicio','alunos','perfil','presenca','pagamentos','material','relatorios','config'];
 const NB_MAP={inicio:'nb-inicio',alunos:'nb-alunos',perfil:'nb-alunos',presenca:'nb-presenca',material:'nb-material',relatorios:'nb-relatorios'};
 
-function irAdmin(t){
+function irAdmin(t, skipRender){
   TELAS_ADMIN.forEach(id=>{ const el=document.getElementById('a-'+id); if(el) el.classList.remove('on'); });
   document.querySelectorAll('#nav-admin .nb').forEach(b=>b.classList.remove('on'));
   const el=document.getElementById('a-'+t); if(el) el.classList.add('on');
   const nb=NB_MAP[t]?document.getElementById(NB_MAP[t]):null; if(nb) nb.classList.add('on');
   window.scrollTo(0,0);
-  if(t==='inicio') renderDashAdmin(); // initial render with local data
+  if(skipRender) return; // login flow: sync happens first, then render
+  if(t==='inicio') renderDashAdmin();
   if(t==='alunos') renderAlunosAdmin();
   if(t==='presenca') renderPresAdmin();
   if(t==='pagamentos') renderPagAdmin();
@@ -712,7 +717,7 @@ function renderDashAdmin(){
   const pk=Object.keys(D.presencas); // todas as aulas, não só do mês atual
   const pkMes=pk.filter(k=>k.startsWith(cm)); // aulas do mês atual (para alertas)
   var tp=0,tf=0;
-  pk.forEach(function(k){ Object.values(D.presencas[k]).forEach(function(v){ if(v==='P')tp++; else if(v==='F')tf++; }); });
+  pk.forEach(function(k){ if(D.presencas[k]) Object.values(D.presencas[k]).forEach(function(v){ if(v==='P')tp++; else if(v==='F')tf++; }); });
   var pp=tp+tf>0?Math.round(tp/(tp+tf)*100):0;
 
   // Pagamentos: soma pagamentos em TODOS os meses/livros registrados
@@ -750,7 +755,7 @@ function renderDashAdmin(){
 
   let alerts=[];
   al.forEach(a=>{
-    let f=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='F') f++; });
+    let f=0; pk.forEach(k=>{ if((D.presencas[k]||{})[String(a.id)]==='F') f++; });
     if(f>=3){
       alerts.push(`<div class="al vm"><span>\u26a0\ufe0f</span><span><strong>${fmtNome(a.nome)}</strong> \u2014 ${f} falta${f>1?'s':''} no total <button class="al-link" onclick="verPerfilAdmin('${a.id}')">ver perfil \u2192</button></span></div>`);
     }
@@ -868,8 +873,9 @@ function renderAlunosAdmin(){
   if(!lista.length){ el.innerHTML='<div class="empty"><div class="empty-ic">\u1f465</div><div class="empty-tx">Nenhum aluno encontrado.</div></div>'; return; }
   el.innerHTML=lista.map(a=>{
     const p=pagM[a.id]===true;
-    let ff=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='F') ff++; });
-    let pres=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') pres++; });
+    const _sid=String(a.id);
+    let ff=0; pk.forEach(k=>{ if((D.presencas[k]||{})[_sid]==='F') ff++; });
+    let pres=0; pk.forEach(k=>{ if((D.presencas[k]||{})[_sid]==='P') pres++; });
     const perc=pk.length>0?Math.round(pres/pk.length*100):null;
     const bClass = !a.ativo?'ba': ff>=2?'br': !p?'br':'bv';
     const bLabel = !a.ativo?'Inativo': ff>=2?`${ff} faltas`: !p?'Pendente':'Em dia';
@@ -891,11 +897,15 @@ function verPerfilAdmin(id){
   irAdmin('perfil'); document.getElementById('nb-alunos').classList.add('on');
   const h=hj(); const cm=chM(h);
   let tp=0,tf=0;
-  Object.values(D.presencas).forEach(v=>{ if(v[id]==='P') tp++; if(v[id]==='F') tf++; });
+  const sid=String(id); // garante comparação como string
+  Object.values(D.presencas).forEach(v=>{ if(v[sid]==='P') tp++; if(v[sid]==='F') tf++; });
   const totalAulas = Object.keys(D.presencas).length;
   const freqPerc = totalAulas>0 ? Math.round(tp/totalAulas*100) : 0;
-  const mp=Object.keys(D.pagamentos).filter(m=>D.pagamentos[m][id]===true).length;
-  const pagA=(D.pagamentos[cm]||{})[id]===true;
+  const mp=Object.keys(D.pagamentos).filter(m=>D.pagamentos[m][String(id)]===true).length;
+  // Verifica pagamento em QUALQUER registro (livro ou mês)
+  const _allPagsPerf={};
+  Object.keys(D.pagamentos).forEach(k=>{ if((D.pagamentos[k]||{})[String(id)]===true) _allPagsPerf[k]=true; });
+  const pagA=Object.keys(_allPagsPerf).length>0;
   const dim=new Date(h.getFullYear(),h.getMonth()+1,0).getDate();
   const p1=new Date(h.getFullYear(),h.getMonth(),1).getDay();
   let cal=DS.map(d=>`<div class="cd hd">${d}</div>`).join('');
@@ -1140,7 +1150,7 @@ function renderRelAdmin(aba){
     // Usa TODAS as presenças (não filtrar por mês atual)
     const pk=Object.keys(D.presencas);
     const linhas=al.map(a=>{
-      let p=0,f=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') p++; if(D.presencas[k][a.id]==='F') f++; });
+      let p=0,f=0; pk.forEach(k=>{ if((D.presencas[k]||{})[String(a.id)]==='P') p++; if((D.presencas[k]||{})[String(a.id)]==='F') f++; });
       const pc=pk.length>0?Math.round(p/pk.length*100):0;
       return `<div class="sl2" style="cursor:pointer" onclick="verPerfilAdmin('${a.id}')"><div><div style="font-weight:500;font-size:14px">${fmtNome(a.nome)}</div><div style="font-size:12px;color:var(--cin)">${p} pres \u00b7 ${f} faltas \u00b7 ${pk.length-p-f} ausentes</div></div><span class="bdg ${pc>=75?'bv':pc>=50?'ba':'br'}">${pc}%</span></div>`;
     }).join('');
@@ -1297,12 +1307,13 @@ function renderAlunoCadastro(){
       <div class="mpb-sub">${a.turma||'Turma \u00danica'}</div>
     </div>`;
   const h=hj(); const cm=chM(h);
-  // Verifica pagamento em qualquer mês/livro registrado
-  const _pagAl={};
-  Object.keys(D.pagamentos).forEach(k=>{ if((D.pagamentos[k]||{})[a.id]===true) _pagAl[k]=k; });
-  const pagA=Object.keys(_pagAl).length>0 || (D.pagamentos[cm]||{})[a.id]===true;
+  // Verifica pagamento em qualquer registro
+  const _aidStr=String(a.id);
+  const _pagAl=Object.keys(D.pagamentos).some(k=>(D.pagamentos[k]||{})[_aidStr]===true);
+  const pagA=_pagAl;
   const pk=Object.keys(D.presencas);
-  let tp=0,tf=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') tp++; if(D.presencas[k][a.id]==='F') tf++; });
+  const _aid=String(a.id);
+  let tp=0,tf=0; pk.forEach(k=>{ if((D.presencas[k]||{})[_aid]==='P') tp++; if((D.presencas[k]||{})[_aid]==='F') tf++; });
   document.getElementById('al-dados').innerHTML=`
     <div class="sl2"><span class="slb">Telefone</span><span style="font-size:14px">${a.tel?fmtTel(a.tel):'N\u00e3o cadastrado'}</span></div>
     <div class="sl2"><span class="slb">E-mail</span><span style="font-size:14px">${a.email||'N\u00e3o cadastrado'}</span></div>
@@ -1329,7 +1340,8 @@ function renderAlunoPresenca(){
   const a=usuAtual; const h=hj(); const cm=chM(h);
   document.getElementById('al-cal-mes').textContent=M[h.getMonth()]+' '+h.getFullYear();
   const pk=Object.keys(D.presencas);
-  let tp=0,tf=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') tp++; if(D.presencas[k][a.id]==='F') tf++; });
+  const _aid=String(a.id);
+  let tp=0,tf=0; pk.forEach(k=>{ if((D.presencas[k]||{})[_aid]==='P') tp++; if((D.presencas[k]||{})[_aid]==='F') tf++; });
   const tot=pk.length; const perc=tot>0?Math.round(tp/tot*100):0;
   document.getElementById('al-pres-stats').innerHTML=`
     <div class="g3">
@@ -1345,7 +1357,7 @@ function renderAlunoPresenca(){
   document.getElementById('al-cal').innerHTML=cal;
   const log=D.aulas_log||{};
   const hist=pk.sort().reverse().map(k=>{
-    const st=D.presencas[k][a.id]; const d=new Date(k+'T12:00:00'); const entry=log[k];
+    const st=(D.presencas[k]||{})[_aid]; const d=new Date(k+'T12:00:00'); const entry=log[k];
     return `<div class="pres-ro"><div><div style="font-size:14px;font-weight:500">${entry?entry.aula:'Aula'}</div><div class="pres-ro-d">${DS[d.getDay()]}, ${fmtD(d)}</div></div><span class="pres-ro-s ${st==='P'?'pres-p':st==='F'?'pres-f':'pres-n'}">${st==='P'?'Presente':st==='F'?'Falta':'\u2014'}</span></div>`;
   }).join('');
   document.getElementById('al-pres-hist').innerHTML=hist||'<p style="color:var(--cin);font-size:14px;padding:8px 0">Sem registros.</p>';
@@ -1353,12 +1365,18 @@ function renderAlunoPresenca(){
 
 function renderAlunoPagamentos(){
   const a=usuAtual;
-  const keys=[...new Set([...Object.keys(D.pagamentos),chM(hj())])].sort().reverse().slice(0,12);
+  const _aidPag=String(a.id);
+  const keys=[...new Set([...Object.keys(D.pagamentos)])].sort().reverse().slice(0,12);
   const linhas=keys.map(k=>{
-    const parts=k.split('-'); if(parts.length<2||isNaN(parseInt(parts[1]))) return '';
-    const [ano,mes]=parts; const p=(D.pagamentos[k]||{})[a.id]===true;
-    return `<div class="pgr"><div class="pgi"><div class="pgn">${M[parseInt(mes)-1]} ${ano}</div>${a.valor?`<div class="pgd">Mensalidade: R$ ${a.valor}</div>`:''}</div><span class="bdg ${p?'bv':'br'}">${p?'\u2713 Pago':'\u2717 Pendente'}</span></div>`;
-  }).filter(Boolean).join('');
+    const p=(D.pagamentos[k]||{})[_aidPag]===true;
+    // Formata a chave: pode ser "2026-03" (mês) ou "L1" (livro)
+    const parts=k.split('-');
+    let label=k;
+    if(parts.length>=2&&!isNaN(parseInt(parts[0]))&&!isNaN(parseInt(parts[1]))){
+      label=M[parseInt(parts[1])-1]+' '+parts[0]; // mês
+    }
+    return `<div class="pgr"><div class="pgi"><div class="pgn">${label}</div>${a.valor?`<div class="pgd">Mensalidade: R$ ${a.valor}</div>`:''}</div><span class="bdg ${p?'bv':'br'}">${p?'\u2713 Pago':'\u2717 Pendente'}</span></div>`;
+  }).join('');
   document.getElementById('al-pag-lista').innerHTML=linhas||'<div class="empty"><div class="empty-ic">\u1f4b3</div><div class="empty-tx">Sem registros.</div></div>';
 }
 
