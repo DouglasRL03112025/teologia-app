@@ -786,19 +786,20 @@ function irAluno(t){
 function renderDashAdmin(){
   const h=hj(); const cm=chM(h); const al=ativos(); const tot=al.length;
   document.getElementById('a-data').textContent=DS[h.getDay()]+', '+h.getDate()+' de '+M[h.getMonth()]+' de '+h.getFullYear();
-  // Frequencia: conta P e F em todas as presencas registradas
-  var _tp=0,_tf=0;
-  Object.keys(D.presencas).forEach(function(k){
-    if(k.endsWith('_cnt')) return;
-    var aula=D.presencas[k];
-    if(typeof aula==='object'){
-      Object.values(aula).forEach(function(v){
-        if(v==='P')_tp++;
-        else if(v==='F')_tf++;
-      });
-    }
-  });
-  var pp=(_tp+_tf)>0?Math.round(_tp/(_tp+_tf)*100):0;
+  // Frequencia: usa totais acumulados do Sheets (_freq_total)
+  var pp=0;
+  if(D._freq_total&&Object.keys(D._freq_total).length>0){
+    var totP=0,totF=0;
+    Object.values(D._freq_total).forEach(function(cnt){totP+=cnt.p;totF+=cnt.f;});
+    var totAulas=totP+totF;
+    pp=totAulas>0?Math.round(totP/totAulas*100):0;
+  } else {
+    // Fallback: conta direto nas presencas
+    var pk=Object.keys(D.presencas).filter(function(k){return !k.endsWith('_cnt');});
+    var tp=0,tf=0;
+    pk.forEach(function(k){Object.values(D.presencas[k]).forEach(function(v){if(v==='P')tp++;else if(v==='F')tf++;});});
+    pp=tp+tf>0?Math.round(tp/(tp+tf)*100):0;
+  }
   // Pagamentos: usa mes atual primeiro, senao qualquer livro
   var pagM=D.pagamentos[cm]||{};
   if(Object.keys(pagM).length===0){
@@ -1663,11 +1664,6 @@ function _syncSheets(){
 
     salvar();
     console.log('OK! Alunos:'+rA.length+' Pres:'+rP.length+' Pags:'+rPg.length);
-    // Atualiza dashboard se admin estiver na tela de inicio
-    if(usuAtual&&usuAtual.isAdmin){
-      var telaInicio=document.getElementById('a-inicio');
-      if(telaInicio&&telaInicio.classList.contains('on')) renderDashAdmin();
-    }
   }).catch(function(e){console.log('Erro:',e);});
 }
 setTimeout(_syncSheets,1000);
