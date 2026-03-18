@@ -786,13 +786,20 @@ function irAluno(t){
 function renderDashAdmin(){
   const h=hj(); const cm=chM(h); const al=ativos(); const tot=al.length;
   document.getElementById('a-data').textContent=DS[h.getDay()]+', '+h.getDate()+' de '+M[h.getMonth()]+' de '+h.getFullYear();
-  // Frequencia: usa mes atual, se vazio usa todas as presencas
-  var pk=Object.keys(D.presencas).filter(function(k){return k.startsWith(cm)&&!k.endsWith('_cnt');});
-  if(pk.length===0){
-    pk=Object.keys(D.presencas).filter(function(k){return !k.endsWith('_cnt');});
+  // Frequencia: usa totais acumulados do Sheets (_freq_total)
+  var pp=0;
+  if(D._freq_total&&Object.keys(D._freq_total).length>0){
+    var totP=0,totF=0;
+    Object.values(D._freq_total).forEach(function(cnt){totP+=cnt.p;totF+=cnt.f;});
+    var totAulas=totP+totF;
+    pp=totAulas>0?Math.round(totP/totAulas*100):0;
+  } else {
+    // Fallback: conta direto nas presencas
+    var pk=Object.keys(D.presencas).filter(function(k){return !k.endsWith('_cnt');});
+    var tp=0,tf=0;
+    pk.forEach(function(k){Object.values(D.presencas[k]).forEach(function(v){if(v==='P')tp++;else if(v==='F')tf++;});});
+    pp=tp+tf>0?Math.round(tp/(tp+tf)*100):0;
   }
-  var tp=0; pk.forEach(function(k){Object.values(D.presencas[k]).forEach(function(v){if(v==='P')tp++;});});
-  var mp=pk.length>0?pk.length*tot:0; var pp=mp>0?Math.round(tp/mp*100):0;
   // Pagamentos: usa mes atual primeiro, senao qualquer livro
   var pagM=D.pagamentos[cm]||{};
   if(Object.keys(pagM).length===0){
@@ -1617,22 +1624,22 @@ function _syncSheets(){
       }
     });
 
-    // Presencas: usa mes da aula como prefixo da chave
+    // Presencas: salva por ID Aula e acumula totais por aluno
+    // Resetar contadores de frequencia antes de recalcular
+    D._freq_total={};
     rP.forEach(function(r){
       var idA=String(r[0]||'').trim();
       var idAu=String(r[1]||'').trim();
-      var pres=String(r[2]||'').toLowerCase().indexOf('sim')>=0;
+      var presStr=String(r[2]||'').trim().toLowerCase();
+      var pres=presStr==='sim'||presStr==='s'||presStr==='yes';
       if(!idA||!idAu) return;
-      var info=aulaMap[idAu];
-      var chave=info?info.mes+'-'+idAu:idAu;
-      if(!D.presencas[chave])D.presencas[chave]={};
-      D.presencas[chave][idA]=pres?'P':'F';
-      // Tambem salva com a chave simples do mes para o calculo de frequencia
-      var mesSim=info?info.mes:'2026-03';
-      if(!D.presencas[mesSim+'_cnt'])D.presencas[mesSim+'_cnt']={};
-      if(!D.presencas[mesSim+'_cnt'][idA])D.presencas[mesSim+'_cnt'][idA]={p:0,f:0};
-      if(pres)D.presencas[mesSim+'_cnt'][idA].p++;
-      else D.presencas[mesSim+'_cnt'][idA].f++;
+      // Salva por aula
+      if(!D.presencas[idAu])D.presencas[idAu]={};
+      D.presencas[idAu][idA]=pres?'P':'F';
+      // Acumula total por aluno
+      if(!D._freq_total[idA])D._freq_total[idA]={p:0,f:0};
+      if(pres)D._freq_total[idA].p++;
+      else D._freq_total[idA].f++;
     });
 
     // Pagamentos: usa mes atual E livro/modulo
