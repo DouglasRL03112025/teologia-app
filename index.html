@@ -755,7 +755,35 @@ function irAluno(t){
   if(t==='agenda') renderAlunoAgenda();
   if(t==='presenca') renderAlunoPresenca();
   if(t==='pagamentos') renderAlunoPagamentos();
-  if(t==='livros') renderAlunoLivros();
+  if(t==='livros') renderAlunofunction renderAlunoLivros(){
+  const a = usuAtual;
+  if(!a){
+    alert("Erro ao carregar aluno");
+    return;
+  }
+
+  const lista = document.getElementById('al-livros-lista');
+  if(!lista) return;
+
+  // Se ainda não existir livros, cria temporário (não salva)
+  if(!a.livros){
+    lista.innerHTML = `
+      <div class="card">
+        ⚠️ Livros ainda não configurados.
+      </div>
+    `;
+    return;
+  }
+
+  lista.innerHTML = a.livros.map(l => `
+    <div class="card">
+      <b>📘 ${l.numero}. ${l.nome}</b><br>
+      📚 Entregue: ${l.entregue ? '✔️' : '❌'}<br>
+      💰 Pago: ${l.pago ? '✔️' : '❌'}<br>
+      📝 Nota: ${l.nota ?? '—'}
+    </div>
+  `).join('');
+}Livros();
   if(t==='notas') renderAlunoNotas();
 }
 
