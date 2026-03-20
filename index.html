@@ -523,6 +523,9 @@ select.inp{cursor:pointer}
     <button class="nb" id="aln-pagamentos" onclick="irAluno('pagamentos')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Pagamentos
     </button>
+    <button class="nb" id="aln-livros" onclick="irAluno('livros')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>Livros
+    </button>
     <button class="nb" id="aln-notas" onclick="irAluno('notas')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Notas
     </button>
@@ -855,7 +858,59 @@ function verPerfilAdmin(id){
     <div class="card"><div class="card-t">📋 Situação</div><div class="sl2"><span class="slb">Pag. ${M[h.getMonth()]}</span><span class="bdg ${pagA?'bv':'br'}">${pagA?'Em dia':'Pendente'}</span></div>${livH}${a.valor?`<div class="sl2"><span class="slb">Mensalidade</span><span class="slv">R$ ${a.valor}</span></div>`:''}${a.email?`<div class="sl2"><span class="slb">E-mail</span><span style="font-size:13px;color:var(--cin)">${a.email}</span></div>`:''}<div class="sl2"><span class="slb">Senha app</span><span style="font-family:monospace;font-size:14px;background:var(--azul-c);padding:2px 8px;border-radius:4px;color:var(--azul)">${a.senha||'—'}</span></div></div>
     <div class="card"><div class="card-t">🔢 Notas</div>${notasH}</div>
     <div class="card"><div class="card-t">📅 Calendário — ${M[h.getMonth()]}</div><div style="display:flex;gap:10px;font-size:12px;margin-bottom:8px"><span><span style="display:inline-block;width:12px;height:12px;background:var(--vd);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Presente</span><span><span style="display:inline-block;width:12px;height:12px;background:var(--vm);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Falta</span></div><div class="cal">${cal}</div></div>
-    <button class="btn bs" onclick="abrirModAluno('${id}')">✏️ Editar dados</button>`;
+    <button class="btn bs" onclick="abrirModAluno('${id}')">✏️ Editar dados</button>
+    <div class="card" style="margin-top:6px">
+      <div class="card-t">📚 Livros do Aluno</div>
+      <div id="livros-admin-lista-${id}"></div>
+    </div>\`;
+  renderLivrosAdminPerfil(id);
+}
+
+/* ════ LIVROS ADMIN — PERFIL ════ */
+function renderLivrosAdminPerfil(id){
+  var aluno = D.alunos.find(function(x){ return x.id===id; });
+  if(!aluno || !aluno.livros) return;
+  var container = document.getElementById('livros-admin-lista-'+id);
+  if(!container) return;
+  container.innerHTML = aluno.livros.map(function(l, livroIdx){
+    var chkEnt = l.entregue ? 'checked' : '';
+    var chkPago = l.pago===true ? 'checked' : '';
+    var notaVal = l.nota!==null ? l.nota : '';
+    var corNota = l.nota!==null ? (l.nota>=7?'var(--vd)':l.nota>=5?'var(--am)':'var(--vm)') : 'var(--cin)';
+    return '<div style="background:var(--fnd);border-radius:var(--r);padding:12px;margin-bottom:8px;border:1px solid var(--brd)">'
+      +'<div style="font-size:14px;font-weight:600;color:var(--azul);margin-bottom:8px">'
+      +'<span style="color:var(--cin);font-weight:400;font-size:12px">'+l.numero+'.</span> '+l.nome+'</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">'
+      +'<label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer">'
+      +'<input type="checkbox" '+chkEnt+' onchange="salvarLivroAdmin(\''+id+'\','+livroIdx+',\'entregue\',this.checked)" style="width:16px;height:16px;cursor:pointer">'
+      +'📚 Entregue</label>'
+      +'<label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer">'
+      +'<input type="checkbox" '+chkPago+' onchange="salvarLivroAdmin(\''+id+'\','+livroIdx+',\'pago\',this.checked)" style="width:16px;height:16px;cursor:pointer">'
+      +'💰 Pago</label>'
+      +'<div style="display:flex;align-items:center;gap:5px">'
+      +'<span style="font-size:13px">📝</span>'
+      +'<input type="number" min="0" max="10" step="0.1" placeholder="—" value="'+notaVal+'"'
+      +' style="width:62px;padding:5px 8px;border:1.5px solid var(--brd);border-radius:8px;font-size:14px;font-weight:600;font-family:Inter,sans-serif;text-align:center;color:'+corNota+'"'
+      +' onchange="salvarLivroAdmin(\''+id+'\','+livroIdx+',\'nota\',this.value)">'
+      +'</div></div></div>';
+  }).join('');
+}
+
+function salvarLivroAdmin(alunoId, livroIdx, campo, valor){
+  var ai = D.alunos.findIndex(function(x){ return x.id===alunoId; });
+  if(ai<0 || !D.alunos[ai].livros || !D.alunos[ai].livros[livroIdx]) return;
+  var livro = D.alunos[ai].livros[livroIdx];
+  if(campo==='nota'){
+    var n = parseFloat(valor);
+    livro.nota = (valor===''||isNaN(n)) ? null : Math.min(10,Math.max(0,n));
+  } else if(campo==='entregue'){
+    livro.entregue = valor;
+  } else if(campo==='pago'){
+    livro.pago = valor;
+  }
+  salvar();
+  var nome = fmtNome(D.alunos[ai].nome).split(' ')[0];
+  toast('\u2713 '+livro.nome+' — '+nome+' atualizado!');
 }
 
 /* ════ PRESENÇA ADMIN ════ */
@@ -1287,14 +1342,45 @@ function renderAlunoPagamentos(){
 }
 
 function renderAlunoLivros(){
-  const a=usuAtual;
-  const livros=D.livros_curso.map(l=>{ const e=(D.livros_ent[l.id]||{})[a.id]===true;
-    return `<div class="pgr"><div class="pgi"><div class="pgn">📖 ${l.nome}</div></div><span class="bdg ${e?'bv':'br'}">${e?'✓ Recebido':'Pendente'}</span></div>`; }).join('');
-  const provas=['p1','p2','p3','p4'].map((p,i)=>{ const f=(D.provas[p]||{})[a.id]===true;
-    return `<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova ${i+1}</div></div><span class="bdg ${f?'bv':'br'}">${f?'✓ Realizada':'Pendente'}</span></div>`; }).join('');
-  // navegar para a aba Livros ativa
-  const el=document.getElementById('al-livros');
-  if(el) el.innerHTML=`<div class="tit" style="font-size:19px;margin-bottom:14px">📚 Livros Recebidos</div>${livros}<div class="tit" style="font-size:19px;margin:18px 0 14px">📝 Minhas Provas</div>${provas}`;
+  const a = usuAtual;
+  const idx = D.alunos.findIndex(x=>x.id===a.id);
+  const livros = idx>=0 ? (D.alunos[idx].livros||[]) : [];
+  if(!livros.length){
+    document.getElementById('al-livros').innerHTML='<div class="empty"><div class="empty-ic">📚</div><div class="empty-tx">Carregando livros...</div></div>';
+    return;
+  }
+  const entregues = livros.filter(l=>l.entregue).length;
+  const comNota   = livros.filter(l=>l.nota!==null).length;
+  const rows = livros.map(l=>{
+    const badgeEnt = l.entregue
+      ? '<span class="bdg bv">📚 Entregue</span>'
+      : '<span class="bdg br">📚 Pendente</span>';
+    const badgeNota = l.nota!==null
+      ? `<span class="bdg ${l.nota>=7?'bv':l.nota>=5?'ba':'br'}">📝 ${parseFloat(l.nota).toFixed(1)}</span>`
+      : '<span class="bdg ba" style="opacity:.6">📝 —</span>';
+    const badgePag = l.pago===true
+      ? '<span class="bdg bv">💰 Pago</span>'
+      : l.pago===false
+        ? '<span class="bdg br">💰 Pendente</span>'
+        : '<span class="bdg ba" style="opacity:.6">💰 —</span>';
+    return `<div class="pgr" style="flex-wrap:wrap;gap:8px">
+      <div class="pgi" style="min-width:180px">
+        <div class="pgn"><span style="color:var(--cin);font-size:12px;margin-right:4px">${l.numero}.</span>${l.nome}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        ${badgeEnt}${badgeNota}${badgePag}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('al-livros').innerHTML=`
+    <div class="tit">Meus Livros</div>
+    <p class="sub">Acompanhe sua situação em cada disciplina</p>
+    <div class="g3" style="margin-bottom:16px">
+      <div class="mc3"><div class="mc3n" style="color:var(--azul)">${livros.length}</div><div class="mc3l">Total</div></div>
+      <div class="mc3"><div class="mc3n" style="color:var(--vd)">${entregues}</div><div class="mc3l">Entregues</div></div>
+      <div class="mc3"><div class="mc3n" style="color:var(--am)">${comNota}</div><div class="mc3l">Com nota</div></div>
+    </div>
+    ${rows}`;
 }
 
 function renderAlunoNotas(){
@@ -1329,10 +1415,62 @@ function salvarEdicaoAluno(){
 /* ════ FECHAR OVERLAYS ════ */
 document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('on'); }));
 
+/* ════ 24 LIVROS — CATÁLOGO FIXO ════ */
+const LIVROS_24 = [
+  {numero:1,  nome:'Bibliologia'},
+  {numero:2,  nome:'Pentateuco'},
+  {numero:3,  nome:'Históricos e Poéticos'},
+  {numero:4,  nome:'História de Israel'},
+  {numero:5,  nome:'Profetas Maiores e Menores'},
+  {numero:6,  nome:'Os Evangelhos'},
+  {numero:7,  nome:'Epístolas Paulinas'},
+  {numero:8,  nome:'Epístolas Gerais'},
+  {numero:9,  nome:'Apocalipse'},
+  {numero:10, nome:'História Eclesiástica'},
+  {numero:11, nome:'Hamartiologia e Soteriologia'},
+  {numero:12, nome:'Antropologia'},
+  {numero:13, nome:'Educação Cristã'},
+  {numero:14, nome:'Seitas Modernas'},
+  {numero:15, nome:'Geografia Bíblica'},
+  {numero:16, nome:'Escatologia'},
+  {numero:17, nome:'Evangelismo'},
+  {numero:18, nome:'Liderança Cristã'},
+  {numero:19, nome:'Hermenêutica'},
+  {numero:20, nome:'Teontologia'},
+  {numero:21, nome:'Cristologia'},
+  {numero:22, nome:'Eclesiologia'},
+  {numero:23, nome:'Atos dos Apóstolos'},
+  {numero:24, nome:'Homilética'}
+];
+
+/* ════ MIGRAÇÃO — garante aluno.livros para todos ════ */
+function migrarLivros(){
+  var alterou = false;
+  D.alunos.forEach(function(a){
+    if(!a.livros || a.livros.length === 0){
+      a.livros = LIVROS_24.map(function(l){
+        return {
+          numero:    l.numero,
+          nome:      l.nome,
+          presenca:  null,
+          faltas:    0,
+          pago:      null,
+          entregue:  false,
+          nota:      null,
+          materiais: []
+        };
+      });
+      alterou = true;
+    }
+  });
+  if(alterou) salvar();
+}
+
 /* ════ INIT ════ */
 D=carregarDB();
 if(!D.alunos||D.alunos.length===0){ D.alunos=JSON.parse(JSON.stringify(ALUNOS_BASE)); salvar(); }
 if(!D.aulas_log) { D.aulas_log={}; }
+migrarLivros();
 </script>
 </body>
 </html>
