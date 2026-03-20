@@ -1343,12 +1343,39 @@ function renderAlunoPagamentos(){
 
 function renderAlunoLivros(){
   const a = usuAtual;
-  const idx = D.alunos.findIndex(x=>x.id===a.id);
-  const livros = idx>=0 ? (D.alunos[idx].livros||[]) : [];
-  if(!livros.length){
-    document.getElementById('al-livros').innerHTML='<div class="empty"><div class="empty-ic">📚</div><div class="empty-tx">Carregando livros...</div></div>';
+  if (!a) return;
+
+  const el = document.getElementById('al-livros-lista');
+  if (!el) return;
+
+  // Sem livros configurados
+  if (!D.livros_curso || D.livros_curso.length === 0) {
+    el.innerHTML = '<p style="color:var(--cin);font-size:14px;padding:8px 0">Nenhum livro configurado ainda.</p>';
     return;
   }
+
+  // Livros recebidos
+  const livros = D.livros_curso.map(l => {
+    const entregue = (D.livros_ent[l.id] || {})[a.id] === true;
+    return `<div class="pgr">
+      <div class="pgi"><div class="pgn">📖 ${l.nome}</div></div>
+      <span class="bdg ${entregue ? 'bv' : 'br'}">${entregue ? '✓ Recebido' : 'Pendente'}</span>
+    </div>`;
+  }).join('');
+
+  // Provas realizadas
+  const provas = ['p1','p2','p3','p4'].map((p, i) => {
+    const feita = (D.provas[p] || {})[a.id] === true;
+    return `<div class="pgr">
+      <div class="pgi"><div class="pgn">📝 Prova ${i+1}</div></div>
+      <span class="bdg ${feita ? 'bv' : 'br'}">${feita ? '✓ Realizada' : 'Pendente'}</span>
+    </div>`;
+  }).join('');
+
+  el.innerHTML =
+    `<div class="tit" style="font-size:19px;margin-bottom:14px">📚 Livros Recebidos</div>` + livros +
+    `<div class="tit" style="font-size:19px;margin:18px 0 14px">📝 Minhas Provas</div>` + provas;
+}
   const entregues = livros.filter(l=>l.entregue).length;
   const comNota   = livros.filter(l=>l.nota!==null).length;
   const rows = livros.map(l=>{
