@@ -861,56 +861,62 @@ function verPerfilAdmin(id){
     <button class="btn bs" onclick="abrirModAluno('${id}')">✏️ Editar dados</button>
     <div class="card" style="margin-top:6px">
       <div class="card-t">📚 Livros do Aluno</div>
-      <div id="livros-admin-lista-${id}"></div>
+      <div id="livros-admin-lista"></div>
     </div>`;
   renderLivrosAdminPerfil(id);
 }
 
 /* ════ LIVROS ADMIN — PERFIL ════ */
-function renderLivrosAdminPerfil(id){
-  var aluno = D.alunos.find(function(x){ return x.id===id; });
-  if(!aluno || !aluno.livros) return;
-  var container = document.getElementById('livros-admin-lista-'+id);
-  if(!container) return;
-  container.innerHTML = aluno.livros.map(function(l, livroIdx){
-    var chkEnt = l.entregue ? 'checked' : '';
-    var chkPago = l.pago===true ? 'checked' : '';
-    var notaVal = l.nota!==null ? l.nota : '';
-    var corNota = l.nota!==null ? (l.nota>=7?'var(--vd)':l.nota>=5?'var(--am)':'var(--vm)') : 'var(--cin)';
+function renderLivrosAdminPerfil(id) {
+  var aluno = D.alunos.find(function(x){ return x.id === id; });
+  var container = document.getElementById('livros-admin-lista');
+  if (!container) return;
+  if (!aluno || !aluno.livros || !aluno.livros.length) {
+    container.innerHTML = '<p style="font-size:14px;color:var(--cin);padding:8px 0">Nenhum livro cadastrado para este aluno.</p>';
+    return;
+  }
+  container.innerHTML = aluno.livros.map(function(l, idx) {
+    var chkEnt  = l.entregue     ? 'checked' : '';
+    var chkPago = l.pago === true ? 'checked' : '';
+    var notaVal = l.nota !== null ? l.nota    : '';
+    var corNota = l.nota !== null
+      ? (l.nota >= 7 ? 'var(--vd)' : l.nota >= 5 ? 'var(--am)' : 'var(--vm)')
+      : 'var(--cin)';
     return '<div style="background:var(--fnd);border-radius:var(--r);padding:12px;margin-bottom:8px;border:1px solid var(--brd)">'
-      +'<div style="font-size:14px;font-weight:600;color:var(--azul);margin-bottom:8px">'
-      +'<span style="color:var(--cin);font-weight:400;font-size:12px">'+l.numero+'.</span> '+l.nome+'</div>'
-      +'<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">'
-      +'<label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer">'
-      +'<input type="checkbox" '+chkEnt+' onchange="salvarLivroAdmin(\''+id+'\','+livroIdx+',\'entregue\',this.checked)" style="width:16px;height:16px;cursor:pointer">'
-      +'📚 Entregue</label>'
-      +'<label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer">'
-      +'<input type="checkbox" '+chkPago+' onchange="salvarLivroAdmin(\''+id+'\','+livroIdx+',\'pago\',this.checked)" style="width:16px;height:16px;cursor:pointer">'
-      +'💰 Pago</label>'
-      +'<div style="display:flex;align-items:center;gap:5px">'
-      +'<span style="font-size:13px">📝</span>'
-      +'<input type="number" min="0" max="10" step="0.1" placeholder="—" value="'+notaVal+'"'
-      +' style="width:62px;padding:5px 8px;border:1.5px solid var(--brd);border-radius:8px;font-size:14px;font-weight:600;font-family:Inter,sans-serif;text-align:center;color:'+corNota+'"'
-      +' onchange="salvarLivroAdmin(\''+id+'\','+livroIdx+',\'nota\',this.value)">'
-      +'</div></div></div>';
+      + '<div style="font-size:14px;font-weight:600;color:var(--azul);margin-bottom:8px">'
+      + '<span style="color:var(--cin);font-weight:400;font-size:12px">' + l.numero + '.</span> ' + l.nome
+      + '</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center">'
+      + '<label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer">'
+      + '<input type="checkbox" ' + chkEnt + ' onchange="salvarLivroAdmin('' + id + '',' + idx + ','entregue',this.checked)" style="width:16px;height:16px;cursor:pointer"> 📚 Entregue'
+      + '</label>'
+      + '<label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer">'
+      + '<input type="checkbox" ' + chkPago + ' onchange="salvarLivroAdmin('' + id + '',' + idx + ','pago',this.checked)" style="width:16px;height:16px;cursor:pointer"> 💰 Pago'
+      + '</label>'
+      + '<div style="display:flex;align-items:center;gap:5px;font-size:13px">'
+      + '<span>📝 Nota:</span>'
+      + '<input type="number" min="0" max="10" step="0.1" placeholder="—" value="' + notaVal + '"'
+      + ' style="width:64px;padding:5px 8px;border:1.5px solid var(--brd);border-radius:8px;font-size:14px;font-weight:600;font-family:Inter,sans-serif;text-align:center;color:' + corNota + '"'
+      + ' onchange="salvarLivroAdmin('' + id + '',' + idx + ','nota',this.value)">'
+      + '</div></div></div>';
   }).join('');
 }
 
-function salvarLivroAdmin(alunoId, livroIdx, campo, valor){
-  var ai = D.alunos.findIndex(function(x){ return x.id===alunoId; });
-  if(ai<0 || !D.alunos[ai].livros || !D.alunos[ai].livros[livroIdx]) return;
+function salvarLivroAdmin(alunoId, livroIdx, campo, valor) {
+  var ai = D.alunos.findIndex(function(x){ return x.id === alunoId; });
+  if (ai < 0 || !D.alunos[ai].livros || !D.alunos[ai].livros[livroIdx]) return;
   var livro = D.alunos[ai].livros[livroIdx];
-  if(campo==='nota'){
+  if (campo === 'nota') {
     var n = parseFloat(valor);
-    livro.nota = (valor===''||isNaN(n)) ? null : Math.min(10,Math.max(0,n));
-  } else if(campo==='entregue'){
+    livro.nota = (valor === '' || isNaN(n)) ? null : Math.min(10, Math.max(0, n));
+  } else if (campo === 'entregue') {
     livro.entregue = valor;
-  } else if(campo==='pago'){
+  } else if (campo === 'pago') {
     livro.pago = valor;
   }
   salvar();
-  var nome = fmtNome(D.alunos[ai].nome).split(' ')[0];
-  toast('\u2713 '+livro.nome+' — '+nome+' atualizado!');
+  var primeiroNome = fmtNome(D.alunos[ai].nome).split(' ')[0];
+  toast('✓ ' + livro.nome + ' — ' + primeiroNome + ' atualizado!');
 }
 
 /* ════ PRESENÇA ADMIN ════ */
@@ -1343,36 +1349,40 @@ function renderAlunoPagamentos(){
 
 function renderAlunoLivros(){
   const a = usuAtual;
-  const idx = D.alunos.findIndex(x=>x.id===a.id);
-  const livros = idx>=0 ? (D.alunos[idx].livros||[]) : [];
-  if(!livros.length){
-    document.getElementById('al-livros').innerHTML='<div class="empty"><div class="empty-ic">📚</div><div class="empty-tx">Carregando livros...</div></div>';
+  const ai = D.alunos.findIndex(x => x.id === a.id);
+  const livros = (ai >= 0 && D.alunos[ai].livros) ? D.alunos[ai].livros : [];
+
+  if (!livros.length) {
+    document.getElementById('al-livros').innerHTML =
+      '<div class="empty"><div class="empty-ic">📚</div><div class="empty-tx">Nenhum livro encontrado. Faça login novamente.</div></div>';
     return;
   }
-  const entregues = livros.filter(l=>l.entregue).length;
-  const comNota   = livros.filter(l=>l.nota!==null).length;
-  const rows = livros.map(l=>{
-    const badgeEnt = l.entregue
+
+  const entregues = livros.filter(l => l.entregue).length;
+  const comNota   = livros.filter(l => l.nota !== null).length;
+  const pagos     = livros.filter(l => l.pago === true).length;
+
+  const rows = livros.map(l => {
+    const bEnt  = l.entregue
       ? '<span class="bdg bv">📚 Entregue</span>'
       : '<span class="bdg br">📚 Pendente</span>';
-    const badgeNota = l.nota!==null
-      ? `<span class="bdg ${l.nota>=7?'bv':l.nota>=5?'ba':'br'}">📝 ${parseFloat(l.nota).toFixed(1)}</span>`
-      : '<span class="bdg ba" style="opacity:.6">📝 —</span>';
-    const badgePag = l.pago===true
+    const bPag  = l.pago === true
       ? '<span class="bdg bv">💰 Pago</span>'
-      : l.pago===false
+      : l.pago === false
         ? '<span class="bdg br">💰 Pendente</span>'
-        : '<span class="bdg ba" style="opacity:.6">💰 —</span>';
-    return `<div class="pgr" style="flex-wrap:wrap;gap:8px">
-      <div class="pgi" style="min-width:180px">
+        : '<span class="bdg ba">💰 —</span>';
+    const bNota = l.nota !== null
+      ? `<span class="bdg ${l.nota>=7?'bv':l.nota>=5?'ba':'br'}">📝 ${parseFloat(l.nota).toFixed(1)}</span>`
+      : '<span class="bdg ba">📝 —</span>';
+    return `<div class="pgr" style="flex-wrap:wrap;gap:8px;align-items:center">
+      <div class="pgi" style="min-width:0;flex:1">
         <div class="pgn"><span style="color:var(--cin);font-size:12px;margin-right:4px">${l.numero}.</span>${l.nome}</div>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-        ${badgeEnt}${badgeNota}${badgePag}
-      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">${bEnt}${bPag}${bNota}</div>
     </div>`;
   }).join('');
-  document.getElementById('al-livros').innerHTML=`
+
+  document.getElementById('al-livros').innerHTML = `
     <div class="tit">Meus Livros</div>
     <p class="sub">Acompanhe sua situação em cada disciplina</p>
     <div class="g3" style="margin-bottom:16px">
@@ -1415,8 +1425,8 @@ function salvarEdicaoAluno(){
 /* ════ FECHAR OVERLAYS ════ */
 document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('on'); }));
 
-/* ════ 24 LIVROS — CATÁLOGO FIXO ════ */
-const LIVROS_24 = [
+/* ════ 24 LIVROS — CATÁLOGO ════ */
+var LIVROS_24 = [
   {numero:1,  nome:'Bibliologia'},
   {numero:2,  nome:'Pentateuco'},
   {numero:3,  nome:'Históricos e Poéticos'},
@@ -1443,27 +1453,19 @@ const LIVROS_24 = [
   {numero:24, nome:'Homilética'}
 ];
 
-/* ════ MIGRAÇÃO — garante aluno.livros para todos ════ */
-function migrarLivros(){
+/* ════ MIGRAÇÃO — cria aluno.livros se não existir ════ */
+function migrarLivros() {
   var alterou = false;
-  D.alunos.forEach(function(a){
-    if(!a.livros || a.livros.length === 0){
-      a.livros = LIVROS_24.map(function(l){
-        return {
-          numero:    l.numero,
-          nome:      l.nome,
-          presenca:  null,
-          faltas:    0,
-          pago:      null,
-          entregue:  false,
-          nota:      null,
-          materiais: []
-        };
+  D.alunos.forEach(function(a) {
+    if (!a.livros || a.livros.length === 0) {
+      a.livros = LIVROS_24.map(function(l) {
+        return { numero: l.numero, nome: l.nome,
+                 entregue: false, pago: null, nota: null, materiais: [] };
       });
       alterou = true;
     }
   });
-  if(alterou) salvar();
+  if (alterou) salvar();
 }
 
 /* ════ INIT ════ */
