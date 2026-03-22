@@ -1327,15 +1327,18 @@ function renderAlunoLivros(){
     +'</div>';
   const livrosPend=D.livros_curso.filter(l=>!((D.livros_ent[l.id]||{})[a.id]===true));
   const livrosRec=D.livros_curso.filter(l=>(D.livros_ent[l.id]||{})[a.id]===true);
-  const livros=[...livrosPend,...livrosRec].map(l=>{ const e=(D.livros_ent[l.id]||{})[a.id]===true;
-    return '<div class="pgr '+(e?'liv-rec':'liv-pend')+'"><div class="pgi"><div class="pgn">📖 '+l.nome+'</div></div><span class="bdg '+(e?'bv':'br')+'">'+(e?'✓ Recebido':'Pendente')+'</span></div>'; }).join('');
+  const mkCard=l=>{ const e=(D.livros_ent[l.id]||{})[a.id]===true;
+    return '<div class="pgr '+(e?'liv-rec':'liv-pend')+'"><div class="pgi"><div class="pgn">📖 '+l.nome+'</div></div><span class="bdg '+(e?'bv':'br')+'">'+(e?'✓ Recebido':'Pendente')+'</span></div>'; };
+  const htmlPend=livrosPend.length?'<p class="sl-sec">❌ Pendentes</p>'+livrosPend.map(mkCard).join(''):'';
+  const htmlRec=livrosRec.length?'<p class="sl-sec" style="margin-top:'+(livrosPend.length?'20':'0')+'px">📚 Recebidos</p>'+livrosRec.map(mkCard).join(''):'';
+  const livros=htmlPend+htmlRec;
   const provas=['p1','p2','p3','p4'].map(function(p,i){
     const nota=(D.notas[p]||{})[a.id];
     const feita=nota!==undefined;
     const info=feita?' — '+nota.toFixed(1):'';
     return '<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova '+(i+1)+info+'</div></div><span class="bdg '+(feita?'bv':'br')+'">'+(feita?'✓ Realizada':'Pendente')+'</span></div>'; }).join('');
   const el=document.getElementById('al-livros-lista');
-  if(el) el.innerHTML=progresso+resumo+'<p class="sl-sec">📚 Livros Recebidos</p>'+livros+'<p class="sl-sec" style="margin-top:28px">📝 Provas</p>'+provas;
+  if(el) el.innerHTML=progresso+resumo+livros+'<p class="sl-sec" style="margin-top:28px">📝 Provas</p>'+provas;
 }
 
 function renderAlunoNotas(){
