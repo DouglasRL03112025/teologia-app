@@ -1291,15 +1291,20 @@ function renderAlunoPagamentos(){
 
 function renderAlunoLivros(){
   const a=usuAtual;
+  const total=D.livros_curso.length;
+  const recebidos=D.livros_curso.filter(function(l){ return (D.livros_ent[l.id]||{})[a.id]===true; }).length;
+  const perc=total>0?Math.round(recebidos/total*100):0;
+  const corBarra=perc===100?'var(--vd)':'var(--azul)';
+  const progresso='<div style="background:#fff;border-radius:var(--r);padding:16px 18px;margin-bottom:16px;border:1px solid var(--brd);box-shadow:var(--s)"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-size:20px">📚</span><div style="flex:1"><div style="font-size:15px;font-weight:600;color:var(--azul)">Progresso do Curso</div><div style="font-size:13px;color:var(--cin);margin-top:1px">'+recebidos+' de '+total+' livros recebidos</div></div><span style="font-size:22px;font-weight:700;font-family:Lora,serif;color:'+corBarra+'">'+perc+'%</span></div><div style="height:8px;background:var(--brd);border-radius:99px;overflow:hidden"><div style="height:100%;width:'+perc+'%;background:'+corBarra+';border-radius:99px"></div></div></div>';
   const livros=D.livros_curso.map(l=>{ const e=(D.livros_ent[l.id]||{})[a.id]===true;
-    return `<div class="pgr"><div class="pgi"><div class="pgn">📖 ${l.nome}</div></div><span class="bdg ${e?'bv':'br'}">${e?'✓ Recebido':'Pendente'}</span></div>`; }).join('');
-  const provas=['p1','p2','p3','p4'].map((p,i)=>{
+    return '<div class="pgr"><div class="pgi"><div class="pgn">📖 '+l.nome+'</div></div><span class="bdg '+(e?'bv':'br')+'">'+(e?'✓ Recebido':'Pendente')+'</span></div>'; }).join('');
+  const provas=['p1','p2','p3','p4'].map(function(p,i){
     const nota=(D.notas[p]||{})[a.id];
     const feita=nota!==undefined;
-    const info=feita?` — ${nota.toFixed(1)}`:'';
-    return `<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova ${i+1}${info}</div></div><span class="bdg ${feita?'bv':'br'}">${feita?'✓ Realizada':'Pendente'}</span></div>`; }).join('');
+    const info=feita?' — '+nota.toFixed(1):'';
+    return '<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova '+(i+1)+info+'</div></div><span class="bdg '+(feita?'bv':'br')+'">'+(feita?'✓ Realizada':'Pendente')+'</span></div>'; }).join('');
   const el=document.getElementById('al-livros-lista');
-  if(el) el.innerHTML=`<p class="sl" style="margin-bottom:8px">LIVROS RECEBIDOS</p>${livros}<p class="sl" style="margin:16px 0 8px">PROVAS</p>${provas}`;
+  if(el) el.innerHTML=progresso+'<p class="sl" style="margin-bottom:8px">LIVROS RECEBIDOS</p>'+livros+'<p class="sl" style="margin:16px 0 8px">PROVAS</p>'+provas;
 }
 
 function renderAlunoNotas(){
