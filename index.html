@@ -1291,7 +1291,7 @@ function renderAlunoPagamentos(){
 
 function renderAlunoLivros(){
   const a=usuAtual;
-  const total=D.livros_curso.length;
+  const total=24;
   const recebidos=D.livros_curso.filter(function(l){ return (D.livros_ent[l.id]||{})[a.id]===true; }).length;
   const perc=total>0?Math.round(recebidos/total*100):0;
   const corBarra=perc===100?'var(--vd)':'var(--azul)';
