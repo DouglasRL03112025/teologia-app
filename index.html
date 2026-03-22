@@ -1335,8 +1335,13 @@ function renderAlunoLivros(){
   const provas=['p1','p2','p3','p4'].map(function(p,i){
     const nota=(D.notas[p]||{})[a.id];
     const feita=nota!==undefined;
-    const info=feita?' — '+nota.toFixed(1):'';
-    return '<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova '+(i+1)+info+'</div></div><span class="bdg '+(feita?'bv':'br')+'">'+(feita?'✓ Realizada':'Pendente')+'</span></div>'; }).join('');
+    if(feita){
+      const status=nota>=7?'✓ Aprovado':nota>=5?'Em recuperação':'✗ Reprovado';
+      const cor=nota>=7?'bv':nota>=5?'ba':'br';
+      return '<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova '+(i+1)+'</div><div class="pgd">'+status+'</div></div><span class="bdg '+cor+'" style="font-size:18px;padding:6px 14px">'+nota.toFixed(1)+'</span></div>';
+    }
+    return '<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova '+(i+1)+'</div><div class="pgd" style="color:var(--vm)">Ainda não realizada</div></div><span class="bdg br">Pendente</span></div>';
+  }).join('');
   const el=document.getElementById('al-livros-lista');
   if(el) el.innerHTML=progresso+resumo+livros+'<p class="sl-sec" style="margin-top:28px">📝 Provas</p>'+provas;
 }
