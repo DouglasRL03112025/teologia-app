@@ -476,6 +476,7 @@ select.inp{cursor:pointer}
     <!-- MINHA PRESENÇA -->
     <div class="tela" id="al-presenca">
       <div class="tit">Minha Presença</div>
+      <div id="al-pres-resumo" style="margin-bottom:12px"></div>
       <div id="al-pres-stats" style="margin-bottom:14px"></div>
       <div class="card">
         <div class="card-t">📅 Calendário — <span id="al-cal-mes"></span></div>
@@ -1258,6 +1259,20 @@ function renderAlunoAgenda(){
 
 function renderAlunoPresenca(){
   const a=usuAtual; const h=hj(); const cm=chM(h);
+  // Resumo geral (todas as datas)
+  let tpTotal=0, tfTotal=0;
+  Object.keys(D.presencas).forEach(k=>{ if(D.presencas[k][a.id]==='P') tpTotal++; if(D.presencas[k][a.id]==='F') tfTotal++; });
+  const resumoEl=document.getElementById('al-pres-resumo');
+  if(resumoEl) resumoEl.innerHTML='<div style="display:flex;gap:10px">'
+    +'<div style="flex:1;background:#f0faf4;border:1px solid #b2dfca;border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:8px">'
+    +'<span style="font-size:18px">📊</span>'
+    +'<div><div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Presenças</div>'
+    +'<div style="font-size:20px;font-weight:700;color:var(--vd);font-family:Lora,serif">'+tpTotal+'</div></div></div>'
+    +'<div style="flex:1;background:#fff0f0;border:1px solid #f5c6c6;border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:8px">'
+    +'<span style="font-size:18px">❌</span>'
+    +'<div><div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Faltas</div>'
+    +'<div style="font-size:20px;font-weight:700;color:var(--vm);font-family:Lora,serif">'+tfTotal+'</div></div></div>'
+    +'</div>';
   document.getElementById('al-cal-mes').textContent=M[h.getMonth()]+' '+h.getFullYear();
   const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
   let tp=0,tf=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') tp++; if(D.presencas[k][a.id]==='F') tf++; });
