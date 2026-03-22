@@ -1325,7 +1325,9 @@ function renderAlunoLivros(){
     +'<div><div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Pendentes</div>'
     +'<div style="font-size:20px;font-weight:700;color:var(--vm);font-family:Lora,serif">'+pendentes+'</div></div></div>'
     +'</div>';
-  const livros=D.livros_curso.map(l=>{ const e=(D.livros_ent[l.id]||{})[a.id]===true;
+  const livrosPend=D.livros_curso.filter(l=>!((D.livros_ent[l.id]||{})[a.id]===true));
+  const livrosRec=D.livros_curso.filter(l=>(D.livros_ent[l.id]||{})[a.id]===true);
+  const livros=[...livrosPend,...livrosRec].map(l=>{ const e=(D.livros_ent[l.id]||{})[a.id]===true;
     return '<div class="pgr '+(e?'liv-rec':'liv-pend')+'"><div class="pgi"><div class="pgn">📖 '+l.nome+'</div></div><span class="bdg '+(e?'bv':'br')+'">'+(e?'✓ Recebido':'Pendente')+'</span></div>'; }).join('');
   const provas=['p1','p2','p3','p4'].map(function(p,i){
     const nota=(D.notas[p]||{})[a.id];
