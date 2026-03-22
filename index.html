@@ -1363,10 +1363,18 @@ function renderAlunoLivros(){
   const livrosRec=D.livros_curso.filter(l=>(D.livros_ent[l.id]||{})[a.id]===true);
   const mkCard=l=>{ const e=(D.livros_ent[l.id]||{})[a.id]===true;
     return '<div class="pgr '+(e?'liv-rec':'liv-pend')+'"><div class="pgi"><div class="pgn">📖 '+l.nome+'</div></div><span class="bdg '+(e?'bv':'br')+'">'+(e?'✓ Recebido':'Pendente')+'</span></div>'; };
-  const htmlPend=livrosPend.length?'<p class="sl-sec">❌ Pendentes</p>'+livrosPend.map(mkCard).join(''):'';
-  const htmlRec=livrosRec.length?'<p class="sl-sec" style="margin-top:'+(livrosPend.length?'20':'0')+'px">📚 Recebidos</p>'+livrosRec.map(mkCard).join(''):'';
+  const emptyMsg=(ic,txt)=>'<div style="text-align:center;padding:18px 12px;color:var(--cin);font-size:13px"><span style="font-size:24px;display:block;margin-bottom:6px">'+ic+'</span>'+txt+'</div>';
+  const htmlPend=livrosPend.length
+    ?'<p class="sl-sec">❌ Pendentes</p>'+livrosPend.map(mkCard).join('')
+    :'<p class="sl-sec">❌ Pendentes</p>'+emptyMsg('🎉','Nenhum livro pendente!');
+  const htmlRec=livrosRec.length
+    ?'<p class="sl-sec" style="margin-top:20px">📚 Recebidos</p>'+livrosRec.map(mkCard).join('')
+    :'<p class="sl-sec" style="margin-top:20px">📚 Recebidos</p>'+emptyMsg('📭','Nenhum livro recebido ainda.');
   const livros=htmlPend+htmlRec;
-  const provas=['p1','p2','p3','p4'].map(function(p,i){
+  const provasFeitas=['p1','p2','p3','p4'].filter(p=>(D.notas[p]||{})[a.id]!==undefined).length;
+  const provas=(provasFeitas===0
+    ? emptyMsg('📝','Nenhuma prova realizada ainda.')
+    : ['p1','p2','p3','p4'].map(function(p,i){
     const nota=(D.notas[p]||{})[a.id];
     const feita=nota!==undefined;
     if(feita){
@@ -1375,7 +1383,7 @@ function renderAlunoLivros(){
       return '<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova '+(i+1)+'</div><div class="pgd">'+status+'</div></div><span class="bdg '+cor+'" style="font-size:18px;padding:6px 14px">'+nota.toFixed(1)+'</span></div>';
     }
     return '<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova '+(i+1)+'</div><div class="pgd" style="color:var(--vm)">Ainda não realizada</div></div><span class="bdg br">Pendente</span></div>';
-  }).join('');
+  }).join(''));
   const el=document.getElementById('al-livros-lista');
   if(el) el.innerHTML=progresso+resumo+livros+'<p class="sl-sec" style="margin-top:28px">📝 Provas</p>'+provas;
 }
