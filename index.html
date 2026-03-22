@@ -859,7 +859,7 @@ function verPerfilAdmin(id){
   for(let i=0;i<p1;i++) cal+='<div class="cd vz"></div>';
   for(let d=1;d<=dim;d++){ const k=`${h.getFullYear()}-${(h.getMonth()+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`; const v=D.presencas[k]; const c=v&&v[id]==='P'?'cp':v&&v[id]==='F'?'cf':''; cal+=`<div class="cd ${c}">${d}</div>`; }
   const notasH=['p1','p2','p3','p4'].map((p,i)=>{ const n=(D.notas[p]||{})[id]; if(n===undefined) return ''; return `<div class="sl2"><span class="slb">Prova ${i+1}</span><span class="bdg ${n>=7?'bv':n>=5?'ba':'br'}">${n.toFixed(1)}</span></div>`; }).filter(Boolean).join('')||'<p style="font-size:14px;color:var(--cin)">Sem notas</p>';
-  const livH=D.livros_curso.map(l=>`<div class="sl2"><span class="slb">${l.nome}</span><span class="bdg ${(D.livros_ent[l.id]||{})[id]?'bv':'br'}">${(D.livros_ent[l.id]||{})[id]?'✓ Entregue':'Pendente'}</span></div>`).join('');
+  const livH=D.livros_curso.map(l=>`<div class="sl2"><span class="slb">${l.nome}</span><span class="bdg ${(D.livros_ent[l.id]||{})[id]?'bv':'br'}">${(D.livros_ent[l.id]||{})[id]?'✓ Recebido':'Pendente'}</span></div>`).join('');
   document.getElementById('a-perfil-conteudo').innerHTML=`
     <div class="ph"><div class="pav">${ini(a.nome)}</div><div class="pn">${fmtNome(a.nome)}</div><div class="pt">${a.turma||'Turma Única'}${a.tel?' · '+fmtTel(a.tel):''}</div></div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:15px">
@@ -933,7 +933,7 @@ function renderLivrosAdmin(){
   const al=ativos(); let h='';
   D.livros_curso.forEach(l=>{ const e=D.livros_ent[l.id]||{}; const q=al.filter(a=>e[a.id]===true).length;
     h+=`<div style="margin-bottom:14px"><div style="font-size:14px;font-weight:600;color:var(--azul);margin-bottom:8px;display:flex;justify-content:space-between"><span>📖 ${l.nome}</span><span style="color:var(--cin);font-weight:400">${q}/${al.length}</span></div>
-    ${al.map(a=>{ const ev=(D.livros_ent[l.id]||{})[a.id]===true; return `<div class="tr"><div><div class="tn">${fmtNome(a.nome)}</div><div class="ts2">${ev?'✓ Entregue':'Pendente'}</div></div><label class="tg"><input type="checkbox" ${ev?'checked':''} onchange="tgLivro('${l.id}','${a.id}',this.checked)"><span class="tsl"></span></label></div>`; }).join('')}</div>`; });
+    ${al.map(a=>{ const ev=(D.livros_ent[l.id]||{})[a.id]===true; return `<div class="tr"><div><div class="tn">${fmtNome(a.nome)}</div><div class="ts2">${ev?'✓ Recebido':'Pendente'}</div></div><label class="tg"><input type="checkbox" ${ev?'checked':''} onchange="tgLivro('${l.id}','${a.id}',this.checked)"><span class="tsl"></span></label></div>`; }).join('')}</div>`; });
   document.getElementById('mat-livros').innerHTML=h;
 }
 function tgLivro(lid,aid,v){ if(!D.livros_ent[lid]) D.livros_ent[lid]={}; D.livros_ent[lid][aid]=v; salvar(); const a=D.alunos.find(x=>x.id===aid); toast(v?`📚 Livro entregue a ${fmtNome(a.nome)}!`:'Marcado como pendente'); renderLivrosAdmin(); }
@@ -1373,14 +1373,14 @@ function renderAlunoLivros(){
   const emptyMsg=(ic,txt)=>'<div style="text-align:center;padding:18px 12px;color:var(--cin);font-size:13px"><span style="font-size:24px;display:block;margin-bottom:6px">'+ic+'</span>'+txt+'</div>';
   const htmlPend=livrosPend.length
     ?'<p class="sl-sec">❌ Pendentes</p>'+livrosPend.map(mkCard).join('')
-    :'<p class="sl-sec">❌ Pendentes</p>'+emptyMsg('🎉','Nenhum livro pendente!');
+    :'<p class="sl-sec">❌ Pendentes</p>'+emptyMsg('🎉','Nenhum livro pendente 🎉');
   const htmlRec=livrosRec.length
     ?'<p class="sl-sec" style="margin-top:20px">📚 Recebidos</p>'+livrosRec.map(mkCard).join('')
-    :'<p class="sl-sec" style="margin-top:20px">📚 Recebidos</p>'+emptyMsg('📭','Nenhum livro recebido ainda.');
+    :'<p class="sl-sec" style="margin-top:20px">📚 Recebidos</p>'+emptyMsg('📭','Nenhum livro recebido ainda');
   const livros=htmlPend+htmlRec;
   const provasFeitas=['p1','p2','p3','p4'].filter(p=>(D.notas[p]||{})[a.id]!==undefined).length;
   const provas=(provasFeitas===0
-    ? emptyMsg('📝','Nenhuma prova realizada ainda.')
+    ? emptyMsg('📝','Nenhuma prova realizada ainda')
     : ['p1','p2','p3','p4'].map(function(p,i){
     const nota=(D.notas[p]||{})[a.id];
     const feita=nota!==undefined;
