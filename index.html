@@ -1432,5 +1432,23 @@ D=carregarDB();
 if(!D.alunos||D.alunos.length===0){ D.alunos=JSON.parse(JSON.stringify(ALUNOS_BASE)); salvar(); }
 if(!D.aulas_log) { D.aulas_log={}; }
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const supabaseUrl = 'https://avzyklukencvhmyuflwh.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2enlrbHVrZW5jdmhteXVmbHdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjc2MTcsImV4cCI6MjA4OTg0MzYxN30.Y_-bIpc56N1v4ix74nReBA85S2Mshcnl6h-E--HJ3W8';
+  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+  async function testarConexao() {
+    const { data, error } = await supabase.from('alunos').select('*');
+    if (error) {
+      console.error('Erro ao conectar com o Supabase:', error);
+    } else {
+      console.log('Conexão com Supabase OK. Dados recebidos:', data);
+    }
+  }
+
+  testarConexao();
+</script>
 </body>
 </html>
