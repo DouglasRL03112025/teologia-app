@@ -1437,10 +1437,10 @@ if(!D.aulas_log) { D.aulas_log={}; }
 <script>
   const supabaseUrl = 'https://avzyklukencvhmyuflwh.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2enlrbHVrZW5jdmhteXVmbHdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjc2MTcsImV4cCI6MjA4OTg0MzYxN30.Y_-bIpc56N1v4ix74nReBA85S2Mshcnl6h-E--HJ3W8';
-  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+  const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
   async function testarConexao() {
-    const { data, error } = await supabase.from('alunos').select('*');
+    const { data, error } = await supabaseClient.from('alunos').select('*');
     if (error) {
       console.error('Erro ao conectar com o Supabase:', error);
     } else {
