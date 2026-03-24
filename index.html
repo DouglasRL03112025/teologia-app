@@ -1448,7 +1448,17 @@ if(!D.aulas_log) { D.aulas_log={}; }
     }
   }
 
+  async function carregarAlunosSupabase() {
+    const { data, error } = await supabaseClient.from('alunos').select('*');
+    if (error) {
+      console.error('Erro ao carregar alunos do Supabase:', error);
+    } else {
+      D.alunos = data;
+    }
+  }
+
   testarConexao();
+  carregarAlunosSupabase();
 </script>
 </body>
 </html>
