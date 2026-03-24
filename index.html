@@ -1457,8 +1457,24 @@ if(!D.aulas_log) { D.aulas_log={}; }
     }
   }
 
+  async function carregarNotasSupabase() {
+    const { data, error } = await supabaseClient.from('notas').select('*');
+    if (error) {
+      console.error('Erro ao carregar notas do Supabase:', error);
+    } else {
+      if (!D.notas) D.notas = {};
+      const resultado = {};
+      data.forEach(function(item) {
+        if (!resultado[item.prova]) resultado[item.prova] = {};
+        resultado[item.prova][item.aluno_id] = item.nota;
+      });
+      D.notas = resultado;
+    }
+  }
+
   testarConexao();
   carregarAlunosSupabase();
+  carregarNotasSupabase();
 </script>
 </body>
 </html>
