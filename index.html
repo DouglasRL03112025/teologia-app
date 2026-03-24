@@ -699,12 +699,16 @@ function abrirMod(id){ document.getElementById(id).classList.add('on'); }
 document.getElementById('login-senha').addEventListener('keydown',e=>{ if(e.key==='Enter') fazerLogin(); });
 document.getElementById('admin-pw').addEventListener('keydown',e=>{ if(e.key==='Enter') verificarAdmin(); });
 
+function normalizarTelefone(tel){
+  return tel ? tel.replace(/\D/g,'') : '';
+}
+
 function fazerLogin(){
-  const tel = document.getElementById('login-tel').value.replace(/\D/g,'').trim();
+  const tel = normalizarTelefone(document.getElementById('login-tel').value.trim());
   const senha = document.getElementById('login-senha').value.trim();
   if(!tel){ toast('⚠ Digite seu telefone'); return; }
   if(!senha){ toast('⚠ Digite sua senha'); return; }
-  const aluno = D.alunos.find(a=>a.tel && a.tel.replace(/\D/g,'')===tel && a.ativo!==false);
+  const aluno = D.alunos.find(a=>a.telefone && normalizarTelefone(a.telefone)===tel && a.ativo!==false);
   if(!aluno){ toast('⚠ Telefone não encontrado'); return; }
   if(aluno.senha && senha !== aluno.senha){ toast('⚠ Senha incorreta'); return; }
   usuAtual = aluno;
