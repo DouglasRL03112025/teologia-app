@@ -1476,9 +1476,24 @@ if(!D.aulas_log) { D.aulas_log={}; }
     }
   }
 
+  async function carregarPresencaSupabase() {
+    const { data, error } = await supabaseClient.from('presenca').select('*');
+    if (error) {
+      console.error('Erro ao carregar presença do Supabase:', error);
+    } else {
+      const resultado = {};
+      data.forEach(function(item) {
+        if (!resultado[item.data]) resultado[item.data] = {};
+        resultado[item.data][item.aluno_id] = item.presente;
+      });
+      D.presenca = resultado;
+    }
+  }
+
   testarConexao();
   carregarAlunosSupabase();
   carregarNotasSupabase();
+  carregarPresencaSupabase();
 </script>
 </body>
 </html>
