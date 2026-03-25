@@ -912,8 +912,18 @@ function salvarPres(){
   // Salvar presença no Supabase
   const ch=chD(_dp); const pD=D.presencas[ch]||{};
   ativos().forEach(function(a){
-    if(pD[a.id]==='P') salvarPresencaSupabase(a.id, ch, true);
-    else if(pD[a.id]==='F') salvarPresencaSupabase(a.id, ch, false);
+    const status = pD[a.id];
+    console.log('[salvarPres] alunoId:', a.id, '| data:', ch, '| status:', status);
+    if(status === 'P'){
+      console.log('[salvarPres] ação: insert/update PRESENTE');
+      sincronizarPresencaSupabase(a.id, ch, true);
+    } else if(status === 'F'){
+      console.log('[salvarPres] ação: insert/update FALTA');
+      sincronizarPresencaSupabase(a.id, ch, false);
+    } else {
+      console.log('[salvarPres] ação: delete (status vazio/null/undefined)');
+      removerPresencaSupabase(a.id, ch);
+    }
   });
   toast('✓ Presenças salvas!');
 }
@@ -1506,6 +1516,22 @@ if(!D.aulas_log) { D.aulas_log={}; }
     if (error) {
       console.error('Erro ao salvar presença no Supabase:', error);
     }
+  }
+
+  async function sincronizarPresencaSupabase(alunoId, data, presente) {
+    const { error } = await supabaseClient.from('presenca').upsert(
+      { aluno_id: alunoId, data: data, presente: presente },
+      { onConflict: 'aluno_id,data' }
+    );
+    if (error) console.error('Erro ao sincronizar presença no Supabase:', error);
+  }
+
+  async function removerPresencaSupabase(alunoId, data) {
+    const { error } = await supabaseClient.from('presenca')
+      .delete()
+      .eq('aluno_id', alunoId)
+      .eq('data', data);
+    if (error) console.error('Erro ao remover presença do Supabase:', error);
   }
 
   testarConexao();
