@@ -908,7 +908,14 @@ function salvarPres(){
     if(!D.aulas_log) D.aulas_log={};
     D.aulas_log[chD(_dp)]={modulo:mod,aula:aulaName||''};
   }
-  salvar(); toast('✓ Presenças salvas!');
+  salvar();
+  // Salvar presença no Supabase
+  const ch=chD(_dp); const pD=D.presencas[ch]||{};
+  ativos().forEach(function(a){
+    if(pD[a.id]==='P') salvarPresencaSupabase(a.id, ch, true);
+    else if(pD[a.id]==='F') salvarPresencaSupabase(a.id, ch, false);
+  });
+  toast('✓ Presenças salvas!');
 }
 
 /* ════ PAGAMENTOS ADMIN ════ */
@@ -1487,6 +1494,17 @@ if(!D.aulas_log) { D.aulas_log={}; }
         resultado[item.data][item.aluno_id] = item.presente;
       });
       D.presenca = resultado;
+    }
+  }
+
+  async function salvarPresencaSupabase(alunoId, data, presente) {
+    const { error } = await supabaseClient.from('presenca').insert({
+      aluno_id: alunoId,
+      data: data,
+      presente: presente
+    });
+    if (error) {
+      console.error('Erro ao salvar presença no Supabase:', error);
     }
   }
 
