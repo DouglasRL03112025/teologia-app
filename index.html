@@ -590,49 +590,6 @@ select.inp{cursor:pointer}
 <div id="toast"></div>
 
 <script>
-/* ════════════════════════════════════════════
-   DADOS INICIAIS — 38 ALUNOS
-════════════════════════════════════════════ */
-const ALUNOS_BASE = [
-  {id:'1',nome:'ADRIANO DE SENA ROSA',tel:'62986225615',senha:'5615',turma:'Turma Única',ativo:true},
-  {id:'2',nome:'ALDENIR PEREIRA',tel:'',senha:'1234',turma:'Turma Única',ativo:true},
-  {id:'3',nome:'ALEX RODRIGUES FREITAS',tel:'62993192156',senha:'2156',turma:'Turma Única',ativo:true},
-  {id:'4',nome:'ALEXANDRE ARAUJO GUEDES',tel:'62992931449',senha:'1449',turma:'Turma Única',ativo:true},
-  {id:'5',nome:'ANTONIA CANDIDO DE SOUZA',tel:'62983168699',senha:'8699',turma:'Turma Única',ativo:true},
-  {id:'6',nome:'CATIA SOUZA DA SILVA RODRIGUES',tel:'62992038797',senha:'8797',turma:'Turma Única',ativo:true},
-  {id:'7',nome:'CRISTIANE DA SILVA LIMA',tel:'62981350208',senha:'0208',turma:'Turma Única',ativo:true},
-  {id:'8',nome:'DENIS MAICON SOUZA FERREIRA',tel:'62981043171',senha:'3171',turma:'Turma Única',ativo:true},
-  {id:'9',nome:'DENNYS ALEXANDRE REIS DE LUCENA',tel:'',senha:'1234',turma:'Turma Única',ativo:true},
-  {id:'10',nome:'DIANA PRISCILA SILVA SANTOS',tel:'62991266727',senha:'6727',turma:'Turma Única',ativo:true},
-  {id:'11',nome:'ETIENNE MOURA SANTOS',tel:'62992459763',senha:'9763',turma:'Turma Única',ativo:true},
-  {id:'12',nome:'EVALDO DE PAULA BARBOSA',tel:'62985210383',senha:'0383',turma:'Turma Única',ativo:true},
-  {id:'13',nome:'GABRIELA MOREIRA HONORATO',tel:'62984857872',senha:'7872',turma:'Turma Única',ativo:true},
-  {id:'14',nome:'IVENS MOREIRA PARAISO',tel:'62991856985',senha:'6985',turma:'Turma Única',ativo:true},
-  {id:'15',nome:'JACQUELINE ALVES DE ARAUJO',tel:'62992302112',senha:'2112',turma:'Turma Única',ativo:true},
-  {id:'16',nome:'JAILTON DIAS XAVIER',tel:'62993583386',senha:'3386',turma:'Turma Única',ativo:true},
-  {id:'17',nome:'JAIRO DA SILVA FAVACHO',tel:'62998620439',senha:'0439',turma:'Turma Única',ativo:true},
-  {id:'18',nome:'JHONATAN JUNIOR EVANGELISTA LEITE',tel:'62991062209',senha:'2209',turma:'Turma Única',ativo:true},
-  {id:'19',nome:'JOÃO VYCTOR RODRIGUES DE SOUZA',tel:'62992566176',senha:'6176',turma:'Turma Única',ativo:true},
-  {id:'20',nome:'JORDANIA LIMA DOS SANTOS',tel:'62991531226',senha:'1226',turma:'Turma Única',ativo:true},
-  {id:'21',nome:'JOSE LUIZ QUEIROZ PINHEIRO',tel:'62985325361',senha:'5361',turma:'Turma Única',ativo:true},
-  {id:'22',nome:'KAROLLINE ELIAS DOS SANTOS BERNAZZOLLI',tel:'62994768383',senha:'8383',turma:'Turma Única',ativo:true},
-  {id:'23',nome:'LEONIDAS RODRIGUES DE SOUZA JUNIOR',tel:'62991984473',senha:'4473',turma:'Turma Única',ativo:true},
-  {id:'24',nome:'LORENA LEOCARDIO DE MORAES',tel:'62991200111',senha:'0111',turma:'Turma Única',ativo:true},
-  {id:'25',nome:'LUCIANE BARBOSA RODRIGUES',tel:'62996259672',senha:'9672',turma:'Turma Única',ativo:true},
-  {id:'26',nome:'LUNA LEOCARDIO DE MORAES',tel:'62992966208',senha:'6208',turma:'Turma Única',ativo:true},
-  {id:'27',nome:'MARIA CONCEIÇÃO DA SILVA',tel:'62982211266',senha:'1266',turma:'Turma Única',ativo:true},
-  {id:'28',nome:'MARIA JUCILEIDE LISBOA LIMA',tel:'62985739860',senha:'9860',turma:'Turma Única',ativo:true},
-  {id:'29',nome:'MARIA LEOCARDIO AMORIM MORAES',tel:'62993161376',senha:'1376',turma:'Turma Única',ativo:true},
-  {id:'30',nome:'MARIA VITORIA LISBOA LIMA',tel:'62985160451',senha:'0451',turma:'Turma Única',ativo:true},
-  {id:'31',nome:'MICAEL DE SOUSA',tel:'62992484375',senha:'4375',turma:'Turma Única',ativo:true},
-  {id:'32',nome:'NEILSON PEREIRA',tel:'62983379454',senha:'9454',turma:'Turma Única',ativo:true},
-  {id:'33',nome:'RONEIK FERREIRA SANTOS',tel:'62985161279',senha:'1279',turma:'Turma Única',ativo:true},
-  {id:'34',nome:'RUBENS SENA DA SILVA',tel:'62994157569',senha:'7569',turma:'Turma Única',ativo:true},
-  {id:'35',nome:'TIAGO CARDOSO BRAGA',tel:'62993020696',senha:'0696',turma:'Turma Única',ativo:true},
-  {id:'36',nome:'WELLINGTON NASCIMENTO FONSECA',tel:'62982585510',senha:'5510',turma:'Turma Única',ativo:true},
-  {id:'37',nome:'ANA BRUNA ALVES CARDOSO DE OLIVEIRA',tel:'62985573220',senha:'3220',turma:'Turma Única',ativo:true},
-  {id:'38',nome:'ELIDIANE DIAS DE SOUSA RAMOS',tel:'62992266437',senha:'6437',turma:'Turma Única',ativo:true}
-];
 
 const AULAS_MOD = {
   '📜 Pentateuco':['Introdução ao Pentateuco','Gênesis 1–11: Origens','Gênesis 12–50: Patriarcas','Êxodo: A Libertação','Levítico: A Santidade','Números: No Deserto','Deuteronômio: A Aliança'],
@@ -653,7 +610,7 @@ const DB_KEY = 'teologia_v4';
 /* ════ DB ════ */
 let D, usuAtual = null;
 
-function ddp(){ return { alunos: JSON.parse(JSON.stringify(ALUNOS_BASE)), presencas:{}, pagamentos:{}, livros_ent:{}, provas:{}, notas:{}, livros_curso:[{id:'l1',nome:'Livro 1 – Introdução Bíblica'},{id:'l2',nome:'Livro 2 – Pentateuco e Históricos'},{id:'l3',nome:'Livro 3 – Poéticos e Proféticos'},{id:'l4',nome:'Livro 4 – Novo Testamento'}], aulas_log:{} }; }
+function ddp(){ return { alunos: [], presencas:{}, pagamentos:{}, livros_ent:{}, provas:{}, notas:{}, livros_curso:[{id:'l1',nome:'Livro 1 – Introdução Bíblica'},{id:'l2',nome:'Livro 2 – Pentateuco e Históricos'},{id:'l3',nome:'Livro 3 – Poéticos e Proféticos'},{id:'l4',nome:'Livro 4 – Novo Testamento'}], aulas_log:{} }; }
 function carregarDB(){
   try{
     var db = JSON.parse(localStorage.getItem(DB_KEY)) || ddp();
@@ -975,21 +932,24 @@ function renderNotasAdmin(){
     return `<div class="nr"><span class="nn">${fmtNome(a.nome)}</span><div class="niw"><input class="ni" id="nt-${a.id}" type="number" min="0" max="10" step="0.1" placeholder="—" value="${n}" oninput="updChip('${a.id}',this.value)"><span class="nc ${n!==''?(n>=7?'bv':n>=5?'ba':'br'):''}" id="chip-${a.id}">${n!==''?parseFloat(n).toFixed(1):''}</span></div></div>`; }).join('');
 }
 function updChip(id,v){ const c=document.getElementById('chip-'+id); if(!c) return; const n=parseFloat(v); if(isNaN(n)||v===''){ c.textContent=''; c.className='nc'; return; } c.textContent=n.toFixed(1); c.className='nc '+(n>=7?'bv':n>=5?'ba':'br'); }
-function salvarNotas(){
+async function salvarNotas(){
   const pid=document.getElementById('sel-prova').value; if(!pid) return;
   if(!D.notas[pid]) D.notas[pid]={};
+  const ops=[];
   ativos().forEach(a=>{
     const el=document.getElementById('nt-'+a.id); if(!el) return;
     const v=parseFloat(el.value);
+    console.log('ID DO ALUNO:', a.id);
     if(!isNaN(v)&&el.value!==''){
       const nota=Math.min(10,Math.max(0,v));
       D.notas[pid][a.id]=nota;
-      sincronizarNotaSupabase(a.id, pid, nota);
+      ops.push(sincronizarNotaSupabase(a.id, pid, nota));
     } else {
       delete D.notas[pid][a.id];
-      removerNotaSupabase(a.id, pid);
+      ops.push(removerNotaSupabase(a.id, pid));
     }
   });
+  await Promise.all(ops);
   salvar(); toast('✓ Notas salvas!');
 }
 
@@ -1461,7 +1421,7 @@ document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{ if(e
 
 /* ════ INIT ════ */
 D=carregarDB();
-if(!D.alunos||D.alunos.length===0){ D.alunos=JSON.parse(JSON.stringify(ALUNOS_BASE)); salvar(); }
+// D.alunos é carregado exclusivamente do Supabase via inicializarApp()
 if(!D.aulas_log) { D.aulas_log={}; }
 </script>
 
@@ -1484,9 +1444,23 @@ if(!D.aulas_log) { D.aulas_log={}; }
     const { data, error } = await supabaseClient.from('alunos').select('*');
     if (error) {
       console.error('Erro ao carregar alunos do Supabase:', error);
-    } else {
-      D.alunos = data;
+      return;
     }
+    // Mapeia colunas do Supabase para o formato interno do sistema
+    D.alunos = data.map(function(a) {
+      return {
+        id:    a.id,           // UUID real do banco
+        nome:  a.nome,
+        tel:   a.telefone || a.tel || '',
+        email: a.email || '',
+        turma: a.turma || 'Turma Única',
+        valor: a.valor || '',
+        senha: a.senha || '1234',
+        ativo: a.ativo !== false
+      };
+    });
+    console.log('[carregarAlunosSupabase] Alunos carregados:', D.alunos.length);
+    D.alunos.forEach(function(a) { console.log('ID DO ALUNO:', a.id); });
   }
 
   async function carregarNotasSupabase() {
@@ -1567,6 +1541,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
       await carregarNotasSupabase();
       await carregarPresencaSupabase();
       console.log('✓ Dados carregados do Supabase. App pronto.');
+      salvar();
     } catch(e) {
       console.error('Erro na inicialização do Supabase:', e);
     }
