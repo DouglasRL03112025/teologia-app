@@ -1474,7 +1474,10 @@ if(!D.aulas_log) { D.aulas_log={}; }
     if (error) {
       console.error('Erro ao carregar alunos do Supabase:', error);
     } else {
-      D.alunos = data;
+      // Garante que a.id seja sempre o UUID do Supabase
+      D.alunos = data.map(function(a) {
+        return Object.assign({}, a, { id: a.id });
+      });
     }
   }
 
@@ -1486,8 +1489,21 @@ if(!D.aulas_log) { D.aulas_log={}; }
       if (!D.notas) D.notas = {};
       const resultado = {};
       data.forEach(function(item) {
-        if (!resultado[item.prova]) resultado[item.prova] = {};
-        resultado[item.prova][item.aluno_id] = item.nota;
+        const prova = item.prova || item.periodo;
+        if (!prova) return;
+        if (!resultado[prova]) resultado[prova] = {};
+        // Se aluno_id for UUID válido, usa direto; senão cruza pelo nome
+        let alunoId = item.aluno_id;
+        const isUUID = alunoId && /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(alunoId);
+        if (!isUUID && item.aluno_nome) {
+          const found = D.alunos.find(function(a) {
+            return a.nome && a.nome.trim().toUpperCase() === item.aluno_nome.trim().toUpperCase();
+          });
+          if (found) alunoId = found.id;
+        }
+        if (alunoId && item.nota !== null && item.nota !== undefined) {
+          resultado[prova][alunoId] = item.nota;
+        }
       });
       D.notas = resultado;
     }
@@ -1539,7 +1555,16 @@ if(!D.aulas_log) { D.aulas_log={}; }
       await carregarAlunosSupabase();
       await carregarNotasSupabase();
       await carregarPresencaSupabase();
+      // Limpar notas antigas do localStorage (IDs numéricos) após Supabase sobrescrever
+      salvar();
+      // Re-renderizar telas que dependem de D.alunos e D.notas com dados atualizados
+      if(typeof renderNotasAdmin === 'function') renderNotasAdmin();
+      if(typeof renderRelAtual === 'function') renderRelAtual();
       console.log('✓ Dados carregados do Supabase. App pronto.');
+      console.log('TESTE IDs:', {
+        aluno: D.alunos[0]?.id,
+        nota: Object.keys(D.notas?.p1 || {})[0]
+      });
     } catch(e) {
       console.error('Erro na inicialização do Supabase:', e);
     }
