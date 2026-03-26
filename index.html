@@ -660,12 +660,12 @@ function normalizarTelefone(tel){
   return tel ? tel.replace(/\D/g,'') : '';
 }
 
-function fazerLogin(){
+async function fazerLogin(){
   const tel = normalizarTelefone(document.getElementById('login-tel').value.trim());
   const senha = document.getElementById('login-senha').value.trim();
   if(!tel){ toast('⚠ Digite seu telefone'); return; }
   if(!senha){ toast('⚠ Digite sua senha'); return; }
-  const aluno = D.alunos.find(a=>a.telefone && normalizarTelefone(a.telefone)===tel && a.ativo!==false);
+  const aluno = D.alunos.find(a=>a.tel && normalizarTelefone(a.tel)===tel && a.ativo!==false);
   if(!aluno){ toast('⚠ Telefone não encontrado'); return; }
   if(aluno.senha && senha !== aluno.senha){ toast('⚠ Senha incorreta'); return; }
   usuAtual = aluno;
@@ -674,11 +674,13 @@ function fazerLogin(){
   document.getElementById('aluno-header-nome').textContent = fmtNome(aluno.nome).split(' ')[0];
   renderAlunoInicio();
   irAluno('cadastro');
+  // Autenticação Supabase Auth em background (não bloqueia o login)
+  autenticarAlunoSupabase(tel).catch(e => console.warn('[Auth] Falha silenciosa:', e));
 }
 
 function abrirModAdmin(){ abrirMod('mod-admin'); setTimeout(()=>document.getElementById('admin-pw').focus(),100); }
 
-function verificarAdmin(){
+async function verificarAdmin(){
   if(document.getElementById('admin-pw').value===ADMIN_PW){
     fecharMod('mod-admin'); document.getElementById('admin-pw').value='';
     usuAtual = {id:'admin',nome:'Administrador',isAdmin:true};
@@ -686,6 +688,8 @@ function verificarAdmin(){
     document.getElementById('pg-admin').style.display='block';
     renderDashAdmin();
     irAdmin('inicio');
+    // Autenticação Supabase Auth em background
+    autenticarAdminSupabase().catch(e => console.warn('[Auth Admin] Falha silenciosa:', e));
   } else { toast('⚠ Senha incorreta'); }
 }
 
@@ -695,6 +699,9 @@ function sair(){
   document.getElementById('pg-login').style.display='flex';
   document.getElementById('login-tel').value='';
   document.getElementById('login-senha').value='';
+  // Sign out do Supabase Auth em background
+  supabaseClient.auth.signOut().catch(e => console.warn('[Auth] Erro ao sair:', e));
+  console.log('[Auth] Sessão encerrada.');
 }
 
 /* ════ NAV ADMIN ════ */
@@ -1545,6 +1552,69 @@ if(!D.aulas_log) { D.aulas_log={}; }
     } catch(e) {
       console.error('Erro na inicialização do Supabase:', e);
     }
+  }
+
+  /* ════ SUPABASE AUTH ════ */
+
+  // Autentica aluno no Supabase Auth usando email fictício
+  // email: <telefone>@ibicamp.com  |  senha: <telefone completo>
+  async function autenticarAlunoSupabase(tel) {
+    const email = tel + '@ibicamp.com';
+    const senha = tel;
+
+    // Tenta login primeiro
+    const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+
+    if (!signInError && signInData.session) {
+      console.log('[Auth] Login aluno autenticado no Supabase Auth. Tipo: aluno | Email:', email);
+      return signInData.session;
+    }
+
+    // Se não existe, cria a conta
+    const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password: senha });
+    if (signUpError) {
+      console.warn('[Auth] Não foi possível criar conta no Supabase Auth:', signUpError.message);
+      return null;
+    }
+
+    console.log('[Auth] Conta criada e autenticada no Supabase Auth. Tipo: aluno | Email:', email);
+    return signUpData.session;
+  }
+
+  // Autentica admin no Supabase Auth
+  async function autenticarAdminSupabase() {
+    const email = 'admin@ibicamp.com';
+    const senha = 'ibicamp2025';
+
+    const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+
+    if (!signInError && signInData.session) {
+      console.log('[Auth] Admin autenticado no Supabase Auth. Tipo: admin | Email:', email);
+      return signInData.session;
+    }
+
+    // Cria conta admin se não existir
+    const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password: senha });
+    if (signUpError) {
+      console.warn('[Auth] Não foi possível criar conta admin no Supabase Auth:', signUpError.message);
+      return null;
+    }
+
+    console.log('[Auth] Conta admin criada no Supabase Auth. Tipo: admin | Email:', email);
+    return signUpData.session;
+  }
+
+  // Verifica sessão ativa e tipo de usuário
+  async function verificarSessaoAuth() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      console.log('[Auth] Nenhuma sessão ativa.');
+      return null;
+    }
+    const email = session.user.email;
+    const tipo = email === 'admin@ibicamp.com' ? 'admin' : 'aluno';
+    console.log('[Auth] Sessão ativa. Tipo:', tipo, '| Email:', email);
+    return { session, tipo, email };
   }
 
   testarConexao();
