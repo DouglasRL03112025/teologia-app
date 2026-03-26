@@ -978,7 +978,18 @@ function updChip(id,v){ const c=document.getElementById('chip-'+id); if(!c) retu
 function salvarNotas(){
   const pid=document.getElementById('sel-prova').value; if(!pid) return;
   if(!D.notas[pid]) D.notas[pid]={};
-  ativos().forEach(a=>{ const el=document.getElementById('nt-'+a.id); if(!el) return; const v=parseFloat(el.value); if(!isNaN(v)&&el.value!=='') D.notas[pid][a.id]=Math.min(10,Math.max(0,v)); else delete D.notas[pid][a.id]; });
+  ativos().forEach(a=>{
+    const el=document.getElementById('nt-'+a.id); if(!el) return;
+    const v=parseFloat(el.value);
+    if(!isNaN(v)&&el.value!==''){
+      const nota=Math.min(10,Math.max(0,v));
+      D.notas[pid][a.id]=nota;
+      sincronizarNotaSupabase(a.id, pid, nota);
+    } else {
+      delete D.notas[pid][a.id];
+      removerNotaSupabase(a.id, pid);
+    }
+  });
   salvar(); toast('✓ Notas salvas!');
 }
 
@@ -1474,10 +1485,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
     if (error) {
       console.error('Erro ao carregar alunos do Supabase:', error);
     } else {
-      // Garante que a.id seja sempre o UUID do Supabase
-      D.alunos = data.map(function(a) {
-        return Object.assign({}, a, { id: a.id });
-      });
+      D.alunos = data;
     }
   }
 
@@ -1489,21 +1497,8 @@ if(!D.aulas_log) { D.aulas_log={}; }
       if (!D.notas) D.notas = {};
       const resultado = {};
       data.forEach(function(item) {
-        const prova = item.prova || item.periodo;
-        if (!prova) return;
-        if (!resultado[prova]) resultado[prova] = {};
-        // Se aluno_id for UUID válido, usa direto; senão cruza pelo nome
-        let alunoId = item.aluno_id;
-        const isUUID = alunoId && /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(alunoId);
-        if (!isUUID && item.aluno_nome) {
-          const found = D.alunos.find(function(a) {
-            return a.nome && a.nome.trim().toUpperCase() === item.aluno_nome.trim().toUpperCase();
-          });
-          if (found) alunoId = found.id;
-        }
-        if (alunoId && item.nota !== null && item.nota !== undefined) {
-          resultado[prova][alunoId] = item.nota;
-        }
+        if (!resultado[item.prova]) resultado[item.prova] = {};
+        resultado[item.prova][item.aluno_id] = item.nota;
       });
       D.notas = resultado;
     }
@@ -1519,7 +1514,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
         if (!resultado[item.data]) resultado[item.data] = {};
         resultado[item.data][item.aluno_id] = item.presente;
       });
-      D.presenca = resultado;
+      D.presencas = resultado;
     }
   }
 
@@ -1550,21 +1545,28 @@ if(!D.aulas_log) { D.aulas_log={}; }
     if (error) console.error('Erro ao remover presença do Supabase:', error);
   }
 
+  async function sincronizarNotaSupabase(alunoId, prova, nota) {
+    const { error } = await supabaseClient.from('notas').upsert(
+      { aluno_id: alunoId, prova: prova, nota: nota },
+      { onConflict: 'aluno_id,prova' }
+    );
+    if (error) console.error('Erro ao sincronizar nota no Supabase:', error);
+  }
+
+  async function removerNotaSupabase(alunoId, prova) {
+    const { error } = await supabaseClient.from('notas')
+      .delete()
+      .eq('aluno_id', alunoId)
+      .eq('prova', prova);
+    if (error) console.error('Erro ao remover nota do Supabase:', error);
+  }
+
   async function inicializarApp() {
     try {
       await carregarAlunosSupabase();
       await carregarNotasSupabase();
       await carregarPresencaSupabase();
-      // Limpar notas antigas do localStorage (IDs numéricos) após Supabase sobrescrever
-      salvar();
-      // Re-renderizar telas que dependem de D.alunos e D.notas com dados atualizados
-      if(typeof renderNotasAdmin === 'function') renderNotasAdmin();
-      if(typeof renderRelAtual === 'function') renderRelAtual();
       console.log('✓ Dados carregados do Supabase. App pronto.');
-      console.log('TESTE IDs:', {
-        aluno: D.alunos[0]?.id,
-        nota: Object.keys(D.notas?.p1 || {})[0]
-      });
     } catch(e) {
       console.error('Erro na inicialização do Supabase:', e);
     }
