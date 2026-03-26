@@ -1534,10 +1534,19 @@ if(!D.aulas_log) { D.aulas_log={}; }
     if (error) console.error('Erro ao remover presença do Supabase:', error);
   }
 
+  async function inicializarApp() {
+    try {
+      await carregarAlunosSupabase();
+      await carregarNotasSupabase();
+      await carregarPresencaSupabase();
+      console.log('✓ Dados carregados do Supabase. App pronto.');
+    } catch(e) {
+      console.error('Erro na inicialização do Supabase:', e);
+    }
+  }
+
   testarConexao();
-  carregarAlunosSupabase();
-  carregarNotasSupabase();
-  carregarPresencaSupabase();
+  inicializarApp();
 </script>
 </body>
 </html>
