@@ -1664,20 +1664,37 @@ if(!D.aulas_log) { D.aulas_log={}; }
       const email = telefone + '@ibicamp.com';
       const password = '1234';
 
-      const { data, error } = await supabaseClient.auth.signUp({ email, password });
+      let data, error;
 
-      if (!error) {
-        console.log('CRIADO:', aluno.nome, '|', email);
-        criados++;
-      } else if (error.message && (error.message.toLowerCase().includes('already') || error.message.toLowerCase().includes('registered') || error.status === 422)) {
-        console.log('JÁ EXISTE:', aluno.nome, '|', email);
-        jaExistem++;
-      } else {
-        console.error('ERRO:', aluno.nome, '|', email, '|', error.message);
-        erros++;
+      // Tenta criar; se rate limit (429), aguarda 3s e tenta mais uma vez
+      ({ data, error } = await supabaseClient.auth.signUp({ email, password }));
+
+      if (error && (error.status === 429 || (error.message && error.message.includes('rate limit')))) {
+        console.warn('[CriarAuth] Rate limit atingido para', aluno.nome, '— aguardando 3s e tentando novamente...');
+        await new Promise(r => setTimeout(r, 3000));
+        ({ data, error } = await supabaseClient.auth.signUp({ email, password }));
       }
 
-      await new Promise(r => setTimeout(r, 1200));
+      if (error) {
+        // "User already registered" → já existe no Auth
+        if (error.message && error.message.toLowerCase().includes('already registered')) {
+          console.log('JÁ EXISTE:', aluno.nome, '|', email);
+          jaExistem++;
+        } else {
+          console.error('ERRO:', aluno.nome, '|', email, '|', error.status, error.message);
+          erros++;
+        }
+      } else if (data && data.user) {
+        // Criação real confirmada: data.user deve existir com um id
+        console.log('CRIADO:', aluno.nome, '|', email, '| id:', data.user.id);
+        criados++;
+      } else {
+        // signUp sem erro mas sem user — provavelmente já existe (confirmação pendente)
+        console.log('JÁ EXISTE:', aluno.nome, '|', email, '(sem erro, sem user — duplicata silenciosa)');
+        jaExistem++;
+      }
+
+      await new Promise(r => setTimeout(r, 1500));
     }
 
     const resumo = `Criação concluída!\n✅ Criados: ${criados}\n⏭ Já existiam: ${jaExistem}\n❌ Erros: ${erros}`;
