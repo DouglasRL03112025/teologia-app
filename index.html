@@ -864,7 +864,7 @@ function verPerfilAdmin(id){
   let cal=DS.map(d=>`<div class="cd hd">${d}</div>`).join('');
   for(let i=0;i<p1;i++) cal+='<div class="cd vz"></div>';
   for(let d=1;d<=dim;d++){ const k=`${h.getFullYear()}-${(h.getMonth()+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`; const v=D.presencas[k]; const c=v&&v[id]==='P'?'cp':v&&v[id]==='F'?'cf':''; cal+=`<div class="cd ${c}">${d}</div>`; }
-  const notasH=['p1','p2','p3','p4'].map((p,i)=>{ const n=(D.notas[p]||{})[id]; if(n===undefined) return ''; return `<div class="sl2"><span class="slb">Prova ${i+1}</span><span class="bdg ${n>=7?'bv':n>=5?'ba':'br'}">${n.toFixed(1)}</span></div>`; }).filter(Boolean).join('')||'<p style="font-size:14px;color:var(--cin)">Sem notas</p>';
+  const notasH=['p1','p2','p3','p4'].map((p,i)=>{ const n=(D.notas[p]||{})[id]; if(n===null||n===undefined) return ''; return `<div class="sl2"><span class="slb">Prova ${i+1}</span><span class="bdg ${n>=7?'bv':n>=5?'ba':'br'}">${(n!==null&&n!==undefined)?Number(n).toFixed(1):''}</span></div>`; }).filter(Boolean).join('')||'<p style="font-size:14px;color:var(--cin)">Sem notas</p>';
   const livH=D.livros_curso.map(l=>`<div class="sl2"><span class="slb">${l.nome}</span><span class="bdg ${(D.livros_ent[l.id]||{})[id]?'bv':'br'}">${(D.livros_ent[l.id]||{})[id]?'✓ Recebido':'Pendente'}</span></div>`).join('');
   document.getElementById('a-perfil-conteudo').innerHTML=`
     <div class="ph"><div class="pav">${ini(a.nome)}</div><div class="pn">${fmtNome(a.nome)}</div><div class="pt">${a.turma||'Turma Única'}${a.tel?' · '+fmtTel(a.tel):''}</div></div>
@@ -974,9 +974,9 @@ function renderNotasAdmin(){
   if(btn) btn.style.display='block';
   const al=ativos(); const np=D.notas[pid]||{};
   document.getElementById('lista-notas').innerHTML=al.map(a=>{ const n=np[a.id]!==undefined?np[a.id]:'';
-    return `<div class="nr"><span class="nn">${fmtNome(a.nome)}</span><div class="niw"><input class="ni" id="nt-${a.id}" type="number" min="0" max="10" step="0.1" placeholder="—" value="${n}" oninput="updChip('${a.id}',this.value)"><span class="nc ${n!==''?(n>=7?'bv':n>=5?'ba':'br'):''}" id="chip-${a.id}">${n!==''?parseFloat(n).toFixed(1):''}</span></div></div>`; }).join('');
+    return `<div class="nr"><span class="nn">${fmtNome(a.nome)}</span><div class="niw"><input class="ni" id="nt-${a.id}" type="number" min="0" max="10" step="0.1" placeholder="—" value="${n}" oninput="updChip('${a.id}',this.value)"><span class="nc ${(n!==''&&n!==null&&n!==undefined)?(n>=7?'bv':n>=5?'ba':'br'):''}" id="chip-${a.id}">${(n!==''&&n!==null&&n!==undefined)?Number(parseFloat(n)).toFixed(1):''}</span></div></div>`; }).join('');
 }
-function updChip(id,v){ const c=document.getElementById('chip-'+id); if(!c) return; const n=parseFloat(v); if(isNaN(n)||v===''){ c.textContent=''; c.className='nc'; return; } c.textContent=n.toFixed(1); c.className='nc '+(n>=7?'bv':n>=5?'ba':'br'); }
+function updChip(id,v){ const c=document.getElementById('chip-'+id); if(!c) return; const n=parseFloat(v); if(isNaN(n)||v===''||v===null){ c.textContent=''; c.className='nc'; return; } c.textContent=(n!==null&&n!==undefined)?Number(n).toFixed(1):''; c.className='nc '+(n>=7?'bv':n>=5?'ba':'br'); }
 async function salvarNotas(){
   const pid=document.getElementById('sel-prova').value; if(!pid) return;
   if(!D.notas[pid]) D.notas[pid]={};
@@ -1136,15 +1136,15 @@ function renderRelAdmin(aba){
   if(aba==='avaliacao'){
     let h2=['p1','p2','p3','p4'].map((p,i)=>{
       const np=D.notas[p]||{};
-      const ns=al.map(a=>np[a.id]).filter(n=>n!==undefined);
+      const ns=al.map(a=>np[a.id]).filter(n=>n!==null&&n!==undefined);
       const med=ns.length>0?(ns.reduce((a,b)=>a+b,0)/ns.length).toFixed(1):'—';
       const apv=ns.filter(n=>n>=7).length; const rep=ns.filter(n=>n<5).length;
       return `<div class="sl2"><div><div style="font-weight:500;font-size:14px">Prova ${i+1}</div><div style="font-size:12px;color:var(--cin)">${ns.length} lançadas · ✓${apv} apr · ✗${rep} rep</div></div><span class="slv" style="font-size:18px;font-family:'Lora',serif">${med}</span></div>`;
     }).join('');
     let h3=al.map(a=>{
-      const na=['p1','p2','p3','p4'].map(p=>(D.notas[p]||{})[a.id]).filter(n=>n!==undefined);
+      const na=['p1','p2','p3','p4'].map(p=>(D.notas[p]||{})[a.id]).filter(n=>n!==null&&n!==undefined);
       const med=na.length>0?(na.reduce((x,y)=>x+y,0)/na.length).toFixed(1):'—';
-      const notas=['p1','p2','p3','p4'].map((p,i)=>{ const n=(D.notas[p]||{})[a.id]; return n!==undefined?`<span style="font-size:11px;background:${n>=7?'var(--vd-c)':n>=5?'var(--am-c)':'var(--vm-c)'};color:${n>=7?'var(--vd)':n>=5?'var(--am)':'var(--vm)'};padding:2px 6px;border-radius:4px">P${i+1}: ${n.toFixed(1)}</span>`:''; }).filter(Boolean).join(' ');
+      const notas=['p1','p2','p3','p4'].map((p,i)=>{ const n=(D.notas[p]||{})[a.id]; return (n!==null&&n!==undefined)?`<span style="font-size:11px;background:${n>=7?'var(--vd-c)':n>=5?'var(--am-c)':'var(--vm-c)'};color:${n>=7?'var(--vd)':n>=5?'var(--am)':'var(--vm)'};padding:2px 6px;border-radius:4px">P${i+1}: ${Number(n).toFixed(1)}</span>`:''; }).filter(Boolean).join(' ');
       return `<div class="sl2"><div><div style="font-weight:500;font-size:14px">${fmtNome(a.nome)}</div><div style="margin-top:3px">${notas||'<span style="font-size:12px;color:var(--cin)">Sem notas</span>'}</div></div><span class="bdg ${med!=='—'?(parseFloat(med)>=7?'bv':parseFloat(med)>=5?'ba':'br'):''}" style="font-size:15px">${med}</span></div>`;
     }).join('');
     document.getElementById('rel-avaliacao').innerHTML=
@@ -1168,7 +1168,7 @@ function exportarPDF(){
     let p=0,f=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') p++; if(D.presencas[k][a.id]==='F') f++; });
     const perc=pk.length>0?Math.round(p/pk.length*100):0;
     const pago=(pagM[a.id]===true)?'<span style="color:#2d7a4a;font-weight:600">✓ Em dia</span>':'<span style="color:#b83232;font-weight:600">✗ Pendente</span>';
-    const notas=['p1','p2','p3','p4'].map((pi,i)=>{ const n=(D.notas[pi]||{})[a.id]; return `<span style="font-size:11px;background:${n!==undefined?(n>=7?'#e8f5ee':n>=5?'#fff8e6':'#fdeaea'):'#f5f4f0'};padding:2px 5px;border-radius:3px;margin-right:3px">P${i+1}: ${n!==undefined?n.toFixed(1):'—'}</span>`; }).join('');
+    const notas=['p1','p2','p3','p4'].map((pi,i)=>{ const n=(D.notas[pi]||{})[a.id]; return `<span style="font-size:11px;background:${(n!==null&&n!==undefined)?(n>=7?'#e8f5ee':n>=5?'#fff8e6':'#fdeaea'):'#f5f4f0'};padding:2px 5px;border-radius:3px;margin-right:3px">P${i+1}: ${(n!==null&&n!==undefined)?Number(n).toFixed(1):'—'}</span>`; }).join('');
     return `<tr>
       <td style="padding:9px 8px;border-bottom:1px solid #e0ddd5;font-size:13px">${fmtNome(a.nome)}</td>
       <td style="padding:9px 8px;border-bottom:1px solid #e0ddd5;text-align:center;font-size:13px">${p}/${pk.length}</td>
@@ -1240,8 +1240,8 @@ function exportarCSV(){
     let p=0,f=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') p++; if(D.presencas[k][a.id]==='F') f++; });
     const perc=pk.length>0?Math.round(p/pk.length*100):0;
     const pago=(pagM[a.id]===true)?'Pago':'Pendente';
-    const notas=['p1','p2','p3','p4'].map(pi=>{ const n=(D.notas[pi]||{})[a.id]; return n!==undefined?n.toFixed(1):''; });
-    const ns=['p1','p2','p3','p4'].map(pi=>(D.notas[pi]||{})[a.id]).filter(n=>n!==undefined);
+    const notas=['p1','p2','p3','p4'].map(pi=>{ const n=(D.notas[pi]||{})[a.id]; return (n!==null&&n!==undefined)?Number(n).toFixed(1):''; });
+    const ns=['p1','p2','p3','p4'].map(pi=>(D.notas[pi]||{})[a.id]).filter(n=>n!==null&&n!==undefined);
     const med=ns.length>0?(ns.reduce((x,y)=>x+y,0)/ns.length).toFixed(1):'';
     csv+=`"${fmtNome(a.nome)}","${a.turma||'Turma Única'}","${a.tel||''}",${p},${f},${perc}%,"${pago}",${notas.join(',')},${med}\n`;
   });
@@ -1424,7 +1424,7 @@ function renderAlunoLivros(){
     if(feita){
       const status=nota>=7?'✓ Aprovado':nota>=5?'Em recuperação':'✗ Reprovado';
       const cor=nota>=7?'bv':nota>=5?'ba':'br';
-      return '<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova '+(i+1)+'</div><div class="pgd">'+status+'</div></div><span class="bdg '+cor+'" style="font-size:18px;padding:6px 14px">'+nota.toFixed(1)+'</span></div>';
+      return '<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova '+(i+1)+'</div><div class="pgd">'+status+'</div></div><span class="bdg '+cor+'" style="font-size:18px;padding:6px 14px">'+((nota!==null&&nota!==undefined)?Number(nota).toFixed(1):'')+'</span></div>';
     }
     return '<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova '+(i+1)+'</div><div class="pgd" style="color:var(--vm)">Ainda não realizada</div></div><span class="bdg br">Pendente</span></div>';
   }).join(''));
@@ -1435,9 +1435,9 @@ function renderAlunoLivros(){
 function renderAlunoNotas(){
   const a=usuAtual;
   const notas=['p1','p2','p3','p4'].map((p,i)=>{ const n=(D.notas[p]||{})[a.id];
-    if(n===undefined) return `<div class="pgr"><div class="pgi"><div class="pgn">Prova ${i+1}</div></div><span class="bdg ba">Sem nota</span></div>`;
-    return `<div class="pgr"><div class="pgi"><div class="pgn">Prova ${i+1}</div><div class="pgd">${n>=7?'✓ Aprovado':n>=5?'Em recuperação':'✗ Reprovado'}</div></div><span class="bdg ${n>=7?'bv':n>=5?'ba':'br'}" style="font-size:18px;padding:6px 14px">${n.toFixed(1)}</span></div>`; }).join('');
-  const ns=['p1','p2','p3','p4'].map(p=>(D.notas[p]||{})[a.id]).filter(n=>n!==undefined);
+    if(n===null||n===undefined) return `<div class="pgr"><div class="pgi"><div class="pgn">Prova ${i+1}</div></div><span class="bdg ba">Sem nota</span></div>`;
+    return `<div class="pgr"><div class="pgi"><div class="pgn">Prova ${i+1}</div><div class="pgd">${n>=7?'✓ Aprovado':n>=5?'Em recuperação':'✗ Reprovado'}</div></div><span class="bdg ${n>=7?'bv':n>=5?'ba':'br'}" style="font-size:18px;padding:6px 14px">${(n!==null&&n!==undefined)?Number(n).toFixed(1):''}</span></div>`; }).join('');
+  const ns=['p1','p2','p3','p4'].map(p=>(D.notas[p]||{})[a.id]).filter(n=>n!==null&&n!==undefined);
   const media=ns.length>0?(ns.reduce((a,b)=>a+b,0)/ns.length).toFixed(1):'—';
   document.getElementById('al-notas-lista').innerHTML=notas+`<div class="card" style="margin-top:6px"><div class="sl2"><span class="slb" style="font-weight:600">Média geral</span><span style="font-size:22px;font-weight:700;color:var(--azul);font-family:'Lora',serif">${media}</span></div></div>`;
 }
