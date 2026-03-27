@@ -423,6 +423,14 @@ select.inp{cursor:pointer}
         <button class="fbb" onclick="salvarFB()">Salvar credenciais Firebase</button>
         <p style="font-size:12px;opacity:.6;margin-top:8px" id="fb-st">Não conectado — armazenamento local</p>
       </div>
+      <!-- ── TEMPORÁRIO: remover após vinculação ── -->
+      <div class="card" style="border-color:#c9a84c;margin-bottom:14px">
+        <div class="card-t" style="color:var(--am)">🔗 Vinculação Auth (temporário)</div>
+        <p style="font-size:14px;color:var(--cin);margin-bottom:12px">Preenche o campo <code>auth_id</code> na tabela <code>alunos</code> vinculando cada aluno ao seu usuário no Supabase Auth. Requer a Service Role Key. Veja o console após executar.</p>
+        <button class="btn bsm" style="background:var(--am);color:#fff" onclick="vincularAuthAlunos()">🔗 Vincular alunos com Auth</button>
+      </div>
+      <!-- ── FIM TEMPORÁRIO ── -->
+
       <div class="card" style="border-color:var(--vm-c)">
         <div class="card-t" style="color:var(--vm)">⚠ Zona de perigo</div>
         <p style="font-size:14px;color:var(--cin);margin-bottom:12px">Apagar todos os dados registrados. Irreversível.</p>
@@ -1646,6 +1654,65 @@ if(!D.aulas_log) { D.aulas_log={}; }
     console.log('[Auth] Sessão ativa. Tipo:', tipo, '| Email:', email);
     return { session, tipo, email };
   }
+
+  /* ════ TEMPORÁRIO: VINCULAÇÃO AUTH → remover após uso ════ */
+
+  async function getSupabaseAdmin() {
+    const serviceKey = prompt('Cole aqui a Service Role Key do Supabase:');
+    if (!serviceKey || serviceKey.trim() === '') throw new Error('Service Role Key não fornecida.');
+    return supabase.createClient(
+      'https://avzyklukencvhmyuflwh.supabase.co',
+      serviceKey.trim(),
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+  }
+
+  async function vincularAuthAlunos() {
+    let adminClient;
+    try {
+      adminClient = await getSupabaseAdmin();
+    } catch (e) {
+      alert(e.message);
+      return;
+    }
+
+    const { data, error: listError } = await adminClient.auth.admin.listUsers();
+    if (listError) {
+      console.error('Erro ao listar usuarios Auth:', listError);
+      alert('Erro ao listar usuarios. Veja o console.');
+      return;
+    }
+
+    const users = data.users;
+    console.log('[Vinculacao] Total de usuarios no Auth:', users.length);
+    console.log('[Vinculacao] Total de alunos em D.alunos:', D.alunos.length);
+
+    for (const aluno of D.alunos) {
+      const telefone = normalizarTelefone(aluno.tel || '');
+      const email = telefone + '@ibicamp.com';
+      const userEncontrado = users.find(function(u) { return u.email === email; });
+
+      if (!userEncontrado) {
+        console.warn('NAO ENCONTRADO:', aluno.nome, '| email tentado:', email);
+        continue;
+      }
+
+      const { error: updateError } = await adminClient
+        .from('alunos')
+        .update({ auth_id: userEncontrado.id })
+        .eq('id', aluno.id);
+
+      if (updateError) {
+        console.error('ERRO AO VINCULAR:', aluno.nome, updateError);
+      } else {
+        console.log('VINCULADO:', aluno.nome, userEncontrado.id);
+      }
+    }
+
+    alert('Vinculacao concluida. Abra o console (F12) para ver os detalhes.');
+  }
+
+  /* ════ FIM TEMPORARIO ════ */
 
   testarConexao();
   inicializarApp();
