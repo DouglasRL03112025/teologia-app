@@ -293,6 +293,9 @@ select.inp{cursor:pointer}
         <button class="ac" onclick="irAdmin('pagamentos')"><span class="ac-ic">💰</span>Pagamentos</button>
         <button class="ac" onclick="irAdmin('alunos')"><span class="ac-ic">👥</span>Ver Alunos</button>
         <button class="ac" onclick="irAdmin('relatorios')"><span class="ac-ic">📊</span>Relatórios</button>
+        <!-- TEMPORÁRIO: remover após vinculação -->
+        <button class="ac" id="btn-vincular-auth" onclick="vincularAuthAlunos()"><span class="ac-ic">🔗</span>Vincular Auth</button>
+        <!-- FIM TEMPORÁRIO -->
       </div>
       <div class="sl">Alertas</div>
       <div id="a-alertas"></div>
@@ -423,14 +426,6 @@ select.inp{cursor:pointer}
         <button class="fbb" onclick="salvarFB()">Salvar credenciais Firebase</button>
         <p style="font-size:12px;opacity:.6;margin-top:8px" id="fb-st">Não conectado — armazenamento local</p>
       </div>
-      <!-- ── TEMPORÁRIO: remover após vinculação ── -->
-      <div class="card" style="border-color:#c9a84c;margin-bottom:14px">
-        <div class="card-t" style="color:var(--am)">🔗 Vinculação Auth (temporário)</div>
-        <p style="font-size:14px;color:var(--cin);margin-bottom:12px">Preenche o campo <code>auth_id</code> na tabela <code>alunos</code> vinculando cada aluno ao seu usuário no Supabase Auth. Requer a Service Role Key. Veja o console após executar.</p>
-        <button class="btn bsm" style="background:var(--am);color:#fff" onclick="vincularAuthAlunos()">🔗 Vincular alunos com Auth</button>
-      </div>
-      <!-- ── FIM TEMPORÁRIO ── -->
-
       <div class="card" style="border-color:var(--vm-c)">
         <div class="card-t" style="color:var(--vm)">⚠ Zona de perigo</div>
         <p style="font-size:14px;color:var(--cin);margin-bottom:12px">Apagar todos os dados registrados. Irreversível.</p>
