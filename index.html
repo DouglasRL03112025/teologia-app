@@ -368,7 +368,7 @@ select.inp{cursor:pointer}
       <div id="mat-provas" style="display:none"></div>
       <div id="mat-notas" style="display:none">
         <div class="campo" style="margin-bottom:14px"><label>Selecionar Prova</label>
-          <select class="inp" id="sel-prova" onchange="renderNotas()">
+          <select class="inp" id="sel-prova" onchange="renderNotasAdmin()">
             <option value="">— Selecione —</option>
             <option value="p1">Prova 1</option><option value="p2">Prova 2</option>
             <option value="p3">Prova 3</option><option value="p4">Prova 4</option>
@@ -423,20 +423,6 @@ select.inp{cursor:pointer}
         <button class="fbb" onclick="salvarFB()">Salvar credenciais Firebase</button>
         <p style="font-size:12px;opacity:.6;margin-top:8px" id="fb-st">Não conectado — armazenamento local</p>
       </div>
-      <!-- ══ CARD SINCRONIZAR USUÁRIOS AUTH ══ -->
-      <div class="card" style="border-color:var(--azul-c)">
-        <div class="card-t">🔐 Supabase Auth</div>
-        <p style="font-size:14px;color:var(--cin);margin-bottom:12px">
-          Cria ou verifica os usuários de cada aluno no Supabase Auth.<br>
-          <span style="font-size:12px">Senha = últimos 4 dígitos do telefone.</span>
-        </p>
-        <button class="btn bp bsm" onclick="garantirUsuariosAuth()" id="btn-sync-auth">
-          🔄 Sincronizar Usuários
-        </button>
-        <div id="sync-auth-log" style="margin-top:10px;font-size:13px;color:var(--cin);display:none;max-height:160px;overflow-y:auto;background:var(--fnd);border-radius:8px;padding:10px;line-height:1.8"></div>
-      </div>
-      <!-- ══ FIM CARD SINCRONIZAR USUÁRIOS AUTH ══ -->
-
       <div class="card" style="border-color:var(--vm-c)">
         <div class="card-t" style="color:var(--vm)">⚠ Zona de perigo</div>
         <p style="font-size:14px;color:var(--cin);margin-bottom:12px">Apagar todos os dados registrados. Irreversível.</p>
@@ -1660,67 +1646,6 @@ if(!D.aulas_log) { D.aulas_log={}; }
     console.log('[Auth] Sessão ativa. Tipo:', tipo, '| Email:', email);
     return { session, tipo, email };
   }
-
-
-  /* ════ GARANTIR USUÁRIOS NO SUPABASE AUTH ════ */
-
-  async function garantirUsuariosAuth() {
-    var btn = document.getElementById('btn-sync-auth');
-    var logEl = document.getElementById('sync-auth-log');
-
-    // Prepara UI
-    btn.disabled = true;
-    btn.textContent = '⏳ Sincronizando...';
-    logEl.style.display = 'block';
-    logEl.innerHTML = '';
-
-    function addLog(msg) {
-      logEl.innerHTML += msg + '<br>';
-      logEl.scrollTop = logEl.scrollHeight;
-      console.log('[SyncAuth]', msg);
-    }
-
-    var alunos = D.alunos || [];
-    addLog('▶ Iniciando para ' + alunos.length + ' aluno(s)...');
-
-    for (var i = 0; i < alunos.length; i++) {
-      var aluno = alunos[i];
-
-      if (!aluno.tel) {
-        addLog('⚠ ' + (aluno.nome || 'Aluno #' + i) + ' — sem telefone, ignorado.');
-        continue;
-      }
-
-      var telNorm = normalizarTelefone(aluno.tel);
-      var email   = telNorm + '@ibicamp.com';
-      var senha   = telNorm.slice(-4);
-
-      // Tenta login
-      var signIn = await supabaseClient.auth.signInWithPassword({ email: email, password: senha });
-
-      if (!signIn.error && signIn.data && signIn.data.session) {
-        addLog('✔ ' + aluno.nome + ' — já existe (' + email + ')');
-        // Faz logout da sessão de verificação para não sujar a sessão atual
-        await supabaseClient.auth.signOut();
-        continue;
-      }
-
-      // Login falhou → cria usuário
-      var signUp = await supabaseClient.auth.signUp({ email: email, password: senha });
-
-      if (signUp.error) {
-        addLog('✖ ' + aluno.nome + ' — erro ao criar: ' + signUp.error.message);
-      } else {
-        addLog('✅ ' + aluno.nome + ' — criado com sucesso (' + email + ')');
-      }
-    }
-
-    addLog('✔ Sincronização concluída.');
-    btn.disabled = false;
-    btn.textContent = '🔄 Sincronizar Usuários';
-  }
-
-  /* ═══════════════════════════════════════════ */
 
   testarConexao();
   inicializarApp();
