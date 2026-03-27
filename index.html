@@ -665,9 +665,16 @@ async function fazerLogin(){
   const senha = document.getElementById('login-senha').value.trim();
   if(!tel){ toast('⚠ Digite seu telefone'); return; }
   if(!senha){ toast('⚠ Digite sua senha'); return; }
-  const aluno = D.alunos.find(a=>a.tel && normalizarTelefone(a.tel)===tel && a.ativo!==false);
+
+  const aluno = D.alunos.find(a => a.tel && normalizarTelefone(a.tel) === tel && a.ativo !== false);
+
+  console.log('LOGIN DEBUG:', tel, aluno ? normalizarTelefone(aluno.tel) : 'não encontrado');
+
   if(!aluno){ toast('⚠ Telefone não encontrado'); return; }
-  if(aluno.senha && senha !== aluno.senha){ toast('⚠ Senha incorreta'); return; }
+
+  const senhaEsperada = aluno.senha || tel.slice(-4);
+  if(senha !== senhaEsperada){ toast('⚠ Senha incorreta'); return; }
+
   usuAtual = aluno;
   document.getElementById('pg-login').style.display='none';
   document.getElementById('pg-aluno').style.display='block';
@@ -1562,7 +1569,6 @@ if(!D.aulas_log) { D.aulas_log={}; }
     const email = tel + '@ibicamp.com';
     const senha = tel;
 
-    // Tenta login primeiro
     const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
 
     if (!signInError && signInData.session) {
@@ -1570,15 +1576,8 @@ if(!D.aulas_log) { D.aulas_log={}; }
       return signInData.session;
     }
 
-    // Se não existe, cria a conta
-    const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password: senha });
-    if (signUpError) {
-      console.warn('[Auth] Não foi possível criar conta no Supabase Auth:', signUpError.message);
-      return null;
-    }
-
-    console.log('[Auth] Conta criada e autenticada no Supabase Auth. Tipo: aluno | Email:', email);
-    return signUpData.session;
+    console.warn('[Auth] Usuário não encontrado ou credencial inválida no Supabase Auth:', signInError?.message);
+    return null;
   }
 
   // Autentica admin no Supabase Auth
