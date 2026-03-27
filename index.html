@@ -657,23 +657,54 @@ document.getElementById('login-senha').addEventListener('keydown',e=>{ if(e.key=
 document.getElementById('admin-pw').addEventListener('keydown',e=>{ if(e.key==='Enter') verificarAdmin(); });
 
 function normalizarTelefone(tel){
-  return tel ? tel.replace(/\D/g,'') : '';
+  if(!tel) return '';
+  return tel.replace(/\D/g,''); // remove tudo que não for número
+}
+
+function telefonesBatem(telDigitado, telSalvo){
+  const a = normalizarTelefone(telDigitado);
+  const b = normalizarTelefone(telSalvo);
+  if(!a || !b) return false;
+  // Comparação exata
+  if(a === b) return true;
+  // Comparação pelos últimos 9 dígitos (com DDD vs sem DDD)
+  if(a.length >= 9 && b.length >= 9 && a.slice(-9) === b.slice(-9)) return true;
+  // Comparação pelos últimos 8 dígitos (fallback)
+  if(a.length >= 8 && b.length >= 8 && a.slice(-8) === b.slice(-8)) return true;
+  return false;
 }
 
 async function fazerLogin(){
-  const tel = normalizarTelefone(document.getElementById('login-tel').value.trim());
+  const telRaw = document.getElementById('login-tel').value.trim();
+  const tel = normalizarTelefone(telRaw);
   const senha = document.getElementById('login-senha').value.trim();
+
+  console.log('=== INÍCIO DO LOGIN ===');
+  console.log('TEL DIGITADO:', telRaw);
+
   if(!tel){ toast('⚠ Digite seu telefone'); return; }
   if(!senha){ toast('⚠ Digite sua senha'); return; }
 
-  const aluno = D.alunos.find(a => a.tel && normalizarTelefone(a.tel) === tel && a.ativo !== false);
+  const aluno = D.alunos.find(function(a){
+    console.log('TEL ALUNO:', a.tel);
+    console.log('TEL NORMALIZADO:', normalizarTelefone(a.tel));
+    return a.ativo !== false && telefonesBatem(tel, a.tel);
+  });
 
-  console.log('LOGIN DEBUG:', tel, aluno ? normalizarTelefone(aluno.tel) : 'não encontrado');
+  if(!aluno){
+    console.log('Aluno NÃO encontrado para o telefone:', tel);
+    toast('⚠ Telefone não encontrado');
+    return;
+  }
 
-  if(!aluno){ toast('⚠ Telefone não encontrado'); return; }
+  console.log('Aluno encontrado:', aluno.nome);
 
-  const senhaEsperada = aluno.senha || tel.slice(-4);
+  const senhaEsperada = aluno.senha || normalizarTelefone(aluno.tel).slice(-4);
+  console.log('SENHA ESPERADA:', senhaEsperada, '| SENHA DIGITADA:', senha);
+
   if(senha !== senhaEsperada){ toast('⚠ Senha incorreta'); return; }
+
+  console.log('Login APROVADO para:', aluno.nome);
 
   usuAtual = aluno;
   document.getElementById('pg-login').style.display='none';
@@ -682,7 +713,7 @@ async function fazerLogin(){
   renderAlunoInicio();
   irAluno('cadastro');
   // Autenticação Supabase Auth em background (não bloqueia o login)
-  autenticarAlunoSupabase(tel).catch(e => console.warn('[Auth] Falha silenciosa:', e));
+  autenticarAlunoSupabase(normalizarTelefone(aluno.tel)).catch(e => console.warn('[Auth] Falha silenciosa:', e));
 }
 
 function abrirModAdmin(){ abrirMod('mod-admin'); setTimeout(()=>document.getElementById('admin-pw').focus(),100); }
