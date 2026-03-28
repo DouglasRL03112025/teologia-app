@@ -1660,8 +1660,12 @@ if(!D.aulas_log) { D.aulas_log={}; }
     let criados = 0, jaExistem = 0, erros = 0;
 
     for (const aluno of D.alunos) {
-      const telefone = normalizarTelefone(aluno.tel || '');
-      const email = telefone + '@ibicamp.com';
+      const telNorm = normalizarTelefone(aluno.tel);
+      if (!telNorm) {
+        console.warn("IGNORADO (sem telefone):", aluno.nome);
+        continue;
+      }
+      const email = telNorm + '@ibicamp.com';
       const password = '123456';
 
       let data, error;
