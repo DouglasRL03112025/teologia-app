@@ -794,29 +794,38 @@ async function carregarAlunoLogado(authId) {
 
 async function carregarLivrosAluno() {
   if (!usuAtual || !usuAtual.id) return;
-  const { data, error } = await supabaseClient
-    .from('aluno_livros')
-    .select(`
-      pagou,
-      forma_pagamento,
-      data_pagamento,
-      participou,
-      livros (
-        nome,
-        codigo,
-        ordem
-      )
-    `)
-    .eq('aluno_id', usuAtual.id)
-    .order('ordem', { foreignTable: 'livros' });
 
-  if (error) {
-    console.error('[Livros] Erro:', error);
+  const { data: livrosAlunoRaw, error: error1 } = await supabaseClient
+    .from('aluno_livros')
+    .select('*')
+    .eq('aluno_id', usuAtual.id);
+
+  if (error1) {
+    console.error('[Livros] Erro ao buscar aluno_livros:', error1);
     return;
   }
 
+  const { data: livrosBase, error: error2 } = await supabaseClient
+    .from('livros')
+    .select('*');
+
+  if (error2) {
+    console.error('[Livros] Erro ao buscar livros:', error2);
+    return;
+  }
+
+  const data = livrosAlunoRaw.map(item => {
+    const livro = livrosBase.find(l => l.codigo === item.livro_codigo);
+    return {
+      ...item,
+      livros: livro || {}
+    };
+  });
+
+  data.sort((a, b) => (a.livros?.ordem || 0) - (b.livros?.ordem || 0));
+
   window.livrosAluno = data;
-  console.log('[Livros] Carregados:', data ? data.length : 0, 'registros');
+  console.log('[Livros] Carregados:', data.length, 'registros');
 }
 
 function renderLivrosAluno() {
