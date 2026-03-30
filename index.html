@@ -1369,7 +1369,8 @@ function renderAlunoAgenda(){
   const percPres=dp+df>0?Math.round(dp/(dp+df)*100):0;
   const corPres=percPres>=75?'var(--vd)':percPres>=50?'var(--am, #f59e0b)':'var(--vm)';
   // Dashboard: provas
-  const provasFeitas=['p1','p2','p3','p4'].filter(function(p){ return (D.notas[p]||{})[a.id]!==undefined; }).length;
+  const todasProvas=Object.keys(D.notas).filter(p=>/^p\d+$/.test(p)).sort((x,y)=>parseInt(x.slice(1))-parseInt(y.slice(1)));
+  const provasFeitas=todasProvas.filter(function(p){ return (D.notas[p]||{})[a.id]!==undefined; }).length;
   const dashEl=document.getElementById('al-agenda-dashboard');
   if(dashEl) dashEl.innerHTML=
     '<div class="dash-grid">'
@@ -1388,7 +1389,7 @@ function renderAlunoAgenda(){
     // Card Provas
     +'<div style="background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:14px 12px;box-shadow:var(--s);text-align:center">'
     +'<div style="font-size:20px;margin-bottom:4px">📝</div>'
-    +'<div style="font-size:22px;font-weight:700;color:var(--azul);font-family:Lora,serif">'+provasFeitas+'<span style="font-size:13px;font-weight:400;color:var(--cin)">/4</span></div>'
+    +'<div style="font-size:22px;font-weight:700;color:var(--azul);font-family:Lora,serif">'+provasFeitas+'<span style="font-size:13px;font-weight:400;color:var(--cin)">/'+todasProvas.length+'</span></div>'
     +'<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Provas</div>'
     +'</div>'
     +'</div>';
@@ -1483,18 +1484,18 @@ function renderAlunoLivros(){
     ?'<p class="sl-sec" style="margin-top:20px">📚 Recebidos</p>'+livrosRec.map(mkCard).join('')
     :'<p class="sl-sec" style="margin-top:20px">📚 Recebidos</p>'+emptyMsg('📭','Nenhum livro recebido ainda');
   const livros=htmlPend+htmlRec;
-  const provasFeitas=['p1','p2','p3','p4'].filter(p=>(D.notas[p]||{})[a.id]!==undefined).length;
+  const provasFeitas=todasProvas.filter(p=>(D.notas[p]||{})[a.id]!==undefined).length;
   const provas=(provasFeitas===0
     ? emptyMsg('📝','Nenhuma prova realizada ainda')
-    : ['p1','p2','p3','p4'].map(function(p,i){
+    : todasProvas.map(function(p,i){
     const nota=(D.notas[p]||{})[a.id];
     const feita=nota!==undefined;
     if(feita){
       const status=nota>=7?'✓ Aprovado':nota>=5?'Em recuperação':'✗ Reprovado';
       const cor=nota>=7?'bv':nota>=5?'ba':'br';
-      return '<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova '+(i+1)+'</div><div class="pgd">'+status+'</div></div><span class="bdg '+cor+'" style="font-size:18px;padding:6px 14px">'+((nota!==null&&nota!==undefined)?Number(nota).toFixed(1):'')+'</span></div>';
+      return '<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova '+(parseInt(p.slice(1)))+'</div><div class="pgd">'+status+'</div></div><span class="bdg '+cor+'" style="font-size:18px;padding:6px 14px">'+((nota!==null&&nota!==undefined)?Number(nota).toFixed(1):'')+'</span></div>';
     }
-    return '<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova '+(i+1)+'</div><div class="pgd" style="color:var(--vm)">Ainda não realizada</div></div><span class="bdg br">Pendente</span></div>';
+    return '<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova '+(parseInt(p.slice(1)))+'</div><div class="pgd" style="color:var(--vm)">Ainda não realizada</div></div><span class="bdg br">Pendente</span></div>';
   }).join(''));
   const el=document.getElementById('al-livros-lista');
   if(el) el.innerHTML=progresso+resumo+livros+'<p class="sl-sec" style="margin-top:28px">📝 Provas</p>'+provas;
@@ -1502,10 +1503,11 @@ function renderAlunoLivros(){
 
 function renderAlunoNotas(){
   const a=usuAtual;
-  const notas=['p1','p2','p3','p4'].map((p,i)=>{ const n=(D.notas[p]||{})[a.id];
-    if(n===null||n===undefined) return `<div class="pgr"><div class="pgi"><div class="pgn">Prova ${i+1}</div></div><span class="bdg ba">Sem nota</span></div>`;
-    return `<div class="pgr"><div class="pgi"><div class="pgn">Prova ${i+1}</div><div class="pgd">${n>=7?'✓ Aprovado':n>=5?'Em recuperação':'✗ Reprovado'}</div></div><span class="bdg ${n>=7?'bv':n>=5?'ba':'br'}" style="font-size:18px;padding:6px 14px">${(n!==null&&n!==undefined)?Number(n).toFixed(1):''}</span></div>`; }).join('');
-  const ns=['p1','p2','p3','p4'].map(p=>(D.notas[p]||{})[a.id]).filter(n=>n!==null&&n!==undefined);
+  const todasProvasNotas=Object.keys(D.notas).filter(p=>/^p\d+$/.test(p)).sort((x,y)=>parseInt(x.slice(1))-parseInt(y.slice(1)));
+  const notas=todasProvasNotas.map((p)=>{ const n=(D.notas[p]||{})[a.id]; const num=parseInt(p.slice(1));
+    if(n===null||n===undefined) return `<div class="pgr"><div class="pgi"><div class="pgn">Prova ${num}</div></div><span class="bdg ba">Sem nota</span></div>`;
+    return `<div class="pgr"><div class="pgi"><div class="pgn">Prova ${num}</div><div class="pgd">${n>=7?'✓ Aprovado':n>=5?'Em recuperação':'✗ Reprovado'}</div></div><span class="bdg ${n>=7?'bv':n>=5?'ba':'br'}" style="font-size:18px;padding:6px 14px">${(n!==null&&n!==undefined)?Number(n).toFixed(1):''}</span></div>`; }).join('');
+  const ns=todasProvasNotas.map(p=>(D.notas[p]||{})[a.id]).filter(n=>n!==null&&n!==undefined);
   const media=ns.length>0?(ns.reduce((a,b)=>a+b,0)/ns.length).toFixed(1):'—';
   document.getElementById('al-notas-lista').innerHTML=notas+`<div class="card" style="margin-top:6px"><div class="sl2"><span class="slb" style="font-weight:600">Média geral</span><span style="font-size:22px;font-weight:700;color:var(--azul);font-family:'Lora',serif">${media}</span></div></div>`;
 }
