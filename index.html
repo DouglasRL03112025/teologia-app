@@ -767,6 +767,10 @@ async function carregarAlunoLogado(authId) {
 
   window.alunoLogado = data;
   usuAtual = data;
+  if (!data.tel && data.telefone) { data.tel = data.telefone; }
+  if (!data.telefone && data.tel) { data.telefone = data.tel; }
+  data.tel = data.tel || '';
+  data.telefone = data.telefone || '';
   document.getElementById('pg-login').style.display = 'none';
   document.getElementById('pg-aluno').style.display = 'flex';
   document.getElementById('aluno-header-nome').textContent = fmtNome(data.nome).split(' ')[0];
