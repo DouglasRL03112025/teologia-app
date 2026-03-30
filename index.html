@@ -765,19 +765,16 @@ async function carregarAlunoLogado(authId) {
     return;
   }
 
-  window.alunoLogado = data;
-  usuAtual = data;
   if (!data.tel && data.telefone) { data.tel = data.telefone; }
   if (!data.telefone && data.tel) { data.telefone = data.tel; }
   data.tel = data.tel || '';
   data.telefone = data.telefone || '';
-  document.getElementById('pg-login').style.display = 'none';
-  document.getElementById('pg-aluno').style.display = 'flex';
+  window.alunoLogado = data;
+  usuAtual = data;
   document.getElementById('aluno-header-nome').textContent = fmtNome(data.nome).split(' ')[0];
   renderAlunoInicio();
   irAluno('cadastro');
   console.log('ALUNO LOGADO:', data);
-  alert('Bem-vindo, ' + data.nome);
 }
 /* ════ FIM TAREFAS 1 e 2 ════ */
 
