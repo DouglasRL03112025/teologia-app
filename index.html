@@ -260,6 +260,18 @@ select.inp{cursor:pointer}
         <input class="inp" id="login-senha" type="password" placeholder="••••" maxlength="6" inputmode="numeric" style="font-size:20px;letter-spacing:4px">
       </div>
       <button class="btn bp" onclick="fazerLogin()" style="font-size:17px;padding:16px">Entrar</button>
+      <!-- ════ TAREFA 3 — Login via Supabase Auth (e-mail + senha) ════ -->
+      <div class="login-divider">Login por e-mail</div>
+      <div class="campo">
+        <label style="font-size:15px">E-mail</label>
+        <input class="inp" id="email" type="text" placeholder="Email">
+      </div>
+      <div class="campo" style="margin-bottom:16px">
+        <label style="font-size:15px">Senha</label>
+        <input class="inp" id="senha" type="password" placeholder="Senha">
+      </div>
+      <button class="btn bp" onclick="loginAluno()" style="font-size:16px;padding:14px;margin-bottom:12px">Entrar com e-mail</button>
+      <!-- ════ FIM TAREFA 3 ════ -->
       <div class="login-divider">ou</div>
       <button onclick="abrirModAdmin()" style="background:none;border:1.5px solid var(--brd);border-radius:var(--r);width:100%;padding:12px;font-size:14px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;color:var(--cin);transition:all .2s" onmouseover="this.style.borderColor='var(--azul)';this.style.color='var(--azul)'" onmouseout="this.style.borderColor='var(--brd)';this.style.color='var(--cin)'">
         🔐 Acesso Administrador
@@ -719,6 +731,45 @@ async function fazerLogin(){
   // Autenticação Supabase Auth em background (não bloqueia o login)
   autenticarAlunoSupabase(normalizarTelefone(aluno.tel)).catch(e => console.warn('[Auth] Falha silenciosa:', e));
 }
+
+/* ════ TAREFA 1 — Login real com Supabase Auth ════ */
+async function loginAluno() {
+  const email = document.getElementById('email').value.trim();
+  const senha = document.getElementById('senha').value.trim();
+
+  if (!email) { alert('Digite o e-mail'); return; }
+  if (!senha) { alert('Digite a senha'); return; }
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  const userId = data.user.id;
+  await carregarAlunoLogado(userId);
+}
+
+/* ════ TAREFA 2 — Carregar aluno logado pelo auth_id ════ */
+async function carregarAlunoLogado(authId) {
+  const { data, error } = await supabaseClient
+    .from('alunos')
+    .select('*')
+    .eq('auth_id', authId)
+    .single();
+
+  if (error) {
+    console.error('[carregarAlunoLogado] Erro:', error);
+    alert('Aluno não encontrado');
+    return;
+  }
+
+  window.alunoLogado = data;
+  console.log('ALUNO LOGADO:', data);
+  alert('Bem-vindo, ' + data.nome);
+}
+/* ════ FIM TAREFAS 1 e 2 ════ */
 
 function abrirModAdmin(){ abrirMod('mod-admin'); setTimeout(()=>document.getElementById('admin-pw').focus(),100); }
 
