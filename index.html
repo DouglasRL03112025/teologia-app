@@ -771,9 +771,15 @@ async function carregarAlunoLogado(authId) {
   data.telefone = data.telefone || '';
   window.alunoLogado = data;
   usuAtual = data;
+  document.getElementById('pg-login').style.display = 'none';
+  document.getElementById('pg-aluno').style.display = 'block';
   document.getElementById('aluno-header-nome').textContent = fmtNome(data.nome).split(' ')[0];
-  renderAlunoInicio();
-  irAluno('cadastro');
+  if (typeof renderAlunoInicio === 'function') {
+    renderAlunoInicio();
+  }
+  if (typeof irAluno === 'function') {
+    irAluno('cadastro');
+  }
   console.log('ALUNO LOGADO:', data);
 }
 /* ════ FIM TAREFAS 1 e 2 ════ */
