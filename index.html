@@ -769,6 +769,9 @@ async function carregarAlunoLogado(authId) {
   usuAtual = data;
   document.getElementById('pg-login').style.display = 'none';
   document.getElementById('pg-aluno').style.display = 'flex';
+  document.getElementById('aluno-header-nome').textContent = fmtNome(data.nome).split(' ')[0];
+  renderAlunoInicio();
+  irAluno('cadastro');
   console.log('ALUNO LOGADO:', data);
   alert('Bem-vindo, ' + data.nome);
 }
