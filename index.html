@@ -1658,6 +1658,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
     } catch(e) {
       console.error('Erro na inicialização do Supabase:', e);
     }
+    await verificarSessao();
   }
 
   /* ════ SUPABASE AUTH ════ */
@@ -1830,6 +1831,20 @@ if(!D.aulas_log) { D.aulas_log={}; }
   }
 
   /* ════ FIM TEMPORARIO ════ */
+
+  /* ════ PERSISTÊNCIA DE SESSÃO ════ */
+
+  async function verificarSessao() {
+    const { data } = await supabaseClient.auth.getSession();
+    const user = data.session?.user;
+    if (user) {
+      await carregarAlunoLogado(user.id);
+    }
+  }
+
+
+
+  /* ════ FIM PERSISTÊNCIA DE SESSÃO ════ */
 
   testarConexao();
   inicializarApp();
