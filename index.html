@@ -528,6 +528,8 @@ select.inp{cursor:pointer}
       <div class="tit">Livros Recebidos</div>
       <p class="sub">Controle de material</p>
       <div id="al-livros-lista"></div>
+      <!-- container livros Supabase (adicionado) -->
+      <div id="aluno-livros"></div>
     </div>
 
     <!-- MINHAS NOTAS -->
@@ -771,6 +773,12 @@ async function carregarAlunoLogado(authId) {
   data.telefone = data.telefone || '';
   window.alunoLogado = data;
   usuAtual = data;
+
+  /* ── LIVROS: carrega e renderiza (adicionado) ── */
+  await carregarLivrosAluno();
+  renderLivrosAluno();
+  /* ── FIM LIVROS ── */
+
   document.getElementById('pg-login').style.display = 'none';
   document.getElementById('pg-aluno').style.display = 'block';
   document.getElementById('aluno-header-nome').textContent = fmtNome(data.nome).split(' ')[0];
@@ -782,6 +790,74 @@ async function carregarAlunoLogado(authId) {
   }
   console.log('ALUNO LOGADO:', data);
 }
+/* ════ LIVROS DO ALUNO — TAREFAS 1 e 2 ════ */
+
+async function carregarLivrosAluno() {
+  if (!usuAtual || !usuAtual.id) return;
+  const { data, error } = await supabaseClient
+    .from('aluno_livros')
+    .select(`
+      pagou,
+      forma_pagamento,
+      data_pagamento,
+      participou,
+      livros (
+        nome,
+        codigo,
+        ordem
+      )
+    `)
+    .eq('aluno_id', usuAtual.id)
+    .order('ordem', { foreignTable: 'livros' });
+
+  if (error) {
+    console.error('[Livros] Erro:', error);
+    return;
+  }
+
+  window.livrosAluno = data;
+  console.log('[Livros] Carregados:', data ? data.length : 0, 'registros');
+}
+
+function renderLivrosAluno() {
+  const container = document.getElementById('aluno-livros');
+  if (!container) return;
+
+  const dados = window.livrosAluno;
+
+  if (!dados || dados.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="empty-ic">📚</div><div class="empty-tx">Nenhum livro encontrado.</div></div>';
+    return;
+  }
+
+  container.innerHTML = dados.map(function(item) {
+    if (!item.livros) return '';
+    const pago   = item.pagou     ? 'Pago'           : 'Pendente';
+    const partic = item.participou ? 'Sim'            : 'Não participou';
+    const forma  = item.forma_pagamento || '-';
+    const data   = item.data_pagamento
+      ? new Date(item.data_pagamento + 'T12:00:00').toLocaleDateString('pt-BR')
+      : '-';
+    const classeBase = item.pagou ? 'liv-rec' : 'liv-pend';
+    const badgeCls   = item.pagou ? 'bv'      : 'br';
+    return (
+      '<div class="pgr ' + classeBase + '" style="flex-direction:column;align-items:flex-start;gap:6px">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;width:100%">' +
+          '<div class="pgn">📖 ' + item.livros.nome + '</div>' +
+          '<span class="bdg ' + badgeCls + '">' + pago + '</span>' +
+        '</div>' +
+        '<div class="pgd" style="font-size:13px;color:var(--cin)">' +
+          'Participação: <strong>' + partic + '</strong>' +
+          ' &nbsp;·&nbsp; Forma: <strong>' + forma + '</strong>' +
+          (item.data_pagamento ? ' &nbsp;·&nbsp; Data: <strong>' + data + '</strong>' : '') +
+        '</div>' +
+      '</div>'
+    );
+  }).join('');
+}
+
+/* ════ FIM LIVROS DO ALUNO ════ */
+
 /* ════ FIM TAREFAS 1 e 2 ════ */
 
 function abrirModAdmin(){ abrirMod('mod-admin'); setTimeout(()=>document.getElementById('admin-pw').focus(),100); }
