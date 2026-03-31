@@ -1569,21 +1569,8 @@ function renderAlunoLivros(){
     ?'<p class="sl-sec" style="margin-top:20px">📚 Recebidos</p>'+livrosRec.map(mkCard).join('')
     :'<p class="sl-sec" style="margin-top:20px">📚 Recebidos</p>'+emptyMsg('📭','Nenhum livro recebido ainda');
   const livros=htmlPend+htmlRec;
-  const provasFeitas=todasProvas.filter(p=>(D.notas[p]||{})[a.id]!==undefined).length;
-  const provas=(provasFeitas===0
-    ? emptyMsg('📝','Nenhuma prova realizada ainda')
-    : todasProvas.map(function(p,i){
-    const nota=(D.notas[p]||{})[a.id];
-    const feita=nota!==undefined;
-    if(feita){
-      const status=nota>=7?'✓ Aprovado':nota>=5?'Em recuperação':'✗ Reprovado';
-      const cor=nota>=7?'bv':nota>=5?'ba':'br';
-      return '<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova '+(parseInt(p.slice(1)))+'</div><div class="pgd">'+status+'</div></div><span class="bdg '+cor+'" style="font-size:18px;padding:6px 14px">'+((nota!==null&&nota!==undefined)?Number(nota).toFixed(1):'')+'</span></div>';
-    }
-    return '<div class="pgr"><div class="pgi"><div class="pgn">📝 Prova '+(parseInt(p.slice(1)))+'</div><div class="pgd" style="color:var(--vm)">Ainda não realizada</div></div><span class="bdg br">Pendente</span></div>';
-  }).join(''));
   const el=document.getElementById('al-livros-lista');
-  if(el) el.innerHTML=progresso+resumo+livros+'<p class="sl-sec" style="margin-top:28px">📝 Provas</p>'+provas;
+  if(el) el.innerHTML=progresso+resumo+livros;
 }
 
 function renderAlunoNotas(){
