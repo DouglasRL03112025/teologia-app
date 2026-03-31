@@ -846,13 +846,13 @@ function renderLivrosAluno() {
     return;
   }
 
-  const total = window.livrosAluno.length;
+  const TOTAL_CURSO = 24; // total fixo do curso
   const pagos = window.livrosAluno.filter(l => l.pagou).length;
-  const progresso = total > 0 ? Math.round((pagos / total) * 100) : 0;
+  const progresso = TOTAL_CURSO > 0 ? Math.round((pagos / TOTAL_CURSO) * 100) : 0;
 
   container.innerHTML = `
     <div style="margin-bottom:15px; padding:10px; background:#f5f5f5; border-radius:8px;">
-      <strong>Progresso do curso:</strong> ${progresso}% (${pagos}/${total})
+      <strong>Progresso do curso:</strong> ${progresso}% (${pagos}/${TOTAL_CURSO})
     </div>
     ${window.livrosAluno.map((item, index) => {
       const isAtual = index === window.livrosAluno.length - 1;
@@ -866,16 +866,29 @@ function renderLivrosAluno() {
       }
       return `
         <div style="
-          border:1px solid #ddd;
           border-radius:10px;
           padding:12px;
           margin-bottom:10px;
           background:${item.pagou ? '#f0fff4' : '#fff5f5'};
+          border:${isAtual ? '2px solid #2563eb' : '1px solid #ddd'};
         ">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <strong>${item.livros?.nome || 'Livro'}</strong>
-            ${isAtual ? '<span style="font-size:12px;">📍 Atual</span>' : ''}
           </div>
+          ${isAtual ? `
+            <div style="
+              margin-top:8px;
+              display:inline-block;
+              background:#2563eb;
+              color:#fff;
+              padding:4px 10px;
+              border-radius:20px;
+              font-size:12px;
+              font-weight:bold;
+            ">
+              📍 LIVRO ATUAL
+            </div>
+          ` : ''}
           <div style="margin-top:6px;">
             ${status}
           </div>
