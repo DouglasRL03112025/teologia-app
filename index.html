@@ -795,10 +795,14 @@ async function carregarAlunoLogado(authId) {
 async function carregarLivrosAluno() {
   if (!usuAtual || !usuAtual.id) return;
 
+  console.log('ID DO USUÁRIO:', usuAtual?.id);
+
   const { data: livrosAlunoRaw, error: error1 } = await supabaseClient
     .from('aluno_livros')
     .select('*')
     .eq('aluno_id', usuAtual.id);
+
+  console.log('DADOS aluno_livros:', livrosAlunoRaw);
 
   if (error1) {
     console.error('[Livros] Erro ao buscar aluno_livros:', error1);
@@ -808,6 +812,8 @@ async function carregarLivrosAluno() {
   const { data: livrosBase, error: error2 } = await supabaseClient
     .from('livros')
     .select('*');
+
+  console.log('DADOS livros:', livrosBase);
 
   if (error2) {
     console.error('[Livros] Erro ao buscar livros:', error2);
@@ -825,6 +831,7 @@ async function carregarLivrosAluno() {
   data.sort((a, b) => (a.livros?.ordem || 0) - (b.livros?.ordem || 0));
 
   window.livrosAluno = data;
+  console.log('RESULTADO FINAL livrosAluno:', window.livrosAluno);
   console.log('[Livros] Carregados:', data.length, 'registros');
 }
 
