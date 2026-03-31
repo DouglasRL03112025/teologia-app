@@ -936,6 +936,105 @@ function setFiltroLivros(tipo) {
 
 /* ════ FIM LIVROS DO ALUNO ════ */
 
+/* ════ MARCAR LIVRO COMO PAGO (ADMIN) ════ */
+
+async function marcarLivroComoPago(idRegistro) {
+  const { error } = await supabaseClient
+    .from('aluno_livros')
+    .update({
+      pagou: true,
+      forma_pagamento: 'admin',
+      data_pagamento: new Date().toISOString()
+    })
+    .eq('id', idRegistro);
+  if (error) {
+    console.error('Erro ao atualizar pagamento:', error);
+    alert('Erro ao marcar como pago');
+    return;
+  }
+  alert('Livro marcado como pago');
+  // Recarrega os livros do aluno atual no perfil admin
+  const container = document.getElementById('admin-livros-aluno');
+  if (container && window._adminPerfilAlunoId) {
+    await carregarExibirLivrosAdminPerfil(window._adminPerfilAlunoId);
+  }
+}
+
+async function carregarExibirLivrosAdminPerfil(alunoId) {
+  const container = document.getElementById('admin-livros-aluno');
+  if (!container) return;
+
+  container.innerHTML = '<div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando livros...</div>';
+
+  const { data: livrosAlunoRaw, error: error1 } = await supabaseClient
+    .from('aluno_livros')
+    .select('*')
+    .eq('aluno_id', alunoId);
+
+  if (error1) {
+    console.error('[Admin Livros] Erro ao buscar aluno_livros:', error1);
+    container.innerHTML = '<div style="font-size:13px;color:var(--vm)">Erro ao carregar livros.</div>';
+    return;
+  }
+
+  if (!livrosAlunoRaw || livrosAlunoRaw.length === 0) {
+    container.innerHTML = '<div style="font-size:13px;color:var(--cin);padding:8px 0">Nenhum livro vinculado a este aluno.</div>';
+    return;
+  }
+
+  const { data: livrosBase, error: error2 } = await supabaseClient
+    .from('livros')
+    .select('*');
+
+  if (error2) {
+    console.error('[Admin Livros] Erro ao buscar livros base:', error2);
+    container.innerHTML = '<div style="font-size:13px;color:var(--vm)">Erro ao carregar catálogo de livros.</div>';
+    return;
+  }
+
+  const livros = livrosAlunoRaw.map(item => {
+    const livro = (livrosBase || []).find(l => l.codigo === item.livro_codigo);
+    return { ...item, livros: livro || {} };
+  });
+
+  livros.sort((a, b) => (a.livros?.ordem || 0) - (b.livros?.ordem || 0));
+
+  container.innerHTML = livros.map(item => {
+    const nomeLivro = item.livros?.nome || item.livro_codigo || 'Livro';
+    const pago = item.pagou === true;
+    const dataFmt = item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '—';
+    return `
+      <div class="sl2" style="align-items:center;gap:8px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:500">${nomeLivro}</div>
+          <div style="font-size:12px;color:var(--cin);margin-top:2px">
+            ${pago ? '✅ Pago · ' + (item.forma_pagamento || '—') + ' · ' + dataFmt : '🔴 Pendente'}
+          </div>
+        </div>
+        ${!pago ? `<button
+          onclick="marcarLivroComoPago('${item.id}')"
+          style="
+            padding:6px 13px;
+            border:none;
+            border-radius:99px;
+            background:var(--vd);
+            color:#fff;
+            font-size:12px;
+            font-weight:600;
+            font-family:inherit;
+            cursor:pointer;
+            white-space:nowrap;
+            flex-shrink:0;
+          ">
+          ✓ Marcar como pago
+        </button>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+/* ════ FIM MARCAR LIVRO COMO PAGO (ADMIN) ════ */
+
 /* ════ FIM TAREFAS 1 e 2 ════ */
 
 function abrirModAdmin(){ abrirMod('mod-admin'); setTimeout(()=>document.getElementById('admin-pw').focus(),100); }
@@ -1078,6 +1177,7 @@ function renderAlunosAdmin(){
 }
 function verPerfilAdmin(id){
   const a=D.alunos.find(x=>x.id===id); if(!a) return;
+  window._adminPerfilAlunoId = id;
   irAdmin('perfil'); document.getElementById('nb-alunos').classList.add('on');
   const h=hj(); const cm=chM(h);
   let tp=0,tf=0;
@@ -1101,7 +1201,9 @@ function verPerfilAdmin(id){
     <div class="card"><div class="card-t">📋 Situação</div><div class="sl2"><span class="slb">Pag. ${M[h.getMonth()]}</span><span class="bdg ${pagA?'bv':'br'}">${pagA?'Em dia':'Pendente'}</span></div>${livH}${a.valor?`<div class="sl2"><span class="slb">Mensalidade</span><span class="slv">R$ ${a.valor}</span></div>`:''}${a.email?`<div class="sl2"><span class="slb">E-mail</span><span style="font-size:13px;color:var(--cin)">${a.email}</span></div>`:''}<div class="sl2"><span class="slb">Senha app</span><span style="font-family:monospace;font-size:14px;background:var(--azul-c);padding:2px 8px;border-radius:4px;color:var(--azul)">${a.senha||'—'}</span></div></div>
     <div class="card"><div class="card-t">🔢 Notas</div>${notasH}</div>
     <div class="card"><div class="card-t">📅 Calendário — ${M[h.getMonth()]}</div><div style="display:flex;gap:10px;font-size:12px;margin-bottom:8px"><span><span style="display:inline-block;width:12px;height:12px;background:var(--vd);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Presente</span><span><span style="display:inline-block;width:12px;height:12px;background:var(--vm);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Falta</span></div><div class="cal">${cal}</div></div>
+    <div class="card"><div class="card-t">📚 Livros do Aluno (Supabase)</div><div id="admin-livros-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
     <button class="btn bs" onclick="abrirModAluno('${id}')">✏️ Editar dados</button>`;
+  carregarExibirLivrosAdminPerfil(id);
 }
 
 /* ════ PRESENÇA ADMIN ════ */
