@@ -932,7 +932,7 @@ function irAdmin(t){
 
 /* ════ NAV ALUNO ════ */
 const TELAS_ALUNO=['cadastro','agenda','presenca','pagamentos','livros','notas'];
-function irAluno(t){
+async function irAluno(t){
   TELAS_ALUNO.forEach(id=>{ const el=document.getElementById('al-'+id); if(el) el.classList.remove('on'); });
   document.querySelectorAll('#nav-aluno .nb').forEach(b=>b.classList.remove('on'));
   const el=document.getElementById('al-'+t); if(el) el.classList.add('on');
@@ -942,7 +942,10 @@ function irAluno(t){
   if(t==='agenda') renderAlunoAgenda();
   if(t==='presenca') renderAlunoPresenca();
   if(t==='pagamentos') renderAlunoPagamentos();
-  if(t==='livros') renderLivrosAluno();
+  if (t === 'livros') {
+    await carregarLivrosAluno();
+    renderLivrosAluno();
+  }
   if(t==='notas') renderAlunoNotas();
 }
 
