@@ -835,13 +835,15 @@ async function carregarLivrosAluno() {
   console.log('[Livros] Carregados:', data.length, 'registros');
 }
 
+window.filtroLivros = 'todos';
+
 function renderLivrosAluno() {
   const container = document.getElementById('aluno-livros');
   if (!container) return;
 
-  const dados = window.livrosAluno;
+  const dadosRaw = window.livrosAluno;
 
-  if (!dados || dados.length === 0) {
+  if (!dadosRaw || dadosRaw.length === 0) {
     container.innerHTML = '<div class="empty"><div class="empty-ic">📚</div><div class="empty-tx">Nenhum livro encontrado.</div></div>';
     return;
   }
@@ -850,12 +852,38 @@ function renderLivrosAluno() {
   const pagos = window.livrosAluno.filter(l => l.pagou).length;
   const progresso = TOTAL_CURSO > 0 ? Math.round((pagos / TOTAL_CURSO) * 100) : 0;
 
+  let dados = window.livrosAluno;
+  if (window.filtroLivros === 'pagos') {
+    dados = dados.filter(l => l.pagou);
+  }
+  if (window.filtroLivros === 'pendentes') {
+    dados = dados.filter(l => !l.pagou);
+  }
+
+  const btnStyle = (tipo) => `
+    padding:7px 14px;
+    border-radius:20px;
+    border:none;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:inherit;
+    background:${window.filtroLivros === tipo ? '#2563eb' : '#e5e7eb'};
+    color:${window.filtroLivros === tipo ? '#fff' : '#374151'};
+  `;
+
   container.innerHTML = `
     <div style="margin-bottom:15px; padding:10px; background:#f5f5f5; border-radius:8px;">
       <strong>Progresso do curso:</strong> ${progresso}% (${pagos}/${TOTAL_CURSO})
     </div>
-    ${window.livrosAluno.map((item, index) => {
-      const isAtual = index === window.livrosAluno.length - 1;
+    <div style="display:flex; gap:8px; margin-bottom:12px;">
+      <button style="${btnStyle('todos')}" onclick="setFiltroLivros('todos')">Todos</button>
+      <button style="${btnStyle('pagos')}" onclick="setFiltroLivros('pagos')">✅ Pagos</button>
+      <button style="${btnStyle('pendentes')}" onclick="setFiltroLivros('pendentes')">🔴 Pendentes</button>
+    </div>
+    ${dados.length === 0 ? '<div class="empty"><div class="empty-ic">🔍</div><div class="empty-tx">Nenhum livro neste filtro.</div></div>' : ''}
+    ${dados.map((item, index) => {
+      const isAtual = item === window.livrosAluno[window.livrosAluno.length - 1];
       let status = '';
       if (!item.participou) {
         status = '⚫ Não participou';
@@ -899,6 +927,11 @@ function renderLivrosAluno() {
       `;
     }).join('')}
   `;
+}
+
+function setFiltroLivros(tipo) {
+  window.filtroLivros = tipo;
+  renderLivrosAluno();
 }
 
 /* ════ FIM LIVROS DO ALUNO ════ */
