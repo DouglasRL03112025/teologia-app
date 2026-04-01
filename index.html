@@ -1175,10 +1175,29 @@ function renderAlunosAdmin(){
     </div>`;
   }).join('');
 }
-function verPerfilAdmin(id){
+/* ════ RESUMO LIVROS DO ALUNO (Supabase) ════ */
+async function carregarResumoLivrosAluno(alunoId) {
+  const { data, error } = await supabaseClient
+    .from('aluno_livros')
+    .select('pagou')
+    .eq('aluno_id', alunoId);
+  if (error) {
+    console.error('Erro ao carregar resumo:', error);
+    return null;
+  }
+  const totalCurso = 24;
+  const pagos = data.filter(item => item.pagou === true).length;
+  const pendentes = totalCurso - pagos;
+  const progresso = totalCurso > 0 ? Math.round((pagos / totalCurso) * 100) : 0;
+  return { pagos, pendentes, progresso, totalCurso };
+}
+/* ════ FIM RESUMO LIVROS ════ */
+
+async function verPerfilAdmin(id){
   const a=D.alunos.find(x=>x.id===id); if(!a) return;
   window._adminPerfilAlunoId = id;
   irAdmin('perfil'); document.getElementById('nb-alunos').classList.add('on');
+  const resumo = await carregarResumoLivrosAluno(id);
   const h=hj(); const cm=chM(h);
   let tp=0,tf=0;
   Object.values(D.presencas).forEach(v=>{ if(v[id]==='P') tp++; if(v[id]==='F') tf++; });
@@ -1198,6 +1217,15 @@ function verPerfilAdmin(id){
       <div class="mc3"><div class="mc3n" style="color:var(--vm)">${tf}</div><div class="mc3l">Faltas</div></div>
       <div class="mc3"><div class="mc3n" style="color:var(--am)">${mp}</div><div class="mc3l">Meses pagos</div></div>
     </div>
+    ${resumo ? `
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-t">📚 Livros do Curso</div>
+      <div class="sl2"><span class="slb">Situação</span><span class="bdg ${resumo.pendentes > 0 ? 'br' : 'bv'}">${resumo.pendentes > 0 ? 'Pendente' : 'Em dia'}</span></div>
+      <div class="sl2"><span class="slb">Livros pagos</span><span class="slv">${resumo.pagos} / ${resumo.totalCurso}</span></div>
+      <div class="sl2"><span class="slb">Pendentes</span><span class="slv" style="color:var(--vm)">${resumo.pendentes}</span></div>
+      <div class="sl2"><span class="slb">Progresso</span><span class="slv">${resumo.progresso}%</span></div>
+      <div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--cin);margin-bottom:5px"><span>Progresso geral</span><span>${resumo.progresso}% (${resumo.pagos}/${resumo.totalCurso})</span></div><div class="ba2"><div class="bf vd" style="width:${resumo.progresso}%"></div></div></div>
+    </div>` : ''}
     <div class="card"><div class="card-t">📋 Situação</div><div class="sl2"><span class="slb">Pag. ${M[h.getMonth()]}</span><span class="bdg ${pagA?'bv':'br'}">${pagA?'Em dia':'Pendente'}</span></div>${livH}${a.valor?`<div class="sl2"><span class="slb">Mensalidade</span><span class="slv">R$ ${a.valor}</span></div>`:''}${a.email?`<div class="sl2"><span class="slb">E-mail</span><span style="font-size:13px;color:var(--cin)">${a.email}</span></div>`:''}<div class="sl2"><span class="slb">Senha app</span><span style="font-family:monospace;font-size:14px;background:var(--azul-c);padding:2px 8px;border-radius:4px;color:var(--azul)">${a.senha||'—'}</span></div></div>
     <div class="card"><div class="card-t">🔢 Notas</div>${notasH}</div>
     <div class="card"><div class="card-t">📅 Calendário — ${M[h.getMonth()]}</div><div style="display:flex;gap:10px;font-size:12px;margin-bottom:8px"><span><span style="display:inline-block;width:12px;height:12px;background:var(--vd);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Presente</span><span><span style="display:inline-block;width:12px;height:12px;background:var(--vm);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Falta</span></div><div class="cal">${cal}</div></div>
