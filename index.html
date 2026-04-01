@@ -1212,10 +1212,12 @@ async function verPerfilAdmin(id){
   const livH=D.livros_curso.map(l=>`<div class="sl2"><span class="slb">${l.nome}</span><span class="bdg ${(D.livros_ent[l.id]||{})[id]?'bv':'br'}">${(D.livros_ent[l.id]||{})[id]?'✓ Recebido':'Pendente'}</span></div>`).join('');
   document.getElementById('a-perfil-conteudo').innerHTML=`
     <div class="ph"><div class="pav">${ini(a.nome)}</div><div class="pn">${fmtNome(a.nome)}</div><div class="pt">${a.turma||'Turma Única'}${a.tel?' · '+fmtTel(a.tel):''}</div></div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:15px">
-      <div class="mc3"><div class="mc3n" style="color:var(--vd)">${tp}</div><div class="mc3l">Presenças</div></div>
-      <div class="mc3"><div class="mc3n" style="color:var(--vm)">${tf}</div><div class="mc3l">Faltas</div></div>
-      <div class="mc3"><div class="mc3n" style="color:var(--am)">${mp}</div><div class="mc3l">Meses pagos</div></div>
+    <div style="display:none;"><!-- LEGADO: Presenças / Faltas / Meses pagos -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:15px">
+        <div class="mc3"><div class="mc3n" style="color:var(--vd)">${tp}</div><div class="mc3l">Presenças</div></div>
+        <div class="mc3"><div class="mc3n" style="color:var(--vm)">${tf}</div><div class="mc3l">Faltas</div></div>
+        <div class="mc3"><div class="mc3n" style="color:var(--am)">${mp}</div><div class="mc3l">Meses pagos</div></div>
+      </div>
     </div>
     ${resumo ? `
     <div class="card" style="margin-bottom:14px">
@@ -1226,9 +1228,13 @@ async function verPerfilAdmin(id){
       <div class="sl2"><span class="slb">Progresso</span><span class="slv">${resumo.progresso}%</span></div>
       <div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--cin);margin-bottom:5px"><span>Progresso geral</span><span>${resumo.progresso}% (${resumo.pagos}/${resumo.totalCurso})</span></div><div class="ba2"><div class="bf vd" style="width:${resumo.progresso}%"></div></div></div>
     </div>` : ''}
-    <div class="card"><div class="card-t">📋 Situação</div><div class="sl2"><span class="slb">Pag. ${M[h.getMonth()]}</span><span class="bdg ${pagA?'bv':'br'}">${pagA?'Em dia':'Pendente'}</span></div>${livH}${a.valor?`<div class="sl2"><span class="slb">Mensalidade</span><span class="slv">R$ ${a.valor}</span></div>`:''}${a.email?`<div class="sl2"><span class="slb">E-mail</span><span style="font-size:13px;color:var(--cin)">${a.email}</span></div>`:''}<div class="sl2"><span class="slb">Senha app</span><span style="font-family:monospace;font-size:14px;background:var(--azul-c);padding:2px 8px;border-radius:4px;color:var(--azul)">${a.senha||'—'}</span></div></div>
+    <div style="display:none;"><!-- LEGADO: Situação antiga (pag. mensal, livros 1–7, senha app) -->
+      <div class="card"><div class="card-t">📋 Situação</div><div class="sl2"><span class="slb">Pag. ${M[h.getMonth()]}</span><span class="bdg ${pagA?'bv':'br'}">${pagA?'Em dia':'Pendente'}</span></div>${livH}${a.valor?`<div class="sl2"><span class="slb">Mensalidade</span><span class="slv">R$ ${a.valor}</span></div>`:''}${a.email?`<div class="sl2"><span class="slb">E-mail</span><span style="font-size:13px;color:var(--cin)">${a.email}</span></div>`:''}<div class="sl2"><span class="slb">Senha app</span><span style="font-family:monospace;font-size:14px;background:var(--azul-c);padding:2px 8px;border-radius:4px;color:var(--azul)">${a.senha||'—'}</span></div></div>
+    </div>
     <div class="card"><div class="card-t">🔢 Notas</div>${notasH}</div>
-    <div class="card"><div class="card-t">📅 Calendário — ${M[h.getMonth()]}</div><div style="display:flex;gap:10px;font-size:12px;margin-bottom:8px"><span><span style="display:inline-block;width:12px;height:12px;background:var(--vd);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Presente</span><span><span style="display:inline-block;width:12px;height:12px;background:var(--vm);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Falta</span></div><div class="cal">${cal}</div></div>
+    <div style="display:none;"><!-- LEGADO: Calendário -->
+      <div class="card"><div class="card-t">📅 Calendário — ${M[h.getMonth()]}</div><div style="display:flex;gap:10px;font-size:12px;margin-bottom:8px"><span><span style="display:inline-block;width:12px;height:12px;background:var(--vd);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Presente</span><span><span style="display:inline-block;width:12px;height:12px;background:var(--vm);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Falta</span></div><div class="cal">${cal}</div></div>
+    </div>
     <div class="card"><div class="card-t">📚 Livros do Aluno (Supabase)</div><div id="admin-livros-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
     <button class="btn bs" onclick="abrirModAluno('${id}')">✏️ Editar dados</button>`;
   carregarExibirLivrosAdminPerfil(id);
