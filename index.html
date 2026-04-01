@@ -900,7 +900,7 @@ function renderLivrosAluno() {
           border-radius:10px;
           padding:12px;
           margin-bottom:10px;
-          background:${item.pagou ? '#f0fff4' : '#fff5f5'};
+          background:${!item.participou ? '#f3f3f3' : item.pagou ? '#f0fff4' : '#fff5f5'};
           border:${isAtual ? '2px solid #2563eb' : '1px solid #ddd'};
         ">
           <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -1006,16 +1006,29 @@ async function carregarExibirLivrosAdminPerfil(alunoId) {
   container.innerHTML = livros.map(item => {
     const nomeLivro = item.livros?.nome || item.livro_codigo || 'Livro';
     const pago = item.pagou === true;
+    const naoParticipou = item.participou === false;
     const dataFmt = item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '—';
+    let statusTexto;
+    let statusCor;
+    if (naoParticipou) {
+      statusTexto = '⚫ Não participou';
+      statusCor = 'var(--cin)';
+    } else if (pago) {
+      statusTexto = '🟢 Pago · ' + (item.forma_pagamento || '—') + ' · ' + dataFmt;
+      statusCor = 'var(--vd)';
+    } else {
+      statusTexto = '🔴 Pendente';
+      statusCor = 'var(--vm)';
+    }
     return `
       <div class="sl2" style="align-items:center;gap:8px;flex-wrap:wrap;">
         <div style="flex:1;min-width:0">
           <div style="font-size:14px;font-weight:500">${nomeLivro}</div>
-          <div style="font-size:12px;color:var(--cin);margin-top:2px">
-            ${pago ? '✅ Pago · ' + (item.forma_pagamento || '—') + ' · ' + dataFmt : '🔴 Pendente'}
+          <div style="font-size:12px;color:${statusCor};margin-top:2px">
+            ${statusTexto}
           </div>
         </div>
-        ${!pago && window.isAdmin ? `<button
+        ${!pago && !naoParticipou && window.isAdmin ? `<button
           onclick="marcarLivroComoPago('${item.id}')"
           style="
             padding:6px 13px;
@@ -1187,14 +1200,14 @@ function renderAlunosAdmin(){
 async function carregarResumoLivrosAluno(alunoId) {
   const { data, error } = await supabaseClient
     .from('aluno_livros')
-    .select('pagou')
+    .select('pagou, participou')
     .eq('aluno_id', alunoId);
   if (error) {
     console.error('Erro ao carregar resumo:', error);
     return null;
   }
   const totalCurso = 24;
-  const pagos = data.filter(item => item.pagou === true).length;
+  const pagos = data.filter(item => item.participou !== false && item.pagou === true).length;
   const pendentes = totalCurso - pagos;
   const progresso = totalCurso > 0 ? Math.round((pagos / totalCurso) * 100) : 0;
   return { pagos, pendentes, progresso, totalCurso };
