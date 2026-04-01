@@ -942,6 +942,7 @@ function setFiltroLivros(tipo) {
 /* ════ MARCAR LIVRO COMO PAGO (ADMIN) ════ */
 
 async function marcarLivroComoPago(idRegistro) {
+  if (!window.isAdmin) { alert('Acesso restrito'); return; }
   const { error } = await supabaseClient
     .from('aluno_livros')
     .update({
@@ -1142,6 +1143,7 @@ function abrirModAluno(id){
   abrirMod('mod-aluno');
 }
 function salvarAluno(){
+  if (!window.isAdmin) { alert('Acesso restrito'); return; }
   const nome=document.getElementById('a-nome').value.trim().toUpperCase(); if(!nome){ toast('⚠ Digite o nome'); return; }
   const eid=document.getElementById('aid').value;
   const a={id:eid||Date.now().toString(),nome,tel:document.getElementById('a-tel').value.replace(/\D/g,''),email:document.getElementById('a-email').value.trim(),turma:document.getElementById('a-turma').value,valor:document.getElementById('a-valor').value,senha:document.getElementById('a-senha').value||'1234',ativo:true};
@@ -1150,6 +1152,7 @@ function salvarAluno(){
   salvar(); fecharMod('mod-aluno'); renderAlunosAdmin(); toast('✓ Aluno '+(eid?'atualizado':'cadastrado')+'!');
 }
 function delAluno(){
+  if (!window.isAdmin) { alert('Acesso restrito'); return; }
   const id=document.getElementById('aid').value; if(!id||!confirm('Excluir este aluno?')) return;
   D.alunos=D.alunos.filter(a=>a.id!==id); salvar(); fecharMod('mod-aluno'); renderAlunosAdmin(); toast('Aluno removido.');
 }
@@ -1270,6 +1273,7 @@ function tgPres(id){
   document.getElementById('pc-'+id).textContent=n==='P'?'Presente':n==='F'?'Falta':'Tocar';
 }
 function salvarPres(){
+  if (!window.isAdmin) { alert('Acesso restrito'); return; }
   // Salvar log da aula
   const mod=document.getElementById('sel-mod').value; const ai=document.getElementById('sel-aula').value;
   if(mod && ai!==''){
@@ -1307,6 +1311,7 @@ function renderPagAdmin(){
     return `<div class="pgr"><div class="pgi"><div class="pgn">${fmtNome(a.nome)}</div><div class="pgd">${M[_mp.getMonth()]+' '+_mp.getFullYear()}${a.valor?' · R$ '+a.valor:''}</div></div><button class="pgb ${p?'pg':'pe'}" onclick="tgPag('${a.id}')">${p?'✓ Pago':'✕ Pendente'}</button></div>`; }).join('');
 }
 function tgPag(id){
+  if (!window.isAdmin) { alert('Acesso restrito'); return; }
   const cm=chM(_mp); if(!D.pagamentos[cm]) D.pagamentos[cm]={};
   D.pagamentos[cm][id]=!D.pagamentos[cm][id]; salvar(); renderPagAdmin();
   const a=D.alunos.find(x=>x.id===id); toast(D.pagamentos[cm][id]?'✓ Pagamento de '+fmtNome(a.nome)+' registrado!':'Marcado como pendente');
@@ -1326,7 +1331,7 @@ function renderLivrosAdmin(){
     ${al.map(a=>{ const ev=(D.livros_ent[l.id]||{})[a.id]===true; return `<div class="tr"><div><div class="tn">${fmtNome(a.nome)}</div><div class="ts2">${ev?'✓ Recebido':'Pendente'}</div></div><label class="tg"><input type="checkbox" ${ev?'checked':''} onchange="tgLivro('${l.id}','${a.id}',this.checked)"><span class="tsl"></span></label></div>`; }).join('')}</div>`; });
   document.getElementById('mat-livros').innerHTML=h;
 }
-function tgLivro(lid,aid,v){ if(!D.livros_ent[lid]) D.livros_ent[lid]={}; D.livros_ent[lid][aid]=v; salvar(); const a=D.alunos.find(x=>x.id===aid); toast(v?`📚 Livro entregue a ${fmtNome(a.nome)}!`:'Marcado como pendente'); renderLivrosAdmin(); }
+function tgLivro(lid,aid,v){ if (!window.isAdmin) { alert('Acesso restrito'); return; } if(!D.livros_ent[lid]) D.livros_ent[lid]={}; D.livros_ent[lid][aid]=v; salvar(); const a=D.alunos.find(x=>x.id===aid); toast(v?`📚 Livro entregue a ${fmtNome(a.nome)}!`:'Marcado como pendente'); renderLivrosAdmin(); }
 function renderProvasAdmin(){
   const al=ativos(); let h='';
   const todasProvasP = Object.keys(D.provas||{}).filter(p => /^p\d+$/.test(p)).sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
@@ -1337,7 +1342,7 @@ function renderProvasAdmin(){
     ${al.map(a=>{ const f=pf[a.id]===true; return `<div class="tr"><div><div class="tn">${fmtNome(a.nome)}</div><div class="ts2">${f?'✓ Realizada':'Pendente'}</div></div><label class="tg"><input type="checkbox" ${f?'checked':''} onchange="tgProva('${p}','${a.id}',this.checked)"><span class="tsl"></span></label></div>`; }).join('')}</div>`; });
   document.getElementById('mat-provas').innerHTML=h;
 }
-function tgProva(pid,aid,v){ if(!D.provas[pid]) D.provas[pid]={}; D.provas[pid][aid]=v; salvar(); const a=D.alunos.find(x=>x.id===aid); toast(v?`📝 Prova registrada para ${fmtNome(a.nome)}!`:'Marcado como pendente'); renderProvasAdmin(); }
+function tgProva(pid,aid,v){ if (!window.isAdmin) { alert('Acesso restrito'); return; } if(!D.provas[pid]) D.provas[pid]={}; D.provas[pid][aid]=v; salvar(); const a=D.alunos.find(x=>x.id===aid); toast(v?`📝 Prova registrada para ${fmtNome(a.nome)}!`:'Marcado como pendente'); renderProvasAdmin(); }
 function renderNotasAdmin(){
   const pid=document.getElementById('sel-prova')?.value; const btn=document.getElementById('btn-sv-notas');
   if(!pid){ document.getElementById('lista-notas').innerHTML=''; if(btn) btn.style.display='none'; return; }
@@ -1348,6 +1353,7 @@ function renderNotasAdmin(){
 }
 function updChip(id,v){ const c=document.getElementById('chip-'+id); if(!c) return; const n=parseFloat(v); if(isNaN(n)||v===''||v===null){ c.textContent=''; c.className='nc'; return; } c.textContent=(n!==null&&n!==undefined)?Number(n).toFixed(1):''; c.className='nc '+(n>=7?'bv':n>=5?'ba':'br'); }
 async function salvarNotas(){
+  if (!window.isAdmin) { alert('Acesso restrito'); return; }
   const pid=document.getElementById('sel-prova').value; if(!pid) return;
   if(!D.notas[pid]) D.notas[pid]={};
   const ops=[];
@@ -1913,6 +1919,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
   }
 
   async function sincronizarPresencaSupabase(alunoId, data, presente) {
+    if (!window.isAdmin) { alert('Acesso restrito'); return; }
     const { error } = await supabaseClient.from('presenca').upsert(
       { aluno_id: alunoId, data: data, presente: presente },
       { onConflict: 'aluno_id,data' }
@@ -1921,6 +1928,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
   }
 
   async function removerPresencaSupabase(alunoId, data) {
+    if (!window.isAdmin) { alert('Acesso restrito'); return; }
     const { error } = await supabaseClient.from('presenca')
       .delete()
       .eq('aluno_id', alunoId)
@@ -1929,6 +1937,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
   }
 
   async function sincronizarNotaSupabase(alunoId, prova, nota) {
+    if (!window.isAdmin) { alert('Acesso restrito'); return; }
     const { error } = await supabaseClient.from('notas').upsert(
       { aluno_id: alunoId, prova: prova, nota: nota },
       { onConflict: 'aluno_id,prova' }
@@ -1937,6 +1946,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
   }
 
   async function removerNotaSupabase(alunoId, prova) {
+    if (!window.isAdmin) { alert('Acesso restrito'); return; }
     const { error } = await supabaseClient.from('notas')
       .delete()
       .eq('aluno_id', alunoId)
