@@ -775,7 +775,7 @@ async function carregarAlunoLogado(authId) {
   window.alunoLogado = data;
   usuAtual = data;
   console.log('Criando provas para aluno:', usuAtual.id);
-  await criarProvasParaAluno(usuAtual.id);
+  // await criarProvasParaAluno(usuAtual.id);
   // Identificação de admin via email (default false, true só se bater exatamente)
   window.isAdmin = (data.email === 'admin@ibicamp.com');
 
@@ -785,7 +785,7 @@ async function carregarAlunoLogado(authId) {
   /* ── FIM LIVROS ── */
 
   /* ── PROVAS: sincroniza provas com base nos livros ── */
-  await criarProvasParaAluno(data.id);
+  // await criarProvasParaAluno(data.id);
   /* ── FIM PROVAS ── */
 
   document.getElementById('pg-login').style.display = 'none';
