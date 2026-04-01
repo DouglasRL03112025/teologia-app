@@ -627,6 +627,7 @@ const DB_KEY = 'teologia_v4';
 
 /* ════ DB ════ */
 let D, usuAtual = null;
+window.isAdmin = false; // Identificação global de admin (default: false)
 
 function ddp(){ return { alunos: [], presencas:{}, pagamentos:{}, livros_ent:{}, provas:{}, notas:{}, livros_curso:[{id:'l1',nome:'Livro 1 – Introdução Bíblica'},{id:'l2',nome:'Livro 2 – Pentateuco e Históricos'},{id:'l3',nome:'Livro 3 – Poéticos e Proféticos'},{id:'l4',nome:'Livro 4 – Novo Testamento'}], aulas_log:{} }; }
 function carregarDB(){
@@ -773,6 +774,8 @@ async function carregarAlunoLogado(authId) {
   data.telefone = data.telefone || '';
   window.alunoLogado = data;
   usuAtual = data;
+  // Identificação de admin via email (default false, true só se bater exatamente)
+  window.isAdmin = (data.email === 'admin@ibicamp.com');
 
   /* ── LIVROS: carrega e renderiza (adicionado) ── */
   await carregarLivrosAluno();
@@ -1043,6 +1046,7 @@ async function verificarAdmin(){
   if(document.getElementById('admin-pw').value===ADMIN_PW){
     fecharMod('mod-admin'); document.getElementById('admin-pw').value='';
     usuAtual = {id:'admin',nome:'Administrador',isAdmin:true};
+    window.isAdmin = true; // Usuário identificado como ADMIN
     document.getElementById('pg-login').style.display='none';
     document.getElementById('pg-admin').style.display='block';
     renderDashAdmin();
@@ -1054,6 +1058,7 @@ async function verificarAdmin(){
 
 function sair(){
   usuAtual=null;
+  window.isAdmin = false; // Reset ao sair
   ['pg-admin','pg-aluno'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('pg-login').style.display='flex';
   document.getElementById('login-tel').value='';
