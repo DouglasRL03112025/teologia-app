@@ -774,6 +774,8 @@ async function carregarAlunoLogado(authId) {
   data.telefone = data.telefone || '';
   window.alunoLogado = data;
   usuAtual = data;
+  console.log('Criando provas para aluno:', usuAtual.id);
+  await criarProvasParaAluno(usuAtual.id);
   // Identificação de admin via email (default false, true só se bater exatamente)
   window.isAdmin = (data.email === 'admin@ibicamp.com');
 
@@ -781,6 +783,10 @@ async function carregarAlunoLogado(authId) {
   await carregarLivrosAluno();
   renderLivrosAluno();
   /* ── FIM LIVROS ── */
+
+  /* ── PROVAS: sincroniza provas com base nos livros ── */
+  await criarProvasParaAluno(data.id);
+  /* ── FIM PROVAS ── */
 
   document.getElementById('pg-login').style.display = 'none';
   document.getElementById('pg-aluno').style.display = 'block';
@@ -793,6 +799,44 @@ async function carregarAlunoLogado(authId) {
   }
   console.log('ALUNO LOGADO:', data);
 }
+/* ════ PROVAS: SINCRONIZAÇÃO AUTOMÁTICA COM LIVROS ════ */
+
+async function criarProvasParaAluno(alunoId) {
+  // Buscar livros do aluno
+  const { data: livrosAluno, error } = await supabaseClient
+    .from('aluno_livros')
+    .select('livro_codigo')
+    .eq('aluno_id', alunoId);
+  if (error) {
+    console.error('Erro ao buscar livros:', error);
+    return;
+  }
+  for (const item of livrosAluno) {
+    // Verificar se já existe prova
+    const { data: existente } = await supabaseClient
+      .from('provas_aluno')
+      .select('id')
+      .eq('aluno_id', alunoId)
+      .eq('livro_codigo', item.livro_codigo)
+      .maybeSingle();
+    if (!existente) {
+      // Criar prova
+      await supabaseClient
+        .from('provas_aluno')
+        .insert({
+          aluno_id: alunoId,
+          livro_codigo: item.livro_codigo,
+          fez_prova: false,
+          corrigida: false,
+          devolvida: false
+        });
+    }
+  }
+  console.log('Provas sincronizadas com livros');
+}
+
+/* ════ FIM PROVAS: SINCRONIZAÇÃO AUTOMÁTICA ════ */
+
 /* ════ LIVROS DO ALUNO — TAREFAS 1 e 2 ════ */
 
 async function carregarLivrosAluno() {
@@ -1226,14 +1270,7 @@ async function irAluno(t){
     await carregarLivrosAluno();
     renderLivrosAluno();
   }
-  if(t==='notas') {
-    const provas = await carregarProvasAluno(usuAtual.id);
-    if (!provas || provas.length === 0) {
-      renderAlunoNotas(); // sistema antigo
-    } else {
-      await renderProvasAluno(); // sistema novo
-    }
-  }
+  if(t==='notas') await renderProvasAluno();
 }
 
 /* ════ DASHBOARD ADMIN ════ */
