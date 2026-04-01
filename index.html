@@ -1226,7 +1226,14 @@ async function irAluno(t){
     await carregarLivrosAluno();
     renderLivrosAluno();
   }
-  if(t==='notas') await renderProvasAluno();
+  if(t==='notas') {
+    const provas = await carregarProvasAluno(usuAtual.id);
+    if (!provas || provas.length === 0) {
+      renderAlunoNotas(); // sistema antigo
+    } else {
+      await renderProvasAluno(); // sistema novo
+    }
+  }
 }
 
 /* ════ DASHBOARD ADMIN ════ */
