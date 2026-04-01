@@ -1015,7 +1015,7 @@ async function carregarExibirLivrosAdminPerfil(alunoId) {
             ${pago ? '✅ Pago · ' + (item.forma_pagamento || '—') + ' · ' + dataFmt : '🔴 Pendente'}
           </div>
         </div>
-        ${!pago ? `<button
+        ${!pago && window.isAdmin ? `<button
           onclick="marcarLivroComoPago('${item.id}')"
           style="
             padding:6px 13px;
