@@ -1208,7 +1208,8 @@ async function verPerfilAdmin(id){
   let cal=DS.map(d=>`<div class="cd hd">${d}</div>`).join('');
   for(let i=0;i<p1;i++) cal+='<div class="cd vz"></div>';
   for(let d=1;d<=dim;d++){ const k=`${h.getFullYear()}-${(h.getMonth()+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`; const v=D.presencas[k]; const c=v&&v[id]==='P'?'cp':v&&v[id]==='F'?'cf':''; cal+=`<div class="cd ${c}">${d}</div>`; }
-  const notasH=['p1','p2','p3','p4'].map((p,i)=>{ const n=(D.notas[p]||{})[id]; if(n===null||n===undefined) return ''; return `<div class="sl2"><span class="slb">Prova ${i+1}</span><span class="bdg ${n>=7?'bv':n>=5?'ba':'br'}">${(n!==null&&n!==undefined)?Number(n).toFixed(1):''}</span></div>`; }).filter(Boolean).join('')||'<p style="font-size:14px;color:var(--cin)">Sem notas</p>';
+  const todasProvas = Object.keys(D.notas).filter(p => /^p\d+$/.test(p)).sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+  const notasH=todasProvas.map((p,i)=>{ const n=(D.notas[p]||{})[id]; const num=parseInt(p.slice(1)); if(n===null||n===undefined) return `<div class="sl2"><span class="slb">Prova ${num}</span><span class="bdg ba">Pendente</span></div>`; return `<div class="sl2"><span class="slb">Prova ${num}</span><span class="bdg ${n>=7?'bv':n>=5?'ba':'br'}">${Number(n).toFixed(1)}</span></div>`; }).join('')||'<p style="font-size:14px;color:var(--cin)">Sem notas</p>';
   const livH=D.livros_curso.map(l=>`<div class="sl2"><span class="slb">${l.nome}</span><span class="bdg ${(D.livros_ent[l.id]||{})[id]?'bv':'br'}">${(D.livros_ent[l.id]||{})[id]?'✓ Recebido':'Pendente'}</span></div>`).join('');
   document.getElementById('a-perfil-conteudo').innerHTML=`
     <div class="ph"><div class="pav">${ini(a.nome)}</div><div class="pn">${fmtNome(a.nome)}</div><div class="pt">${a.turma||'Turma Única'}${a.tel?' · '+fmtTel(a.tel):''}</div></div>
