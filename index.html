@@ -1270,7 +1270,19 @@ async function irAluno(t){
     await carregarLivrosAluno();
     renderLivrosAluno();
   }
-  if(t==='notas') await renderProvasAluno();
+  if(t==='notas') {
+    try {
+      const provas = await carregarProvasAluno(usuAtual.id);
+      if (provas && provas.length > 0) {
+        await renderProvasAluno();
+      } else {
+        renderAlunoNotas(); // sistema antigo SEMPRE como fallback
+      }
+    } catch (e) {
+      console.error('Erro nas provas:', e);
+      renderAlunoNotas(); // fallback de segurança
+    }
+  }
 }
 
 /* ════ DASHBOARD ADMIN ════ */
