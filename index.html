@@ -1324,8 +1324,11 @@ function renderLivrosAdmin(){
 function tgLivro(lid,aid,v){ if(!D.livros_ent[lid]) D.livros_ent[lid]={}; D.livros_ent[lid][aid]=v; salvar(); const a=D.alunos.find(x=>x.id===aid); toast(v?`📚 Livro entregue a ${fmtNome(a.nome)}!`:'Marcado como pendente'); renderLivrosAdmin(); }
 function renderProvasAdmin(){
   const al=ativos(); let h='';
-  ['p1','p2','p3','p4'].forEach((p,i)=>{ const pf=D.provas[p]||{}; const q=al.filter(a=>pf[a.id]===true).length;
-    h+=`<div style="margin-bottom:14px"><div style="font-size:14px;font-weight:600;color:var(--azul);margin-bottom:8px;display:flex;justify-content:space-between"><span>📝 Prova ${i+1}</span><span style="color:var(--cin);font-weight:400">${q}/${al.length}</span></div>
+  const todasProvasP = Object.keys(D.provas||{}).filter(p => /^p\d+$/.test(p)).sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+  // Garante ao menos p1–p4 visíveis se não houver nenhuma
+  const listaProvas = todasProvasP.length ? todasProvasP : ['p1','p2','p3','p4'];
+  listaProvas.forEach((p)=>{ const num=parseInt(p.slice(1)); const pf=D.provas[p]||{}; const q=al.filter(a=>pf[a.id]===true).length;
+    h+=`<div style="margin-bottom:14px"><div style="font-size:14px;font-weight:600;color:var(--azul);margin-bottom:8px;display:flex;justify-content:space-between"><span>📝 Prova ${num}</span><span style="color:var(--cin);font-weight:400">${q}/${al.length}</span></div>
     ${al.map(a=>{ const f=pf[a.id]===true; return `<div class="tr"><div><div class="tn">${fmtNome(a.nome)}</div><div class="ts2">${f?'✓ Realizada':'Pendente'}</div></div><label class="tg"><input type="checkbox" ${f?'checked':''} onchange="tgProva('${p}','${a.id}',this.checked)"><span class="tsl"></span></label></div>`; }).join('')}</div>`; });
   document.getElementById('mat-provas').innerHTML=h;
 }
@@ -1411,8 +1414,9 @@ function renderRelAdmin(aba){
     al.forEach(a=>{ let f=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='F') f++; }); if(f>=3) criticos.push(`<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--brd)">⚠️ <strong>${fmtNome(a.nome)}</strong> — ${f} faltas</div>`); });
     const pagPend=al.filter(a=>(D.pagamentos[cm]||{})[a.id]!==true);
     if(pagPend.length) criticos.push(`<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--brd)">💰 ${pagPend.length} aluno${pagPend.length>1?'s':''} com pagamento pendente: ${pagPend.map(a=>fmtNome(a.nome).split(' ')[0]).join(', ')}</div>`);
-    const semNota=['p1','p2','p3','p4'].filter(p=>Object.keys(D.notas[p]||{}).length===0);
-    if(semNota.length) criticos.push(`<div style="font-size:13px;padding:6px 0">📝 Prova${semNota.length>1?'s':''} sem notas lançadas: ${semNota.map((_,i)=>'Prova '+(i+1)).join(', ')}</div>`);
+    const todasProvasGeral = Object.keys(D.notas).filter(p => /^p\d+$/.test(p)).sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+    const semNota=todasProvasGeral.filter(p=>Object.keys(D.notas[p]||{}).length===0);
+    if(semNota.length) criticos.push(`<div style="font-size:13px;padding:6px 0">📝 Prova${semNota.length>1?'s':''} sem notas lançadas: ${semNota.map(p=>'Prova '+parseInt(p.slice(1))).join(', ')}</div>`);
     document.getElementById('rel-geral').innerHTML=
       `<div class="card"><div class="card-t">📈 Resumo — ${M[h.getMonth()]} ${h.getFullYear()}${turmaLabel}</div>
         <div class="sl2"><span class="slb">Alunos</span><span class="slv">${tot}</span></div>
@@ -1496,17 +1500,19 @@ function renderRelAdmin(aba){
   }
 
   if(aba==='avaliacao'){
-    let h2=['p1','p2','p3','p4'].map((p,i)=>{
+    const todasProvasAval = Object.keys(D.notas).filter(p => /^p\d+$/.test(p)).sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+    let h2=todasProvasAval.map((p)=>{
       const np=D.notas[p]||{};
       const ns=al.map(a=>np[a.id]).filter(n=>n!==null&&n!==undefined);
       const med=ns.length>0?(ns.reduce((a,b)=>a+b,0)/ns.length).toFixed(1):'—';
       const apv=ns.filter(n=>n>=7).length; const rep=ns.filter(n=>n<5).length;
-      return `<div class="sl2"><div><div style="font-weight:500;font-size:14px">Prova ${i+1}</div><div style="font-size:12px;color:var(--cin)">${ns.length} lançadas · ✓${apv} apr · ✗${rep} rep</div></div><span class="slv" style="font-size:18px;font-family:'Lora',serif">${med}</span></div>`;
+      const num=parseInt(p.slice(1));
+      return `<div class="sl2"><div><div style="font-weight:500;font-size:14px">Prova ${num}</div><div style="font-size:12px;color:var(--cin)">${ns.length} lançadas · ✓${apv} apr · ✗${rep} rep</div></div><span class="slv" style="font-size:18px;font-family:'Lora',serif">${med}</span></div>`;
     }).join('');
     let h3=al.map(a=>{
-      const na=['p1','p2','p3','p4'].map(p=>(D.notas[p]||{})[a.id]).filter(n=>n!==null&&n!==undefined);
+      const na=todasProvasAval.map(p=>(D.notas[p]||{})[a.id]).filter(n=>n!==null&&n!==undefined);
       const med=na.length>0?(na.reduce((x,y)=>x+y,0)/na.length).toFixed(1):'—';
-      const notas=['p1','p2','p3','p4'].map((p,i)=>{ const n=(D.notas[p]||{})[a.id]; return (n!==null&&n!==undefined)?`<span style="font-size:11px;background:${n>=7?'var(--vd-c)':n>=5?'var(--am-c)':'var(--vm-c)'};color:${n>=7?'var(--vd)':n>=5?'var(--am)':'var(--vm)'};padding:2px 6px;border-radius:4px">P${i+1}: ${Number(n).toFixed(1)}</span>`:''; }).filter(Boolean).join(' ');
+      const notas=todasProvasAval.map((p)=>{ const n=(D.notas[p]||{})[a.id]; const num=parseInt(p.slice(1)); return (n!==null&&n!==undefined)?`<span style="font-size:11px;background:${n>=7?'var(--vd-c)':n>=5?'var(--am-c)':'var(--vm-c)'};color:${n>=7?'var(--vd)':n>=5?'var(--am)':'var(--vm)'};padding:2px 6px;border-radius:4px">P${num}: ${Number(n).toFixed(1)}</span>`:''; }).filter(Boolean).join(' ');
       return `<div class="sl2"><div><div style="font-weight:500;font-size:14px">${fmtNome(a.nome)}</div><div style="margin-top:3px">${notas||'<span style="font-size:12px;color:var(--cin)">Sem notas</span>'}</div></div><span class="bdg ${med!=='—'?(parseFloat(med)>=7?'bv':parseFloat(med)>=5?'ba':'br'):''}" style="font-size:15px">${med}</span></div>`;
     }).join('');
     document.getElementById('rel-avaliacao').innerHTML=
@@ -1525,12 +1531,13 @@ function exportarPDF(){
   const pagM=D.pagamentos[cm]||{};
   const log=D.aulas_log||{};
 
+  const todasProvasPDF = Object.keys(D.notas).filter(p => /^p\d+$/.test(p)).sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
   // Montar HTML para impressão
   let linhasAlunos=al.map(a=>{
     let p=0,f=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') p++; if(D.presencas[k][a.id]==='F') f++; });
     const perc=pk.length>0?Math.round(p/pk.length*100):0;
     const pago=(pagM[a.id]===true)?'<span style="color:#2d7a4a;font-weight:600">✓ Em dia</span>':'<span style="color:#b83232;font-weight:600">✗ Pendente</span>';
-    const notas=['p1','p2','p3','p4'].map((pi,i)=>{ const n=(D.notas[pi]||{})[a.id]; return `<span style="font-size:11px;background:${(n!==null&&n!==undefined)?(n>=7?'#e8f5ee':n>=5?'#fff8e6':'#fdeaea'):'#f5f4f0'};padding:2px 5px;border-radius:3px;margin-right:3px">P${i+1}: ${(n!==null&&n!==undefined)?Number(n).toFixed(1):'—'}</span>`; }).join('');
+    const notas=todasProvasPDF.map((pi)=>{ const n=(D.notas[pi]||{})[a.id]; const num=parseInt(pi.slice(1)); return `<span style="font-size:11px;background:${(n!==null&&n!==undefined)?(n>=7?'#e8f5ee':n>=5?'#fff8e6':'#fdeaea'):'#f5f4f0'};padding:2px 5px;border-radius:3px;margin-right:3px">P${num}: ${(n!==null&&n!==undefined)?Number(n).toFixed(1):'—'}</span>`; }).join('');
     return `<tr>
       <td style="padding:9px 8px;border-bottom:1px solid #e0ddd5;font-size:13px">${fmtNome(a.nome)}</td>
       <td style="padding:9px 8px;border-bottom:1px solid #e0ddd5;text-align:center;font-size:13px">${p}/${pk.length}</td>
@@ -1597,13 +1604,14 @@ function exportarCSV(){
   const al=alunosFiltrados();
   const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
   const pagM=D.pagamentos[cm]||{};
-  let csv='Nome,Turma,Telefone,Presencas,Faltas,Freq%,Pagamento,P1,P2,P3,P4,Media\n';
+  const todasProvasCSV = Object.keys(D.notas).filter(p => /^p\d+$/.test(p)).sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+  let csv='Nome,Turma,Telefone,Presencas,Faltas,Freq%,Pagamento,' + todasProvasCSV.map(p=>'P'+parseInt(p.slice(1))).join(',') + ',Media\n';
   al.forEach(a=>{
     let p=0,f=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') p++; if(D.presencas[k][a.id]==='F') f++; });
     const perc=pk.length>0?Math.round(p/pk.length*100):0;
     const pago=(pagM[a.id]===true)?'Pago':'Pendente';
-    const notas=['p1','p2','p3','p4'].map(pi=>{ const n=(D.notas[pi]||{})[a.id]; return (n!==null&&n!==undefined)?Number(n).toFixed(1):''; });
-    const ns=['p1','p2','p3','p4'].map(pi=>(D.notas[pi]||{})[a.id]).filter(n=>n!==null&&n!==undefined);
+    const notas=todasProvasCSV.map(pi=>{ const n=(D.notas[pi]||{})[a.id]; return (n!==null&&n!==undefined)?Number(n).toFixed(1):''; });
+    const ns=todasProvasCSV.map(pi=>(D.notas[pi]||{})[a.id]).filter(n=>n!==null&&n!==undefined);
     const med=ns.length>0?(ns.reduce((x,y)=>x+y,0)/ns.length).toFixed(1):'';
     csv+=`"${fmtNome(a.nome)}","${a.turma||'Turma Única'}","${a.tel||''}",${p},${f},${perc}%,"${pago}",${notas.join(',')},${med}\n`;
   });
