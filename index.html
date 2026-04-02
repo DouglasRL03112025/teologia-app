@@ -1023,7 +1023,7 @@ async function renderProvasAluno() {
 
   container.innerHTML = '<div style="color:var(--cin);font-size:14px;padding:8px 0">Carregando provas...</div>';
 
-  const dados = await montarProvasComLivros(usuAtual.id);
+  let dados = await montarProvasComLivros(usuAtual.id);
 
   if (!dados.length) {
     container.innerHTML = '<div class="empty"><div class="empty-ic">📝</div><div class="empty-tx">Nenhuma prova registrada.</div></div>';
