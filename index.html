@@ -1041,19 +1041,17 @@ async function renderProvasAluno() {
   const corNota = n => n === null || n === undefined ? 'color:var(--cin)' : n >= 7 ? 'color:var(--vd)' : n >= 5 ? 'color:var(--am)' : 'color:var(--vm)';
 
   const cards = dados.map(p => {
-    const statusRealizada = p.fez_prova
-      ? '<span style="color:#2d7a4a;font-size:14px;">🟢 Prova realizada</span>'
-      : '<span style="color:#999;font-size:14px;">⚪ Não realizada</span>';
-
-    const statusDevolvida = p.devolvida
-      ? '<span style="color:#2563eb;font-size:14px;">📦 Prova devolvida</span>'
-      : (p.fez_prova && !p.corrigida
-          ? '<span style="color:#a06c00;font-size:14px;">🟡 Aguardando correção</span>'
-          : '');
-
     const temNota = p.nota !== null && p.nota !== undefined;
+    const statusRealizada = temNota
+      ? '<div style="color:green;">🟢 Prova realizada</div>'
+      : '<div style="color:#999;">⚪ Não realizada</div>';
+    const statusDevolvida = temNota
+      ? '<div style="color:#2563eb;">📦 Prova devolvida</div>'
+      : '';
     const nota = temNota
-      ? `<div style="font-size:22px;font-weight:700;font-family:'Lora',serif;${corNota(p.nota)};margin-top:4px">${notaFmt(p.nota)}<span style="font-size:13px;font-weight:400;color:var(--cin);margin-left:4px">/ 10</span></div>`
+      ? `<div style="font-weight:bold; font-size:16px; margin-top:6px;">
+           Nota: ${p.nota}
+         </div>`
       : '';
 
     const datasHtml = [
@@ -1064,8 +1062,8 @@ async function renderProvasAluno() {
     return `
       <div class="pgr" style="flex-direction:column;align-items:stretch;gap:6px;padding:14px;border-radius:var(--r);border:1px solid var(--brd);background:#fff;box-shadow:var(--s);margin-bottom:10px">
         <div style="font-size:15px;font-weight:600;color:var(--azul);margin-bottom:2px">📖 ${p.livro_nome}</div>
-        <div>${statusRealizada}</div>
-        ${statusDevolvida ? `<div>${statusDevolvida}</div>` : ''}
+        ${statusRealizada}
+        ${statusDevolvida}
         ${nota}
         ${datasHtml ? `<div style="margin-top:4px">${datasHtml}</div>` : ''}
       </div>`;
