@@ -1414,8 +1414,8 @@ async function irAluno(t){
   if(t==='agenda') renderAlunoAgenda();
   if(t==='presenca') renderAlunoPresenca();
   if(t==='pagamentos') {
-    renderAlunoPagamentos();
-    renderPagamentosAluno();
+    // renderAlunoPagamentos(); // desativado: substituído por renderPagamentosAlunoViaLivros
+    // renderPagamentosAluno(); // desativado: substituído por renderPagamentosAlunoViaLivros
     await carregarLivrosAluno();
     renderPagamentosAlunoViaLivros();
   }
