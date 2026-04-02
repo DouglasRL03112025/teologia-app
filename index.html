@@ -1092,6 +1092,92 @@ async function renderProvasAluno() {
 
 /* ════ FIM SISTEMA DE PROVAS ════ */
 
+/* ════ ADMIN: GERENCIAR PROVAS DO ALUNO ════ */
+
+async function carregarExibirProvasAdminPerfil(alunoId) {
+  window._adminPerfilAlunoIdProvas = alunoId;
+  const container = document.getElementById('admin-provas-aluno');
+  if (!container) return;
+  container.innerHTML = '<div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando provas...</div>';
+  const { data: provas, error } = await supabaseClient
+    .from('provas_aluno')
+    .select('*')
+    .eq('aluno_id', alunoId)
+    .order('livro_codigo', { ascending: true });
+  if (error) {
+    console.error('[Admin Provas] Erro:', error);
+    container.innerHTML = '<div style="font-size:13px;color:var(--vm)">Erro ao carregar provas.</div>';
+    return;
+  }
+  if (!provas || provas.length === 0) {
+    container.innerHTML = '<div style="font-size:13px;color:var(--cin);padding:8px 0">Nenhuma prova registrada.</div>';
+    return;
+  }
+  const { data: livrosBase } = await supabaseClient.from('livros').select('*');
+  container.innerHTML = provas.map(item => {
+    const livro = (livrosBase || []).find(l => l.codigo === item.livro_codigo);
+    const nomeLivro = livro?.nome || item.livro_codigo || 'Livro';
+    const notaVal = item.nota !== null && item.nota !== undefined ? Number(item.nota).toFixed(1) : '—';
+    const corNota = item.nota !== null && item.nota !== undefined
+      ? (item.nota >= 7 ? 'color:var(--vd)' : item.nota >= 5 ? 'color:var(--am)' : 'color:var(--vm)')
+      : 'color:var(--cin)';
+    return `
+      <div class="pgr" style="flex-direction:column;align-items:stretch;gap:8px;margin-bottom:12px;padding:14px;border-radius:var(--r);border:1px solid var(--brd);background:#fff;box-shadow:var(--s)">
+        <div style="font-size:15px;font-weight:600;color:var(--azul)">📖 ${nomeLivro}</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:13px;color:var(--cin)">Nota:</span>
+          <input type="number" min="0" max="10" step="0.1"
+            value="${item.nota !== null && item.nota !== undefined ? item.nota : ''}"
+            placeholder="—"
+            onchange="atualizarNota('${item.id}', this.value)"
+            style="width:72px;padding:6px 8px;border:1.5px solid var(--brd);border-radius:8px;font-size:16px;font-weight:700;text-align:center;font-family:inherit;${corNota}">
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
+          <input type="checkbox" ${item.fez_prova ? 'checked' : ''}
+            onchange="toggleFezProva('${item.id}', this.checked)"
+            style="width:17px;height:17px;cursor:pointer;accent-color:var(--azul)">
+          Prova realizada
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
+          <input type="checkbox" ${item.devolvida ? 'checked' : ''}
+            onchange="toggleDevolvida('${item.id}', this.checked)"
+            style="width:17px;height:17px;cursor:pointer;accent-color:var(--vd)">
+          Prova devolvida ao aluno
+        </label>
+      </div>`;
+  }).join('');
+}
+
+async function toggleFezProva(id, valor) {
+  const { error } = await supabaseClient
+    .from('provas_aluno')
+    .update({ fez_prova: valor, corrigida: valor })
+    .eq('id', id);
+  if (error) console.error('[toggleFezProva] Erro:', error);
+  else toast(valor ? '✔ Prova marcada como realizada' : 'Prova desmarcada');
+}
+
+async function toggleDevolvida(id, valor) {
+  const { error } = await supabaseClient
+    .from('provas_aluno')
+    .update({ devolvida: valor, corrigida: true })
+    .eq('id', id);
+  if (error) console.error('[toggleDevolvida] Erro:', error);
+  else toast(valor ? '📦 Prova marcada como devolvida' : 'Devolução desmarcada');
+}
+
+async function atualizarNota(id, valor) {
+  const nota = valor !== '' && valor !== null && valor !== undefined ? parseFloat(valor) : null;
+  const { error } = await supabaseClient
+    .from('provas_aluno')
+    .update({ nota: nota, corrigida: true })
+    .eq('id', id);
+  if (error) console.error('[atualizarNota] Erro:', error);
+  else toast(nota !== null ? `✏️ Nota ${nota.toFixed(1)} salva!` : 'Nota removida');
+}
+
+/* ════ FIM ADMIN: GERENCIAR PROVAS DO ALUNO ════ */
+
 /* ════ MARCAR LIVRO COMO PAGO (ADMIN) ════ */
 
 async function marcarLivroComoPago(idRegistro) {
@@ -1423,8 +1509,10 @@ async function verPerfilAdmin(id){
     <div style="display:none;"><!-- LEGADO: Calendário -->
       <div class="card"><div class="card-t">📅 Calendário — ${M[h.getMonth()]}</div><div style="display:flex;gap:10px;font-size:12px;margin-bottom:8px"><span><span style="display:inline-block;width:12px;height:12px;background:var(--vd);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Presente</span><span><span style="display:inline-block;width:12px;height:12px;background:var(--vm);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Falta</span></div><div class="cal">${cal}</div></div>
     </div>
+    <div class="card"><div class="card-t">📝 Provas do Aluno</div><div id="admin-provas-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
     <div class="card"><div class="card-t">📚 Livros do Aluno (Supabase)</div><div id="admin-livros-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
     <button class="btn bs" onclick="abrirModAluno('${id}')">✏️ Editar dados</button>`;
+  carregarExibirProvasAdminPerfil(id);
   carregarExibirLivrosAdminPerfil(id);
 }
 
