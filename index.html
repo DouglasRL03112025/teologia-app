@@ -995,14 +995,21 @@ async function renderPagamentosAlunoViaLivros() {
   }
   const dados = window.livrosAluno;
   const pagos = dados.filter(l => l.pagou).length;
+  const pendentes = dados.filter(l => !l.pagou).length;
   const total = 24;
-  const progresso = Math.round((pagos / total) * 100);
+  const ordenados = [
+    ...dados.filter(l => l.pagou),
+    ...dados.filter(l => !l.pagou)
+  ];
   container.innerHTML = `
-    <div style="margin-bottom:10px; font-weight:bold;">
-      Progresso: ${progresso}% (${pagos}/${total})
+    <div style="margin-bottom:15px;">
+      <div><strong>Pagos:</strong> ${pagos}</div>
+      <div><strong>Pendentes:</strong> ${pendentes}</div>
+      <div><strong>Total:</strong> ${total}</div>
     </div>
-    ${dados.map(item => {
+    ${ordenados.map(item => {
       const cor = item.pagou ? '#f0fff4' : '#fff5f5';
+      const nome = item.livros?.nome || item.nome || 'Livro';
       return `
         <div style="
           border:1px solid #ddd;
@@ -1012,10 +1019,10 @@ async function renderPagamentosAlunoViaLivros() {
           background:${cor};
         ">
           <div style="font-weight:bold;">
-            ${item.livros?.nome || item.nome || 'Livro'}
+            \u{1F4B3} ${nome}
           </div>
           <div>
-            ${item.pagou ? '🟢 Pago' : '🔴 Pendente'}
+            ${item.pagou ? '\u{1F7E2} Pago' : '\u{1F534} Pendente'}
           </div>
           ${item.pagou ? `
             <div style="font-size:12px;">
