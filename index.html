@@ -990,6 +990,7 @@ async function carregarProvasAluno(alunoId) {
     .from('provas_aluno')
     .select('*')
     .eq('aluno_id', alunoId);
+  console.log('PROVAS DO BANCO:', data);
   if (error) {
     console.error('[Provas] Erro ao carregar provas:', error);
     return [];
@@ -1362,11 +1363,13 @@ async function irAluno(t){
       if (provas && provas.length > 0) {
         await renderProvasAluno();
       } else {
-        renderAlunoNotas(); // sistema antigo SEMPRE como fallback
+        console.warn('SEM PROVAS NO BANCO');
+        return;
       }
     } catch (e) {
       console.error('Erro nas provas:', e);
-      renderAlunoNotas(); // fallback de segurança
+      console.warn('SEM PROVAS NO BANCO');
+      return;
     }
   }
 }
