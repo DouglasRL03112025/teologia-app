@@ -521,6 +521,8 @@ select.inp{cursor:pointer}
       <div class="tit">Meus Pagamentos</div>
       <p class="sub">Situação mensal</p>
       <div id="al-pag-lista"></div>
+      <!-- container pagamentos via livros (adicionado) -->
+      <div id="aluno-pagamentos"></div>
     </div>
 
     <!-- LIVROS RECEBIDOS -->
@@ -981,6 +983,56 @@ function setFiltroLivros(tipo) {
   renderLivrosAluno();
 }
 
+/* ════ PAGAMENTOS VIA LIVROS (adicionado) ════ */
+
+async function renderPagamentosAlunoViaLivros() {
+  const container = document.getElementById('aluno-pagamentos');
+  if (!container) return;
+  container.innerHTML = 'Carregando pagamentos...';
+  if (!window.livrosAluno || window.livrosAluno.length === 0) {
+    container.innerHTML = '<p>Nenhum pagamento encontrado.</p>';
+    return;
+  }
+  const dados = window.livrosAluno;
+  const pagos = dados.filter(l => l.pagou).length;
+  const total = 24;
+  const progresso = Math.round((pagos / total) * 100);
+  container.innerHTML = `
+    <div style="margin-bottom:10px; font-weight:bold;">
+      Progresso: ${progresso}% (${pagos}/${total})
+    </div>
+    ${dados.map(item => {
+      const cor = item.pagou ? '#f0fff4' : '#fff5f5';
+      return `
+        <div style="
+          border:1px solid #ddd;
+          border-radius:10px;
+          padding:10px;
+          margin-bottom:8px;
+          background:${cor};
+        ">
+          <div style="font-weight:bold;">
+            ${item.livros?.nome || item.nome || 'Livro'}
+          </div>
+          <div>
+            ${item.pagou ? '🟢 Pago' : '🔴 Pendente'}
+          </div>
+          ${item.pagou ? `
+            <div style="font-size:12px;">
+              Forma: ${item.forma_pagamento || '-'}
+            </div>
+            <div style="font-size:12px;">
+              Data: ${item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '-'}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('')}
+  `;
+}
+
+/* ════ FIM PAGAMENTOS VIA LIVROS ════ */
+
 /* ════ FIM LIVROS DO ALUNO ════ */
 
 /* ════ SISTEMA DE PROVAS VINCULADO AOS LIVROS ════ */
@@ -1361,7 +1413,12 @@ async function irAluno(t){
   if(t==='cadastro') renderAlunoCadastro();
   if(t==='agenda') renderAlunoAgenda();
   if(t==='presenca') renderAlunoPresenca();
-  if(t==='pagamentos') { renderAlunoPagamentos(); renderPagamentosAluno(); }
+  if(t==='pagamentos') {
+    renderAlunoPagamentos();
+    renderPagamentosAluno();
+    await carregarLivrosAluno();
+    renderPagamentosAlunoViaLivros();
+  }
   if (t === 'livros') {
     await carregarLivrosAluno();
     renderLivrosAluno();
