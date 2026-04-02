@@ -1040,6 +1040,33 @@ async function renderPagamentosAlunoViaLivros() {
 
 /* ════ FIM PAGAMENTOS VIA LIVROS ════ */
 
+/* ════ DASHBOARD ALUNO — ATUALIZAÇÃO COM DADOS REAIS ════ */
+
+function atualizarDashboardAluno() {
+  try {
+    // LIVROS: usa window.livrosAluno carregado pelo Supabase
+    const totalLivros = 24;
+    const pagos = (window.livrosAluno || []).filter(l => l.pagou).length;
+    // PROVAS: usa window.provasAluno se existir, senão array vazio
+    const provas = window.provasAluno || [];
+    const provasFeitas = provas.filter(p => p.fez_prova === true).length;
+    const totalProvas = provas.length || 24;
+    // ATUALIZAR DOM
+    const elLivros = document.getElementById('dash-livros');
+    const elProvas = document.getElementById('dash-provas');
+    if (elLivros) {
+      elLivros.innerHTML = pagos + '<span style="font-size:13px;font-weight:400;color:var(--cin)">/' + totalLivros + '</span>';
+    }
+    if (elProvas) {
+      elProvas.innerHTML = provasFeitas + '<span style="font-size:13px;font-weight:400;color:var(--cin)">/' + totalProvas + '</span>';
+    }
+  } catch (e) {
+    console.error('[Dashboard] Erro ao atualizar:', e);
+  }
+}
+
+/* ════ FIM DASHBOARD ALUNO ════ */
+
 /* ════ FIM LIVROS DO ALUNO ════ */
 
 /* ════ SISTEMA DE PROVAS VINCULADO AOS LIVROS ════ */
@@ -1418,7 +1445,11 @@ async function irAluno(t){
   const nb=document.getElementById('aln-'+t); if(nb) nb.classList.add('on');
   window.scrollTo(0,0);
   if(t==='cadastro') renderAlunoCadastro();
-  if(t==='agenda') renderAlunoAgenda();
+  if(t==='agenda') {
+    renderAlunoAgenda();
+    await carregarLivrosAluno();
+    atualizarDashboardAluno();
+  }
   if(t==='presenca') renderAlunoPresenca();
   if(t==='pagamentos') {
     // renderAlunoPagamentos(); // desativado: substituído por renderPagamentosAlunoViaLivros
@@ -2033,7 +2064,7 @@ function renderAlunoAgenda(){
     // Card Livros
     +'<div style="background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:14px 12px;box-shadow:var(--s);text-align:center">'
     +'<div style="font-size:20px;margin-bottom:4px">📚</div>'
-    +'<div style="font-size:22px;font-weight:700;color:var(--azul);font-family:Lora,serif">'+livrosRec+'<span style="font-size:13px;font-weight:400;color:var(--cin)">/'+totalLivros+'</span></div>'
+    +'<div id="dash-livros" style="font-size:22px;font-weight:700;color:var(--azul);font-family:Lora,serif">'+livrosRec+'<span style="font-size:13px;font-weight:400;color:var(--cin)">/'+totalLivros+'</span></div>'
     +'<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Livros</div>'
     +'</div>'
     // Card Presença
@@ -2045,7 +2076,7 @@ function renderAlunoAgenda(){
     // Card Provas
     +'<div style="background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:14px 12px;box-shadow:var(--s);text-align:center">'
     +'<div style="font-size:20px;margin-bottom:4px">📝</div>'
-    +'<div style="font-size:22px;font-weight:700;color:var(--azul);font-family:Lora,serif">'+provasFeitas+'<span style="font-size:13px;font-weight:400;color:var(--cin)">/'+todasProvas.length+'</span></div>'
+    +'<div id="dash-provas" style="font-size:22px;font-weight:700;color:var(--azul);font-family:Lora,serif">'+provasFeitas+'<span style="font-size:13px;font-weight:400;color:var(--cin)">/'+todasProvas.length+'</span></div>'
     +'<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Provas</div>'
     +'</div>'
     +'</div>';
