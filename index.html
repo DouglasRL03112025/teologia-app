@@ -1361,7 +1361,7 @@ async function irAluno(t){
   if(t==='cadastro') renderAlunoCadastro();
   if(t==='agenda') renderAlunoAgenda();
   if(t==='presenca') renderAlunoPresenca();
-  if(t==='pagamentos') renderAlunoPagamentos();
+  if(t==='pagamentos') { renderAlunoPagamentos(); renderPagamentosAluno(); }
   if (t === 'livros') {
     await carregarLivrosAluno();
     renderLivrosAluno();
@@ -2044,6 +2044,66 @@ function renderAlunoPagamentos(){
   const linhas=keys.map(k=>{ const [ano,mes]=k.split('-'); const p=(D.pagamentos[k]||{})[a.id]===true;
     return `<div class="pgr"><div class="pgi"><div class="pgn">${M[parseInt(mes)-1]} ${ano}</div>${a.valor?`<div class="pgd">Mensalidade: R$ ${a.valor}</div>`:''}</div><span class="bdg ${p?'bv':'br'}">${p?'✓ Pago':'✗ Pendente'}</span></div>`; }).join('');
   document.getElementById('al-pag-lista').innerHTML=linhas||'<div class="empty"><div class="empty-ic">💳</div><div class="empty-tx">Sem registros.</div></div>';
+}
+
+async function carregarPagamentosAluno() {
+  if (!usuAtual || !usuAtual.id) return [];
+  const { data, error } = await supabaseClient
+    .from('pagamentos_aluno')
+    .select('*')
+    .eq('aluno_id', usuAtual.id);
+  if (error) {
+    console.error('Erro ao carregar pagamentos:', error);
+    return [];
+  }
+  console.log('PAGAMENTOS:', data);
+  return data || [];
+}
+
+async function renderPagamentosAluno() {
+  const container = document.getElementById('al-pag-lista');
+  if (!container) return;
+  container.innerHTML = 'Carregando pagamentos...';
+  const dados = await carregarPagamentosAluno();
+  if (!dados || dados.length === 0) {
+    container.innerHTML = '<p>Nenhum pagamento encontrado.</p>';
+    return;
+  }
+  const totalMeses = 12;
+  const pagos = dados.filter(p => p.pago).length;
+  const progresso = Math.round((pagos / totalMeses) * 100);
+  container.innerHTML = `
+    <div style="margin-bottom:10px; font-weight:bold;">
+      Progresso: ${progresso}% (${pagos}/${totalMeses})
+    </div>
+    ${dados.map(item => {
+      const cor = item.pago ? '#f0fff4' : '#fff5f5';
+      return `
+        <div style="
+          border:1px solid #ddd;
+          border-radius:10px;
+          padding:10px;
+          margin-bottom:8px;
+          background:${cor};
+        ">
+          <div style="font-weight:bold;">
+            ${item.mes}
+          </div>
+          <div>
+            ${item.pago ? '🟢 Pago' : '🔴 Pendente'}
+          </div>
+          ${item.pago ? `
+            <div style="font-size:12px;">
+              Forma: ${item.forma_pagamento || '-'}
+            </div>
+            <div style="font-size:12px;">
+              Data: ${item.data_pagamento || '-'}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('')}
+  `;
 }
 
 function renderAlunoLivros(){
