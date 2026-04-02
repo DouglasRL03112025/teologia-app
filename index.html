@@ -1049,8 +1049,10 @@ function atualizarDashboardAluno() {
     const pagos = (window.livrosAluno || []).filter(l => l.pagou).length;
     // PROVAS: usa window.provasAluno se existir, senão array vazio
     const provas = window.provasAluno || [];
-    const provasFeitas = provas.filter(p => p.fez_prova === true).length;
-    const totalProvas = provas.length || 24;
+    // prova feita = existe registro
+    const provasFeitas = provas.length;
+    // total fixo do curso
+    const totalProvas = 24;
     // ATUALIZAR DOM
     const elLivros = document.getElementById('dash-livros');
     const elProvas = document.getElementById('dash-provas');
