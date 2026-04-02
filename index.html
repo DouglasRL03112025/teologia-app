@@ -1038,40 +1038,36 @@ async function renderProvasAluno() {
   });
 
   const notaFmt = n => (n !== null && n !== undefined) ? Number(n).toFixed(1) : '—';
-  const corNota = n => n === null || n === undefined ? '' : n >= 7 ? 'color:var(--vd)' : n >= 5 ? 'color:var(--am)' : 'color:var(--vm)';
+  const corNota = n => n === null || n === undefined ? 'color:var(--cin)' : n >= 7 ? 'color:var(--vd)' : n >= 5 ? 'color:var(--am)' : 'color:var(--vm)';
 
   const cards = dados.map(p => {
-    let status = '', badgeClass = '', extra = '';
-    if (!p.fez_prova) {
-      status = '⚪ Não realizada';
-      badgeClass = 'ba';
-    } else if (p.fez_prova && !p.corrigida) {
-      status = '🟡 Aguardando correção';
-      badgeClass = 'ba';
-    } else if (p.corrigida && !p.devolvida) {
-      status = `🟢 Corrigida — Nota: <strong style="${corNota(p.nota)}">${notaFmt(p.nota)}</strong>`;
-      badgeClass = 'bv';
-    } else if (p.devolvida) {
-      status = `📦 Devolvida — Nota: <strong style="${corNota(p.nota)}">${notaFmt(p.nota)}</strong>`;
-      badgeClass = 'bv';
-    }
+    const statusRealizada = p.fez_prova
+      ? '<span style="color:#2d7a4a;font-size:14px;">🟢 Prova realizada</span>'
+      : '<span style="color:#999;font-size:14px;">⚪ Não realizada</span>';
+
+    const statusDevolvida = p.devolvida
+      ? '<span style="color:#2563eb;font-size:14px;">📦 Prova devolvida</span>'
+      : (p.fez_prova && !p.corrigida
+          ? '<span style="color:#a06c00;font-size:14px;">🟡 Aguardando correção</span>'
+          : '');
+
+    const temNota = p.nota !== null && p.nota !== undefined;
+    const nota = temNota
+      ? `<div style="font-size:22px;font-weight:700;font-family:'Lora',serif;${corNota(p.nota)};margin-top:4px">${notaFmt(p.nota)}<span style="font-size:13px;font-weight:400;color:var(--cin);margin-left:4px">/ 10</span></div>`
+      : '';
 
     const datasHtml = [
-      p.data_envio    ? `<span style="font-size:11px;color:var(--cin)">Envio: ${new Date(p.data_envio+'T12:00:00').toLocaleDateString('pt-BR')}</span>` : '',
-      p.data_correcao ? `<span style="font-size:11px;color:var(--cin)">Correção: ${new Date(p.data_correcao+'T12:00:00').toLocaleDateString('pt-BR')}</span>` : '',
-      p.data_devolucao? `<span style="font-size:11px;color:var(--cin)">Devolução: ${new Date(p.data_devolucao+'T12:00:00').toLocaleDateString('pt-BR')}</span>` : ''
+      p.data_correcao  ? `<span style="font-size:11px;color:var(--cin)">Correção: ${new Date(p.data_correcao).toLocaleDateString('pt-BR')}</span>`  : '',
+      p.data_devolucao ? `<span style="font-size:11px;color:var(--cin)">Devolução: ${new Date(p.data_devolucao).toLocaleDateString('pt-BR')}</span>` : ''
     ].filter(Boolean).join(' · ');
 
     return `
-      <div class="pgr" style="flex-direction:column;align-items:stretch;gap:6px">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <div style="font-size:15px;font-weight:600;color:var(--azul)">📖 ${p.livro_nome}</div>
-          ${p.corrigida && p.nota !== null && p.nota !== undefined
-            ? `<span class="bdg ${badgeClass}" style="font-size:16px;padding:5px 13px;font-weight:700">${notaFmt(p.nota)}</span>`
-            : ''}
-        </div>
-        <div style="font-size:14px">${status}</div>
-        ${datasHtml ? `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:2px">${datasHtml}</div>` : ''}
+      <div class="pgr" style="flex-direction:column;align-items:stretch;gap:6px;padding:14px;border-radius:var(--r);border:1px solid var(--brd);background:#fff;box-shadow:var(--s);margin-bottom:10px">
+        <div style="font-size:15px;font-weight:600;color:var(--azul);margin-bottom:2px">📖 ${p.livro_nome}</div>
+        <div>${statusRealizada}</div>
+        ${statusDevolvida ? `<div>${statusDevolvida}</div>` : ''}
+        ${nota}
+        ${datasHtml ? `<div style="margin-top:4px">${datasHtml}</div>` : ''}
       </div>`;
   }).join('');
 
