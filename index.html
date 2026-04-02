@@ -1065,8 +1065,18 @@ async function renderProvasAluno() {
       p.data_devolucao ? `<span style="font-size:11px;color:var(--cin)">Devolução: ${new Date(p.data_devolucao).toLocaleDateString('pt-BR')}</span>` : ''
     ].filter(Boolean).join(' · ');
 
+    let corFundo = '#f3f4f6'; // padrão cinza
+    if (p.nota !== null && p.nota !== undefined) {
+      corFundo = '#dcfce7'; // verde (corrigida)
+    } else if (p.fez_prova) {
+      corFundo = '#fef9c3'; // amarelo (aguardando correção)
+    }
+    if (p.devolvida) {
+      corFundo = '#dbeafe'; // azul (finalizada)
+    }
+
     return `
-      <div class="pgr" style="flex-direction:column;align-items:stretch;gap:4px;padding:12px;border-radius:var(--r);border:1px solid var(--brd);background:#fff;box-shadow:var(--s);margin-bottom:10px">
+      <div class="pgr" style="flex-direction:column;align-items:stretch;gap:4px;padding:12px;border-radius:var(--r);border:1px solid var(--brd);background:${corFundo};box-shadow:var(--s);margin-bottom:10px">
         <div style="font-size:15px;font-weight:600;color:var(--azul);margin-bottom:2px">📖 ${p.livro_nome}</div>
         ${statusRealizada}
         ${statusDevolvida}
