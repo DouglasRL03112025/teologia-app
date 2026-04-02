@@ -1040,6 +1040,13 @@ async function renderProvasAluno() {
   const notaFmt = n => (n !== null && n !== undefined) ? Number(n).toFixed(1) : '—';
   const corNota = n => n === null || n === undefined ? 'color:var(--cin)' : n >= 7 ? 'color:var(--vd)' : n >= 5 ? 'color:var(--am)' : 'color:var(--vm)';
 
+  // GARANTIR ORDEM CORRETA DAS PROVAS (p1, p2, p3...)
+  dados = [...dados].sort((a, b) => {
+    const numA = parseInt((a.prova || '').replace('p','')) || 0;
+    const numB = parseInt((b.prova || '').replace('p','')) || 0;
+    return numA - numB;
+  });
+
   const cards = dados.map(p => {
     const temNota = p.nota !== null && p.nota !== undefined;
     const statusRealizada = temNota
@@ -1049,9 +1056,7 @@ async function renderProvasAluno() {
       ? '<div style="color:#2563eb;">📦 Prova devolvida</div>'
       : '';
     const nota = temNota
-      ? `<div style="font-weight:bold; font-size:16px; margin-top:6px;">
-           Nota: ${p.nota}
-         </div>`
+      ? `<span style="font-size:20px; font-weight:bold;">${p.nota ?? '--'}</span>`
       : '';
 
     const datasHtml = [
@@ -1060,7 +1065,7 @@ async function renderProvasAluno() {
     ].filter(Boolean).join(' · ');
 
     return `
-      <div class="pgr" style="flex-direction:column;align-items:stretch;gap:6px;padding:14px;border-radius:var(--r);border:1px solid var(--brd);background:#fff;box-shadow:var(--s);margin-bottom:10px">
+      <div class="pgr" style="flex-direction:column;align-items:stretch;gap:4px;padding:12px;border-radius:var(--r);border:1px solid var(--brd);background:#fff;box-shadow:var(--s);margin-bottom:10px">
         <div style="font-size:15px;font-weight:600;color:var(--azul);margin-bottom:2px">📖 ${p.livro_nome}</div>
         ${statusRealizada}
         ${statusDevolvida}
