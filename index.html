@@ -1446,8 +1446,9 @@ async function irAluno(t){
   window.scrollTo(0,0);
   if(t==='cadastro') renderAlunoCadastro();
   if(t==='agenda') {
-    renderAlunoAgenda();
     await carregarLivrosAluno();
+    window.provasAluno = await carregarProvasAluno(usuAtual.id);
+    renderAlunoAgenda();
     atualizarDashboardAluno();
   }
   if(t==='presenca') renderAlunoPresenca();
