@@ -1050,7 +1050,7 @@ function atualizarDashboardAluno() {
     // PROVAS: usa window.provasAluno se existir, senão array vazio
     const provas = window.provasAluno || [];
     // prova feita = existe registro
-    const provasFeitas = provas.filter(p => p.fez_prova === true).length;
+    const provasFeitas = provas.length;
     // total fixo do curso
     const totalProvas = 24;
     // ATUALIZAR DOM
@@ -2059,8 +2059,9 @@ function renderAlunoAgenda(){
   const percPres=dp+df>0?Math.round(dp/(dp+df)*100):0;
   const corPres=percPres>=75?'var(--vd)':percPres>=50?'var(--am, #f59e0b)':'var(--vm)';
   // Dashboard: provas
-  const todasProvas=Object.keys(D.notas).filter(p=>/^p\d+$/.test(p)).sort((x,y)=>parseInt(x.slice(1))-parseInt(y.slice(1)));
-  const provasFeitas=todasProvas.filter(function(p){ return (D.notas[p]||{})[a.id]!==undefined; }).length;
+  const provas = window.provasAluno || [];
+  const provasFeitas = provas.filter(p => p.fez_prova === true).length;
+  const totalProvas = provas.length;
   const dashEl=document.getElementById('al-agenda-dashboard');
   if(dashEl) dashEl.innerHTML=
     '<div class="dash-grid">'
@@ -2079,7 +2080,7 @@ function renderAlunoAgenda(){
     // Card Provas
     +'<div style="background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:14px 12px;box-shadow:var(--s);text-align:center">'
     +'<div style="font-size:20px;margin-bottom:4px">📝</div>'
-    +'<div id="dash-provas" style="font-size:22px;font-weight:700;color:var(--azul);font-family:Lora,serif">'+provasFeitas+'<span style="font-size:13px;font-weight:400;color:var(--cin)">/'+todasProvas.length+'</span></div>'
+    +'<div id="dash-provas" style="font-size:22px;font-weight:700;color:var(--azul);font-family:Lora,serif">'+provasFeitas+'<span style="font-size:13px;font-weight:400;color:var(--cin)">/'+totalProvas+'</span></div>'
     +'<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Provas</div>'
     +'</div>'
     +'</div>';
