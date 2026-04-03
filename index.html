@@ -1050,7 +1050,7 @@ function atualizarDashboardAluno() {
     // PROVAS: usa window.provasAluno se existir, senão array vazio
     const provas = window.provasAluno || [];
     // prova feita = existe registro
-    const provasFeitas = provas.length;
+    const provasFeitas = provas.filter(p => p.fez_prova === true).length;
     // total fixo do curso
     const totalProvas = 24;
     // ATUALIZAR DOM
