@@ -518,7 +518,7 @@ select.inp{cursor:pointer}
 
     <!-- MEUS PAGAMENTOS -->
     <div class="tela" id="al-pagamentos">
-      <div class="tit">Meus Pagamentos</div>
+      <div class="tit">💰 Meus Pagamentos</div>
       <p class="sub">Situação mensal</p>
       <div id="al-pag-lista"></div>
       <!-- container pagamentos via livros (adicionado) -->
@@ -527,7 +527,7 @@ select.inp{cursor:pointer}
 
     <!-- LIVROS RECEBIDOS -->
     <div class="tela" id="al-livros">
-      <div class="tit">Livros Recebidos</div>
+      <div class="tit">📚 Meus Livros</div>
       <p class="sub">Controle de material</p>
       <div id="al-livros-lista"></div>
       <!-- container livros Supabase (adicionado) -->
@@ -922,10 +922,14 @@ function renderLivrosAluno() {
   `;
 
   container.innerHTML = `
-    <div style="margin-bottom:15px; padding:10px; background:#f5f5f5; border-radius:8px;">
-      <strong>Progresso do curso:</strong> ${progresso}% (${pagos}/${TOTAL_CURSO})
+    <div style="margin-bottom:15px; padding:12px 14px; background:#EEF4FF; border:1px solid #D6E4FF; border-radius:12px; display:flex; align-items:center; gap:10px;">
+      <div style="font-size:22px; line-height:1;">📖</div>
+      <div>
+        <div style="font-size:14px; font-weight:600; color:#1a3a5c;">Progresso do curso</div>
+        <div style="font-size:13px; color:#2563EB; font-weight:500; margin-top:2px;">${progresso}% concluído — ${pagos} de ${TOTAL_CURSO} livros</div>
+      </div>
     </div>
-    <div style="display:flex; gap:8px; margin-bottom:12px;">
+    <div style="display:flex; gap:8px; margin-bottom:14px;">
       <button style="${btnStyle('todos')}" onclick="setFiltroLivros('todos')">Todos</button>
       <button style="${btnStyle('pagos')}" onclick="setFiltroLivros('pagos')">✅ Pagos</button>
       <button style="${btnStyle('pendentes')}" onclick="setFiltroLivros('pendentes')">🔴 Pendentes</button>
@@ -933,45 +937,48 @@ function renderLivrosAluno() {
     ${dados.length === 0 ? '<div class="empty"><div class="empty-ic">🔍</div><div class="empty-tx">Nenhum livro neste filtro.</div></div>' : ''}
     ${dados.map((item, index) => {
       const isAtual = item === window.livrosAluno[window.livrosAluno.length - 1];
-      let status = '';
+      let statusText = '';
+      let statusColor = '';
       if (!item.participou) {
-        status = '⚫ Não participou';
+        statusText = '⚫ Não participou';
+        statusColor = '#6b6b6b';
       } else if (item.pagou) {
-        status = '🟢 Pago';
+        statusText = '🟢 Pago';
+        statusColor = '#2563EB';
       } else {
-        status = '🔴 Pendente';
+        statusText = '🔴 Pendente';
+        statusColor = '#2563EB';
       }
       return `
         <div style="
-          border-radius:10px;
-          padding:12px;
-          margin-bottom:10px;
-          background:${!item.participou ? '#f3f3f3' : item.pagou ? '#f0fff4' : '#fff5f5'};
-          border:${isAtual ? '2px solid #2563eb' : '1px solid #ddd'};
+          background:#EEF4FF;
+          border:${isAtual ? '2px solid #2563EB' : '1px solid #D6E4FF'};
+          border-radius:12px;
+          padding:16px;
+          margin-bottom:12px;
         ">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <strong>${item.livros?.nome || 'Livro'}</strong>
+          <div style="font-size:15px; font-weight:600; color:#1a3a5c; margin-bottom:6px;">
+            📚 ${item.livros?.nome || 'Livro'}
           </div>
           ${isAtual ? `
             <div style="
-              margin-top:8px;
               display:inline-block;
               background:#2563eb;
               color:#fff;
-              padding:4px 10px;
+              padding:3px 10px;
               border-radius:20px;
-              font-size:12px;
-              font-weight:bold;
+              font-size:11px;
+              font-weight:700;
+              letter-spacing:.4px;
+              margin-bottom:6px;
             ">
               📍 LIVRO ATUAL
             </div>
           ` : ''}
-          <div style="margin-top:6px;">
-            ${status}
+          <div style="color:${statusColor}; font-size:13px; font-weight:500; margin-top:2px;">
+            ${statusText}
           </div>
-          <div style="font-size:12px; color:#555; margin-top:4px;">
-            Forma: ${item.forma_pagamento || '-'}
-          </div>
+          ${item.forma_pagamento ? `<div style="font-size:12px; color:#888; margin-top:4px;">Forma: ${item.forma_pagamento}</div>` : ''}
         </div>
       `;
     }).join('')}
@@ -1002,35 +1009,41 @@ async function renderPagamentosAlunoViaLivros() {
     ...dados.filter(l => !l.pagou)
   ];
   container.innerHTML = `
-    <div style="margin-bottom:15px;">
-      <div><strong>Pagos:</strong> ${pagos}</div>
-      <div><strong>Pendentes:</strong> ${pendentes}</div>
-      <div><strong>Total:</strong> ${total}</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+      <div style="background:#ECFDF5; border:1px solid #BBF7D0; border-radius:12px; padding:14px; text-align:center;">
+        <div style="font-size:26px; font-weight:700; color:#16A34A; font-family:'Lora',serif; line-height:1.1;">${pagos}</div>
+        <div style="font-size:11px; color:#166534; margin-top:3px; font-weight:500; text-transform:uppercase; letter-spacing:.4px;">✅ Pagos</div>
+      </div>
+      <div style="background:#FEF2F2; border:1px solid #FECACA; border-radius:12px; padding:14px; text-align:center;">
+        <div style="font-size:26px; font-weight:700; color:#DC2626; font-family:'Lora',serif; line-height:1.1;">${pendentes}</div>
+        <div style="font-size:11px; color:#991B1B; margin-top:3px; font-weight:500; text-transform:uppercase; letter-spacing:.4px;">❌ Pendentes</div>
+      </div>
     </div>
     ${ordenados.map(item => {
-      const cor = item.pagou ? '#f0fff4' : '#fff5f5';
       const nome = item.livros?.nome || item.nome || 'Livro';
+      const pago = item.pagou;
       return `
         <div style="
-          border:1px solid #ddd;
-          border-radius:10px;
-          padding:10px;
-          margin-bottom:8px;
-          background:${cor};
+          background:#ECFDF5;
+          border:1px solid #BBF7D0;
+          border-radius:12px;
+          padding:16px;
+          margin-bottom:12px;
         ">
-          <div style="font-weight:bold;">
-            \u{1F4B3} ${nome}
+          <div style="font-size:14px; font-weight:600; color:#1a3a5c; margin-bottom:10px;">
+            💳 ${nome}
           </div>
-          <div>
-            ${item.pagou ? '\u{1F7E2} Pago' : '\u{1F534} Pendente'}
+          <div style="
+            font-size:14px;
+            font-weight:700;
+            color:${pago ? '#16A34A' : '#DC2626'};
+            margin-bottom:${pago ? '8px' : '0'};
+          ">
+            ${pago ? '✅ PAGO' : '❌ PENDENTE'}
           </div>
-          ${item.pagou ? `
-            <div style="font-size:12px;">
-              Forma: ${item.forma_pagamento || '-'}
-            </div>
-            <div style="font-size:12px;">
-              Data: ${item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '-'}
-            </div>
+          ${pago ? `
+            <div style="font-size:12px; color:#555; margin-top:2px;">Forma: ${item.forma_pagamento || '-'}</div>
+            <div style="font-size:12px; color:#555; margin-top:2px;">Data: ${item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '-'}</div>
           ` : ''}
         </div>
       `;
