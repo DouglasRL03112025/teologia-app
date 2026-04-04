@@ -494,6 +494,14 @@ select.inp{cursor:pointer}
       <div class="tit">Agenda de Aulas</div>
       <p class="sub">Últimas aulas registradas</p>
       <div id="al-agenda-dashboard" style="margin-bottom:16px"></div>
+      <div class="card" id="al-agenda-cal-card" style="margin-bottom:14px">
+        <div class="card-t">📅 Calendário — <span id="al-agenda-cal-mes"></span></div>
+        <div style="display:flex;gap:10px;font-size:12px;margin-bottom:8px">
+          <span><span style="display:inline-block;width:12px;height:12px;background:var(--vd);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Presente</span>
+          <span><span style="display:inline-block;width:12px;height:12px;background:var(--vm);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Falta</span>
+        </div>
+        <div class="cal" id="al-agenda-cal"></div>
+      </div>
       <div id="al-agenda-lista"></div>
     </div>
 
@@ -502,14 +510,6 @@ select.inp{cursor:pointer}
       <div class="tit">Minha Presença</div>
       <div id="al-pres-resumo" style="margin-bottom:12px"></div>
       <div id="al-pres-stats" style="margin-bottom:14px"></div>
-      <div class="card">
-        <div class="card-t">📅 Calendário — <span id="al-cal-mes"></span></div>
-        <div style="display:flex;gap:10px;font-size:12px;margin-bottom:8px">
-          <span><span style="display:inline-block;width:12px;height:12px;background:var(--vd);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Presente</span>
-          <span><span style="display:inline-block;width:12px;height:12px;background:var(--vm);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Falta</span>
-        </div>
-        <div class="cal" id="al-cal"></div>
-      </div>
       <div class="card">
         <div class="card-t">📋 Histórico de aulas</div>
         <div id="al-pres-hist"></div>
@@ -1477,7 +1477,7 @@ async function irAluno(t){
     console.log('[irAluno/agenda] Carregando provas para usuAtual.id:', usuAtual?.id);
     window.provasAluno = await carregarProvasAluno(usuAtual.id);
     console.log('[irAluno/agenda] window.provasAluno apos carregamento:', window.provasAluno);
-    renderAlunoAgenda();
+    await renderAlunoAgenda();
     atualizarDashboardAluno();
   }
   if(t==='presenca') await renderAlunoPresenca();
@@ -2075,52 +2075,22 @@ function renderAlunoCadastro(){
     <div class="sl2"><span class="slb">Pagamento ${M[h.getMonth()]}</span><span class="bdg ${pagA?'bv':'br'}">${pagA?'Em dia':'Pendente'}</span></div>`;
 }
 
-function renderAlunoAgenda(){
-  const a=usuAtual;
-  // Dashboard: livros
-  const totalLivros=24;
-  const livrosRec=Object.keys(D.livros_ent).reduce(function(acc,lid){ return acc+(((D.livros_ent[lid]||{})[a.id]===true)?1:0); },0);
-  // Dashboard: presença
-  let dp=0,df=0;
-  Object.keys(D.presencas).forEach(function(k){ if(D.presencas[k][a.id]==='P') dp++; if(D.presencas[k][a.id]==='F') df++; });
-  const percPres=dp+df>0?Math.round(dp/(dp+df)*100):0;
-  const corPres=percPres>=75?'var(--vd)':percPres>=50?'var(--am, #f59e0b)':'var(--vm)';
-  // Dashboard: provas
-  const provas = window.provasAluno || [];
-  const provasFeitas = provas.filter(p => p.nota !== null).length;
-  const totalProvas = provas.length;
-  const dashEl=document.getElementById('al-agenda-dashboard');
-  if(dashEl) dashEl.innerHTML=
-    '<div class="dash-grid">'
-    // Card Livros
-    +'<div style="background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:14px 12px;box-shadow:var(--s);text-align:center">'
-    +'<div style="font-size:20px;margin-bottom:4px">📚</div>'
-    +'<div id="dash-livros" style="font-size:22px;font-weight:700;color:var(--azul);font-family:Lora,serif">'+livrosRec+'<span style="font-size:13px;font-weight:400;color:var(--cin)">/'+totalLivros+'</span></div>'
-    +'<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Livros</div>'
-    +'</div>'
-    // Card Presença
-    +'<div style="background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:14px 12px;box-shadow:var(--s);text-align:center">'
-    +'<div style="font-size:20px;margin-bottom:4px">📊</div>'
-    +'<div style="font-size:22px;font-weight:700;font-family:Lora,serif;color:'+corPres+'">'+percPres+'<span style="font-size:13px;font-weight:400;color:var(--cin)">%</span></div>'
-    +'<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Presença</div>'
-    +'</div>'
-    // Card Provas
-    +'<div style="background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:14px 12px;box-shadow:var(--s);text-align:center">'
-    +'<div style="font-size:20px;margin-bottom:4px">📝</div>'
-    +'<div id="dash-provas" style="font-size:22px;font-weight:700;color:var(--azul);font-family:Lora,serif">'+provasFeitas+'<span style="font-size:13px;font-weight:400;color:var(--cin)">/'+totalProvas+'</span></div>'
-    +'<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Provas</div>'
-    +'</div>'
-    +'</div>';
-  const log=D.aulas_log||{};
-  const keys=Object.keys(log).sort().reverse().slice(0,20);
-  if(!keys.length){ document.getElementById('al-agenda-lista').innerHTML='<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Nenhuma aula registrada ainda.</div></div>'; return; }
-  document.getElementById('al-agenda-lista').innerHTML=keys.map(k=>{
-    const d=new Date(k+'T12:00:00'); const entry=log[k];
-    const meuStatus=(D.presencas[k]||{})[usuAtual.id];
-    const stBadge=meuStatus==='P'?'<span class="bdg bv">✓ Presente</span>':meuStatus==='F'?'<span class="bdg br">✗ Falta</span>':'<span class="bdg ba">Não reg.</span>';
-    return `<div class="aula-item"><div class="aula-mod">${entry.modulo||'Módulo'}</div><div class="aula-nome">${entry.aula||'Aula registrada'}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><span class="aula-data">${DS[d.getDay()]}, ${fmtD(d)}</span>${stBadge}</div></div>`;
-  }).join('');
+/* ════ FONTE ÚNICA DE DADOS DE PRESENÇA ════ */
+
+async function getPresencaAluno(alunoId) {
+  const { data, error } = await supabaseClient
+    .from('presenca')
+    .select('*')
+    .eq('aluno_id', alunoId)
+    .order('data', { ascending: true });
+  if (error) {
+    console.error('[getPresencaAluno] Erro:', error);
+    return [];
+  }
+  return data || [];
 }
+
+/* ════ FIM FONTE ÚNICA ════ */
 
 async function renderAlunoPresenca(){
   console.log('[Presença] usuAtual:', usuAtual);
@@ -2133,7 +2103,6 @@ async function renderAlunoPresenca(){
   const alunoId = usuAtual.id;
   console.log('[Presença] alunoId:', alunoId);
 
-  // Feedback visual imediato
   const elResumo = document.getElementById('al-pres-resumo');
   const elStats  = document.getElementById('al-pres-stats');
   const elHist   = document.getElementById('al-pres-hist');
@@ -2141,31 +2110,9 @@ async function renderAlunoPresenca(){
   if (elStats)  elStats.innerHTML  = '';
   if (elHist)   elHist.innerHTML   = '';
 
-  // ── DIAGNÓSTICO: query sem filtro para confirmar acesso à tabela ──
-  const { data: amostra, error: erroAmostra } = await supabaseClient
-    .from('presenca')
-    .select('*')
-    .limit(3);
-  console.log('[Presença] Amostra sem filtro (primeiros 3):', amostra, '| erro:', erroAmostra);
+  const lista = await getPresencaAluno(alunoId);
+  console.log('[Presença] Registros do aluno:', lista);
 
-  // ── QUERY PRINCIPAL com filtro por aluno_id ──
-  const { data: registros, error } = await supabaseClient
-    .from('presenca')
-    .select('*')
-    .eq('aluno_id', alunoId)
-    .order('data', { ascending: true });
-
-  console.log('[Presença] Registros do aluno:', registros, '| erro:', error);
-
-  if (error) {
-    console.error('[Presença] Erro na query:', error);
-    if (elHist) elHist.innerHTML = '<p style="color:var(--vm);font-size:14px;padding:8px 0">Erro ao carregar dados. Veja o console.</p>';
-    return;
-  }
-
-  const lista = registros || [];
-
-  // ── CÁLCULOS ──
   const total     = lista.length;
   const presencas = lista.filter(r => r.presente === true).length;
   const faltas    = lista.filter(r => r.presente === false).length;
@@ -2173,7 +2120,6 @@ async function renderAlunoPresenca(){
 
   console.log('[Presença] Total:', total, '| Presenças:', presencas, '| Faltas:', faltas, '| %:', perc);
 
-  // ── RESUMO GERAL (topo) ──
   if (elResumo) {
     elResumo.innerHTML =
       '<div style="display:flex;gap:10px">'
@@ -2188,7 +2134,6 @@ async function renderAlunoPresenca(){
       + '</div>';
   }
 
-  // ── STATS ──
   if (elStats) {
     elStats.innerHTML = `
       <div class="g3">
@@ -2198,45 +2143,109 @@ async function renderAlunoPresenca(){
       </div>`;
   }
 
-  // ── CALENDÁRIO (mantém lógica visual existente, alimentado com dados reais) ──
-  const h = hj();
-  document.getElementById('al-cal-mes').textContent = M[h.getMonth()] + ' ' + h.getFullYear();
-  const presencasPorData = {};
-  lista.forEach(r => { presencasPorData[r.data] = r.presente; });
-  const dim = new Date(h.getFullYear(), h.getMonth() + 1, 0).getDate();
-  const p1  = new Date(h.getFullYear(), h.getMonth(), 1).getDay();
-  let cal = DS.map(d => `<div class="cd hd">${d}</div>`).join('');
-  for (let i = 0; i < p1; i++) cal += '<div class="cd vz"></div>';
-  for (let d = 1; d <= dim; d++) {
-    const k = `${h.getFullYear()}-${(h.getMonth()+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`;
-    const v = presencasPorData[k];
-    const c = v === true ? 'cp' : v === false ? 'cf' : '';
-    cal += `<div class="cd ${c}">${d}</div>`;
-  }
-  document.getElementById('al-cal').innerHTML = cal;
-
-  // ── HISTÓRICO ──
   if (elHist) {
     if (lista.length === 0) {
       elHist.innerHTML = '<p style="color:var(--cin);font-size:14px;padding:8px 0">Sem registros de presença.</p>';
       return;
     }
-    const itens = [...lista].reverse().map(r => {
+    elHist.innerHTML = [...lista].reverse().map(r => {
       const d  = new Date(r.data + 'T12:00:00');
-      const ds = DS[d.getDay()];
-      const dt = fmtD(d);
       const stClass = r.presente ? 'pres-p' : 'pres-f';
       const stLabel = r.presente ? 'Presente' : 'Falta';
       return `<div class="pres-ro">
         <div>
           <div style="font-size:14px;font-weight:500">${r.livro || 'Aula'}</div>
-          <div class="pres-ro-d">${ds}, ${dt}</div>
+          <div class="pres-ro-d">${DS[d.getDay()]}, ${fmtD(d)}</div>
         </div>
         <span class="pres-ro-s ${stClass}">${stLabel}</span>
       </div>`;
     }).join('');
-    elHist.innerHTML = itens;
   }
+}
+
+async function renderAlunoAgenda(){
+  if (!usuAtual || !usuAtual.id) return;
+
+  // ── PRESENÇA: fonte única ──
+  const lista = await getPresencaAluno(usuAtual.id);
+  const presencas  = lista.filter(r => r.presente === true).length;
+  const faltas     = lista.filter(r => r.presente === false).length;
+  const percPres   = presencas + faltas > 0 ? Math.round(presencas / (presencas + faltas) * 100) : 0;
+  const corPres    = percPres >= 75 ? 'var(--vd)' : percPres >= 50 ? 'var(--am, #f59e0b)' : 'var(--vm)';
+
+  // mapa data → presente (para badges na lista e calendário)
+  const presencasPorData = {};
+  lista.forEach(r => { presencasPorData[r.data] = r.presente; });
+
+  // ── LIVROS ──
+  const totalLivros = 24;
+  const livrosRec = Object.keys(D.livros_ent).reduce(function(acc, lid){
+    return acc + (((D.livros_ent[lid] || {})[usuAtual.id] === true) ? 1 : 0);
+  }, 0);
+
+  // ── PROVAS ──
+  const provas = window.provasAluno || [];
+  const provasFeitas = provas.filter(p => p.nota !== null).length;
+  const totalProvas  = provas.length;
+
+  // ── DASHBOARD ──
+  const dashEl = document.getElementById('al-agenda-dashboard');
+  if (dashEl) dashEl.innerHTML =
+    '<div class="dash-grid">'
+    + '<div style="background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:14px 12px;box-shadow:var(--s);text-align:center">'
+    + '<div style="font-size:20px;margin-bottom:4px">📚</div>'
+    + '<div id="dash-livros" style="font-size:22px;font-weight:700;color:var(--azul);font-family:Lora,serif">' + livrosRec + '<span style="font-size:13px;font-weight:400;color:var(--cin)">/' + totalLivros + '</span></div>'
+    + '<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Livros</div>'
+    + '</div>'
+    + '<div style="background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:14px 12px;box-shadow:var(--s);text-align:center">'
+    + '<div style="font-size:20px;margin-bottom:4px">📊</div>'
+    + '<div style="font-size:22px;font-weight:700;font-family:Lora,serif;color:' + corPres + '">' + percPres + '<span style="font-size:13px;font-weight:400;color:var(--cin)">%</span></div>'
+    + '<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Presença</div>'
+    + '</div>'
+    + '<div style="background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:14px 12px;box-shadow:var(--s);text-align:center">'
+    + '<div style="font-size:20px;margin-bottom:4px">📝</div>'
+    + '<div id="dash-provas" style="font-size:22px;font-weight:700;color:var(--azul);font-family:Lora,serif">' + provasFeitas + '<span style="font-size:13px;font-weight:400;color:var(--cin)">/' + totalProvas + '</span></div>'
+    + '<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Provas</div>'
+    + '</div>'
+    + '</div>';
+
+  // ── CALENDÁRIO ──
+  const h = hj();
+  const elCalMes = document.getElementById('al-agenda-cal-mes');
+  const elCal    = document.getElementById('al-agenda-cal');
+  if (elCalMes) elCalMes.textContent = M[h.getMonth()] + ' ' + h.getFullYear();
+  if (elCal) {
+    const dim = new Date(h.getFullYear(), h.getMonth() + 1, 0).getDate();
+    const p1  = new Date(h.getFullYear(), h.getMonth(), 1).getDay();
+    let cal = DS.map(d => `<div class="cd hd">${d}</div>`).join('');
+    for (let i = 0; i < p1; i++) cal += '<div class="cd vz"></div>';
+    for (let d = 1; d <= dim; d++) {
+      const k = `${h.getFullYear()}-${(h.getMonth()+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`;
+      const v = presencasPorData[k];
+      const c = v === true ? 'cp' : v === false ? 'cf' : '';
+      cal += `<div class="cd ${c}">${d}</div>`;
+    }
+    elCal.innerHTML = cal;
+  }
+
+  // ── LISTA DE AULAS ──
+  const log  = D.aulas_log || {};
+  const keys = Object.keys(log).sort().reverse().slice(0, 20);
+  if (!keys.length) {
+    document.getElementById('al-agenda-lista').innerHTML = '<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Nenhuma aula registrada ainda.</div></div>';
+    return;
+  }
+  document.getElementById('al-agenda-lista').innerHTML = keys.map(k => {
+    const d     = new Date(k + 'T12:00:00');
+    const entry = log[k];
+    const v     = presencasPorData[k];
+    const stBadge = v === true
+      ? '<span class="bdg bv">✓ Presente</span>'
+      : v === false
+        ? '<span class="bdg br">✗ Falta</span>'
+        : '<span class="bdg ba">Não reg.</span>';
+    return `<div class="aula-item"><div class="aula-mod">${entry.modulo || 'Módulo'}</div><div class="aula-nome">${entry.aula || 'Aula registrada'}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><span class="aula-data">${DS[d.getDay()]}, ${fmtD(d)}</span>${stBadge}</div></div>`;
+  }).join('');
 }
 
 function renderAlunoPagamentos(){
