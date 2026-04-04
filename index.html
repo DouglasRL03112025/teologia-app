@@ -305,6 +305,7 @@ select.inp{cursor:pointer}
         <button class="ac" onclick="irAdmin('pagamentos')"><span class="ac-ic">💰</span>Pagamentos</button>
         <button class="ac" onclick="irAdmin('alunos')"><span class="ac-ic">👥</span>Ver Alunos</button>
         <button class="ac" onclick="irAdmin('relatorios')"><span class="ac-ic">📊</span>Relatórios</button>
+        <button class="ac" onclick="irAdmin('aulas')"><span class="ac-ic">📚</span>Gerir Aulas</button>
         <!-- TEMPORÁRIO: remover após vinculação -->
         <button class="ac" id="btn-vincular-auth" onclick="vincularAuthAlunos()"><span class="ac-ic">🔗</span>Vincular Auth</button>
         <button class="ac" id="btn-criar-usuarios-auth" onclick="criarUsuariosAuth()"><span class="ac-ic">🔑</span>Criar Usuários Auth</button>
@@ -423,6 +424,42 @@ select.inp{cursor:pointer}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
         <button class="btn bs" onclick="exportarPDF()">📄 Exportar PDF</button>
         <button class="btn bs" onclick="exportarCSV()">📊 Exportar CSV</button>
+      </div>
+    </div>
+
+    <!-- AULAS ADMIN -->
+    <div class="tela" id="adm-aulas">
+      <div class="tit">📚 Gestão de Aulas</div>
+      <p class="sub">Cadastre e gerencie as aulas exibidas na agenda dos alunos</p>
+
+      <div class="card">
+        <div class="card-t" id="adm-aulas-form-titulo">➕ Nova Aula</div>
+        <input type="hidden" id="adm-aula-id">
+        <div class="campo">
+          <label>Data *</label>
+          <input class="inp" type="date" id="adm-aula-data">
+        </div>
+        <div class="campo">
+          <label>Hora</label>
+          <input class="inp" type="time" id="adm-aula-hora">
+        </div>
+        <div class="campo">
+          <label>Livro</label>
+          <input class="inp" type="text" id="adm-aula-livro" placeholder="Ex: Pentateuco, Evangelhos...">
+        </div>
+        <div class="campo">
+          <label>Descrição</label>
+          <textarea class="inp" id="adm-aula-descricao" rows="3" placeholder="Descreva o conteúdo da aula..." style="resize:vertical"></textarea>
+        </div>
+        <button class="btn bp" onclick="salvarAula()">💾 Salvar Aula</button>
+        <button class="btn bs" id="adm-aula-cancelar" style="display:none" onclick="cancelarEdicaoAula()">✕ Cancelar edição</button>
+      </div>
+
+      <div class="card">
+        <div class="card-t">📋 Aulas Cadastradas</div>
+        <div id="adm-aulas-lista">
+          <div class="empty"><div class="empty-ic">⏳</div><div class="empty-tx">Carregando aulas...</div></div>
+        </div>
       </div>
     </div>
 
@@ -1452,13 +1489,17 @@ function sair(){
 }
 
 /* ════ NAV ADMIN ════ */
-const TELAS_ADMIN=['inicio','alunos','perfil','presenca','pagamentos','material','relatorios','config'];
+const TELAS_ADMIN=['inicio','alunos','perfil','presenca','pagamentos','material','relatorios','config','aulas'];
 const NB_MAP={inicio:'nb-inicio',alunos:'nb-alunos',perfil:'nb-alunos',presenca:'nb-presenca',material:'nb-material',relatorios:'nb-relatorios'};
 
 function irAdmin(t){
-  TELAS_ADMIN.forEach(id=>{ const el=document.getElementById('a-'+id); if(el) el.classList.remove('on'); });
+  TELAS_ADMIN.forEach(id=>{
+    const elId = id === 'aulas' ? 'adm-aulas' : 'a-'+id;
+    const el=document.getElementById(elId); if(el) el.classList.remove('on');
+  });
   document.querySelectorAll('#nav-admin .nb').forEach(b=>b.classList.remove('on'));
-  const el=document.getElementById('a-'+t); if(el) el.classList.add('on');
+  const elId = t === 'aulas' ? 'adm-aulas' : 'a-'+t;
+  const el=document.getElementById(elId); if(el) el.classList.add('on');
   const nb=NB_MAP[t]?document.getElementById(NB_MAP[t]):null; if(nb) nb.classList.add('on');
   window.scrollTo(0,0);
   if(t==='inicio') renderDashAdmin();
@@ -1468,6 +1509,7 @@ function irAdmin(t){
   if(t==='material') renderMatAdmin('livros');
   if(t==='relatorios') renderRelAdmin('geral');
   if(t==='config') initConfig();
+  if(t==='aulas') carregarAulas();
 }
 
 /* ════ NAV ALUNO ════ */
@@ -2805,6 +2847,101 @@ if(!D.aulas_log) { D.aulas_log={}; }
 
 
   /* ════ FIM PERSISTÊNCIA DE SESSÃO ════ */
+
+  /* ════ MÓDULO ADMIN: AULAS ════ */
+
+  async function carregarAulas() {
+    const container = document.getElementById('adm-aulas-lista');
+    if (!container) return;
+    container.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-tx">Carregando...</div></div>';
+    try {
+      const { data, error } = await supabaseClient
+        .from('aulas')
+        .select('*')
+        .order('data', { ascending: false });
+      if (error) { console.error('[Aulas] Erro ao carregar:', error); container.innerHTML = '<div class="empty"><div class="empty-ic">❌</div><div class="empty-tx">Erro ao carregar aulas.</div></div>'; return; }
+      if (!data || data.length === 0) { container.innerHTML = '<div class="empty"><div class="empty-ic">📚</div><div class="empty-tx">Nenhuma aula cadastrada ainda.</div></div>'; return; }
+      container.innerHTML = data.map(aula => {
+        const dataFmt = aula.data ? new Date(aula.data + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }) : '—';
+        const hora = aula.hora ? aula.hora.slice(0,5) : '';
+        return `
+          <div style="background:#fff;border-radius:var(--r);padding:14px;margin-bottom:10px;border:1px solid var(--brd);border-left:4px solid var(--azul);box-shadow:var(--s)">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:600;color:var(--azul);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">${dataFmt}${hora ? ' · ' + hora : ''}</div>
+                ${aula.livro ? `<div style="font-size:15px;font-weight:600;margin-bottom:3px">${aula.livro}</div>` : ''}
+                ${aula.descricao ? `<div style="font-size:13px;color:var(--cin);line-height:1.5">${aula.descricao}</div>` : ''}
+              </div>
+              <div style="display:flex;gap:7px;flex-shrink:0;margin-top:2px">
+                <button onclick="editarAula('${aula.id}')" style="padding:7px 12px;border:1.5px solid var(--azul);border-radius:8px;background:#fff;color:var(--azul);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer">✏️</button>
+                <button onclick="excluirAula('${aula.id}')" style="padding:7px 12px;border:1.5px solid var(--vm);border-radius:8px;background:#fff;color:var(--vm);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer">🗑️</button>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    } catch(e) { console.error('[Aulas] Exceção:', e); container.innerHTML = '<div class="empty"><div class="empty-ic">❌</div><div class="empty-tx">Erro inesperado.</div></div>'; }
+  }
+
+  async function salvarAula() {
+    const id = document.getElementById('adm-aula-id').value.trim();
+    const data = document.getElementById('adm-aula-data').value.trim();
+    const hora = document.getElementById('adm-aula-hora').value.trim();
+    const livro = document.getElementById('adm-aula-livro').value.trim();
+    const descricao = document.getElementById('adm-aula-descricao').value.trim();
+    if (!data) { toast('⚠ A data é obrigatória'); return; }
+    const payload = { data, hora: hora || null, livro: livro || null, descricao: descricao || null };
+    try {
+      let error;
+      if (id) {
+        ({ error } = await supabaseClient.from('aulas').update(payload).eq('id', id));
+      } else {
+        ({ error } = await supabaseClient.from('aulas').insert(payload));
+      }
+      if (error) { console.error('[Aulas] Erro ao salvar:', error); toast('❌ Erro ao salvar aula'); return; }
+      toast(id ? '✓ Aula atualizada!' : '✓ Aula criada!');
+      limparFormAula();
+      await carregarAulas();
+    } catch(e) { console.error('[Aulas] Exceção ao salvar:', e); toast('❌ Erro inesperado'); }
+  }
+
+  async function editarAula(id) {
+    try {
+      const { data, error } = await supabaseClient.from('aulas').select('*').eq('id', id).single();
+      if (error) { console.error('[Aulas] Erro ao buscar aula:', error); toast('❌ Erro ao carregar aula'); return; }
+      document.getElementById('adm-aula-id').value = data.id;
+      document.getElementById('adm-aula-data').value = data.data || '';
+      document.getElementById('adm-aula-hora').value = data.hora ? data.hora.slice(0,5) : '';
+      document.getElementById('adm-aula-livro').value = data.livro || '';
+      document.getElementById('adm-aula-descricao').value = data.descricao || '';
+      document.getElementById('adm-aulas-form-titulo').textContent = '✏️ Editar Aula';
+      document.getElementById('adm-aula-cancelar').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch(e) { console.error('[Aulas] Exceção ao editar:', e); }
+  }
+
+  async function excluirAula(id) {
+    if (!confirm('Deseja excluir esta aula? Esta ação é irreversível.')) return;
+    try {
+      const { error } = await supabaseClient.from('aulas').delete().eq('id', id);
+      if (error) { console.error('[Aulas] Erro ao excluir:', error); toast('❌ Erro ao excluir aula'); return; }
+      toast('✓ Aula excluída');
+      await carregarAulas();
+    } catch(e) { console.error('[Aulas] Exceção ao excluir:', e); }
+  }
+
+  function limparFormAula() {
+    document.getElementById('adm-aula-id').value = '';
+    document.getElementById('adm-aula-data').value = '';
+    document.getElementById('adm-aula-hora').value = '';
+    document.getElementById('adm-aula-livro').value = '';
+    document.getElementById('adm-aula-descricao').value = '';
+    document.getElementById('adm-aulas-form-titulo').textContent = '➕ Nova Aula';
+    document.getElementById('adm-aula-cancelar').style.display = 'none';
+  }
+
+  function cancelarEdicaoAula() { limparFormAula(); }
+
+  /* ════ FIM MÓDULO ADMIN: AULAS ════ */
 
   testarConexao();
   inicializarApp();
