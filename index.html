@@ -2884,24 +2884,40 @@ if(!D.aulas_log) { D.aulas_log={}; }
 
   async function salvarAula() {
     const id = document.getElementById('adm-aula-id').value.trim();
-    const data = document.getElementById('adm-aula-data').value.trim();
-    const hora = document.getElementById('adm-aula-hora').value.trim();
-    const livro = document.getElementById('adm-aula-livro').value.trim();
-    const descricao = document.getElementById('adm-aula-descricao').value.trim();
-    if (!data) { toast('⚠ A data é obrigatória'); return; }
-    const payload = { data, hora: hora || null, livro: livro || null, descricao: descricao || null };
+    const dataInput = document.getElementById('adm-aula-data').value.trim();
+    const horaInput = document.getElementById('adm-aula-hora').value.trim();
+    const livroInput = document.getElementById('adm-aula-livro').value.trim();
+    const descricaoInput = document.getElementById('adm-aula-descricao').value.trim();
+
+    if (!dataInput) { alert('Informe a data da aula'); return; }
+
+    const payload = {
+      data: dataInput,
+      hora: horaInput ? horaInput + ':00' : null,
+      livro: livroInput || null,
+      descricao: descricaoInput || null
+    };
+
     try {
       let error;
       if (id) {
         ({ error } = await supabaseClient.from('aulas').update(payload).eq('id', id));
       } else {
-        ({ error } = await supabaseClient.from('aulas').insert(payload));
+        delete payload.id;
+        ({ error } = await supabaseClient.from('aulas').insert([payload]));
       }
-      if (error) { console.error('[Aulas] Erro ao salvar:', error); toast('❌ Erro ao salvar aula'); return; }
+      if (error) {
+        console.error('[AULAS ERRO COMPLETO]', error);
+        alert(error.message);
+        return;
+      }
       toast(id ? '✓ Aula atualizada!' : '✓ Aula criada!');
       limparFormAula();
       await carregarAulas();
-    } catch(e) { console.error('[Aulas] Exceção ao salvar:', e); toast('❌ Erro inesperado'); }
+    } catch(e) {
+      console.error('[Aulas] Exceção ao salvar:', e);
+      alert('Erro inesperado: ' + e.message);
+    }
   }
 
   async function editarAula(id) {
