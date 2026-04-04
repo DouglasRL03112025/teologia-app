@@ -2347,24 +2347,46 @@ async function renderAlunoAgenda(){
     }
   }
 
-  // ── LISTA HISTÓRICA DE AULAS ──
-  const log  = D.aulas_log || {};
-  const keys = Object.keys(log).sort().reverse().slice(0, 20);
-  if (!keys.length) {
-    document.getElementById('al-agenda-lista').innerHTML = '<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Nenhuma aula registrada ainda.</div></div>';
-    return;
+  // ── LISTA: APENAS AULAS FUTURAS (tabela `aulas`) ──
+  const listaEl = document.getElementById('al-agenda-lista');
+  if (listaEl) {
+    try {
+      const hojeStr = new Date().toISOString().slice(0, 10);
+      const { data: todasAulas, error: erroAulas } = await supabaseClient
+        .from('aulas')
+        .select('*')
+        .gte('data', hojeStr)
+        .order('data', { ascending: true });
+
+      if (erroAulas) {
+        console.error('[Agenda] Erro ao buscar aulas futuras:', erroAulas);
+        listaEl.innerHTML = '<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Não há aulas agendadas para este período.</div></div>';
+      } else {
+        const aulasFuturas = (todasAulas || []);
+        aulasFuturas.sort((a, b) => new Date(a.data) - new Date(b.data));
+
+        if (!aulasFuturas.length) {
+          listaEl.innerHTML = '<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Não há aulas agendadas para este período.</div></div>';
+        } else {
+          listaEl.innerHTML = aulasFuturas.map(a => {
+            const d = new Date(a.data + 'T12:00:00');
+            const horaFmt = a.hora ? a.hora.slice(0, 5) : '';
+            return `<div class="aula-item" style="border-left-color:var(--azul)">
+              <div class="aula-mod">${a.livro || 'Livro'}</div>
+              <div class="aula-nome">${a.descricao || 'Aula programada'}</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+                <span class="aula-data">${DS[d.getDay()]}, ${fmtD(d)}${horaFmt ? ' — ' + horaFmt : ''}</span>
+                <span class="bdg ba">📌 Agendada</span>
+              </div>
+            </div>`;
+          }).join('');
+        }
+      }
+    } catch(e) {
+      console.error('[Agenda] Exceção ao buscar aulas futuras:', e);
+      listaEl.innerHTML = '<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Não há aulas agendadas para este período.</div></div>';
+    }
   }
-  document.getElementById('al-agenda-lista').innerHTML = keys.map(k => {
-    const d     = new Date(k + 'T12:00:00');
-    const entry = log[k];
-    const v     = presencasPorData[k];
-    const stBadge = v === true
-      ? '<span class="bdg bv">✓ Presente</span>'
-      : v === false
-        ? '<span class="bdg br">✗ Falta</span>'
-        : '<span class="bdg ba">Não reg.</span>';
-    return `<div class="aula-item"><div class="aula-mod">${entry.modulo || 'Módulo'}</div><div class="aula-nome">${entry.aula || 'Aula registrada'}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><span class="aula-data">${DS[d.getDay()]}, ${fmtD(d)}</span>${stBadge}</div></div>`;
-  }).join('');
 
   // guarda contexto para o clique no dia
   window._agendaPresencasPorData = presencasPorData;
