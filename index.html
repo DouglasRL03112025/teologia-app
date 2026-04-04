@@ -1051,8 +1051,8 @@ function atualizarDashboardAluno() {
     const provas = window.provasAluno || [];
     // prova feita = tem nota registrada
     const provasFeitas = provas.filter(p => p.nota !== null).length;
-    // total fixo do curso
-    const totalProvas = 24;
+    // total dinamico baseado nos registros carregados
+    const totalProvas = provas.length;
     // ATUALIZAR DOM
     const elLivros = document.getElementById('dash-livros');
     const elProvas = document.getElementById('dash-provas');
