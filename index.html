@@ -1,4 +1,4 @@
-/<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -2325,30 +2325,68 @@ async function renderAlunoAgenda(){
   }
 
   // ── AULAS FUTURAS DO MÊS ──
-  const hojeStr = hoje.toISOString().slice(0, 10);
   const elFuturas = document.getElementById('al-agenda-futuras');
   if (elFuturas) {
-    const futuras = aulasDoMes.filter(a => a.data >= hojeStr);
+    const futuras = aulasDoMes.filter(a => a.data >= hoje.toISOString().slice(0,10));
     if (futuras.length === 0) {
-      elFuturas.innerHTML = '<p style="color:var(--cin);font-size:14px;text-align:center;padding:12px 0">Nenhuma aula futura neste mês.</p>';
+      elFuturas.innerHTML = '';
     } else {
-      elFuturas.innerHTML = '<div class="card-t" style="margin-bottom:8px">📆 Próximas aulas do mês</div>'
-        + futuras.map(a => {
-            const d = new Date(a.data + 'T12:00:00');
-            return '<div class="aula-item" style="border-left-color:var(--dou)">'
-              + '<div class="aula-mod">' + (a.livro || 'Livro') + '</div>'
-              + '<div class="aula-nome">' + (a.descricao || 'Aula programada') + '</div>'
-              + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">'
-              + '<span class="aula-data">' + DS[d.getDay()] + ', ' + fmtD(d) + (a.hora ? ' — ' + a.hora : '') + '</span>'
-              + '<span class="bdg ba">📌 Agendada</span>'
-              + '</div></div>';
-          }).join('');
+      elFuturas.innerHTML = `
+        <div class="card-t" style="margin-bottom:8px">📆 Próximas aulas do mês</div>
+        ${futuras.map(a => {
+          const d = new Date(a.data + 'T12:00:00');
+          return `<div class="aula-item" style="border-left-color:var(--dou)">
+            <div class="aula-mod">${a.livro || 'Livro'}</div>
+            <div class="aula-nome">${a.descricao || 'Aula programada'}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+              <span class="aula-data">${DS[d.getDay()]}, ${fmtD(d)}${a.hora ? ' — ' + a.hora : ''}</span>
+              <span class="bdg ba">📌 Agendada</span>
+            </div>
+          </div>`;
+        }).join('')}`;
     }
   }
 
-  // al-agenda-lista: limpar — histórico pertence à tela de Presença
+  // ── LISTA: APENAS AULAS FUTURAS (tabela `aulas`) ──
   const listaEl = document.getElementById('al-agenda-lista');
-  if (listaEl) listaEl.innerHTML = '';
+  if (listaEl) {
+    try {
+      const hojeStr = new Date().toISOString().slice(0, 10);
+      const { data: todasAulas, error: erroAulas } = await supabaseClient
+        .from('aulas')
+        .select('*')
+        .gte('data', hojeStr)
+        .order('data', { ascending: true });
+
+      if (erroAulas) {
+        console.error('[Agenda] Erro ao buscar aulas futuras:', erroAulas);
+        listaEl.innerHTML = '<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Não há aulas agendadas para este período.</div></div>';
+      } else {
+        const aulasFuturas = (todasAulas || []);
+        aulasFuturas.sort((a, b) => new Date(a.data) - new Date(b.data));
+
+        if (!aulasFuturas.length) {
+          listaEl.innerHTML = '<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Não há aulas agendadas para este período.</div></div>';
+        } else {
+          listaEl.innerHTML = aulasFuturas.map(a => {
+            const d = new Date(a.data + 'T12:00:00');
+            const horaFmt = a.hora ? a.hora.slice(0, 5) : '';
+            return `<div class="aula-item" style="border-left-color:var(--azul)">
+              <div class="aula-mod">${a.livro || 'Livro'}</div>
+              <div class="aula-nome">${a.descricao || 'Aula programada'}</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+                <span class="aula-data">${DS[d.getDay()]}, ${fmtD(d)}${horaFmt ? ' — ' + horaFmt : ''}</span>
+                <span class="bdg ba">📌 Agendada</span>
+              </div>
+            </div>`;
+          }).join('');
+        }
+      }
+    } catch(e) {
+      console.error('[Agenda] Exceção ao buscar aulas futuras:', e);
+      listaEl.innerHTML = '<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Não há aulas agendadas para este período.</div></div>';
+    }
+  }
 
   // guarda contexto para o clique no dia
   window._agendaPresencasPorData = presencasPorData;
@@ -2922,8 +2960,24 @@ if(!D.aulas_log) { D.aulas_log={}; }
   async function excluirAula(id) {
     if (!confirm('Deseja excluir esta aula? Esta ação é irreversível.')) return;
     try {
+      // 1. Buscar dados da aula antes de excluir
+      const { data: aula, error: erroAula } = await supabaseClient
+        .from('aulas').select('*').eq('id', id).single();
+      if (erroAula) { console.error('[Aulas] Erro ao buscar aula:', erroAula); toast('❌ Erro ao excluir aula'); return; }
+
+      // 2. Excluir presenças relacionadas (antes de excluir a aula)
+      if (aula.data) {
+        const filtro = supabaseClient.from('presenca').delete().eq('data', aula.data);
+        const { error: erroPres } = aula.livro
+          ? await filtro.eq('livro', aula.livro)
+          : await filtro;
+        if (erroPres) console.error('[Aulas] Erro ao excluir presenças:', erroPres);
+      }
+
+      // 3. Excluir a aula
       const { error } = await supabaseClient.from('aulas').delete().eq('id', id);
-      if (error) { console.error('[Aulas] Erro ao excluir:', error); toast('❌ Erro ao excluir aula'); return; }
+      if (error) { console.error('[Aulas] Erro ao excluir aula:', error); toast('❌ Erro ao excluir aula'); return; }
+
       toast('✓ Aula excluída');
       await carregarAulas();
     } catch(e) { console.error('[Aulas] Exceção ao excluir:', e); }
