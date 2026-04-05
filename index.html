@@ -335,31 +335,37 @@ select.inp{cursor:pointer}
     </div>
 
     <!-- PRESENÇA ADMIN -->
-    <div class="tela" id="a-presenca">
-      <div class="tit">Lançar Presença</div>
-      <div class="dn">
-        <button class="dnb" onclick="mudarData(-1)">‹</button>
-        <span class="dnt" id="a-data-pres"></span>
-        <button class="dnb" onclick="mudarData(1)">›</button>
-      </div>
-      <div class="card" style="padding:14px 16px;margin-bottom:14px">
-        <div class="card-t" style="margin-bottom:10px">📚 Aula do dia</div>
-        <div class="campo" style="margin-bottom:10px"><label>Módulo</label>
-          <select class="inp" id="sel-mod" onchange="renderAulas()">
-            <option value="">— Selecione o módulo —</option>
-            <option>📜 Pentateuco</option><option>🏛 Históricos</option><option>🎵 Poéticos</option>
-            <option>🗣 Proféticos</option><option>✝️ Evangelhos</option><option>📮 Atos e Cartas</option>
-            <option>📖 Apocalipse</option><option>📐 Teologia Sistemática</option>
-            <option>🔍 Hermenêutica</option><option>🎤 Homilética</option>
+    <div class="tela" id="adm-presenca">
+      <div class="tit">✅ Lançar Presença</div>
+      <p class="sub">Selecione a aula e marque os alunos</p>
+
+      <div class="card">
+        <div class="card-t">📚 Selecionar Aula</div>
+        <div class="campo">
+          <label>Aula</label>
+          <select class="inp" id="adm-pres-aula" onchange="admPresCarregarPresenca()">
+            <option value="">— Selecione uma aula —</option>
           </select>
         </div>
-        <div class="campo" style="margin-bottom:0"><label>Aula</label>
-          <select class="inp" id="sel-aula"><option value="">— Selecione a aula —</option></select>
-        </div>
+        <div id="adm-pres-aula-info" style="font-size:13px;color:var(--cin);margin-top:-6px;display:none"></div>
       </div>
-      <p style="font-size:14px;color:var(--cin);margin-bottom:13px">Toque para alternar: <strong>Presente → Falta → limpar</strong></p>
-      <div id="a-lista-pres"></div>
-      <button class="btn bp" onclick="salvarPres()">✓ Confirmar Presenças</button>
+
+      <div class="card" id="adm-pres-card-alunos" style="display:none">
+        <div class="card-t" style="justify-content:space-between">
+          <span>👥 Alunos</span>
+          <span id="adm-pres-contador" style="font-size:13px;color:var(--cin);font-weight:500"></span>
+        </div>
+        <div id="adm-pres-lista-alunos"></div>
+      </div>
+
+      <button class="btn bp" id="adm-pres-btn-salvar" style="display:none" onclick="admPresSalvar()">
+        💾 Salvar Presença
+      </button>
+
+      <div id="adm-pres-empty" style="text-align:center;padding:32px 20px;color:var(--cin)">
+        <div style="font-size:38px;margin-bottom:10px">📋</div>
+        <div style="font-size:15px">Selecione uma aula acima para carregar os alunos</div>
+      </div>
     </div>
 
     <!-- PAGAMENTOS ADMIN -->
@@ -1494,17 +1500,17 @@ const NB_MAP={inicio:'nb-inicio',alunos:'nb-alunos',perfil:'nb-alunos',presenca:
 
 function irAdmin(t){
   TELAS_ADMIN.forEach(id=>{
-    const elId = id === 'aulas' ? 'adm-aulas' : 'a-'+id;
+    const elId = id === 'aulas' ? 'adm-aulas' : id === 'presenca' ? 'adm-presenca' : 'a-'+id;
     const el=document.getElementById(elId); if(el) el.classList.remove('on');
   });
   document.querySelectorAll('#nav-admin .nb').forEach(b=>b.classList.remove('on'));
-  const elId = t === 'aulas' ? 'adm-aulas' : 'a-'+t;
+  const elId = t === 'aulas' ? 'adm-aulas' : t === 'presenca' ? 'adm-presenca' : 'a-'+t;
   const el=document.getElementById(elId); if(el) el.classList.add('on');
   const nb=NB_MAP[t]?document.getElementById(NB_MAP[t]):null; if(nb) nb.classList.add('on');
   window.scrollTo(0,0);
   if(t==='inicio') renderDashAdmin();
   if(t==='alunos') renderAlunosAdmin();
-  if(t==='presenca') renderPresAdmin();
+  if(t==='presenca') admPresCarregarAulas();
   if(t==='pagamentos') renderPagAdmin();
   if(t==='material') renderMatAdmin('livros');
   if(t==='relatorios') renderRelAdmin('geral');
@@ -2325,68 +2331,30 @@ async function renderAlunoAgenda(){
   }
 
   // ── AULAS FUTURAS DO MÊS ──
+  const hojeStr = hoje.toISOString().slice(0, 10);
   const elFuturas = document.getElementById('al-agenda-futuras');
   if (elFuturas) {
-    const futuras = aulasDoMes.filter(a => a.data >= hoje.toISOString().slice(0,10));
+    const futuras = aulasDoMes.filter(a => a.data >= hojeStr);
     if (futuras.length === 0) {
-      elFuturas.innerHTML = '';
+      elFuturas.innerHTML = '<p style="color:var(--cin);font-size:14px;text-align:center;padding:12px 0">Nenhuma aula futura neste mês.</p>';
     } else {
-      elFuturas.innerHTML = `
-        <div class="card-t" style="margin-bottom:8px">📆 Próximas aulas do mês</div>
-        ${futuras.map(a => {
-          const d = new Date(a.data + 'T12:00:00');
-          return `<div class="aula-item" style="border-left-color:var(--dou)">
-            <div class="aula-mod">${a.livro || 'Livro'}</div>
-            <div class="aula-nome">${a.descricao || 'Aula programada'}</div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-              <span class="aula-data">${DS[d.getDay()]}, ${fmtD(d)}${a.hora ? ' — ' + a.hora : ''}</span>
-              <span class="bdg ba">📌 Agendada</span>
-            </div>
-          </div>`;
-        }).join('')}`;
-    }
-  }
-
-  // ── LISTA: APENAS AULAS FUTURAS (tabela `aulas`) ──
-  const listaEl = document.getElementById('al-agenda-lista');
-  if (listaEl) {
-    try {
-      const hojeStr = new Date().toISOString().slice(0, 10);
-      const { data: todasAulas, error: erroAulas } = await supabaseClient
-        .from('aulas')
-        .select('*')
-        .gte('data', hojeStr)
-        .order('data', { ascending: true });
-
-      if (erroAulas) {
-        console.error('[Agenda] Erro ao buscar aulas futuras:', erroAulas);
-        listaEl.innerHTML = '<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Não há aulas agendadas para este período.</div></div>';
-      } else {
-        const aulasFuturas = (todasAulas || []);
-        aulasFuturas.sort((a, b) => new Date(a.data) - new Date(b.data));
-
-        if (!aulasFuturas.length) {
-          listaEl.innerHTML = '<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Não há aulas agendadas para este período.</div></div>';
-        } else {
-          listaEl.innerHTML = aulasFuturas.map(a => {
+      elFuturas.innerHTML = '<div class="card-t" style="margin-bottom:8px">📆 Próximas aulas do mês</div>'
+        + futuras.map(a => {
             const d = new Date(a.data + 'T12:00:00');
-            const horaFmt = a.hora ? a.hora.slice(0, 5) : '';
-            return `<div class="aula-item" style="border-left-color:var(--azul)">
-              <div class="aula-mod">${a.livro || 'Livro'}</div>
-              <div class="aula-nome">${a.descricao || 'Aula programada'}</div>
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-                <span class="aula-data">${DS[d.getDay()]}, ${fmtD(d)}${horaFmt ? ' — ' + horaFmt : ''}</span>
-                <span class="bdg ba">📌 Agendada</span>
-              </div>
-            </div>`;
+            return '<div class="aula-item" style="border-left-color:var(--dou)">'
+              + '<div class="aula-mod">' + (a.livro || 'Livro') + '</div>'
+              + '<div class="aula-nome">' + (a.descricao || 'Aula programada') + '</div>'
+              + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">'
+              + '<span class="aula-data">' + DS[d.getDay()] + ', ' + fmtD(d) + (a.hora ? ' — ' + a.hora : '') + '</span>'
+              + '<span class="bdg ba">📌 Agendada</span>'
+              + '</div></div>';
           }).join('');
-        }
-      }
-    } catch(e) {
-      console.error('[Agenda] Exceção ao buscar aulas futuras:', e);
-      listaEl.innerHTML = '<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Não há aulas agendadas para este período.</div></div>';
     }
   }
+
+  // al-agenda-lista: vazio — histórico pertence à tela de Presença
+  const listaEl = document.getElementById('al-agenda-lista');
+  if (listaEl) listaEl.innerHTML = '';
 
   // guarda contexto para o clique no dia
   window._agendaPresencasPorData = presencasPorData;
@@ -2960,12 +2928,10 @@ if(!D.aulas_log) { D.aulas_log={}; }
   async function excluirAula(id) {
     if (!confirm('Deseja excluir esta aula? Esta ação é irreversível.')) return;
     try {
-      // 1. Buscar dados da aula antes de excluir
       const { data: aula, error: erroAula } = await supabaseClient
         .from('aulas').select('*').eq('id', id).single();
       if (erroAula) { console.error('[Aulas] Erro ao buscar aula:', erroAula); toast('❌ Erro ao excluir aula'); return; }
 
-      // 2. Excluir presenças relacionadas (antes de excluir a aula)
       if (aula.data) {
         const filtro = supabaseClient.from('presenca').delete().eq('data', aula.data);
         const { error: erroPres } = aula.livro
@@ -2974,10 +2940,8 @@ if(!D.aulas_log) { D.aulas_log={}; }
         if (erroPres) console.error('[Aulas] Erro ao excluir presenças:', erroPres);
       }
 
-      // 3. Excluir a aula
       const { error } = await supabaseClient.from('aulas').delete().eq('id', id);
       if (error) { console.error('[Aulas] Erro ao excluir aula:', error); toast('❌ Erro ao excluir aula'); return; }
-
       toast('✓ Aula excluída');
       await carregarAulas();
     } catch(e) { console.error('[Aulas] Exceção ao excluir:', e); }
@@ -2996,6 +2960,189 @@ if(!D.aulas_log) { D.aulas_log={}; }
   function cancelarEdicaoAula() { limparFormAula(); }
 
   /* ════ FIM MÓDULO ADMIN: AULAS ════ */
+
+  /* ════ MÓDULO ADMIN: PRESENÇA (Supabase) ════ */
+
+  let admPresAulaAtual = null;
+  let admPresAlunos    = [];
+  let admPresEstado    = {};
+  let admPresRegistros = {};
+
+  async function admPresCarregarAulas() {
+    const sel = document.getElementById('adm-pres-aula');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Carregando aulas…</option>';
+    try {
+      const { data, error } = await supabaseClient
+        .from('aulas').select('*').order('data', { ascending: false });
+      if (error) {
+        console.error('[AULAS ADMIN]', error);
+        sel.innerHTML = '<option value="">Erro ao carregar aulas</option>';
+        return;
+      }
+      if (!data || data.length === 0) {
+        sel.innerHTML = '<option value="">Nenhuma aula cadastrada</option>';
+        return;
+      }
+      sel.innerHTML = '<option value="">— Selecione uma aula —</option>';
+      data.forEach(aula => {
+        const dataFmt = aula.data
+          ? new Date(aula.data + 'T00:00:00').toLocaleDateString('pt-BR',
+              { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })
+          : '—';
+        const hora  = aula.hora  ? ' ' + aula.hora.slice(0,5) : '';
+        const livro = aula.livro ? ' · ' + aula.livro : '';
+        const opt = document.createElement('option');
+        opt.value = aula.id;
+        opt.textContent = dataFmt + hora + livro;
+        opt.dataset.aula = JSON.stringify(aula);
+        sel.appendChild(opt);
+      });
+      admPresAulaAtual = null; admPresEstado = {}; admPresRegistros = {};
+      const cardAlunos = document.getElementById('adm-pres-card-alunos');
+      const btnSalvar  = document.getElementById('adm-pres-btn-salvar');
+      const emptyMsg   = document.getElementById('adm-pres-empty');
+      const infoDiv    = document.getElementById('adm-pres-aula-info');
+      if (cardAlunos) cardAlunos.style.display = 'none';
+      if (btnSalvar)  btnSalvar.style.display  = 'none';
+      if (emptyMsg)   emptyMsg.style.display   = 'block';
+      if (infoDiv)    infoDiv.style.display    = 'none';
+    } catch(e) { console.error('[AULAS ADMIN] Exceção:', e); }
+  }
+
+  async function admPresCarregarPresenca() {
+    const sel        = document.getElementById('adm-pres-aula');
+    const selOpt     = sel ? sel.options[sel.selectedIndex] : null;
+    const cardAlunos = document.getElementById('adm-pres-card-alunos');
+    const btnSalvar  = document.getElementById('adm-pres-btn-salvar');
+    const emptyMsg   = document.getElementById('adm-pres-empty');
+    const infoDiv    = document.getElementById('adm-pres-aula-info');
+    const listaDiv   = document.getElementById('adm-pres-lista-alunos');
+    const contador   = document.getElementById('adm-pres-contador');
+
+    if (!sel || !sel.value) {
+      admPresAulaAtual = null; admPresEstado = {}; admPresRegistros = {};
+      if (cardAlunos) cardAlunos.style.display = 'none';
+      if (btnSalvar)  btnSalvar.style.display  = 'none';
+      if (emptyMsg)   emptyMsg.style.display   = 'block';
+      if (infoDiv)    infoDiv.style.display    = 'none';
+      return;
+    }
+
+    try { admPresAulaAtual = JSON.parse(selOpt.dataset.aula); }
+    catch(e) { console.error('[AULAS ADMIN] Erro ao parsear aula:', e); return; }
+
+    const dataFmt = admPresAulaAtual.data
+      ? new Date(admPresAulaAtual.data + 'T00:00:00').toLocaleDateString('pt-BR',
+          { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
+      : '—';
+    if (infoDiv) {
+      infoDiv.textContent = '📅 ' + dataFmt + (admPresAulaAtual.livro ? ' · ' + admPresAulaAtual.livro : '');
+      infoDiv.style.display = 'block';
+    }
+    if (cardAlunos) cardAlunos.style.display = 'block';
+    if (btnSalvar)  btnSalvar.style.display  = 'none';
+    if (emptyMsg)   emptyMsg.style.display   = 'none';
+    if (listaDiv)   listaDiv.innerHTML = '<div style="text-align:center;padding:20px;color:var(--cin)">⏳ Carregando…</div>';
+    if (contador)   contador.textContent = '';
+
+    try {
+      const [resAlunos, resPres] = await Promise.all([
+        supabaseClient.from('alunos').select('*').order('nome'),
+        supabaseClient.from('presenca').select('*').eq('data', admPresAulaAtual.data)
+      ]);
+      if (resAlunos.error) { console.error('[AULAS ADMIN] Erro alunos:', resAlunos.error); return; }
+      admPresAlunos = resAlunos.data || [];
+      admPresEstado = {}; admPresRegistros = {};
+      (resPres.data || []).forEach(p => {
+        admPresRegistros[p.aluno_id] = { id: p.id, presente: p.presente };
+        admPresEstado[p.aluno_id]    = p.presente;
+      });
+      admPresAlunos.forEach(a => { if (!(a.id in admPresEstado)) admPresEstado[a.id] = null; });
+      admPresRenderizarLista();
+      admPresAtualizarContador();
+      if (btnSalvar) btnSalvar.style.display = 'block';
+    } catch(e) { console.error('[AULAS ADMIN] Exceção ao carregar:', e); }
+  }
+
+  function admPresFmtIniciais(nome) {
+    const p = (nome || '').trim().split(' ').filter(Boolean);
+    if (!p.length) return '?';
+    if (p.length === 1) return p[0][0].toUpperCase();
+    return (p[0][0] + p[p.length-1][0]).toUpperCase();
+  }
+
+  function admPresRenderizarLista() {
+    const listaDiv = document.getElementById('adm-pres-lista-alunos');
+    if (!listaDiv) return;
+    if (!admPresAlunos.length) {
+      listaDiv.innerHTML = '<div style="text-align:center;padding:20px;color:var(--cin)">Nenhum aluno cadastrado</div>';
+      return;
+    }
+    listaDiv.innerHTML = admPresAlunos.map(aluno => {
+      const v = admPresEstado[aluno.id];
+      const rowCls = 'pr' + (v === true ? ' P' : v === false ? ' F' : '');
+      const btnTxt = v === true ? '✅ Presente' : v === false ? '❌ Falta' : '—';
+      return '<div class="' + rowCls + '" id="adm-pres-row-' + aluno.id + '" onclick="admPresToggle(\'' + aluno.id + '\')">'
+        + '<div class="av" style="width:40px;height:40px;font-size:14px;flex-shrink:0">' + admPresFmtIniciais(aluno.nome) + '</div>'
+        + '<div class="prnm">' + (aluno.nome || '—') + '</div>'
+        + '<div class="prch" id="adm-pres-btn-' + aluno.id + '">' + btnTxt + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function admPresToggle(alunoId) {
+    const v = admPresEstado[alunoId];
+    admPresEstado[alunoId] = (v === null || v === undefined) ? true : v === true ? false : null;
+    const row = document.getElementById('adm-pres-row-' + alunoId);
+    const btn = document.getElementById('adm-pres-btn-' + alunoId);
+    if (!row || !btn) return;
+    const nv = admPresEstado[alunoId];
+    row.className = 'pr' + (nv === true ? ' P' : nv === false ? ' F' : '');
+    btn.textContent = nv === true ? '✅ Presente' : nv === false ? '❌ Falta' : '—';
+    admPresAtualizarContador();
+  }
+
+  function admPresAtualizarContador() {
+    const el = document.getElementById('adm-pres-contador');
+    if (!el) return;
+    const vals = Object.values(admPresEstado);
+    el.textContent = '✅ ' + vals.filter(v=>v===true).length
+      + ' · ❌ ' + vals.filter(v=>v===false).length
+      + ' · Total: ' + admPresAlunos.length;
+  }
+
+  async function admPresSalvar() {
+    if (!admPresAulaAtual) { toast('⚠️ Selecione uma aula primeiro'); return; }
+    const btn = document.getElementById('adm-pres-btn-salvar');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Salvando…'; }
+    const dataSel  = admPresAulaAtual.data;
+    const livroSel = admPresAulaAtual.livro || null;
+    let erros = 0;
+    for (const aluno of admPresAlunos) {
+      const valor = admPresEstado[aluno.id];
+      if (valor === null || valor === undefined) continue;
+      try {
+        if (admPresRegistros[aluno.id]) {
+          const { error } = await supabaseClient.from('presenca')
+            .update({ presente: valor })
+            .eq('aluno_id', aluno.id).eq('data', dataSel);
+          if (error) { console.error('[AULAS ADMIN] update erro', aluno.id, error); erros++; }
+          else admPresRegistros[aluno.id].presente = valor;
+        } else {
+          const { data: ins, error } = await supabaseClient.from('presenca')
+            .insert({ aluno_id: aluno.id, data: dataSel, livro: livroSel, presente: valor })
+            .select().single();
+          if (error) { console.error('[AULAS ADMIN] insert erro', aluno.id, error); erros++; }
+          else if (ins) admPresRegistros[aluno.id] = { id: ins.id, presente: valor };
+        }
+      } catch(e) { console.error('[AULAS ADMIN] exceção', aluno.id, e); erros++; }
+    }
+    if (btn) { btn.disabled = false; btn.textContent = '💾 Salvar Presença'; }
+    toast(erros === 0 ? '✅ Presenças salvas com sucesso!' : '⚠️ Salvo com ' + erros + ' erro(s). Veja o console.');
+  }
+
+  /* ════ FIM MÓDULO ADMIN: PRESENÇA ════ */
 
   testarConexao();
   inicializarApp();
