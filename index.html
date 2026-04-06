@@ -1807,132 +1807,112 @@ function salvarPres(){
   toast('✓ Presenças salvas!');
 }
 
-/* ════ PAGAMENTOS ADMIN ════ */
-let _mp=new Date();
-let _pagCache = []; // todos os registros brutos do mês — preenchido por renderPagAdmin
+/* ════ PAGAMENTOS ADMIN — fonte: aluno_livros (mesma da área do aluno) ════ */
+let _mp=new Date();         // mantido: usado pelo seletor de mês no HTML
+let _pagCache = [];         // mantido por compatibilidade
 
 function mudarMes(d){ _mp.setMonth(_mp.getMonth()+d); renderPagAdmin(); }
 
-/* Aceita qualquer representação válida de "pago" vinda do banco */
-function isPago(valor) {
-  if (valor === true)   return true;
-  if (valor === 1)      return true;
-  if (valor === '1')    return true;
-  if (valor === 'true') return true;
-  if (valor === 't')    return true;
-  if (valor === 'yes')  return true;
-  return false;
-}
-
-/* Normaliza campo mes para "YYYY-MM" independente do formato */
-function normalizarMes(valor) {
-  if (valor === null || valor === undefined) return null;
-  const str = String(valor).trim();
-  if (/^\d{4}-\d{2}$/.test(str))       return str;
-  if (/^\d{4}-\d{1}$/.test(str))       return str.slice(0,5) + str.slice(5).padStart(2,'0');
-  if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 7);
-  if (/^\d{1,2}\/\d{4}$/.test(str))   { const [m,a]=str.split('/'); return `${a}-${m.padStart(2,'0')}`; }
-  return null;
-}
-
 async function renderPagAdmin(){
-  const cm = chM(_mp);
-  document.getElementById('a-mes-pag').textContent = M[_mp.getMonth()] + ' ' + _mp.getFullYear();
+  document.getElementById('a-mes-pag').textContent = 'Pagamentos por Livro';
   const lista = document.getElementById('a-lista-pag');
   lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--cin)">⏳ Carregando…</div>';
 
   try {
-    const { data: pagamentos, error } = await supabaseClient
-      .from('pagamentos_aluno')
-      .select('*');
-    if (error) throw error;
+    const [resAlunoLivros, resLivros] = await Promise.all([
+      supabaseClient.from('aluno_livros').select('*'),
+      supabaseClient.from('livros').select('*')
+    ]);
+    if (resAlunoLivros.error) throw resAlunoLivros.error;
 
-    // DEBUG — revela o valor real do campo pago vindo do banco
-    console.log('[PAG ADMIN] CM esperado:', cm);
-    console.log('[PAG ADMIN] Total registros recebidos:', (pagamentos||[]).length);
-    console.log('[PAG ADMIN] VALORES DE PAGO:', (pagamentos||[]).map(p => ({
-      aluno_id: p.aluno_id,
-      mes: p.mes,
-      mes_norm: normalizarMes(p.mes),
-      pago_raw: p.pago,
-      pago_tipo: typeof p.pago,
-      isPago: isPago(p.pago)
-    })));
+    const alunoLivros = resAlunoLivros.data || [];
+    const livros      = resLivros.data      || [];
+    _pagCache = alunoLivros; // cache bruto para tgPagLivro
 
-    _pagCache = pagamentos || [];
+    const al = ativos();
+    if (!al.length) {
+      lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--cin)">Nenhum aluno ativo.</div>';
+      return;
+    }
+
+    lista.innerHTML = al.map(a => {
+      const regsAluno   = alunoLivros.filter(r => r.aluno_id === a.id);
+      const totalLivros = regsAluno.length;
+      const qtdPagos    = regsAluno.filter(r => r.pagou === true).length;
+      const qtdPend     = totalLivros - qtdPagos;
+      const emDia       = totalLivros > 0 && qtdPend === 0;
+
+      const livrosHtml = regsAluno.map(r => {
+        const livro    = livros.find(l => l.codigo === r.livro_codigo);
+        const nomeLiv  = livro?.nome || r.livro_codigo || 'Livro';
+        const pago     = r.pagou === true;
+        const valorExib = parseFloat(r.valor || livro?.valor || a.valor || 0);
+        const valorStr  = valorExib ? ' · R$ ' + valorExib.toFixed(2) : '';
+        const dtStr     = r.data_pagamento
+          ? ' · ' + new Date(r.data_pagamento).toLocaleDateString('pt-BR') : '';
+        const fmStr     = r.forma_pagamento ? ' · ' + r.forma_pagamento : '';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd)">
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:500">📚 ${nomeLiv}</div>
+            <div style="font-size:12px;color:var(--cin)">${pago
+              ? '✅ Pago' + dtStr + fmStr + valorStr
+              : '❌ Pendente' + valorStr}</div>
+          </div>
+          <button class="pgb ${pago?'pg':'pe'}"
+            onclick="tgPagLivro('${r.id}', ${pago}, '${a.id}', '${fmtNome(a.nome).replace(/'/g,"\\'")}')">
+            ${pago ? '✓ Pago' : '✕ Pendente'}
+          </button>
+        </div>`;
+      }).join('') || '<div style="font-size:13px;color:var(--cin);padding:4px 0">Nenhum livro vinculado.</div>';
+
+      return `<div class="pgr ${emDia?'liv-rec':'liv-pend'}"
+        style="flex-direction:column;align-items:stretch;padding:0;overflow:hidden">
+        <div style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer"
+          onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+          <div class="pgi">
+            <div class="pgn">${fmtNome(a.nome)}</div>
+            <div class="pgd">${totalLivros} livro${totalLivros!==1?'s':''} · ${qtdPagos} pago${qtdPagos!==1?'s':''}</div>
+          </div>
+          <span class="bdg ${emDia?'bv':'br'}">${emDia?'Em dia':qtdPend+' pendente'+(qtdPend!==1?'s':'')}</span>
+        </div>
+        <div style="display:none;border-top:1px solid var(--brd);padding:8px 14px 12px;background:#fafafa">
+          ${livrosHtml}
+        </div>
+      </div>`;
+    }).join('');
+
   } catch(e) {
-    console.error('[PAG ADMIN] Erro ao buscar pagamentos:', e);
+    console.error('[PAG ADMIN] Erro:', e);
     lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--vm)">❌ Erro ao carregar pagamentos</div>';
-    return;
   }
-
-  const al = ativos();
-
-  lista.innerHTML = al.map(a => {
-    // Para cada aluno: busca registro pago no mês exibido
-    // Ausência de registro = pendente (não é erro)
-    const pagamentoAluno = _pagCache.find(p =>
-      p.aluno_id === a.id &&
-      normalizarMes(p.mes) === cm &&
-      isPago(p.pago)
-    );
-    const pago = !!pagamentoAluno;
-    const valorExib = pagamentoAluno ? (pagamentoAluno.valor || a.valor || 0) : (a.valor || 0);
-    const valorStr  = valorExib ? ' · R$ ' + parseFloat(valorExib).toFixed(2) : '';
-    return `<div class="pgr ${pago?'liv-rec':'liv-pend'}">
-      <div class="pgi">
-        <div class="pgn">${fmtNome(a.nome)}</div>
-        <div class="pgd">${M[_mp.getMonth()] + ' ' + _mp.getFullYear()}${valorStr}</div>
-      </div>
-      <button class="pgb ${pago?'pg':'pe'}" onclick="tgPag('${a.id}')">${pago ? '✓ Pago' : '✕ Pendente'}</button>
-    </div>`;
-  }).join('') || '<div style="text-align:center;padding:20px;color:var(--cin)">Nenhum aluno ativo.</div>';
 }
 
-async function tgPag(id){
+/* Marcar/desmarcar pagamento de um livro individual em aluno_livros */
+async function tgPagLivro(idRegistro, estaPago, alunoId, nomeAluno) {
   if (!window.isAdmin) { alert('Acesso restrito'); return; }
-  const cm = chM(_mp);
-  const a  = D.alunos.find(x => x.id === id);
-
-  // Determina estado atual consultando o cache bruto com a mesma lógica
-  const regAtual = _pagCache.find(p =>
-    p.aluno_id === id &&
-    normalizarMes(p.mes) === cm &&
-    isPago(p.pago)
-  );
-  const novoPago = !regAtual;
-
   try {
-    if (novoPago) {
-      const valor = parseFloat(a?.valor) || 0;
-      const { error } = await supabaseClient
-        .from('pagamentos_aluno')
-        .upsert({
-          aluno_id:       id,
-          mes:            cm,
-          pago:           true,
-          valor:          valor,
-          data_pagamento: new Date().toISOString()
-        }, { onConflict: 'aluno_id,mes' });
+    if (estaPago) {
+      const { error } = await supabaseClient.from('aluno_livros')
+        .update({ pagou: false, data_pagamento: null, forma_pagamento: null })
+        .eq('id', idRegistro);
       if (error) throw error;
-      toast('✓ Pagamento de ' + fmtNome(a?.nome) + ' registrado!');
+      toast('↩ Pagamento de ' + nomeAluno + ' revertido');
     } else {
-      const { error } = await supabaseClient
-        .from('pagamentos_aluno')
-        .update({ pago: false, data_pagamento: null })
-        .eq('aluno_id', id)
-        .eq('mes', cm);
+      const { error } = await supabaseClient.from('aluno_livros')
+        .update({ pagou: true, forma_pagamento: 'admin', data_pagamento: new Date().toISOString() })
+        .eq('id', idRegistro);
       if (error) throw error;
-      toast('↩ Pagamento de ' + fmtNome(a?.nome) + ' marcado como pendente');
+      toast('✓ Livro de ' + nomeAluno + ' marcado como pago!');
     }
+    await renderPagAdmin();
   } catch(e) {
     console.error('[PAG ADMIN] Erro ao salvar:', e);
     toast('❌ Erro ao salvar. Tente novamente.');
-    return;
   }
-
-  await renderPagAdmin();
 }
+
+/* Mantido para não quebrar chamadas legadas */
+async function tgPag(id){ await renderPagAdmin(); }
 
 /* ════ MATERIAL ADMIN ════ */
 function abaMat(aba,btn){
@@ -2029,21 +2009,24 @@ async function abaRel(aba,btn){
 let _relCache = null; // { alunos, presencas, aulas } — recarregado a cada visita à tela
 
 async function _relCarregarDados() {
-  const [resAlunos, resPres, resAulas, resPagamentos] = await Promise.all([
+  const [resAlunos, resPres, resAulas, resAlunoLivros, resLivros] = await Promise.all([
     supabaseClient.from('alunos').select('*').order('nome', { ascending: true }),
     supabaseClient.from('presenca').select('*'),
     supabaseClient.from('aulas').select('data, livro, descricao'),
-    supabaseClient.from('pagamentos_aluno').select('*')
+    supabaseClient.from('aluno_livros').select('*'),
+    supabaseClient.from('livros').select('*')
   ]);
-  if (resAlunos.error)     { console.error('[REL] Erro alunos:', resAlunos.error); throw resAlunos.error; }
-  if (resPres.error)       { console.error('[REL] Erro presenças:', resPres.error); }
-  if (resAulas.error)      { console.error('[REL] Erro aulas:', resAulas.error); }
-  if (resPagamentos.error) { console.error('[REL] Erro pagamentos:', resPagamentos.error); }
+  if (resAlunos.error)      { console.error('[REL] Erro alunos:', resAlunos.error); throw resAlunos.error; }
+  if (resPres.error)        { console.error('[REL] Erro presenças:', resPres.error); }
+  if (resAulas.error)       { console.error('[REL] Erro aulas:', resAulas.error); }
+  if (resAlunoLivros.error) { console.error('[REL] Erro aluno_livros:', resAlunoLivros.error); }
+  if (resLivros.error)      { console.error('[REL] Erro livros:', resLivros.error); }
   _relCache = {
-    alunos:     resAlunos.data    || [],
-    presencas:  resPres.data      || [],
-    aulas:      (resAulas.data    || []).map(a => ({ ...a, livro: a.livro || 'Sem livro' })),
-    pagamentos: resPagamentos.data || []
+    alunos:      resAlunos.data     || [],
+    presencas:   resPres.data       || [],
+    aulas:       (resAulas.data     || []).map(a => ({ ...a, livro: a.livro || 'Sem livro' })),
+    alunoLivros: resAlunoLivros.data || [],
+    livros:      resLivros.data      || []
   };
 }
 
@@ -2087,28 +2070,48 @@ async function renderRelAdmin(aba){
     const mp = totalAulas * tot;
     const pp = mp > 0 ? Math.round(tp / mp * 100) : 0;
 
-    const pagM = D.pagamentos[cm] || {};
-    const pagos = al.filter(a => pagM[a.id] === true).length;
-    const rec = al.reduce((s,a) => s + (pagM[a.id] === true ? (parseFloat(a.valor)||0) : 0), 0);
+    // Pagamentos: fonte aluno_livros (igual à área do aluno)
+    const alunoLivros = _relCache.alunoLivros || [];
+    const livros      = _relCache.livros      || [];
+
+    // Aluno "em dia" = todos os livros com participou !== false têm pagou === true
+    const alunosEmDia = al.filter(a => {
+      const regs = alunoLivros.filter(r => r.aluno_id === a.id && r.participou !== false);
+      return regs.length > 0 && regs.every(r => r.pagou === true);
+    });
+    const pagos = alunosEmDia.length;
+
+    // Receita = soma dos valores de todos os livros pagos
+    const rec = al.reduce((s, a) => {
+      return s + alunoLivros
+        .filter(r => r.aluno_id === a.id && r.pagou === true)
+        .reduce((ss, r) => {
+          const lv = livros.find(l => l.codigo === r.livro_codigo);
+          return ss + parseFloat(r.valor || lv?.valor || a.valor || 0);
+        }, 0);
+    }, 0);
 
     let criticos = [];
     al.forEach(a => {
       const faltas = totalAulas - todasPresencas.filter(p => p.aluno_id === a.id && p.presente === true).length;
       if (faltas >= 3) criticos.push(`<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--brd)">⚠️ <strong>${fmtNome(a.nome)}</strong> — ${faltas} faltas</div>`);
     });
-    const pagPend = al.filter(a => (D.pagamentos[cm]||{})[a.id] !== true);
+    const pagPend = al.filter(a => {
+      const regs = alunoLivros.filter(r => r.aluno_id === a.id && r.participou !== false);
+      return regs.length > 0 && regs.some(r => !r.pagou);
+    });
     if (pagPend.length) criticos.push(`<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--brd)">💰 ${pagPend.length} aluno${pagPend.length>1?'s':''} com pagamento pendente: ${pagPend.map(a=>fmtNome(a.nome).split(' ')[0]).join(', ')}</div>`);
     const todasProvasGeral = Object.keys(D.notas).filter(p => /^p\d+$/.test(p)).sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
     const semNota = todasProvasGeral.filter(p => Object.keys(D.notas[p]||{}).length === 0);
     if (semNota.length) criticos.push(`<div style="font-size:13px;padding:6px 0">📝 Prova${semNota.length>1?'s':''} sem notas lançadas: ${semNota.map(p=>'Prova '+parseInt(p.slice(1))).join(', ')}</div>`);
 
     document.getElementById('rel-geral').innerHTML =
-      `<div class="card"><div class="card-t">📈 Resumo — ${M[h.getMonth()]} ${h.getFullYear()}${turmaLabel}</div>
+      `<div class="card"><div class="card-t">📈 Resumo Geral${turmaLabel}</div>
         <div class="sl2"><span class="slb">Alunos</span><span class="slv">${tot}</span></div>
         <div class="sl2"><span class="slb">Aulas registradas</span><span class="slv">${totalAulas}</span></div>
         <div class="sl2"><span class="slb">Frequência média</span><span class="slv">${pp}%</span></div>
         <div class="sl2"><span class="slb">Pagamentos em dia</span><span class="slv">${pagos}/${tot}</span></div>
-        <div class="sl2"><span class="slb">Receita do mês</span><span class="slv">R$ ${rec.toFixed(2)}</span></div>
+        <div class="sl2"><span class="slb">Receita acumulada</span><span class="slv">R$ ${rec.toFixed(2)}</span></div>
       </div>
       <div class="card"><div class="card-t">📊 Indicadores</div>
         <div class="bw2"><div class="bt"><span>Frequência</span><span>${pp}%</span></div><div class="ba2"><div class="bf vd" style="width:${pp}%"></div></div></div>
@@ -2175,43 +2178,57 @@ async function renderRelAdmin(aba){
   }
 
   if(aba==='financeiro'){
-    // ── FINANCEIRO: usa exclusivamente _relCache.pagamentos (pagamentos_aluno) ──
-    const pagamentos = _relCache.pagamentos || [];
+    // ── FINANCEIRO: fonte aluno_livros, agrupado por livro ──
+    const alunoLivros = _relCache.alunoLivros || [];
+    const livros      = _relCache.livros      || [];
 
-    // DEBUG
-    console.log('[REL FINANCEIRO] Total registros:', pagamentos.length);
-    console.log('[REL FINANCEIRO] VALORES DE PAGO:', pagamentos.map(p => ({
-      aluno_id: p.aluno_id, mes: p.mes, mes_norm: normalizarMes(p.mes),
-      pago_raw: p.pago, isPago: isPago(p.pago)
-    })));
+    // Coleta todos os livro_codigo presentes nos alunos filtrados pela turma
+    const codigos = [...new Set(
+      alunoLivros
+        .filter(r => al.some(a => a.id === r.aluno_id))
+        .map(r => r.livro_codigo)
+    )].sort();
 
-    // Meses únicos extraídos dos valores normalizados
-    const meses = [...new Set(
-      pagamentos.map(p => normalizarMes(p.mes)).filter(Boolean)
-    )].sort().reverse();
-    if (!meses.includes(cm)) meses.unshift(cm);
-    const mesesExibir = meses.slice(0, 12);
+    if (!codigos.length) {
+      document.getElementById('rel-financeiro').innerHTML =
+        '<p style="color:var(--cin)">Nenhum livro vinculado aos alunos.</p>';
+      return;
+    }
 
     let h2 = '';
-    mesesExibir.forEach(mes => {
-      const [ano, mesNum] = mes.split('-');
+    codigos.forEach(codigo => {
+      const livro     = livros.find(l => l.codigo === codigo);
+      const nomeLivro = livro?.nome || codigo || 'Livro';
 
-      // Para cada mês: quem tem registro pago (ausência = pendente)
-      const pagosMes    = pagamentos.filter(p =>
-        normalizarMes(p.mes) === mes && isPago(p.pago)
+      // Apenas registros de alunos na turma filtrada
+      const regsLivro   = alunoLivros.filter(r =>
+        r.livro_codigo === codigo && al.some(a => a.id === r.aluno_id)
       );
-      const totalPagos  = pagosMes.length;
-      const receita     = pagosMes.reduce((s, p) => s + (parseFloat(p.valor) || 0), 0);
-      const alunosPagosIds = pagosMes.map(p => p.aluno_id);
-      const pendentes   = al.filter(a => !alunosPagosIds.includes(a.id));
+      const totalAlunos = regsLivro.length;
+      const pagosRegs   = regsLivro.filter(r => r.pagou === true);
+      const totalPagos  = pagosRegs.length;
+      const receita     = pagosRegs.reduce((s, r) => {
+        const a  = al.find(x => x.id === r.aluno_id);
+        const lv = livros.find(l => l.codigo === r.livro_codigo);
+        return s + parseFloat(r.valor || lv?.valor || a?.valor || 0);
+      }, 0);
+      const pendentesNomes = regsLivro
+        .filter(r => !r.pagou)
+        .map(r => { const a = al.find(x => x.id === r.aluno_id); return a ? fmtNome(a.nome).split(' ')[0] : '?'; });
+      const pct = totalAlunos > 0 ? Math.round(totalPagos / totalAlunos * 100) : 0;
 
       h2 += `<div style="background:#fff;border-radius:var(--r);padding:14px;margin-bottom:9px;border:1px solid var(--brd);box-shadow:var(--s)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div><div style="font-weight:600;font-size:15px">${M[parseInt(mesNum)-1]} ${ano}</div><div style="font-size:12px;color:var(--cin)">${totalPagos} de ${tot} pagaram</div></div>
+          <div>
+            <div style="font-weight:600;font-size:15px">📚 ${nomeLivro}</div>
+            <div style="font-size:12px;color:var(--cin)">${totalPagos} de ${totalAlunos} pagaram</div>
+          </div>
           <div style="font-weight:700;color:var(--vd);font-size:16px">R$ ${receita.toFixed(2)}</div>
         </div>
-        <div class="ba2" style="margin-bottom:8px"><div class="bf do" style="width:${tot>0?Math.round(totalPagos/tot*100):0}%"></div></div>
-        ${pendentes.length ? `<div style="font-size:12px;color:var(--vm)">Pendente: ${pendentes.map(a=>fmtNome(a.nome).split(' ')[0]).join(', ')}</div>` : '<div style="font-size:12px;color:var(--vd)">&#10003; Todos pagaram</div>'}
+        <div class="ba2" style="margin-bottom:8px"><div class="bf do" style="width:${pct}%"></div></div>
+        ${pendentesNomes.length
+          ? `<div style="font-size:12px;color:var(--vm)">Pendente: ${pendentesNomes.join(', ')}</div>`
+          : '<div style="font-size:12px;color:var(--vd)">&#10003; Todos pagaram</div>'}
       </div>`;
     });
 
