@@ -230,6 +230,16 @@ select.inp{cursor:pointer}
 
 @media(min-width:500px){main{padding:22px 22px 80px}}
 
+/* ── RELATÓRIO POR ALUNO ── */
+.rep-item{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid var(--brd)}
+.rep-item:last-child{border-bottom:none}
+.rep-nome{font-size:14px;font-weight:600}
+.rep-sub{font-size:12px;color:var(--cin)}
+.rep-perc{font-size:16px;font-weight:700}
+.rep-ok{color:var(--vd)}
+.rep-warn{color:var(--am)}
+.rep-bad{color:var(--vm)}
+
 /* ── DASHBOARD GRID ── */
 .dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 @media(max-width:499px){
@@ -306,6 +316,7 @@ select.inp{cursor:pointer}
         <button class="ac" onclick="irAdmin('pagamentos')"><span class="ac-ic">💰</span>Pagamentos</button>
         <button class="ac" onclick="irAdmin('alunos')"><span class="ac-ic">👥</span>Ver Alunos</button>
         <button class="ac" onclick="irAdmin('relatorios')"><span class="ac-ic">📊</span>Relatórios</button>
+        <button class="ac" onclick="irAdmin('relatorio')"><span class="ac-ic">👤</span>Rel. por Aluno</button>
         <button class="ac" onclick="irAdmin('aulas')"><span class="ac-ic">📚</span>Gerir Aulas</button>
         <!-- TEMPORÁRIO: remover após vinculação -->
         <button class="ac" id="btn-vincular-auth" onclick="vincularAuthAlunos()"><span class="ac-ic">🔗</span>Vincular Auth</button>
@@ -490,6 +501,15 @@ select.inp{cursor:pointer}
         <div id="adm-aulas-lista">
           <div class="empty"><div class="empty-ic">⏳</div><div class="empty-tx">Carregando aulas...</div></div>
         </div>
+      </div>
+    </div>
+
+    <!-- RELATÓRIO POR ALUNO -->
+    <div class="tela" id="adm-relatorio">
+      <div class="tit">📊 Relatório por aluno</div>
+      <p class="sub">Visão geral de frequência dos alunos</p>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div id="adm-relatorio-lista"></div>
       </div>
     </div>
 
@@ -1519,16 +1539,16 @@ function sair(){
 }
 
 /* ════ NAV ADMIN ════ */
-const TELAS_ADMIN=['inicio','alunos','perfil','presenca','pagamentos','material','relatorios','config','aulas'];
-const NB_MAP={inicio:'nb-inicio',alunos:'nb-alunos',perfil:'nb-alunos',presenca:'nb-presenca',material:'nb-material',relatorios:'nb-relatorios'};
+const TELAS_ADMIN=['inicio','alunos','perfil','presenca','pagamentos','material','relatorios','relatorio','config','aulas'];
+const NB_MAP={inicio:'nb-inicio',alunos:'nb-alunos',perfil:'nb-alunos',presenca:'nb-presenca',material:'nb-material',relatorios:'nb-relatorios',relatorio:'nb-relatorios'};
 
 function irAdmin(t){
   TELAS_ADMIN.forEach(id=>{
-    const elId = id === 'aulas' ? 'adm-aulas' : id === 'presenca' ? 'adm-presenca' : 'a-'+id;
+    const elId = id === 'aulas' ? 'adm-aulas' : id === 'presenca' ? 'adm-presenca' : id === 'relatorio' ? 'adm-relatorio' : 'a-'+id;
     const el=document.getElementById(elId); if(el) el.classList.remove('on');
   });
   document.querySelectorAll('#nav-admin .nb').forEach(b=>b.classList.remove('on'));
-  const elId = t === 'aulas' ? 'adm-aulas' : t === 'presenca' ? 'adm-presenca' : 'a-'+t;
+  const elId = t === 'aulas' ? 'adm-aulas' : t === 'presenca' ? 'adm-presenca' : t === 'relatorio' ? 'adm-relatorio' : 'a-'+t;
   const el=document.getElementById(elId); if(el) el.classList.add('on');
   const nb=NB_MAP[t]?document.getElementById(NB_MAP[t]):null; if(nb) nb.classList.add('on');
   window.scrollTo(0,0);
@@ -1538,6 +1558,7 @@ function irAdmin(t){
   if(t==='pagamentos') renderPagAdmin();
   if(t==='material') renderMatAdmin('livros');
   if(t==='relatorios') renderRelAdmin('geral');
+  if(t==='relatorio') admRelCarregar();
   if(t==='config') initConfig();
   if(t==='aulas') carregarAulas();
 }
@@ -3179,6 +3200,56 @@ if(!D.aulas_log) { D.aulas_log={}; }
   }
 
   /* ════ FIM MÓDULO ADMIN: PRESENÇA ════ */
+
+  /* ════ MÓDULO ADMIN: RELATÓRIO POR ALUNO ════ */
+
+  async function admRelCarregar() {
+    const listaDiv = document.getElementById('adm-relatorio-lista');
+    if (!listaDiv) return;
+    listaDiv.innerHTML = '<div style="text-align:center;padding:24px;color:var(--cin)">⏳ Carregando…</div>';
+
+    try {
+      const [resAlunos, resPres, resAulas] = await Promise.all([
+        supabaseClient.from('alunos').select('*').order('nome', { ascending: true }),
+        supabaseClient.from('presenca').select('*'),
+        supabaseClient.from('aulas').select('data, livro')
+      ]);
+
+      if (resAlunos.error) { console.error('[REL ALUNO] Erro alunos:', resAlunos.error); listaDiv.innerHTML = '<div style="text-align:center;padding:24px;color:var(--vm)">❌ Erro ao carregar alunos</div>'; return; }
+      if (resPres.error)   { console.error('[REL ALUNO] Erro presenças:', resPres.error); }
+      if (resAulas.error)  { console.error('[REL ALUNO] Erro aulas:', resAulas.error); }
+
+      const alunos   = resAlunos.data || [];
+      const presencas = resPres.data  || [];
+      const aulas     = resAulas.data || [];
+
+      if (!alunos.length) {
+        listaDiv.innerHTML = '<div style="text-align:center;padding:24px;color:var(--cin)">Nenhum aluno cadastrado</div>';
+        return;
+      }
+
+      listaDiv.innerHTML = alunos.map(aluno => {
+        const totalAulas  = aulas.length;
+        const minhas      = presencas.filter(p => p.aluno_id === aluno.id);
+        const qtdPresente = minhas.filter(p => p.presente === true).length;
+        const qtdFalta    = totalAulas - qtdPresente;
+        const perc        = totalAulas > 0 ? Math.round((qtdPresente / totalAulas) * 100) : 0;
+        const cls         = perc >= 75 ? 'rep-ok' : perc >= 50 ? 'rep-warn' : 'rep-bad';
+        return '<div class="rep-item">'
+          + '<div>'
+          + '<div class="rep-nome">' + (aluno.nome || '—') + '</div>'
+          + '<div class="rep-sub">' + qtdPresente + ' presenças • ' + qtdFalta + ' faltas • ' + totalAulas + ' aulas</div>'
+          + '</div>'
+          + '<div class="rep-perc ' + cls + '">' + perc + '%</div>'
+          + '</div>';
+      }).join('');
+    } catch(e) {
+      console.error('[REL ALUNO] Exceção:', e);
+      listaDiv.innerHTML = '<div style="text-align:center;padding:24px;color:var(--vm)">❌ Erro inesperado</div>';
+    }
+  }
+
+  /* ════ FIM MÓDULO ADMIN: RELATÓRIO POR ALUNO ════ */
 
   testarConexao();
   inicializarApp();
