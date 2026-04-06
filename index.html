@@ -85,6 +85,7 @@ main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
 .ac.dest{background:var(--azul);color:#fff;border-color:var(--azul)}
 .ac.dest .ac-ic{background:rgba(255,255,255,.15)}
 .ac.dest:hover{background:var(--azul-e)}
+.oculto-auth{display:none !important;}
 
 /* ── ALERTAS ── */
 .al{border-radius:var(--r);padding:13px 15px;margin-bottom:10px;font-size:14px;display:flex;align-items:flex-start;gap:9px;line-height:1.5}
@@ -319,8 +320,8 @@ select.inp{cursor:pointer}
         <button class="ac" onclick="irAdmin('relatorio')"><span class="ac-ic">👤</span>Rel. por Aluno</button>
         <button class="ac" onclick="irAdmin('aulas')"><span class="ac-ic">📚</span>Gerir Aulas</button>
         <!-- TEMPORÁRIO: remover após vinculação -->
-        <button class="ac" id="btn-vincular-auth" onclick="vincularAuthAlunos()"><span class="ac-ic">🔗</span>Vincular Auth</button>
-        <button class="ac" id="btn-criar-usuarios-auth" onclick="criarUsuariosAuth()"><span class="ac-ic">🔑</span>Criar Usuários Auth</button>
+        <button class="ac oculto-auth" id="btn-vincular-auth" onclick="vincularAuthAlunos()"><span class="ac-ic">🔗</span>Vincular Auth</button>
+        <button class="ac oculto-auth" id="btn-criar-usuarios-auth" onclick="criarUsuariosAuth()"><span class="ac-ic">🔑</span>Criar Usuários Auth</button>
         <!-- FIM TEMPORÁRIO -->
       </div>
       <div class="sl">Alertas</div>
