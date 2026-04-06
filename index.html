@@ -955,7 +955,9 @@ async function carregarLivrosAluno() {
 
   const { data: livrosBase, error: error2 } = await supabaseClient
     .from('livros')
-    .select('*');
+    .select('*')
+    .eq('ativo', true)
+    .order('ordem', { ascending: true });
 
   console.log('DADOS livros:', livrosBase);
 
@@ -1210,7 +1212,9 @@ async function montarProvasComLivros(alunoId) {
   const provas = await carregarProvasAluno(alunoId);
   const { data: livros, error } = await supabaseClient
     .from('livros')
-    .select('*');
+    .select('*')
+    .eq('ativo', true)
+    .order('ordem', { ascending: true });
   if (error) {
     console.error('[Provas] Erro ao carregar livros:', error);
     return provas;
@@ -1331,7 +1335,7 @@ async function carregarExibirProvasAdminPerfil(alunoId) {
     container.innerHTML = '<div style="font-size:13px;color:var(--cin);padding:8px 0">Nenhuma prova registrada.</div>';
     return;
   }
-  const { data: livrosBase } = await supabaseClient.from('livros').select('*');
+  const { data: livrosBase } = await supabaseClient.from('livros').select('*').order('ordem', { ascending: true });
   container.innerHTML = provas.map(item => {
     const livro = (livrosBase || []).find(l => l.codigo === item.livro_codigo);
     const nomeLivro = livro?.nome || item.livro_codigo || 'Livro';
@@ -1445,7 +1449,8 @@ async function carregarExibirLivrosAdminPerfil(alunoId) {
 
   const { data: livrosBase, error: error2 } = await supabaseClient
     .from('livros')
-    .select('*');
+    .select('*')
+    .order('ordem', { ascending: true });
 
   if (error2) {
     console.error('[Admin Livros] Erro ao buscar livros base:', error2);
@@ -1612,39 +1617,23 @@ async function irAluno(t){
 }
 
 /* ════ DASHBOARD ADMIN ════ */
-async function renderDashAdmin(){
+function renderDashAdmin(){
   const h=hj(); const cm=chM(h); const al=ativos(); const tot=al.length;
   document.getElementById('a-data').textContent=DS[h.getDay()]+', '+h.getDate()+' de '+M[h.getMonth()]+' de '+h.getFullYear();
   const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
   let tp=0; pk.forEach(k=>Object.values(D.presencas[k]).forEach(v=>{ if(v==='P') tp++; }));
   const mp=pk.length*tot; const pp=mp>0?Math.round(tp/mp*100):0;
-
-  /* ── Pagamentos: fonte única aluno_livros ── */
-  let totalOk=0; let totalPendentes=0;
-  try {
-    const { data: alunoLivros, error } = await supabaseClient
-      .from('aluno_livros').select('aluno_id, pagou, participou');
-    if (!error && alunoLivros) {
-      al.forEach(aluno => {
-        const regs = alunoLivros.filter(r => r.aluno_id === aluno.id && r.participou !== false);
-        if (regs.length === 0) { totalPendentes++; return; }
-        if (regs.some(r => r.pagou !== true)) totalPendentes++;
-        else totalOk++;
-      });
-    } else {
-      totalPendentes = tot;
-    }
-  } catch(e) { totalPendentes = tot; }
-
+  const pagM=D.pagamentos[cm]||{}; const pagos=al.filter(a=>pagM[a.id]===true).length;
   document.getElementById('a-metricas').innerHTML=`
     <div class="mc"><div class="mn">${tot}</div><div class="ml">Alunos ativos</div></div>
     <div class="mc vd"><div class="mn">${pp}%</div><div class="ml">Frequência mensal</div></div>
-    <div class="mc do"><div class="mn">${totalOk}</div><div class="ml">Pagamentos OK</div></div>
-    <div class="mc vm"><div class="mn">${totalPendentes}</div><div class="ml">Pag. pendentes</div></div>`;
+    <div class="mc do"><div class="mn">${pagos}</div><div class="ml">Pagamentos OK</div></div>
+    <div class="mc vm"><div class="mn">${tot-pagos}</div><div class="ml">Pag. pendentes</div></div>`;
   let alerts=[];
   al.forEach(a=>{ let f=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='F') f++; });
     if(f>=2) alerts.push(`<div class="al vm"><span>⚠️</span><span><strong>${fmtNome(a.nome)}</strong> — ${f} falta${f>1?'s':''} este mês</span></div>`); });
-  if(totalPendentes>0) alerts.push(`<div class="al am"><span>💰</span><span><strong>${totalPendentes} aluno${totalPendentes>1?'s':''}</strong> com pagamento pendente</span></div>`);
+  const pend=tot-pagos;
+  if(pend>0) alerts.push(`<div class="al am"><span>💰</span><span><strong>${pend} aluno${pend>1?'s':''}</strong> com pagamento pendente em ${M[h.getMonth()]}</span></div>`);
   if(!alerts.length) alerts.push('<div class="al vd"><span>✅</span><span>Tudo em dia! Nenhum alerta no momento.</span></div>');
   document.getElementById('a-alertas').innerHTML=alerts.join('');
 }
@@ -1837,11 +1826,9 @@ async function renderPagAdmin(){
   try {
     const [resAlunoLivros, resLivros] = await Promise.all([
       supabaseClient.from('aluno_livros').select('*'),
-      supabaseClient.from('livros').select('*')
+      supabaseClient.from('livros').select('*').order('ordem', { ascending: true })
     ]);
     if (resAlunoLivros.error) throw resAlunoLivros.error;
-
-    const alunoLivros = resAlunoLivros.data || [];
     const livros      = resLivros.data      || [];
     _pagCache = alunoLivros; // cache bruto para tgPagLivro
 
@@ -2030,7 +2017,7 @@ async function _relCarregarDados() {
     supabaseClient.from('presenca').select('*'),
     supabaseClient.from('aulas').select('data, livro, descricao'),
     supabaseClient.from('aluno_livros').select('*'),
-    supabaseClient.from('livros').select('*')
+    supabaseClient.from('livros').select('*').order('ordem', { ascending: true })
   ]);
   if (resAlunos.error)      { console.error('[REL] Erro alunos:', resAlunos.error); throw resAlunos.error; }
   if (resPres.error)        { console.error('[REL] Erro presenças:', resPres.error); }
