@@ -1820,13 +1820,48 @@ async function renderPagAdmin(){
   lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--cin)">⏳ Carregando…</div>';
 
   try {
-    // Busca pagamentos do mês exibido diretamente do Supabase
+    // Busca TODOS os pagamentos do Supabase (sem filtrar por mês no banco)
     const { data: pagamentos, error } = await supabaseClient
       .from('pagamentos_aluno')
-      .select('*')
-      .eq('mes', cm);
+      .select('*');
     if (error) throw error;
-    _pagCache = pagamentos || [];
+
+    // Debug temporário
+    console.log('CM:', cm);
+    console.log('Pagamentos Supabase:', pagamentos);
+
+    // Normaliza qualquer formato de mês para "YYYY-MM"
+    function normalizarMes(valor) {
+      if (!valor) return null;
+      const str = String(valor);
+      // Caso já esteja no formato YYYY-MM
+      if (/^\d{4}-\d{2}$/.test(str)) return str;
+      // Caso esteja no formato YYYY-M
+      if (/^\d{4}-\d{1}$/.test(str)) {
+        const [ano, mes] = str.split('-');
+        return `${ano}-${mes.padStart(2, '0')}`;
+      }
+      // Caso esteja como data completa YYYY-MM-DD
+      if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+        return str.slice(0, 7);
+      }
+      // Caso esteja como MM/YYYY
+      if (/^\d{2}\/\d{4}$/.test(str)) {
+        const [mes, ano] = str.split('/');
+        return `${ano}-${mes}`;
+      }
+      return null;
+    }
+
+    const mesAtual = cm; // ex: "2026-03"
+    const pagamentosMes = (pagamentos || []).filter(p => {
+      const mesNormalizado = normalizarMes(p.mes);
+      return mesNormalizado === mesAtual && p.pago === true;
+    });
+
+    console.log('Pagamentos filtrados:', pagamentosMes);
+
+    _pagCache = pagamentosMes;
   } catch(e) {
     console.error('[PAG ADMIN] Erro ao buscar pagamentos:', e);
     lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--vm)">❌ Erro ao carregar pagamentos</div>';
