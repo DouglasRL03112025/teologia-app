@@ -1809,22 +1809,22 @@ function salvarPres(){
 
 /* ════ PAGAMENTOS ADMIN ════ */
 let _mp=new Date();
-let _pagCache = []; // cache dos pagamentos_aluno do mês exibido
+let _pagCache = []; // todos os registros brutos do mês — preenchido por renderPagAdmin
 
 function mudarMes(d){ _mp.setMonth(_mp.getMonth()+d); renderPagAdmin(); }
 
-/* ── Interpreta qualquer representação válida de "pago" vinda do banco ── */
+/* Aceita qualquer representação válida de "pago" vinda do banco */
 function isPago(valor) {
-  if (valor === true)     return true;
-  if (valor === 1)        return true;
-  if (valor === '1')      return true;
-  if (valor === 'true')   return true;
-  if (valor === 't')      return true;
-  if (valor === 'yes')    return true;
+  if (valor === true)   return true;
+  if (valor === 1)      return true;
+  if (valor === '1')    return true;
+  if (valor === 'true') return true;
+  if (valor === 't')    return true;
+  if (valor === 'yes')  return true;
   return false;
 }
 
-/* ── Normaliza campo mes para "YYYY-MM" independente do formato vindo do banco ── */
+/* Normaliza campo mes para "YYYY-MM" independente do formato */
 function normalizarMes(valor) {
   if (valor === null || valor === undefined) return null;
   const str = String(valor).trim();
@@ -1847,30 +1847,19 @@ async function renderPagAdmin(){
       .select('*');
     if (error) throw error;
 
-    // ── DEBUG: inspeciona valores reais do banco ──────────────────────
+    // DEBUG — revela o valor real do campo pago vindo do banco
     console.log('[PAG ADMIN] CM esperado:', cm);
     console.log('[PAG ADMIN] Total registros recebidos:', (pagamentos||[]).length);
-    console.log('[PAG ADMIN] VALORES DE PAGO:', (pagamentos||[]).map(p => p.pago));
-    console.log('[PAG ADMIN] Detalhe completo:',
-      (pagamentos||[]).map(p => ({
-        aluno_id: p.aluno_id,
-        mes: p.mes,
-        mes_norm: normalizarMes(p.mes),
-        pago_raw: p.pago,
-        pago_tipo: typeof p.pago,
-        isPago: isPago(p.pago)
-      }))
-    );
-    // ─────────────────────────────────────────────────────────────────
+    console.log('[PAG ADMIN] VALORES DE PAGO:', (pagamentos||[]).map(p => ({
+      aluno_id: p.aluno_id,
+      mes: p.mes,
+      mes_norm: normalizarMes(p.mes),
+      pago_raw: p.pago,
+      pago_tipo: typeof p.pago,
+      isPago: isPago(p.pago)
+    })));
 
-    const mesAtual = cm;
-    const pagamentosMes = (pagamentos || []).filter(p =>
-      normalizarMes(p.mes) === mesAtual && isPago(p.pago)
-    );
-
-    console.log('[PAG ADMIN] Pagamentos encontrados para o mês:', pagamentosMes.length, pagamentosMes);
-
-    _pagCache = pagamentosMes;
+    _pagCache = pagamentos || [];
   } catch(e) {
     console.error('[PAG ADMIN] Erro ao buscar pagamentos:', e);
     lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--vm)">❌ Erro ao carregar pagamentos</div>';
@@ -1878,11 +1867,18 @@ async function renderPagAdmin(){
   }
 
   const al = ativos();
+
   lista.innerHTML = al.map(a => {
-    const reg = _pagCache.find(p => p.aluno_id === a.id);
-    const pago = !!reg;
-    const valorExib = reg ? (reg.valor || a.valor || 0) : (a.valor || 0);
-    const valorStr = valorExib ? ' · R$ ' + parseFloat(valorExib).toFixed(2) : '';
+    // Para cada aluno: busca registro pago no mês exibido
+    // Ausência de registro = pendente (não é erro)
+    const pagamentoAluno = _pagCache.find(p =>
+      p.aluno_id === a.id &&
+      normalizarMes(p.mes) === cm &&
+      isPago(p.pago)
+    );
+    const pago = !!pagamentoAluno;
+    const valorExib = pagamentoAluno ? (pagamentoAluno.valor || a.valor || 0) : (a.valor || 0);
+    const valorStr  = valorExib ? ' · R$ ' + parseFloat(valorExib).toFixed(2) : '';
     return `<div class="pgr ${pago?'liv-rec':'liv-pend'}">
       <div class="pgi">
         <div class="pgn">${fmtNome(a.nome)}</div>
@@ -1895,11 +1891,16 @@ async function renderPagAdmin(){
 
 async function tgPag(id){
   if (!window.isAdmin) { alert('Acesso restrito'); return; }
-  const cm  = chM(_mp);
-  const al  = D.alunos || [];
-  const a   = al.find(x => x.id === id);
-  const reg = _pagCache.find(p => p.aluno_id === id);
-  const novoPago = !reg; // toggle: se estava pago → pendente, se pendente → pago
+  const cm = chM(_mp);
+  const a  = D.alunos.find(x => x.id === id);
+
+  // Determina estado atual consultando o cache bruto com a mesma lógica
+  const regAtual = _pagCache.find(p =>
+    p.aluno_id === id &&
+    normalizarMes(p.mes) === cm &&
+    isPago(p.pago)
+  );
+  const novoPago = !regAtual;
 
   try {
     if (novoPago) {
@@ -1907,11 +1908,11 @@ async function tgPag(id){
       const { error } = await supabaseClient
         .from('pagamentos_aluno')
         .upsert({
-          aluno_id:        id,
-          mes:             cm,
-          pago:            true,
-          valor:           valor,
-          data_pagamento:  new Date().toISOString()
+          aluno_id:       id,
+          mes:            cm,
+          pago:           true,
+          valor:          valor,
+          data_pagamento: new Date().toISOString()
         }, { onConflict: 'aluno_id,mes' });
       if (error) throw error;
       toast('✓ Pagamento de ' + fmtNome(a?.nome) + ' registrado!');
@@ -1925,7 +1926,7 @@ async function tgPag(id){
       toast('↩ Pagamento de ' + fmtNome(a?.nome) + ' marcado como pendente');
     }
   } catch(e) {
-    console.error('[PAG ADMIN] Erro ao salvar pagamento:', e);
+    console.error('[PAG ADMIN] Erro ao salvar:', e);
     toast('❌ Erro ao salvar. Tente novamente.');
     return;
   }
@@ -2174,28 +2175,20 @@ async function renderRelAdmin(aba){
   }
 
   if(aba==='financeiro'){
-    // ── FINANCEIRO: usa exclusivamente _relCache.pagamentos (Supabase) ──
+    // ── FINANCEIRO: usa exclusivamente _relCache.pagamentos (pagamentos_aluno) ──
     const pagamentos = _relCache.pagamentos || [];
 
-    // ── DEBUG ─────────────────────────────────────────────────────────
+    // DEBUG
     console.log('[REL FINANCEIRO] Total registros:', pagamentos.length);
-    console.log('[REL FINANCEIRO] VALORES DE PAGO:', pagamentos.map(p => p.pago));
-    console.log('[REL FINANCEIRO] Detalhe:',
-      pagamentos.map(p => ({
-        aluno_id: p.aluno_id,
-        mes: p.mes,
-        mes_norm: normalizarMes(p.mes),
-        pago_raw: p.pago,
-        isPago: isPago(p.pago)
-      }))
-    );
-    // ─────────────────────────────────────────────────────────────────
+    console.log('[REL FINANCEIRO] VALORES DE PAGO:', pagamentos.map(p => ({
+      aluno_id: p.aluno_id, mes: p.mes, mes_norm: normalizarMes(p.mes),
+      pago_raw: p.pago, isPago: isPago(p.pago)
+    })));
 
-    // Meses únicos a partir dos valores normalizados
+    // Meses únicos extraídos dos valores normalizados
     const meses = [...new Set(
       pagamentos.map(p => normalizarMes(p.mes)).filter(Boolean)
     )].sort().reverse();
-
     if (!meses.includes(cm)) meses.unshift(cm);
     const mesesExibir = meses.slice(0, 12);
 
@@ -2203,12 +2196,14 @@ async function renderRelAdmin(aba){
     mesesExibir.forEach(mes => {
       const [ano, mesNum] = mes.split('-');
 
-      const pagosMes   = pagamentos.filter(p => normalizarMes(p.mes) === mes && isPago(p.pago));
-      const totalPagos = pagosMes.length;
-      const receita    = pagosMes.reduce((total, p) => total + (parseFloat(p.valor) || 0), 0);
-
+      // Para cada mês: quem tem registro pago (ausência = pendente)
+      const pagosMes    = pagamentos.filter(p =>
+        normalizarMes(p.mes) === mes && isPago(p.pago)
+      );
+      const totalPagos  = pagosMes.length;
+      const receita     = pagosMes.reduce((s, p) => s + (parseFloat(p.valor) || 0), 0);
       const alunosPagosIds = pagosMes.map(p => p.aluno_id);
-      const pendentes      = al.filter(a => !alunosPagosIds.includes(a.id));
+      const pendentes   = al.filter(a => !alunosPagosIds.includes(a.id));
 
       h2 += `<div style="background:#fff;border-radius:var(--r);padding:14px;margin-bottom:9px;border:1px solid var(--brd);box-shadow:var(--s)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
