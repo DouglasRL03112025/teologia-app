@@ -1809,18 +1809,87 @@ function salvarPres(){
 
 /* ════ PAGAMENTOS ADMIN ════ */
 let _mp=new Date();
+let _pagCache = []; // cache dos pagamentos_aluno do mês exibido
+
 function mudarMes(d){ _mp.setMonth(_mp.getMonth()+d); renderPagAdmin(); }
-function renderPagAdmin(){
-  const cm=chM(_mp); document.getElementById('a-mes-pag').textContent=M[_mp.getMonth()]+' '+_mp.getFullYear();
-  const pagM=D.pagamentos[cm]||{}; const al=ativos();
-  document.getElementById('a-lista-pag').innerHTML=al.map(a=>{ const p=pagM[a.id]===true;
-    return `<div class="pgr"><div class="pgi"><div class="pgn">${fmtNome(a.nome)}</div><div class="pgd">${M[_mp.getMonth()]+' '+_mp.getFullYear()}${a.valor?' · R$ '+a.valor:''}</div></div><button class="pgb ${p?'pg':'pe'}" onclick="tgPag('${a.id}')">${p?'✓ Pago':'✕ Pendente'}</button></div>`; }).join('');
+
+async function renderPagAdmin(){
+  const cm = chM(_mp);
+  document.getElementById('a-mes-pag').textContent = M[_mp.getMonth()] + ' ' + _mp.getFullYear();
+  const lista = document.getElementById('a-lista-pag');
+  lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--cin)">⏳ Carregando…</div>';
+
+  try {
+    // Busca pagamentos do mês exibido diretamente do Supabase
+    const { data: pagamentos, error } = await supabaseClient
+      .from('pagamentos_aluno')
+      .select('*')
+      .eq('mes', cm);
+    if (error) throw error;
+    _pagCache = pagamentos || [];
+  } catch(e) {
+    console.error('[PAG ADMIN] Erro ao buscar pagamentos:', e);
+    lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--vm)">❌ Erro ao carregar pagamentos</div>';
+    return;
+  }
+
+  const al = ativos();
+  lista.innerHTML = al.map(a => {
+    const reg = _pagCache.find(p => p.aluno_id === a.id && p.pago === true);
+    const pago = !!reg;
+    const valorExib = reg ? (reg.valor || a.valor || 0) : (a.valor || 0);
+    const valorStr = valorExib ? ' · R$ ' + parseFloat(valorExib).toFixed(2) : '';
+    return `<div class="pgr ${pago?'liv-rec':'liv-pend'}">
+      <div class="pgi">
+        <div class="pgn">${fmtNome(a.nome)}</div>
+        <div class="pgd">${M[_mp.getMonth()] + ' ' + _mp.getFullYear()}${valorStr}</div>
+      </div>
+      <button class="pgb ${pago?'pg':'pe'}" onclick="tgPag('${a.id}')">${pago ? '✓ Pago' : '✕ Pendente'}</button>
+    </div>`;
+  }).join('') || '<div style="text-align:center;padding:20px;color:var(--cin)">Nenhum aluno ativo.</div>';
 }
-function tgPag(id){
+
+async function tgPag(id){
   if (!window.isAdmin) { alert('Acesso restrito'); return; }
-  const cm=chM(_mp); if(!D.pagamentos[cm]) D.pagamentos[cm]={};
-  D.pagamentos[cm][id]=!D.pagamentos[cm][id]; salvar(); renderPagAdmin();
-  const a=D.alunos.find(x=>x.id===id); toast(D.pagamentos[cm][id]?'✓ Pagamento de '+fmtNome(a.nome)+' registrado!':'Marcado como pendente');
+  const cm  = chM(_mp);
+  const al  = D.alunos || [];
+  const a   = al.find(x => x.id === id);
+  const reg = _pagCache.find(p => p.aluno_id === id && p.pago === true);
+  const novoPago = !reg; // toggle: se estava pago → pendente, se pendente → pago
+
+  try {
+    if (novoPago) {
+      // Marcar como pago: upsert na tabela Supabase
+      const valor = parseFloat(a?.valor) || 0;
+      const { error } = await supabaseClient
+        .from('pagamentos_aluno')
+        .upsert({
+          aluno_id:        id,
+          mes:             cm,
+          pago:            true,
+          valor:           valor,
+          data_pagamento:  new Date().toISOString()
+        }, { onConflict: 'aluno_id,mes' });
+      if (error) throw error;
+      toast('✓ Pagamento de ' + fmtNome(a?.nome) + ' registrado!');
+    } else {
+      // Marcar como pendente: atualiza pago=false no Supabase
+      const { error } = await supabaseClient
+        .from('pagamentos_aluno')
+        .update({ pago: false, data_pagamento: null })
+        .eq('aluno_id', id)
+        .eq('mes', cm);
+      if (error) throw error;
+      toast('↩ Pagamento de ' + fmtNome(a?.nome) + ' marcado como pendente');
+    }
+  } catch(e) {
+    console.error('[PAG ADMIN] Erro ao salvar pagamento:', e);
+    toast('❌ Erro ao salvar. Tente novamente.');
+    return;
+  }
+
+  // Recarrega lista para refletir o estado real do Supabase
+  await renderPagAdmin();
 }
 
 /* ════ MATERIAL ADMIN ════ */
@@ -1924,10 +1993,10 @@ async function _relCarregarDados() {
     supabaseClient.from('aulas').select('data, livro, descricao'),
     supabaseClient.from('pagamentos_aluno').select('*')
   ]);
-  if (resAlunos.error)    { console.error('[REL] Erro alunos:', resAlunos.error); throw resAlunos.error; }
-  if (resPres.error)      { console.error('[REL] Erro presenças:', resPres.error); }
-  if (resAulas.error)     { console.error('[REL] Erro aulas:', resAulas.error); }
-  if (resPagamentos.error){ console.error('[REL] Erro pagamentos:', resPagamentos.error); }
+  if (resAlunos.error)     { console.error('[REL] Erro alunos:', resAlunos.error); throw resAlunos.error; }
+  if (resPres.error)       { console.error('[REL] Erro presenças:', resPres.error); }
+  if (resAulas.error)      { console.error('[REL] Erro aulas:', resAulas.error); }
+  if (resPagamentos.error) { console.error('[REL] Erro pagamentos:', resPagamentos.error); }
   _relCache = {
     alunos:     resAlunos.data    || [],
     presencas:  resPres.data      || [],
@@ -2066,7 +2135,6 @@ async function renderRelAdmin(aba){
   if(aba==='financeiro'){
     // ── FINANCEIRO: usa exclusivamente _relCache.pagamentos (Supabase) ──
     const pagamentos = _relCache.pagamentos || [];
-    const alunos     = _relCache.alunos     || [];
 
     // Obtém meses únicos presentes na tabela pagamentos_aluno
     const meses = [...new Set(pagamentos.map(p => p.mes))].sort().reverse();
