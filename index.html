@@ -1033,23 +1033,47 @@ function renderLivrosAluno() {
     </div>
     ${dados.length === 0 ? '<div class="empty"><div class="empty-ic">🔍</div><div class="empty-tx">Nenhum livro neste filtro.</div></div>' : ''}
     ${dados.map((item, index) => {
-      const isAtual = item === window.livrosAluno[window.livrosAluno.length - 1];
+      // ── Progressão baseada em ordem ──
+      const ordemItem = item.livros?.ordem || (index + 1);
+
+      // ultimoPago = maior ordem com pagou === true (entre TODOS os livros do aluno)
+      const ultimoPagoOrdem = window.livrosAluno.reduce((max, l) => {
+        if (l.pagou === true) {
+          const o = l.livros?.ordem || 0;
+          return o > max ? o : max;
+        }
+        return max;
+      }, 0);
+
       let statusText = '';
       let statusColor = '';
-      if (!item.participou) {
-        statusText = '⚫ Não participou';
+      let badgeHtml = '';
+
+      if (item.participou === false) {
+        statusText  = '⚫ Não participou';
         statusColor = '#6b6b6b';
-      } else if (item.pagou) {
-        statusText = '🟢 Pago';
+        badgeHtml   = '';
+      } else if (item.pagou === true || ordemItem <= ultimoPagoOrdem) {
+        // Pago (inclui todos até o último pago)
+        statusText  = '🟢 Pago';
+        statusColor = '#16A34A';
+        badgeHtml   = '';
+      } else if (ordemItem === ultimoPagoOrdem + 1) {
+        // Livro Atual
+        statusText  = '📍 Livro Atual — aguardando pagamento';
         statusColor = '#2563EB';
+        badgeHtml   = `<div style="display:inline-block;background:#2563eb;color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.4px;margin-bottom:6px;">📍 LIVRO ATUAL</div>`;
       } else {
-        statusText = '🔴 Pendente';
-        statusColor = '#2563EB';
+        // Bloqueado — não mostrar como "pendente"
+        statusText  = '🔒 Bloqueado';
+        statusColor = '#9CA3AF';
+        badgeHtml   = '';
       }
+
       return `
         <div style="
           background:#EEF4FF;
-          border:${isAtual ? '2px solid #2563EB' : '1px solid #D6E4FF'};
+          border:${ordemItem === ultimoPagoOrdem + 1 ? '2px solid #2563EB' : '1px solid #D6E4FF'};
           border-radius:12px;
           padding:16px;
           margin-bottom:12px;
@@ -1057,25 +1081,11 @@ function renderLivrosAluno() {
           <div style="font-size:15px; font-weight:600; color:#1a3a5c; margin-bottom:6px;">
             📚 ${item.livros?.nome || 'Livro'}
           </div>
-          ${isAtual ? `
-            <div style="
-              display:inline-block;
-              background:#2563eb;
-              color:#fff;
-              padding:3px 10px;
-              border-radius:20px;
-              font-size:11px;
-              font-weight:700;
-              letter-spacing:.4px;
-              margin-bottom:6px;
-            ">
-              📍 LIVRO ATUAL
-            </div>
-          ` : ''}
+          ${badgeHtml}
           <div style="color:${statusColor}; font-size:13px; font-weight:500; margin-top:2px;">
             ${statusText}
           </div>
-          ${item.forma_pagamento ? `<div style="font-size:12px; color:#888; margin-top:4px;">Forma: ${item.forma_pagamento}</div>` : ''}
+          ${item.pagou && item.forma_pagamento ? `<div style="font-size:12px; color:#888; margin-top:4px;">Forma: ${item.forma_pagamento}</div>` : ''}
         </div>
       `;
     }).join('')}
@@ -1098,13 +1108,28 @@ async function renderPagamentosAlunoViaLivros() {
     return;
   }
   const dados = window.livrosAluno;
-  const pagos = dados.filter(l => l.pagou).length;
-  const pendentes = dados.filter(l => !l.pagou).length;
-  const total = 24;
-  const ordenados = [
-    ...dados.filter(l => l.pagou),
-    ...dados.filter(l => !l.pagou)
-  ];
+
+  // Calcular progressão
+  const ultimoPagoOrdem = dados.reduce((max, l) => {
+    if (l.pagou === true) {
+      const o = l.livros?.ordem || 0;
+      return o > max ? o : max;
+    }
+    return max;
+  }, 0);
+
+  // Classificar cada livro
+  const classificados = dados.map(item => {
+    const ordemItem = item.livros?.ordem || 0;
+    if (item.participou === false) return { ...item, _tipo: 'nao_participou' };
+    if (item.pagou === true || ordemItem <= ultimoPagoOrdem) return { ...item, _tipo: 'pago' };
+    if (ordemItem === ultimoPagoOrdem + 1) return { ...item, _tipo: 'atual' };
+    return { ...item, _tipo: 'bloqueado' };
+  });
+
+  const pagos     = classificados.filter(l => l._tipo === 'pago').length;
+  const pendentes = classificados.filter(l => l._tipo === 'atual').length; // só o atual conta como pendente
+
   container.innerHTML = `
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
       <div style="background:#ECFDF5; border:1px solid #BBF7D0; border-radius:12px; padding:14px; text-align:center;">
@@ -1116,32 +1141,28 @@ async function renderPagamentosAlunoViaLivros() {
         <div style="font-size:11px; color:#991B1B; margin-top:3px; font-weight:500; text-transform:uppercase; letter-spacing:.4px;">❌ Pendentes</div>
       </div>
     </div>
-    ${ordenados.map(item => {
+    ${classificados.map(item => {
       const nome = item.livros?.nome || item.nome || 'Livro';
-      const pago = item.pagou;
+      let corFundo, corBorda, statusHtml;
+      if (item._tipo === 'pago') {
+        corFundo = '#ECFDF5'; corBorda = '#BBF7D0';
+        statusHtml = `<div style="font-size:14px;font-weight:700;color:#16A34A;margin-bottom:${item.data_pagamento?'8px':'0'};">✅ PAGO</div>
+          ${item.data_pagamento ? `<div style="font-size:12px;color:#555;margin-top:2px;">Forma: ${item.forma_pagamento||'-'}</div><div style="font-size:12px;color:#555;margin-top:2px;">Data: ${new Date(item.data_pagamento).toLocaleDateString('pt-BR')}</div>` : ''}`;
+      } else if (item._tipo === 'atual') {
+        corFundo = '#FEF2F2'; corBorda = '#FECACA';
+        statusHtml = `<div style="font-size:14px;font-weight:700;color:#DC2626;">❌ PENDENTE</div>`;
+      } else if (item._tipo === 'nao_participou') {
+        corFundo = '#F9FAFB'; corBorda = '#E5E7EB';
+        statusHtml = `<div style="font-size:14px;font-weight:500;color:#6B7280;">⚫ Não participou</div>`;
+      } else {
+        // bloqueado — exibir mas sem status de pendente
+        corFundo = '#F9FAFB'; corBorda = '#E5E7EB';
+        statusHtml = `<div style="font-size:14px;font-weight:500;color:#9CA3AF;">🔒 Aguardando livro anterior</div>`;
+      }
       return `
-        <div style="
-          background:#ECFDF5;
-          border:1px solid #BBF7D0;
-          border-radius:12px;
-          padding:16px;
-          margin-bottom:12px;
-        ">
-          <div style="font-size:14px; font-weight:600; color:#1a3a5c; margin-bottom:10px;">
-            💳 ${nome}
-          </div>
-          <div style="
-            font-size:14px;
-            font-weight:700;
-            color:${pago ? '#16A34A' : '#DC2626'};
-            margin-bottom:${pago ? '8px' : '0'};
-          ">
-            ${pago ? '✅ PAGO' : '❌ PENDENTE'}
-          </div>
-          ${pago ? `
-            <div style="font-size:12px; color:#555; margin-top:2px;">Forma: ${item.forma_pagamento || '-'}</div>
-            <div style="font-size:12px; color:#555; margin-top:2px;">Data: ${item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '-'}</div>
-          ` : ''}
+        <div style="background:${corFundo};border:1px solid ${corBorda};border-radius:12px;padding:16px;margin-bottom:12px;">
+          <div style="font-size:14px;font-weight:600;color:#1a3a5c;margin-bottom:8px;">💳 ${nome}</div>
+          ${statusHtml}
         </div>
       `;
     }).join('')}
@@ -1522,12 +1543,11 @@ async function verificarAdmin(){
   if(document.getElementById('admin-pw').value===ADMIN_PW){
     fecharMod('mod-admin'); document.getElementById('admin-pw').value='';
     usuAtual = {id:'admin',nome:'Administrador',isAdmin:true};
-    window.isAdmin = true; // Usuário identificado como ADMIN
+    window.isAdmin = true;
     document.getElementById('pg-login').style.display='none';
     document.getElementById('pg-admin').style.display='block';
-    renderDashAdmin();
+    await renderDashAdmin();
     irAdmin('inicio');
-    // Autenticação Supabase Auth em background
     autenticarAdminSupabase().catch(e => console.warn('[Auth Admin] Falha silenciosa:', e));
   } else { toast('⚠ Senha incorreta'); }
 }
@@ -1558,8 +1578,8 @@ function irAdmin(t){
   const el=document.getElementById(elId); if(el) el.classList.add('on');
   const nb=NB_MAP[t]?document.getElementById(NB_MAP[t]):null; if(nb) nb.classList.add('on');
   window.scrollTo(0,0);
-  if(t==='inicio') renderDashAdmin();
-  if(t==='alunos') renderAlunosAdmin();
+  if(t==='inicio') renderDashAdmin().catch(e=>console.error('[Dashboard]',e));
+  if(t==='alunos') renderAlunosAdmin().catch(e=>console.error('[Alunos]',e));
   if(t==='presenca') admPresCarregarAulas();
   if(t==='pagamentos') renderPagAdmin();
   if(t==='material') renderMatAdmin('livros');
@@ -1589,8 +1609,9 @@ async function irAluno(t){
   }
   if(t==='presenca') await renderAlunoPresenca();
   if(t==='pagamentos') {
-    // renderAlunoPagamentos(); // desativado: substituído por renderPagamentosAlunoViaLivros
-    // renderPagamentosAluno(); // desativado: substituído por renderPagamentosAlunoViaLivros
+    // Limpar container legado para evitar duplicação
+    const legado = document.getElementById('al-pag-lista');
+    if (legado) legado.innerHTML = '';
     await carregarLivrosAluno();
     renderPagamentosAlunoViaLivros();
   }
@@ -1617,23 +1638,55 @@ async function irAluno(t){
 }
 
 /* ════ DASHBOARD ADMIN ════ */
-function renderDashAdmin(){
-  const h=hj(); const cm=chM(h); const al=ativos(); const tot=al.length;
+async function renderDashAdmin(){
+  const h=hj(); const cm=chM(h);
   document.getElementById('a-data').textContent=DS[h.getDay()]+', '+h.getDate()+' de '+M[h.getMonth()]+' de '+h.getFullYear();
-  const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
-  let tp=0; pk.forEach(k=>Object.values(D.presencas[k]).forEach(v=>{ if(v==='P') tp++; }));
-  const mp=pk.length*tot; const pp=mp>0?Math.round(tp/mp*100):0;
-  const pagM=D.pagamentos[cm]||{}; const pagos=al.filter(a=>pagM[a.id]===true).length;
+
+  // Buscar dados do Supabase
+  const [resAlunos, resPres, resAlunoLivros] = await Promise.all([
+    supabaseClient.from('alunos').select('*').order('nome', { ascending: true }),
+    supabaseClient.from('presenca').select('*'),
+    supabaseClient.from('aluno_livros').select('*')
+  ]);
+
+  const al = (resAlunos.data || []).filter(a => a.ativo !== false);
+  const tot = al.length;
+  const presencas = resPres.data || [];
+  const alunoLivros = resAlunoLivros.data || [];
+
+  // Frequência do mês atual (baseada em registros de presença)
+  const presDoMes = presencas.filter(p => p.data && p.data.startsWith(cm));
+  const datasUnicas = [...new Set(presDoMes.map(p => p.data))];
+  let tp = presDoMes.filter(p => p.presente === true).length;
+  const mp = datasUnicas.length * tot;
+  const pp = mp > 0 ? Math.round(tp / mp * 100) : 0;
+
+  // Pagamentos: aluno "em dia" = TODOS os livros com participou !== false estão pagos
+  const alunosEmDia = al.filter(a => {
+    const regs = alunoLivros.filter(r => r.aluno_id === a.id && r.participou !== false);
+    return regs.length > 0 && regs.every(r => r.pagou === true);
+  });
+  const pagos = alunosEmDia.length;
+  const pend  = tot - pagos;
+
   document.getElementById('a-metricas').innerHTML=`
     <div class="mc"><div class="mn">${tot}</div><div class="ml">Alunos ativos</div></div>
     <div class="mc vd"><div class="mn">${pp}%</div><div class="ml">Frequência mensal</div></div>
     <div class="mc do"><div class="mn">${pagos}</div><div class="ml">Pagamentos OK</div></div>
-    <div class="mc vm"><div class="mn">${tot-pagos}</div><div class="ml">Pag. pendentes</div></div>`;
+    <div class="mc vm"><div class="mn">${pend}</div><div class="ml">Pag. pendentes</div></div>`;
+
   let alerts=[];
-  al.forEach(a=>{ let f=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='F') f++; });
-    if(f>=2) alerts.push(`<div class="al vm"><span>⚠️</span><span><strong>${fmtNome(a.nome)}</strong> — ${f} falta${f>1?'s':''} este mês</span></div>`); });
-  const pend=tot-pagos;
-  if(pend>0) alerts.push(`<div class="al am"><span>💰</span><span><strong>${pend} aluno${pend>1?'s':''}</strong> com pagamento pendente em ${M[h.getMonth()]}</span></div>`);
+  // Alertas de faltas no mês
+  al.forEach(a=>{
+    const f = presDoMes.filter(p => p.aluno_id === a.id && p.presente === false).length;
+    if(f>=2) alerts.push(`<div class="al vm"><span>⚠️</span><span><strong>${fmtNome(a.nome)}</strong> — ${f} falta${f>1?'s':''} este mês</span></div>`);
+  });
+  // Alerta de pagamentos pendentes
+  const pendNomes = al.filter(a => {
+    const regs = alunoLivros.filter(r => r.aluno_id === a.id && r.participou !== false);
+    return regs.length > 0 && regs.some(r => !r.pagou);
+  });
+  if(pendNomes.length > 0) alerts.push(`<div class="al am"><span>💰</span><span><strong>${pendNomes.length} aluno${pendNomes.length>1?'s':''}</strong> com pagamento pendente</span></div>`);
   if(!alerts.length) alerts.push('<div class="al vd"><span>✅</span><span>Tudo em dia! Nenhum alerta no momento.</span></div>');
   document.getElementById('a-alertas').innerHTML=alerts.join('');
 }
@@ -1665,7 +1718,7 @@ function delAluno(){
   const id=document.getElementById('aid').value; if(!id||!confirm('Excluir este aluno?')) return;
   D.alunos=D.alunos.filter(a=>a.id!==id); salvar(); fecharMod('mod-aluno'); renderAlunosAdmin(); toast('Aluno removido.');
 }
-function renderAlunosAdmin(){
+async function renderAlunosAdmin(){
   popularFiltroTurma();
   const b=(document.getElementById('busca-admin')?.value||'').toLowerCase();
   const turmaFilt=document.getElementById('filtro-turma-alunos')?.value||'';
@@ -1677,8 +1730,16 @@ function renderAlunosAdmin(){
   const cont=document.getElementById('contador-alunos');
   if(cont) cont.textContent=`(${lista.length})`;
   if(!lista.length){ el.innerHTML='<div class="empty"><div class="empty-ic">👥</div><div class="empty-tx">Nenhum aluno encontrado.</div></div>'; return; }
-  const cm=chM(hj()); const pagM=D.pagamentos[cm]||{};
-  el.innerHTML=lista.map(a=>{ const p=pagM[a.id]===true;
+
+  // Buscar aluno_livros para badge correto
+  const { data: alunoLivros } = await supabaseClient.from('aluno_livros').select('aluno_id, pagou, participou');
+  const alLivros = alunoLivros || [];
+
+  const cm=chM(hj());
+  el.innerHTML=lista.map(a=>{
+    // Em dia = todos os livros com participou !== false estão pagos
+    const regs = alLivros.filter(r => r.aluno_id === a.id && r.participou !== false);
+    const emDia = regs.length > 0 && regs.every(r => r.pagou === true);
     const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
     let pres=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') pres++; });
     const perc=pk.length>0?Math.round(pres/pk.length*100):null;
@@ -1688,7 +1749,7 @@ function renderAlunosAdmin(){
         <div class="an">${fmtNome(a.nome)}</div>
         <div class="as2">${a.turma||'Turma Única'}${a.tel?' · '+fmtTel(a.tel):''}${perc!==null?' · '+perc+'% freq.':''}</div>
       </div>
-      <span class="bdg ${p?'bv':'br'}">${p?'Em dia':'Pendente'}</span>
+      <span class="bdg ${emDia?'bv':'br'}">${emDia?'Em dia':'Pendente'}</span>
     </div>`;
   }).join('');
 }
@@ -1824,62 +1885,76 @@ async function renderPagAdmin(){
   lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--cin)">⏳ Carregando…</div>';
 
   try {
-    const [resAlunoLivros, resLivros] = await Promise.all([
-      supabaseClient.from('aluno_livros').select('*'),
-      supabaseClient.from('livros').select('*').order('ordem', { ascending: true })
+    const [alunosRes, livrosRes, alunoLivrosRes] = await Promise.all([
+      supabaseClient.from('alunos').select('*').order('nome', { ascending: true }),
+      supabaseClient.from('livros').select('*').order('ordem', { ascending: true }),
+      supabaseClient.from('aluno_livros').select('*')
     ]);
-    if (resAlunoLivros.error) throw resAlunoLivros.error;
-    const livros      = resLivros.data      || [];
-    _pagCache = alunoLivros; // cache bruto para tgPagLivro
+    if (alunosRes.error)      throw alunosRes.error;
+    if (livrosRes.error)      throw livrosRes.error;
+    if (alunoLivrosRes.error) throw alunoLivrosRes.error;
 
-    const al = ativos();
-    if (!al.length) {
+    const alunos     = (alunosRes.data     || []).filter(a => a.ativo !== false);
+    const livros     = livrosRes.data      || [];
+    const alunoLivros = alunoLivrosRes.data || [];
+    _pagCache = alunoLivros;
+
+    if (!alunos.length) {
       lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--cin)">Nenhum aluno ativo.</div>';
       return;
     }
 
-    lista.innerHTML = al.map(a => {
-      const regsAluno   = alunoLivros.filter(r => r.aluno_id === a.id);
-      const totalLivros = regsAluno.length;
-      const qtdPagos    = regsAluno.filter(r => r.pagou === true).length;
-      const qtdPend     = totalLivros - qtdPagos;
-      const emDia       = totalLivros > 0 && qtdPend === 0;
-
-      const livrosHtml = regsAluno.map(r => {
-        const livro    = livros.find(l => l.codigo === r.livro_codigo);
-        const nomeLiv  = livro?.nome || r.livro_codigo || 'Livro';
-        const pago     = r.pagou === true;
-        const valorExib = parseFloat(r.valor || livro?.valor || a.valor || 0);
+    lista.innerHTML = alunos.map(aluno => {
+      // Para cada livro do catálogo, busca o registro em aluno_livros
+      const livrosDoAluno = livros.map(livro => {
+        const reg = alunoLivros.find(r =>
+          r.aluno_id === aluno.id &&
+          r.livro_codigo === livro.codigo
+        );
+        const pago = reg?.pagou === true;
+        const valorExib = parseFloat(reg?.valor || livro.valor || aluno.valor || 0);
         const valorStr  = valorExib ? ' · R$ ' + valorExib.toFixed(2) : '';
-        const dtStr     = r.data_pagamento
-          ? ' · ' + new Date(r.data_pagamento).toLocaleDateString('pt-BR') : '';
-        const fmStr     = r.forma_pagamento ? ' · ' + r.forma_pagamento : '';
-        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd)">
-          <div style="flex:1">
-            <div style="font-size:14px;font-weight:500">📚 ${nomeLiv}</div>
-            <div style="font-size:12px;color:var(--cin)">${pago
+        const dtStr     = reg?.data_pagamento
+          ? ' · ' + new Date(reg.data_pagamento).toLocaleDateString('pt-BR') : '';
+        const fmStr     = reg?.forma_pagamento ? ' · ' + reg.forma_pagamento : '';
+        const statusInfo = reg
+          ? (pago
               ? '✅ Pago' + dtStr + fmStr + valorStr
-              : '❌ Pendente' + valorStr}</div>
-          </div>
-          <button class="pgb ${pago?'pg':'pe'}"
-            onclick="tgPagLivro('${r.id}', ${pago}, '${a.id}', '${fmtNome(a.nome).replace(/'/g,"\\'")}')">
-            ${pago ? '✓ Pago' : '✕ Pendente'}
-          </button>
-        </div>`;
-      }).join('') || '<div style="font-size:13px;color:var(--cin);padding:4px 0">Nenhum livro vinculado.</div>';
+              : '❌ Pendente' + valorStr)
+          : '— Sem registro';
+        return { livro, reg, pago, statusInfo };
+      });
 
+      const qtdPagos = livrosDoAluno.filter(l => l.pago).length;
+      const qtdPend  = livrosDoAluno.filter(l => l.reg && !l.pago).length;
+      const emDia    = livrosDoAluno.filter(l => l.reg).length > 0 && qtdPend === 0;
+
+      const livrosHtml = livrosDoAluno.map(({ livro, reg, pago, statusInfo }) =>
+        `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd)">
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:500">📚 ${livro.nome || livro.codigo}</div>
+            <div style="font-size:12px;color:var(--cin)">${statusInfo}</div>
+          </div>
+          ${reg && window.isAdmin ? `<button class="pgb ${pago?'pg':'pe'}"
+            onclick="tgPagLivro('${reg.id}', ${pago}, '${aluno.id}', '${(aluno.nome||'').replace(/'/g,"\\'")}')">
+            ${pago ? '✓ Pago' : '✕ Pendente'}
+          </button>` : ''}
+        </div>`
+      ).join('');
+
+      const nomeAluno = (aluno.nome||'').split(' ').map(p=>p.charAt(0)+p.slice(1).toLowerCase()).join(' ');
       return `<div class="pgr ${emDia?'liv-rec':'liv-pend'}"
         style="flex-direction:column;align-items:stretch;padding:0;overflow:hidden">
         <div style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer"
           onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
           <div class="pgi">
-            <div class="pgn">${fmtNome(a.nome)}</div>
-            <div class="pgd">${totalLivros} livro${totalLivros!==1?'s':''} · ${qtdPagos} pago${qtdPagos!==1?'s':''}</div>
+            <div class="pgn">${nomeAluno}</div>
+            <div class="pgd">${livros.length} livro${livros.length!==1?'s':''} · ${qtdPagos} pago${qtdPagos!==1?'s':''}</div>
           </div>
           <span class="bdg ${emDia?'bv':'br'}">${emDia?'Em dia':qtdPend+' pendente'+(qtdPend!==1?'s':'')}</span>
         </div>
         <div style="display:none;border-top:1px solid var(--brd);padding:8px 14px 12px;background:#fafafa">
-          ${livrosHtml}
+          ${livrosHtml || '<div style="font-size:13px;color:var(--cin);padding:4px 0">Nenhum livro no catálogo.</div>'}
         </div>
       </div>`;
     }).join('');
@@ -2386,7 +2461,11 @@ function renderAlunoCadastro(){
       <div class="mpb-sub">${a.turma||'Turma Única'}</div>
     </div>`;
   const h=hj(); const cm=chM(h);
-  const pagA=(D.pagamentos[cm]||{})[a.id]===true;
+  // Status de pagamento: usa livrosAluno (aluno_livros) como fonte correta
+  const livrosCarregados = window.livrosAluno || [];
+  const livrosParticipantes = livrosCarregados.filter(l => l.participou !== false);
+  const todosEmDia = livrosParticipantes.length > 0 && livrosParticipantes.every(l => l.pagou === true);
+  const pagA = todosEmDia;
   const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
   let tp=0,tf=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') tp++; if(D.presencas[k][a.id]==='F') tf++; });
   document.getElementById('al-dados').innerHTML=`
@@ -2661,64 +2740,21 @@ function renderAlunoPagamentos(){
   document.getElementById('al-pag-lista').innerHTML=linhas||'<div class="empty"><div class="empty-ic">💳</div><div class="empty-tx">Sem registros.</div></div>';
 }
 
+/* ════ LEGADO: carregarPagamentosAluno — DESATIVADO, usa pagamentos_aluno ════ */
 async function carregarPagamentosAluno() {
-  if (!usuAtual || !usuAtual.id) return [];
-  const { data, error } = await supabaseClient
-    .from('pagamentos_aluno')
-    .select('*')
-    .eq('aluno_id', usuAtual.id);
-  if (error) {
-    console.error('Erro ao carregar pagamentos:', error);
-    return [];
-  }
-  console.log('PAGAMENTOS:', data);
-  return data || [];
+  console.warn('[LEGADO] carregarPagamentosAluno desativado — use renderPagamentosAlunoViaLivros');
+  return [];
 }
 
 async function renderPagamentosAluno() {
-  const container = document.getElementById('al-pag-lista');
-  if (!container) return;
-  container.innerHTML = 'Carregando pagamentos...';
-  const dados = await carregarPagamentosAluno();
-  if (!dados || dados.length === 0) {
-    container.innerHTML = '<p>Nenhum pagamento encontrado.</p>';
-    return;
-  }
-  const totalMeses = 12;
-  const pagos = dados.filter(p => p.pago).length;
-  const progresso = Math.round((pagos / totalMeses) * 100);
-  container.innerHTML = `
-    <div style="margin-bottom:10px; font-weight:bold;">
-      Progresso: ${progresso}% (${pagos}/${totalMeses})
-    </div>
-    ${dados.map(item => {
-      const cor = item.pago ? '#f0fff4' : '#fff5f5';
-      return `
-        <div style="
-          border:1px solid #ddd;
-          border-radius:10px;
-          padding:10px;
-          margin-bottom:8px;
-          background:${cor};
-        ">
-          <div style="font-weight:bold;">
-            ${item.mes}
-          </div>
-          <div>
-            ${item.pago ? '🟢 Pago' : '🔴 Pendente'}
-          </div>
-          ${item.pago ? `
-            <div style="font-size:12px;">
-              Forma: ${item.forma_pagamento || '-'}
-            </div>
-            <div style="font-size:12px;">
-              Data: ${item.data_pagamento || '-'}
-            </div>
-          ` : ''}
-        </div>
-      `;
-    }).join('')}
-  `;
+  console.warn('[LEGADO] renderPagamentosAluno desativado — use renderPagamentosAlunoViaLivros');
+  await carregarLivrosAluno();
+  renderPagamentosAlunoViaLivros();
+}
+
+/* ════ LEGADO: renderAlunoPagamentos — DESATIVADO ════ */
+function renderAlunoPagamentos(){
+  console.warn('[LEGADO] renderAlunoPagamentos desativado');
 }
 
 function renderAlunoLivros(){
