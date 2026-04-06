@@ -1826,40 +1826,46 @@ async function renderPagAdmin(){
       .select('*');
     if (error) throw error;
 
-    // Debug temporário
-    console.log('CM:', cm);
-    console.log('Pagamentos Supabase:', pagamentos);
-
-    // Normaliza qualquer formato de mês para "YYYY-MM"
+    // ── DEBUG DIAGNÓSTICO ──────────────────────────────────────────────
+    console.log('═══════════════════════════════════════════');
+    console.log('[PAG ADMIN] CM esperado:', cm);
+    console.log('[PAG ADMIN] Total de registros recebidos:', (pagamentos||[]).length);
+    console.log('[PAG ADMIN] Todos os valores de mes no banco:',
+      (pagamentos||[]).map(p => ({
+        aluno_id: p.aluno_id,
+        mes: p.mes,
+        tipo: typeof p.mes,
+        pago: p.pago
+      }))
+    );
+    // ── PASSO 1: ignorar mês — apenas pago===true ─────────────────────
+    // Se isso funcionar → o problema é 100% o campo mes
+    const pagamentosSemFiltroMes = (pagamentos||[]).filter(p => p.pago === true);
+    console.log('[PAG ADMIN] Pagos SEM filtro de mês:', pagamentosSemFiltroMes);
+    // ── PASSO 2: filtro normal com normalização robusta ───────────────
     function normalizarMes(valor) {
-      if (!valor) return null;
-      const str = String(valor);
-      // Caso já esteja no formato YYYY-MM
-      if (/^\d{4}-\d{2}$/.test(str)) return str;
-      // Caso esteja no formato YYYY-M
-      if (/^\d{4}-\d{1}$/.test(str)) {
-        const [ano, mes] = str.split('-');
-        return `${ano}-${mes.padStart(2, '0')}`;
-      }
-      // Caso esteja como data completa YYYY-MM-DD
-      if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
-        return str.slice(0, 7);
-      }
-      // Caso esteja como MM/YYYY
-      if (/^\d{2}\/\d{4}$/.test(str)) {
-        const [mes, ano] = str.split('/');
-        return `${ano}-${mes}`;
-      }
+      if (valor === null || valor === undefined) return null;
+      const str = String(valor).trim();
+      if (/^\d{4}-\d{2}$/.test(str))       return str;                          // YYYY-MM  ✓
+      if (/^\d{4}-\d{1}$/.test(str))       return str.slice(0,5) + str.slice(5).padStart(2,'0'); // YYYY-M
+      if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 7);               // YYYY-MM-DD...
+      if (/^\d{2}\/\d{4}$/.test(str))     { const [m,a]=str.split('/'); return `${a}-${m}`; } // MM/YYYY
+      if (/^\d{1,2}\/\d{4}$/.test(str))   { const [m,a]=str.split('/'); return `${a}-${m.padStart(2,'0')}`; }
       return null;
     }
-
-    const mesAtual = cm; // ex: "2026-03"
-    const pagamentosMes = (pagamentos || []).filter(p => {
-      const mesNormalizado = normalizarMes(p.mes);
-      return mesNormalizado === mesAtual && p.pago === true;
+    const mesAtual = cm;
+    const pagamentosMesFiltrado = (pagamentos||[]).filter(p => {
+      const mesNorm = normalizarMes(p.mes);
+      console.log(`[PAG ADMIN] aluno=${p.aluno_id} | mes_raw="${p.mes}" | mes_norm="${mesNorm}" | esperado="${mesAtual}" | match=${mesNorm===mesAtual} | pago=${p.pago}`);
+      return mesNorm === mesAtual && p.pago === true;
     });
+    console.log('[PAG ADMIN] Pagos COM filtro de mês:', pagamentosMesFiltrado);
+    console.log('[PAG ADMIN] ► Se "Pagos SEM filtro" > 0 mas "COM filtro" = 0 → problema é o campo mes');
+    console.log('═══════════════════════════════════════════');
 
-    console.log('Pagamentos filtrados:', pagamentosMes);
+    // Usa SEM filtro de mês enquanto o formato não está confirmado
+    // Troque para pagamentosMesFiltrado assim que o console confirmar que o filtro funciona
+    const pagamentosMes = pagamentosSemFiltroMes;
 
     _pagCache = pagamentosMes;
   } catch(e) {
@@ -2171,8 +2177,33 @@ async function renderRelAdmin(aba){
     // ── FINANCEIRO: usa exclusivamente _relCache.pagamentos (Supabase) ──
     const pagamentos = _relCache.pagamentos || [];
 
-    // Obtém meses únicos presentes na tabela pagamentos_aluno
-    const meses = [...new Set(pagamentos.map(p => p.mes))].sort().reverse();
+    // ── DEBUG DIAGNÓSTICO ──────────────────────────────────────────────
+    console.log('═══════════════════════════════════════════');
+    console.log('[REL FINANCEIRO] Total registros pagamentos_aluno:', pagamentos.length);
+    console.log('[REL FINANCEIRO] Todos os valores de mes:',
+      pagamentos.map(p => ({ aluno_id: p.aluno_id, mes: p.mes, tipo: typeof p.mes, pago: p.pago }))
+    );
+    const todosPagos = pagamentos.filter(p => p.pago === true);
+    console.log('[REL FINANCEIRO] Pagos SEM filtro de mês:', todosPagos.length, todosPagos);
+    console.log('═══════════════════════════════════════════');
+    // ── FIM DEBUG ──────────────────────────────────────────────────────
+
+    // Normalização robusta de mes (lida com YYYY-MM, YYYY-M, YYYY-MM-DD, MM/YYYY)
+    function normalizarMesRel(valor) {
+      if (valor === null || valor === undefined) return null;
+      const str = String(valor).trim();
+      if (/^\d{4}-\d{2}$/.test(str))       return str;
+      if (/^\d{4}-\d{1}$/.test(str))       return str.slice(0,5) + str.slice(5).padStart(2,'0');
+      if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 7);
+      if (/^\d{1,2}\/\d{4}$/.test(str))   { const [m,a]=str.split('/'); return `${a}-${m.padStart(2,'0')}`; }
+      return null;
+    }
+
+    // Obtém meses únicos a partir dos valores normalizados
+    const mesesNorm = pagamentos
+      .map(p => normalizarMesRel(p.mes))
+      .filter(Boolean);
+    const meses = [...new Set(mesesNorm)].sort().reverse();
 
     // Garante que o mês atual sempre apareça, mesmo sem registros
     if (!meses.includes(cm)) meses.unshift(cm);
@@ -2180,16 +2211,25 @@ async function renderRelAdmin(aba){
     // Limita a 12 meses
     const mesesExibir = meses.slice(0, 12);
 
+    // Alerta visual se nenhum dado foi encontrado (ajuda a diagnosticar)
+    if (todosPagos.length === 0 && pagamentos.length === 0) {
+      document.getElementById('rel-financeiro').innerHTML =
+        `<div style="background:var(--am-c);border:1px solid var(--am);border-radius:var(--r);padding:14px;font-size:14px;color:var(--am)">
+          ⚠️ <strong>Nenhum registro</strong> encontrado em <code>pagamentos_aluno</code>.<br>
+          Verifique o console para detalhes de debug.
+        </div>`;
+      return;
+    }
+
     let h2 = '';
     mesesExibir.forEach(mes => {
       const [ano, mesNum] = mes.split('-');
 
-      // Pagamentos confirmados neste mês
-      const pagosMes   = pagamentos.filter(p => p.mes === mes && p.pago === true);
+      // Filtra usando a mesma normalização
+      const pagosMes   = pagamentos.filter(p => normalizarMesRel(p.mes) === mes && p.pago === true);
       const totalPagos = pagosMes.length;
-      const receita    = pagosMes.reduce((total, p) => total + (p.valor || 0), 0);
+      const receita    = pagosMes.reduce((total, p) => total + (parseFloat(p.valor) || 0), 0);
 
-      // Alunos (filtrados pela turma) que NAO possuem registro pago neste mes
       const alunosPagosIds = pagosMes.map(p => p.aluno_id);
       const pendentes      = al.filter(a => !alunosPagosIds.includes(a.id));
 
