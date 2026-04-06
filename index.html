@@ -1813,6 +1813,28 @@ let _pagCache = []; // cache dos pagamentos_aluno do mês exibido
 
 function mudarMes(d){ _mp.setMonth(_mp.getMonth()+d); renderPagAdmin(); }
 
+/* ── Interpreta qualquer representação válida de "pago" vinda do banco ── */
+function isPago(valor) {
+  if (valor === true)     return true;
+  if (valor === 1)        return true;
+  if (valor === '1')      return true;
+  if (valor === 'true')   return true;
+  if (valor === 't')      return true;
+  if (valor === 'yes')    return true;
+  return false;
+}
+
+/* ── Normaliza campo mes para "YYYY-MM" independente do formato vindo do banco ── */
+function normalizarMes(valor) {
+  if (valor === null || valor === undefined) return null;
+  const str = String(valor).trim();
+  if (/^\d{4}-\d{2}$/.test(str))       return str;
+  if (/^\d{4}-\d{1}$/.test(str))       return str.slice(0,5) + str.slice(5).padStart(2,'0');
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 7);
+  if (/^\d{1,2}\/\d{4}$/.test(str))   { const [m,a]=str.split('/'); return `${a}-${m.padStart(2,'0')}`; }
+  return null;
+}
+
 async function renderPagAdmin(){
   const cm = chM(_mp);
   document.getElementById('a-mes-pag').textContent = M[_mp.getMonth()] + ' ' + _mp.getFullYear();
@@ -1820,52 +1842,33 @@ async function renderPagAdmin(){
   lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--cin)">⏳ Carregando…</div>';
 
   try {
-    // Busca TODOS os pagamentos do Supabase (sem filtrar por mês no banco)
     const { data: pagamentos, error } = await supabaseClient
       .from('pagamentos_aluno')
       .select('*');
     if (error) throw error;
 
-    // ── DEBUG DIAGNÓSTICO ──────────────────────────────────────────────
-    console.log('═══════════════════════════════════════════');
+    // ── DEBUG: inspeciona valores reais do banco ──────────────────────
     console.log('[PAG ADMIN] CM esperado:', cm);
-    console.log('[PAG ADMIN] Total de registros recebidos:', (pagamentos||[]).length);
-    console.log('[PAG ADMIN] Todos os valores de mes no banco:',
+    console.log('[PAG ADMIN] Total registros recebidos:', (pagamentos||[]).length);
+    console.log('[PAG ADMIN] VALORES DE PAGO:', (pagamentos||[]).map(p => p.pago));
+    console.log('[PAG ADMIN] Detalhe completo:',
       (pagamentos||[]).map(p => ({
         aluno_id: p.aluno_id,
         mes: p.mes,
-        tipo: typeof p.mes,
-        pago: p.pago
+        mes_norm: normalizarMes(p.mes),
+        pago_raw: p.pago,
+        pago_tipo: typeof p.pago,
+        isPago: isPago(p.pago)
       }))
     );
-    // ── PASSO 1: ignorar mês — apenas pago===true ─────────────────────
-    // Se isso funcionar → o problema é 100% o campo mes
-    const pagamentosSemFiltroMes = (pagamentos||[]).filter(p => p.pago === true);
-    console.log('[PAG ADMIN] Pagos SEM filtro de mês:', pagamentosSemFiltroMes);
-    // ── PASSO 2: filtro normal com normalização robusta ───────────────
-    function normalizarMes(valor) {
-      if (valor === null || valor === undefined) return null;
-      const str = String(valor).trim();
-      if (/^\d{4}-\d{2}$/.test(str))       return str;                          // YYYY-MM  ✓
-      if (/^\d{4}-\d{1}$/.test(str))       return str.slice(0,5) + str.slice(5).padStart(2,'0'); // YYYY-M
-      if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 7);               // YYYY-MM-DD...
-      if (/^\d{2}\/\d{4}$/.test(str))     { const [m,a]=str.split('/'); return `${a}-${m}`; } // MM/YYYY
-      if (/^\d{1,2}\/\d{4}$/.test(str))   { const [m,a]=str.split('/'); return `${a}-${m.padStart(2,'0')}`; }
-      return null;
-    }
-    const mesAtual = cm;
-    const pagamentosMesFiltrado = (pagamentos||[]).filter(p => {
-      const mesNorm = normalizarMes(p.mes);
-      console.log(`[PAG ADMIN] aluno=${p.aluno_id} | mes_raw="${p.mes}" | mes_norm="${mesNorm}" | esperado="${mesAtual}" | match=${mesNorm===mesAtual} | pago=${p.pago}`);
-      return mesNorm === mesAtual && p.pago === true;
-    });
-    console.log('[PAG ADMIN] Pagos COM filtro de mês:', pagamentosMesFiltrado);
-    console.log('[PAG ADMIN] ► Se "Pagos SEM filtro" > 0 mas "COM filtro" = 0 → problema é o campo mes');
-    console.log('═══════════════════════════════════════════');
+    // ─────────────────────────────────────────────────────────────────
 
-    // Usa SEM filtro de mês enquanto o formato não está confirmado
-    // Troque para pagamentosMesFiltrado assim que o console confirmar que o filtro funciona
-    const pagamentosMes = pagamentosSemFiltroMes;
+    const mesAtual = cm;
+    const pagamentosMes = (pagamentos || []).filter(p =>
+      normalizarMes(p.mes) === mesAtual && isPago(p.pago)
+    );
+
+    console.log('[PAG ADMIN] Pagamentos encontrados para o mês:', pagamentosMes.length, pagamentosMes);
 
     _pagCache = pagamentosMes;
   } catch(e) {
@@ -1876,7 +1879,7 @@ async function renderPagAdmin(){
 
   const al = ativos();
   lista.innerHTML = al.map(a => {
-    const reg = _pagCache.find(p => p.aluno_id === a.id && p.pago === true);
+    const reg = _pagCache.find(p => p.aluno_id === a.id);
     const pago = !!reg;
     const valorExib = reg ? (reg.valor || a.valor || 0) : (a.valor || 0);
     const valorStr = valorExib ? ' · R$ ' + parseFloat(valorExib).toFixed(2) : '';
@@ -1895,12 +1898,11 @@ async function tgPag(id){
   const cm  = chM(_mp);
   const al  = D.alunos || [];
   const a   = al.find(x => x.id === id);
-  const reg = _pagCache.find(p => p.aluno_id === id && p.pago === true);
+  const reg = _pagCache.find(p => p.aluno_id === id);
   const novoPago = !reg; // toggle: se estava pago → pendente, se pendente → pago
 
   try {
     if (novoPago) {
-      // Marcar como pago: upsert na tabela Supabase
       const valor = parseFloat(a?.valor) || 0;
       const { error } = await supabaseClient
         .from('pagamentos_aluno')
@@ -1914,7 +1916,6 @@ async function tgPag(id){
       if (error) throw error;
       toast('✓ Pagamento de ' + fmtNome(a?.nome) + ' registrado!');
     } else {
-      // Marcar como pendente: atualiza pago=false no Supabase
       const { error } = await supabaseClient
         .from('pagamentos_aluno')
         .update({ pago: false, data_pagamento: null })
@@ -1929,7 +1930,6 @@ async function tgPag(id){
     return;
   }
 
-  // Recarrega lista para refletir o estado real do Supabase
   await renderPagAdmin();
 }
 
@@ -2177,56 +2177,33 @@ async function renderRelAdmin(aba){
     // ── FINANCEIRO: usa exclusivamente _relCache.pagamentos (Supabase) ──
     const pagamentos = _relCache.pagamentos || [];
 
-    // ── DEBUG DIAGNÓSTICO ──────────────────────────────────────────────
-    console.log('═══════════════════════════════════════════');
-    console.log('[REL FINANCEIRO] Total registros pagamentos_aluno:', pagamentos.length);
-    console.log('[REL FINANCEIRO] Todos os valores de mes:',
-      pagamentos.map(p => ({ aluno_id: p.aluno_id, mes: p.mes, tipo: typeof p.mes, pago: p.pago }))
+    // ── DEBUG ─────────────────────────────────────────────────────────
+    console.log('[REL FINANCEIRO] Total registros:', pagamentos.length);
+    console.log('[REL FINANCEIRO] VALORES DE PAGO:', pagamentos.map(p => p.pago));
+    console.log('[REL FINANCEIRO] Detalhe:',
+      pagamentos.map(p => ({
+        aluno_id: p.aluno_id,
+        mes: p.mes,
+        mes_norm: normalizarMes(p.mes),
+        pago_raw: p.pago,
+        isPago: isPago(p.pago)
+      }))
     );
-    const todosPagos = pagamentos.filter(p => p.pago === true);
-    console.log('[REL FINANCEIRO] Pagos SEM filtro de mês:', todosPagos.length, todosPagos);
-    console.log('═══════════════════════════════════════════');
-    // ── FIM DEBUG ──────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────
 
-    // Normalização robusta de mes (lida com YYYY-MM, YYYY-M, YYYY-MM-DD, MM/YYYY)
-    function normalizarMesRel(valor) {
-      if (valor === null || valor === undefined) return null;
-      const str = String(valor).trim();
-      if (/^\d{4}-\d{2}$/.test(str))       return str;
-      if (/^\d{4}-\d{1}$/.test(str))       return str.slice(0,5) + str.slice(5).padStart(2,'0');
-      if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 7);
-      if (/^\d{1,2}\/\d{4}$/.test(str))   { const [m,a]=str.split('/'); return `${a}-${m.padStart(2,'0')}`; }
-      return null;
-    }
+    // Meses únicos a partir dos valores normalizados
+    const meses = [...new Set(
+      pagamentos.map(p => normalizarMes(p.mes)).filter(Boolean)
+    )].sort().reverse();
 
-    // Obtém meses únicos a partir dos valores normalizados
-    const mesesNorm = pagamentos
-      .map(p => normalizarMesRel(p.mes))
-      .filter(Boolean);
-    const meses = [...new Set(mesesNorm)].sort().reverse();
-
-    // Garante que o mês atual sempre apareça, mesmo sem registros
     if (!meses.includes(cm)) meses.unshift(cm);
-
-    // Limita a 12 meses
     const mesesExibir = meses.slice(0, 12);
-
-    // Alerta visual se nenhum dado foi encontrado (ajuda a diagnosticar)
-    if (todosPagos.length === 0 && pagamentos.length === 0) {
-      document.getElementById('rel-financeiro').innerHTML =
-        `<div style="background:var(--am-c);border:1px solid var(--am);border-radius:var(--r);padding:14px;font-size:14px;color:var(--am)">
-          ⚠️ <strong>Nenhum registro</strong> encontrado em <code>pagamentos_aluno</code>.<br>
-          Verifique o console para detalhes de debug.
-        </div>`;
-      return;
-    }
 
     let h2 = '';
     mesesExibir.forEach(mes => {
       const [ano, mesNum] = mes.split('-');
 
-      // Filtra usando a mesma normalização
-      const pagosMes   = pagamentos.filter(p => normalizarMesRel(p.mes) === mes && p.pago === true);
+      const pagosMes   = pagamentos.filter(p => normalizarMes(p.mes) === mes && isPago(p.pago));
       const totalPagos = pagosMes.length;
       const receita    = pagosMes.reduce((total, p) => total + (parseFloat(p.valor) || 0), 0);
 
