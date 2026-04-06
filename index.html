@@ -1905,39 +1905,93 @@ function alunosFiltrados(){
   return ativos().filter(a=> !turma || (a.turma||'Turma Única')===turma);
 }
 
-function renderRelAtual(){ renderRelAdmin(_abaRelAtual); }
+async function renderRelAtual(){ await renderRelAdmin(_abaRelAtual); }
 
-function abaRel(aba,btn){
+async function abaRel(aba,btn){
   _abaRelAtual = aba;
   document.querySelectorAll('#a-relatorios .tab').forEach(t=>t.classList.remove('on')); btn.classList.add('on');
   ['geral','presenca','por-aula','financeiro','avaliacao'].forEach(a=>document.getElementById('rel-'+a).style.display=a===aba?'block':'none');
-  renderRelAdmin(aba);
+  await renderRelAdmin(aba);
 }
 
-function renderRelAdmin(aba){
+/* ════ CACHE SUPABASE PARA RELATÓRIOS ════ */
+let _relCache = null; // { alunos, presencas, aulas } — recarregado a cada visita à tela
+
+async function _relCarregarDados() {
+  const [resAlunos, resPres, resAulas] = await Promise.all([
+    supabaseClient.from('alunos').select('*').order('nome', { ascending: true }),
+    supabaseClient.from('presenca').select('*'),
+    supabaseClient.from('aulas').select('data, livro, descricao')
+  ]);
+  if (resAlunos.error) { console.error('[REL] Erro alunos:', resAlunos.error); throw resAlunos.error; }
+  if (resPres.error)   { console.error('[REL] Erro presenças:', resPres.error); }
+  if (resAulas.error)  { console.error('[REL] Erro aulas:', resAulas.error); }
+  _relCache = {
+    alunos:   resAlunos.data || [],
+    presencas: resPres.data  || [],
+    aulas:    (resAulas.data  || []).map(a => ({ ...a, livro: a.livro || 'Sem livro' }))
+  };
+}
+
+async function renderRelAdmin(aba){
   popularFiltroTurma();
   const h=hj(); const cm=chM(h);
-  const al=alunosFiltrados(); const tot=al.length;
   const turmaLabel = document.getElementById('filtro-turma')?.value ? ` — ${document.getElementById('filtro-turma').value}` : '';
 
+  // Mostrar loading enquanto busca dados
+  const abaEl = document.getElementById('rel-' + aba);
+  if (abaEl) abaEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--cin)">⏳ Carregando dados…</div>';
+
+  try {
+    await _relCarregarDados();
+  } catch(e) {
+    if (abaEl) abaEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--vm)">❌ Erro ao carregar dados do servidor</div>';
+    return;
+  }
+
+  // Usa mesma base do admRelCarregar:
+  // - totalAulas = aulas.length (tabela aulas)
+  // - presença = tabela presenca, filtrada por aluno_id, presente===true
+  const todasAulas  = _relCache.aulas;
+  const todasPresencas = _relCache.presencas;
+  const todoAlunos  = _relCache.alunos;
+  const totalAulas  = todasAulas.length;
+
+  // Filtra alunos pela turma selecionada (mantém compatibilidade com filtro existente)
+  const turmaFiltro = document.getElementById('filtro-turma')?.value || '';
+  const al = turmaFiltro
+    ? todoAlunos.filter(a => (a.turma || 'Turma Única') === turmaFiltro)
+    : todoAlunos;
+  const tot = al.length;
+
   if(aba==='geral'){
-    const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
-    let tp=0; pk.forEach(k=>al.forEach(a=>{ if(D.presencas[k][a.id]==='P') tp++; }));
-    const mp=pk.length*tot; const pp=mp>0?Math.round(tp/mp*100):0;
-    const pagM=D.pagamentos[cm]||{}; const pagos=al.filter(a=>pagM[a.id]===true).length;
-    const rec=al.reduce((s,a)=>s+(pagM[a.id]===true?(parseFloat(a.valor)||0):0),0);
-    // Alertas críticos
-    let criticos=[];
-    al.forEach(a=>{ let f=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='F') f++; }); if(f>=3) criticos.push(`<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--brd)">⚠️ <strong>${fmtNome(a.nome)}</strong> — ${f} faltas</div>`); });
-    const pagPend=al.filter(a=>(D.pagamentos[cm]||{})[a.id]!==true);
-    if(pagPend.length) criticos.push(`<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--brd)">💰 ${pagPend.length} aluno${pagPend.length>1?'s':''} com pagamento pendente: ${pagPend.map(a=>fmtNome(a.nome).split(' ')[0]).join(', ')}</div>`);
+    // Frequência: mesma fórmula do admRelCarregar
+    let tp = 0;
+    al.forEach(a => {
+      tp += todasPresencas.filter(p => p.aluno_id === a.id && p.presente === true).length;
+    });
+    const mp = totalAulas * tot;
+    const pp = mp > 0 ? Math.round(tp / mp * 100) : 0;
+
+    const pagM = D.pagamentos[cm] || {};
+    const pagos = al.filter(a => pagM[a.id] === true).length;
+    const rec = al.reduce((s,a) => s + (pagM[a.id] === true ? (parseFloat(a.valor)||0) : 0), 0);
+
+    let criticos = [];
+    al.forEach(a => {
+      const faltas = totalAulas - todasPresencas.filter(p => p.aluno_id === a.id && p.presente === true).length;
+      if (faltas >= 3) criticos.push(`<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--brd)">⚠️ <strong>${fmtNome(a.nome)}</strong> — ${faltas} faltas</div>`);
+    });
+    const pagPend = al.filter(a => (D.pagamentos[cm]||{})[a.id] !== true);
+    if (pagPend.length) criticos.push(`<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--brd)">💰 ${pagPend.length} aluno${pagPend.length>1?'s':''} com pagamento pendente: ${pagPend.map(a=>fmtNome(a.nome).split(' ')[0]).join(', ')}</div>`);
     const todasProvasGeral = Object.keys(D.notas).filter(p => /^p\d+$/.test(p)).sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
-    const semNota=todasProvasGeral.filter(p=>Object.keys(D.notas[p]||{}).length===0);
-    if(semNota.length) criticos.push(`<div style="font-size:13px;padding:6px 0">📝 Prova${semNota.length>1?'s':''} sem notas lançadas: ${semNota.map(p=>'Prova '+parseInt(p.slice(1))).join(', ')}</div>`);
-    document.getElementById('rel-geral').innerHTML=
+    const semNota = todasProvasGeral.filter(p => Object.keys(D.notas[p]||{}).length === 0);
+    if (semNota.length) criticos.push(`<div style="font-size:13px;padding:6px 0">📝 Prova${semNota.length>1?'s':''} sem notas lançadas: ${semNota.map(p=>'Prova '+parseInt(p.slice(1))).join(', ')}</div>`);
+
+    document.getElementById('rel-geral').innerHTML =
       `<div class="card"><div class="card-t">📈 Resumo — ${M[h.getMonth()]} ${h.getFullYear()}${turmaLabel}</div>
         <div class="sl2"><span class="slb">Alunos</span><span class="slv">${tot}</span></div>
-        <div class="sl2"><span class="slb">Aulas registradas</span><span class="slv">${pk.length}</span></div>
+        <div class="sl2"><span class="slb">Aulas registradas</span><span class="slv">${totalAulas}</span></div>
         <div class="sl2"><span class="slb">Frequência média</span><span class="slv">${pp}%</span></div>
         <div class="sl2"><span class="slb">Pagamentos em dia</span><span class="slv">${pagos}/${tot}</span></div>
         <div class="sl2"><span class="slb">Receita do mês</span><span class="slv">R$ ${rec.toFixed(2)}</span></div>
@@ -1946,38 +2000,47 @@ function renderRelAdmin(aba){
         <div class="bw2"><div class="bt"><span>Frequência</span><span>${pp}%</span></div><div class="ba2"><div class="bf vd" style="width:${pp}%"></div></div></div>
         <div class="bw2"><div class="bt"><span>Pagamentos</span><span>${tot>0?Math.round(pagos/tot*100):0}%</span></div><div class="ba2"><div class="bf do" style="width:${tot>0?Math.round(pagos/tot*100):0}%"></div></div></div>
       </div>`
-      +(criticos.length?`<div class="card" style="border-color:var(--vm-c)"><div class="card-t" style="color:var(--vm)">⚠️ Alertas (${criticos.length})</div>${criticos.join('')}</div>`:'');
+      + (criticos.length ? `<div class="card" style="border-color:var(--vm-c)"><div class="card-t" style="color:var(--vm)">⚠️ Alertas (${criticos.length})</div>${criticos.join('')}</div>` : '');
   }
 
   if(aba==='presenca'){
-    const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
-    const linhas=al.map(a=>{
-      let p=0,f=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') p++; if(D.presencas[k][a.id]==='F') f++; });
-      const pc=pk.length>0?Math.round(p/pk.length*100):0;
-      return `<div class="sl2"><div><div style="font-weight:500;font-size:14px">${fmtNome(a.nome)}</div><div style="font-size:12px;color:var(--cin)">${p} pres · ${f} faltas · ${pk.length-p-f} ausentes</div></div><span class="bdg ${pc>=75?'bv':pc>=50?'ba':'br'}">${pc}%</span></div>`;
+    // Mesma fórmula do admRelCarregar: totalAulas da tabela aulas
+    const linhas = al.map(a => {
+      const qtdPresente = todasPresencas.filter(p => p.aluno_id === a.id && p.presente === true).length;
+      const qtdFalta    = totalAulas - qtdPresente;
+      const pc = totalAulas > 0 ? Math.round(qtdPresente / totalAulas * 100) : 0;
+      return `<div class="sl2"><div><div style="font-weight:500;font-size:14px">${fmtNome(a.nome)}</div><div style="font-size:12px;color:var(--cin)">${qtdPresente} pres · ${qtdFalta} faltas · ${totalAulas} aulas</div></div><span class="bdg ${pc>=75?'bv':pc>=50?'ba':'br'}">${pc}%</span></div>`;
     }).join('');
-    document.getElementById('rel-presenca').innerHTML=
+    document.getElementById('rel-presenca').innerHTML =
       `<div class="card"><div class="card-t">👥 Frequência por aluno — ${M[h.getMonth()]}${turmaLabel}</div>
-        ${linhas||'<p style="color:var(--cin);font-size:14px">Sem aulas registradas.</p>'}
+        ${linhas || '<p style="color:var(--cin);font-size:14px">Sem aulas registradas.</p>'}
       </div>`;
   }
 
   if(aba==='por-aula'){
-    const log=D.aulas_log||{};
-    const keys=Object.keys(D.presencas).sort().reverse();
-    if(!keys.length){ document.getElementById('rel-por-aula').innerHTML='<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Nenhuma aula registrada ainda.</div></div>'; return; }
-    const linhas=keys.map(k=>{
-      const d=new Date(k+'T12:00:00');
-      const entry=log[k]||{};
-      const presD=D.presencas[k]||{};
-      let presentes=0,faltas=0;
-      al.forEach(a=>{ if(presD[a.id]==='P') presentes++; if(presD[a.id]==='F') faltas++; });
-      const total2=presentes+faltas; const perc=total2>0?Math.round(presentes/tot*100):0;
+    if (!todasAulas.length) {
+      document.getElementById('rel-por-aula').innerHTML = '<div class="empty"><div class="empty-ic">📅</div><div class="empty-tx">Nenhuma aula registrada ainda.</div></div>';
+      return;
+    }
+    // Ordena aulas por data decrescente
+    const aulasOrdenadas = [...todasAulas].sort((a,b) => (b.data||'').localeCompare(a.data||''));
+    const linhas = aulasOrdenadas.map(aula => {
+      const livro = aula.livro || 'Sem livro';
+      const d = new Date(aula.data + 'T12:00:00');
+      // presencas da data + livro (mesmo critério do módulo de presença)
+      const presD = todasPresencas.filter(p => p.data === aula.data && (p.livro || 'Sem livro') === livro);
+      let presentes = 0, faltas = 0;
+      al.forEach(a => {
+        const reg = presD.find(p => p.aluno_id === a.id);
+        if (reg && reg.presente === true)  presentes++;
+        if (reg && reg.presente === false) faltas++;
+      });
+      const perc = tot > 0 ? Math.round(presentes / tot * 100) : 0;
       return `<div class="card" style="padding:14px;margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
           <div style="flex:1">
-            <div style="font-size:12px;font-weight:600;color:var(--azul);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">${entry.modulo||'—'}</div>
-            <div style="font-size:15px;font-weight:500">${entry.aula||'Aula registrada'}</div>
+            <div style="font-size:12px;font-weight:600;color:var(--azul);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">${livro}</div>
+            <div style="font-size:15px;font-weight:500">${aula.descricao || 'Aula registrada'}</div>
             <div style="font-size:12px;color:var(--cin);margin-top:3px">${DS[d.getDay()]}, ${fmtD(d)}</div>
           </div>
           <span class="bdg ${perc>=75?'bv':perc>=50?'ba':'br'}">${presentes}/${tot}</span>
@@ -1993,8 +2056,8 @@ function renderRelAdmin(aba){
         </div>
       </div>`;
     }).join('');
-    document.getElementById('rel-por-aula').innerHTML=
-      `<div style="font-size:13px;color:var(--cin);margin-bottom:12px">${keys.length} aula${keys.length>1?'s':''} registrada${keys.length>1?'s':''}</div>${linhas}`;
+    document.getElementById('rel-por-aula').innerHTML =
+      `<div style="font-size:13px;color:var(--cin);margin-bottom:12px">${todasAulas.length} aula${todasAulas.length>1?'s':''} registrada${todasAulas.length>1?'s':''}</div>${linhas}`;
   }
 
   if(aba==='financeiro'){
