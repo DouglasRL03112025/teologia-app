@@ -941,44 +941,62 @@ async function carregarLivrosAluno() {
 
   console.log('ID DO USUÁRIO:', usuAtual?.id);
 
-  const { data: livrosAlunoRaw, error: error1 } = await supabaseClient
+  // AÇÃO 1: Busca TODOS os registros de aluno_livros — sem limit, sem filtro por ativo, sem filtro por ordem
+  const { data: alunoLivros, error: error1 } = await supabaseClient
     .from('aluno_livros')
     .select('*')
     .eq('aluno_id', usuAtual.id);
 
-  console.log('DADOS aluno_livros:', livrosAlunoRaw);
+  // AÇÃO 3: Log obrigatório do resultado bruto
+  console.log('alunoLivros:', alunoLivros);
 
   if (error1) {
     console.error('[Livros] Erro ao buscar aluno_livros:', error1);
     return;
   }
 
+  // AÇÃO 2: Armazenar resultado completo antes de qualquer processamento
+  window.alunoLivrosRaw = alunoLivros;
+
+  // Busca todos os livros base — SEM filtro por ativo e SEM filtro por ordem
+  // para garantir que p7 e outros livros sejam encontrados mesmo se ativo=false
   const { data: livrosBase, error: error2 } = await supabaseClient
     .from('livros')
-    .select('*')
-    .eq('ativo', true)
-    .order('ordem', { ascending: true });
+    .select('*');
 
-  console.log('DADOS livros:', livrosBase);
+  console.log('DADOS livros (todos):', livrosBase);
 
   if (error2) {
     console.error('[Livros] Erro ao buscar livros:', error2);
     return;
   }
 
-  const data = livrosAlunoRaw.map(item => {
-    const livro = livrosBase.find(l => l.codigo === item.livro_codigo);
+  // AÇÃO 6: Nenhum .filter() ou .map() remove registros — todos os registros de aluno_livros são preservados
+  const data = (alunoLivros || []).map(item => {
+    const livro = (livrosBase || []).find(l => l.codigo === item.livro_codigo);
+
+    // AÇÃO 4: Warn se livro não tiver correspondente na tabela livros
+    if (!livro) {
+      console.warn('Livro sem registro na tabela livros:', item.livro_codigo, '| registro aluno_livros:', item);
+    }
+
     return {
       ...item,
       livros: livro || {}
     };
   });
 
-  data.sort((a, b) => (a.livros?.ordem || 0) - (b.livros?.ordem || 0));
+  // Ordena por ordem do livro; livros sem ordem definida vão para o final
+  data.sort((a, b) => {
+    const oa = a.livros?.ordem ?? 9999;
+    const ob = b.livros?.ordem ?? 9999;
+    return oa - ob;
+  });
 
+  // AÇÃO 2: Resultado completo armazenado em window.livrosAluno
   window.livrosAluno = data;
   console.log('RESULTADO FINAL livrosAluno:', window.livrosAluno);
-  console.log('[Livros] Carregados:', data.length, 'registros');
+  console.log('[Livros] Carregados:', data.length, 'registros de aluno_livros');
 }
 
 window.filtroLivros = 'todos';
@@ -1032,13 +1050,20 @@ function renderLivrosAluno() {
       <button style="${btnStyle('pendentes')}" onclick="setFiltroLivros('pendentes')">🔴 Pendentes</button>
     </div>
     ${dados.length === 0 ? '<div class="empty"><div class="empty-ic">🔍</div><div class="empty-tx">Nenhum livro neste filtro.</div></div>' : ''}
-    ${dados.map((item, index) => {
+    ${dados.map((item) => {
+      // AÇÃO 4: warn se item não tiver livro correspondente
+      if (!item.livros || !item.livros.codigo) {
+        console.warn('Livro sem registro na tabela livros (render):', item.livro_codigo, item);
+      }
+
       // ── Progressão baseada em ordem ──
-      const ordemItem = item.livros?.ordem || (index + 1);
+      // Livros sem ordem definida recebem 9999 para não interferir na lógica de progressão
+      const ordemItem = item.livros?.ordem ?? 9999;
 
       // ultimoPago = maior ordem com pagou === true (entre TODOS os livros do aluno)
+      // AÇÃO 5: pagou=true no banco é SEMPRE respeitado — não assumir pendente automaticamente
       const ultimoPagoOrdem = window.livrosAluno.reduce((max, l) => {
-        if (l.pagou === true) {
+        if (l.pagou === true && (l.livros?.ordem ?? 9999) < 9999) {
           const o = l.livros?.ordem || 0;
           return o > max ? o : max;
         }
@@ -1053,8 +1078,13 @@ function renderLivrosAluno() {
         statusText  = '⚫ Não participou';
         statusColor = '#6b6b6b';
         badgeHtml   = '';
-      } else if (item.pagou === true || ordemItem <= ultimoPagoOrdem) {
-        // Pago (inclui todos até o último pago)
+      } else if (item.pagou === true) {
+        // AÇÃO 5: pagou=true no banco → SEMPRE pago, independente de ordem
+        statusText  = '🟢 Pago';
+        statusColor = '#16A34A';
+        badgeHtml   = '';
+      } else if (ordemItem <= ultimoPagoOrdem) {
+        // Ordem anterior ao último pago → também pago por progressão
         statusText  = '🟢 Pago';
         statusColor = '#16A34A';
         badgeHtml   = '';
@@ -1079,7 +1109,7 @@ function renderLivrosAluno() {
           margin-bottom:12px;
         ">
           <div style="font-size:15px; font-weight:600; color:#1a3a5c; margin-bottom:6px;">
-            📚 ${item.livros?.nome || 'Livro'}
+            📚 ${item.livros?.nome || item.livro_codigo || 'Livro'}
           </div>
           ${badgeHtml}
           <div style="color:${statusColor}; font-size:13px; font-weight:500; margin-top:2px;">
@@ -1111,18 +1141,23 @@ async function renderPagamentosAlunoViaLivros() {
 
   // Calcular progressão
   const ultimoPagoOrdem = dados.reduce((max, l) => {
-    if (l.pagou === true) {
+    if (l.pagou === true && (l.livros?.ordem ?? 9999) < 9999) {
       const o = l.livros?.ordem || 0;
       return o > max ? o : max;
     }
     return max;
   }, 0);
 
-  // Classificar cada livro
+  // AÇÃO 5: pagou=true no banco é SEMPRE respeitado — classificar antes de verificar ordem
+  // AÇÃO 4: warn se livro não tiver correspondente
   const classificados = dados.map(item => {
-    const ordemItem = item.livros?.ordem || 0;
+    if (!item.livros || !item.livros.codigo) {
+      console.warn('Livro sem registro na tabela livros (pagamentos):', item.livro_codigo, item);
+    }
+    const ordemItem = item.livros?.ordem ?? 9999;
     if (item.participou === false) return { ...item, _tipo: 'nao_participou' };
-    if (item.pagou === true || ordemItem <= ultimoPagoOrdem) return { ...item, _tipo: 'pago' };
+    if (item.pagou === true) return { ...item, _tipo: 'pago' }; // pagou=true → sempre pago
+    if (ordemItem < 9999 && ordemItem <= ultimoPagoOrdem) return { ...item, _tipo: 'pago' };
     if (ordemItem === ultimoPagoOrdem + 1) return { ...item, _tipo: 'atual' };
     return { ...item, _tipo: 'bloqueado' };
   });
