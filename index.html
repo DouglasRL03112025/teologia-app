@@ -624,8 +624,8 @@ select.inp{cursor:pointer}
     <div class="tela" id="al-livros">
       <div class="tit">📚 Meus Livros</div>
       <p class="sub">Controle de material</p>
-      <div id="al-livros-lista"></div>
-      <!-- container livros Supabase (adicionado) -->
+      <!-- al-livros-lista REMOVIDO: era alimentado por D.livros_ent (localStorage) e causava exibicao incorreta -->
+      <!-- unico container de livros agora é aluno-livros, alimentado pelo Supabase -->
       <div id="aluno-livros"></div>
     </div>
 
@@ -1001,11 +1001,15 @@ async function carregarLivrosAluno() {
 
 window.filtroLivros = 'todos';
 
-function renderLivrosAluno() {
+function renderLivrosAluno(_ignored) {
+  // ACAO 2: sempre usa window.livrosAluno — nunca outra variavel
   const container = document.getElementById('aluno-livros');
   if (!container) return;
 
-  const dadosRaw = window.livrosAluno;
+  // ACAO 1: log imediatamente antes de usar os dados
+  console.log('RENDER DATA (renderLivrosAluno):', window.livrosAluno);
+
+  const dadosRaw = window.livrosAluno; // fonte unica de verdade
 
   if (!dadosRaw || dadosRaw.length === 0) {
     container.innerHTML = '<div class="empty"><div class="empty-ic">📚</div><div class="empty-tx">Nenhum livro encontrado.</div></div>';
@@ -1651,8 +1655,17 @@ async function irAluno(t){
     renderPagamentosAlunoViaLivros();
   }
   if (t === 'livros') {
+    // Limpar container legado (D.livros_ent) para evitar dados do localStorage na tela
+    const legadoLivros = document.getElementById('al-livros-lista');
+    if (legadoLivros) legadoLivros.innerHTML = '';
+
     await carregarLivrosAluno();
-    renderLivrosAluno();
+
+    // ACAO 1: Log imediatamente antes da renderizacao
+    console.log('RENDER DATA:', window.livrosAluno);
+
+    // ACAO 3: usar window.livrosAluno explicitamente
+    renderLivrosAluno(window.livrosAluno);
   }
   if(t==='notas') {
     try {
@@ -2793,6 +2806,14 @@ function renderAlunoPagamentos(){
 }
 
 function renderAlunoLivros(){
+  // LEGADO DESATIVADO — esta funcao usava D.livros_ent (localStorage) e causava exibicao incorreta
+  // Agora apenas limpa o container legado e delega para renderLivrosAluno (Supabase)
+  console.warn('[LEGADO] renderAlunoLivros desativado — dados vem do Supabase via renderLivrosAluno');
+  const legado = document.getElementById('al-livros-lista');
+  if (legado) legado.innerHTML = '';
+  renderLivrosAluno(window.livrosAluno);
+  return;
+  // codigo original abaixo preservado mas nunca executado:
   const a=usuAtual;
   const total = 24
   const recebidos=D.livros_curso.filter(function(l){ return (D.livros_ent[l.id]||{})[a.id]===true; }).length;
