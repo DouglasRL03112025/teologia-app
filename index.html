@@ -1054,75 +1054,64 @@ function renderLivrosAluno(_ignored) {
       <button style="${btnStyle('pendentes')}" onclick="setFiltroLivros('pendentes')">🔴 Pendentes</button>
     </div>
     ${dados.length === 0 ? '<div class="empty"><div class="empty-ic">🔍</div><div class="empty-tx">Nenhum livro neste filtro.</div></div>' : ''}
-    ${dados.map((item) => {
-      // AÇÃO 4: warn se item não tiver livro correspondente
-      if (!item.livros || !item.livros.codigo) {
-        console.warn('Livro sem registro na tabela livros (render):', item.livro_codigo, item);
-      }
+    ${(() => {
+      // Calcular livro atual SEPARADAMENTE — somente para exibir badge, não para inferir pagamento
+      const pagosFiltro = window.livrosAluno.filter(l => l.pagou === true && (l.livros?.ordem ?? 9999) < 9999);
+      const maiorOrdemPaga = pagosFiltro.length > 0 ? Math.max(...pagosFiltro.map(l => l.livros?.ordem || 0)) : 0;
+      const ordemLivroAtual = maiorOrdemPaga + 1;
 
-      // ── Progressão baseada em ordem ──
-      // Livros sem ordem definida recebem 9999 para não interferir na lógica de progressão
-      const ordemItem = item.livros?.ordem ?? 9999;
-
-      // ultimoPago = maior ordem com pagou === true (entre TODOS os livros do aluno)
-      // AÇÃO 5: pagou=true no banco é SEMPRE respeitado — não assumir pendente automaticamente
-      const ultimoPagoOrdem = window.livrosAluno.reduce((max, l) => {
-        if (l.pagou === true && (l.livros?.ordem ?? 9999) < 9999) {
-          const o = l.livros?.ordem || 0;
-          return o > max ? o : max;
+      return dados.map((item) => {
+        // Warn se item não tiver livro correspondente
+        if (!item.livros || !item.livros.codigo) {
+          console.warn('Livro sem registro na tabela livros (render):', item.livro_codigo, item);
         }
-        return max;
-      }, 0);
 
-      let statusText = '';
-      let statusColor = '';
-      let badgeHtml = '';
+        const ordemItem = item.livros?.ordem ?? 9999;
 
-      if (item.participou === false) {
-        statusText  = '⚫ Não participou';
-        statusColor = '#6b6b6b';
-        badgeHtml   = '';
-      } else if (item.pagou === true) {
-        // AÇÃO 5: pagou=true no banco → SEMPRE pago, independente de ordem
-        statusText  = '🟢 Pago';
-        statusColor = '#16A34A';
-        badgeHtml   = '';
-      } else if (ordemItem <= ultimoPagoOrdem) {
-        // Ordem anterior ao último pago → também pago por progressão
-        statusText  = '🟢 Pago';
-        statusColor = '#16A34A';
-        badgeHtml   = '';
-      } else if (ordemItem === ultimoPagoOrdem + 1) {
-        // Livro Atual
-        statusText  = '📍 Livro Atual — aguardando pagamento';
-        statusColor = '#2563EB';
-        badgeHtml   = `<div style="display:inline-block;background:#2563eb;color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.4px;margin-bottom:6px;">📍 LIVRO ATUAL</div>`;
-      } else {
-        // Bloqueado — não mostrar como "pendente"
-        statusText  = '🔒 Bloqueado';
-        statusColor = '#9CA3AF';
-        badgeHtml   = '';
-      }
+        let statusText = '';
+        let statusColor = '';
+        let badgeHtml = '';
 
-      return `
-        <div style="
-          background:#EEF4FF;
-          border:${ordemItem === ultimoPagoOrdem + 1 ? '2px solid #2563EB' : '1px solid #D6E4FF'};
-          border-radius:12px;
-          padding:16px;
-          margin-bottom:12px;
-        ">
-          <div style="font-size:15px; font-weight:600; color:#1a3a5c; margin-bottom:6px;">
-            📚 ${item.livros?.nome || item.livro_codigo || 'Livro'}
+        if (item.participou === false) {
+          statusText  = '⚫ Não participou';
+          statusColor = '#6b6b6b';
+          badgeHtml   = '';
+        } else if (item.pagou === true) {
+          // pagou=true no banco → PAGO — nunca usar ordem para inferir isso
+          statusText  = '🟢 Pago';
+          statusColor = '#16A34A';
+          badgeHtml   = '';
+        } else if (ordemItem === ordemLivroAtual) {
+          // Livro atual = próximo após o maior pago (apenas badge, não marca como pago)
+          statusText  = '📍 Livro Atual — aguardando pagamento';
+          statusColor = '#2563EB';
+          badgeHtml   = `<div style="display:inline-block;background:#2563eb;color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.4px;margin-bottom:6px;">📍 LIVRO ATUAL</div>`;
+        } else {
+          statusText  = '🔒 Pendente';
+          statusColor = '#9CA3AF';
+          badgeHtml   = '';
+        }
+
+        return `
+          <div style="
+            background:#EEF4FF;
+            border:${ordemItem === ordemLivroAtual ? '2px solid #2563EB' : '1px solid #D6E4FF'};
+            border-radius:12px;
+            padding:16px;
+            margin-bottom:12px;
+          ">
+            <div style="font-size:15px; font-weight:600; color:#1a3a5c; margin-bottom:6px;">
+              📚 ${item.livros?.nome || item.livro_codigo || 'Livro'}
+            </div>
+            ${badgeHtml}
+            <div style="color:${statusColor}; font-size:13px; font-weight:500; margin-top:2px;">
+              ${statusText}
+            </div>
+            ${item.pagou === true && item.forma_pagamento ? `<div style="font-size:12px; color:#888; margin-top:4px;">Forma: ${item.forma_pagamento}</div>` : ''}
           </div>
-          ${badgeHtml}
-          <div style="color:${statusColor}; font-size:13px; font-weight:500; margin-top:2px;">
-            ${statusText}
-          </div>
-          ${item.pagou && item.forma_pagamento ? `<div style="font-size:12px; color:#888; margin-top:4px;">Forma: ${item.forma_pagamento}</div>` : ''}
-        </div>
-      `;
-    }).join('')}
+        `;
+      }).join('');
+    })()}
   `;
 }
 
@@ -1143,31 +1132,26 @@ async function renderPagamentosAlunoViaLivros() {
   }
   const dados = window.livrosAluno;
 
-  // Calcular progressão
-  const ultimoPagoOrdem = dados.reduce((max, l) => {
-    if (l.pagou === true && (l.livros?.ordem ?? 9999) < 9999) {
-      const o = l.livros?.ordem || 0;
-      return o > max ? o : max;
-    }
-    return max;
-  }, 0);
+  // Calcular livro atual SEPARADAMENTE — somente para badge, não para inferir pagamento
+  const pagosDados = dados.filter(l => l.pagou === true && (l.livros?.ordem ?? 9999) < 9999);
+  const maiorOrdemPaga = pagosDados.length > 0 ? Math.max(...pagosDados.map(l => l.livros?.ordem || 0)) : 0;
+  const ordemLivroAtual = maiorOrdemPaga + 1;
 
-  // AÇÃO 5: pagou=true no banco é SEMPRE respeitado — classificar antes de verificar ordem
-  // AÇÃO 4: warn se livro não tiver correspondente
+  // Classificar cada livro: pagou===true → pago; caso contrário → pendente (ou não participou)
+  // NUNCA usar ordem para inferir pagamento
   const classificados = dados.map(item => {
     if (!item.livros || !item.livros.codigo) {
       console.warn('Livro sem registro na tabela livros (pagamentos):', item.livro_codigo, item);
     }
     const ordemItem = item.livros?.ordem ?? 9999;
     if (item.participou === false) return { ...item, _tipo: 'nao_participou' };
-    if (item.pagou === true) return { ...item, _tipo: 'pago' }; // pagou=true → sempre pago
-    if (ordemItem < 9999 && ordemItem <= ultimoPagoOrdem) return { ...item, _tipo: 'pago' };
-    if (ordemItem === ultimoPagoOrdem + 1) return { ...item, _tipo: 'atual' };
-    return { ...item, _tipo: 'bloqueado' };
+    if (item.pagou === true) return { ...item, _tipo: 'pago' }; // única fonte de verdade
+    if (ordemItem === ordemLivroAtual) return { ...item, _tipo: 'atual' };
+    return { ...item, _tipo: 'pendente' };
   });
 
   const pagos     = classificados.filter(l => l._tipo === 'pago').length;
-  const pendentes = classificados.filter(l => l._tipo === 'atual').length; // só o atual conta como pendente
+  const pendentes = classificados.filter(l => l._tipo === 'atual' || l._tipo === 'pendente').length;
 
   container.innerHTML = `
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
@@ -1189,14 +1173,14 @@ async function renderPagamentosAlunoViaLivros() {
           ${item.data_pagamento ? `<div style="font-size:12px;color:#555;margin-top:2px;">Forma: ${item.forma_pagamento||'-'}</div><div style="font-size:12px;color:#555;margin-top:2px;">Data: ${new Date(item.data_pagamento).toLocaleDateString('pt-BR')}</div>` : ''}`;
       } else if (item._tipo === 'atual') {
         corFundo = '#FEF2F2'; corBorda = '#FECACA';
-        statusHtml = `<div style="font-size:14px;font-weight:700;color:#DC2626;">❌ PENDENTE</div>`;
+        statusHtml = `<div style="font-size:14px;font-weight:700;color:#DC2626;">❌ PENDENTE — Livro Atual</div>`;
       } else if (item._tipo === 'nao_participou') {
         corFundo = '#F9FAFB'; corBorda = '#E5E7EB';
         statusHtml = `<div style="font-size:14px;font-weight:500;color:#6B7280;">⚫ Não participou</div>`;
       } else {
-        // bloqueado — exibir mas sem status de pendente
+        // pendente — aguardando
         corFundo = '#F9FAFB'; corBorda = '#E5E7EB';
-        statusHtml = `<div style="font-size:14px;font-weight:500;color:#9CA3AF;">🔒 Aguardando livro anterior</div>`;
+        statusHtml = `<div style="font-size:14px;font-weight:500;color:#9CA3AF;">⏳ Pendente</div>`;
       }
       return `
         <div style="background:${corFundo};border:1px solid ${corBorda};border-radius:12px;padding:16px;margin-bottom:12px;">
