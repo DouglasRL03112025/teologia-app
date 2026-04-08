@@ -2500,14 +2500,26 @@ function renderAlunoCadastro(){
   const pagA = todosEmDia;
   const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
   let tp=0,tf=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') tp++; if(D.presencas[k][a.id]==='F') tf++; });
+  // Cálculo dinâmico de livros liberados
+  const _hoje = new Date();
+  const _livroBase = 7;
+  const _livrosLiberados = Math.min(_hoje.getDate() >= 25 ? _livroBase + 1 : _livroBase, 24);
+  const _livrosPagos = (window.livrosAluno || []).filter(l => l.pagou === true).length;
+  const _statusPagamento = `${_livrosPagos}/${_livrosLiberados} livros pagos`;
+
+  // Cálculo dinâmico de email
+  const _emailExibido = a.email
+    ? a.email
+    : (a.tel ? (a.tel.replace(/\D/g, '') + '@ibicamp.com') : null);
+
   document.getElementById('al-dados').innerHTML=`
     <div class="sl2"><span class="slb">Telefone</span><span style="font-size:14px">${a.tel?fmtTel(a.tel):'Não cadastrado'}</span></div>
-    <div class="sl2"><span class="slb">E-mail</span><span style="font-size:14px">${a.email||'Não cadastrado'}</span></div>
+    ${_emailExibido ? `<div class="sl2"><span class="slb">E-mail</span><span style="font-size:14px">${_emailExibido}</span></div>` : ''}
     <div class="sl2"><span class="slb">Turma</span><span style="font-size:14px">${a.turma||'Turma Única'}</span></div>
     <div class="sl2"><span class="slb">Mensalidade</span><span style="font-size:14px">${a.valor?'R$ '+a.valor:'—'}</span></div>
     <div class="sl2"><span class="slb">Presenças este mês</span><span class="bdg bv">${tp}</span></div>
     <div class="sl2"><span class="slb">Faltas este mês</span><span class="bdg ${tf>=2?'br':'ba'}">${tf}</span></div>
-    <div class="sl2"><span class="slb">Pagamento ${M[h.getMonth()]}</span><span class="bdg ${pagA?'bv':'br'}">${pagA?'Em dia':'Pendente'}</span></div>`;
+    <div class="sl2"><span class="slb">Pagamento</span><span class="bdg ${_livrosPagos >= _livrosLiberados?'bv':'br'}">${_statusPagamento}</span></div>`;
 }
 
 /* ════ FONTE ÚNICA DE DADOS DE PRESENÇA ════ */
