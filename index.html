@@ -118,7 +118,7 @@ select.inp{cursor:pointer}
 .ai{flex:1;min-width:0}
 .an{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .as2{font-size:12px;color:var(--cin);margin-top:2px}
-.bdg{font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;flex-shrink:0}
+.bdg{font-size:14px;font-weight:600;padding:4px 10px;border-radius:99px;flex-shrink:0}
 .bv{background:var(--vd-c);color:var(--vd)}.br{background:var(--vm-c);color:var(--vm)}.ba{background:var(--am-c);color:var(--am)}
 
 /* ── PERFIL ── */
@@ -177,9 +177,9 @@ select.inp{cursor:pointer}
 .tab.on{background:var(--azul);color:#fff;border-color:var(--azul)}
 
 /* ── RELATÓRIOS ── */
-.sl2{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--brd);font-size:14px}
+.sl2{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--brd);font-size:20px}
 .sl2:last-child{border-bottom:none}
-.slb{color:var(--cin)}.slv{font-weight:600;color:var(--azul)}
+.slb{color:var(--cin);font-size:17px}.slv{font-weight:600;color:var(--azul)}
 .bw2{margin-bottom:13px}
 .bt{display:flex;justify-content:space-between;font-size:12px;color:var(--cin);margin-bottom:5px}
 .ba2{height:9px;background:var(--brd);border-radius:99px;overflow:hidden}
@@ -226,7 +226,7 @@ select.inp{cursor:pointer}
 /* ── BANNER PERFIL ALUNO ── */
 .meu-perfil-banner{background:linear-gradient(135deg,var(--azul),var(--azul-e));border-radius:var(--rl);padding:24px 18px;margin-bottom:16px;color:#fff;text-align:center}
 .mpb-av{width:72px;height:72px;border-radius:50%;background:var(--dou);color:var(--azul);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;font-family:'Lora',serif;margin:0 auto 12px}
-.mpb-nome{font-family:'Lora',serif;font-size:22px;font-weight:700}
+.mpb-nome{font-family:'Lora',serif;font-size:34px;font-weight:700}
 .mpb-sub{font-size:13px;opacity:.75;margin-top:4px}
 
 @media(min-width:500px){main{padding:22px 22px 80px}}
@@ -2513,10 +2513,10 @@ function renderAlunoCadastro(){
     : (a.tel ? (a.tel.replace(/\D/g, '') + '@ibicamp.com') : null);
 
   document.getElementById('al-dados').innerHTML=`
-    <div class="sl2"><span class="slb">Telefone</span><span style="font-size:14px">${a.tel?fmtTel(a.tel):'Não cadastrado'}</span></div>
-    ${_emailExibido ? `<div class="sl2"><span class="slb">E-mail</span><span style="font-size:14px">${_emailExibido}</span></div>` : ''}
-    <div class="sl2"><span class="slb">Turma</span><span style="font-size:14px">${a.turma||'Turma Única'}</span></div>
-    <div class="sl2"><span class="slb">Mensalidade</span><span style="font-size:14px">${a.valor?'R$ '+a.valor:'—'}</span></div>
+    <div class="sl2"><span class="slb">Telefone</span><span style="font-size:18px">${a.tel?fmtTel(a.tel):'Não cadastrado'}</span></div>
+    ${_emailExibido ? `<div class="sl2"><span class="slb">E-mail</span><span style="font-size:18px">${_emailExibido}</span></div>` : ''}
+    <div class="sl2"><span class="slb">Turma</span><span style="font-size:18px">${a.turma||'Turma Única'}</span></div>
+    <div class="sl2"><span class="slb">Mensalidade</span><span style="font-size:18px">${a.valor?'R$ '+a.valor:'—'}</span></div>
     <div class="sl2"><span class="slb">Presenças este mês</span><span class="bdg bv">${tp}</span></div>
     <div class="sl2"><span class="slb">Faltas este mês</span><span class="bdg ${tf>=2?'br':'ba'}">${tf}</span></div>
     <div class="sl2"><span class="slb">Pagamento</span><span class="bdg ${_livrosPagos >= _livrosLiberados?'bv':'br'}">${_statusPagamento}</span></div>`;
