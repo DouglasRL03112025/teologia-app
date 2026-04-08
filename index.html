@@ -1002,117 +1002,118 @@ async function carregarLivrosAluno() {
 window.filtroLivros = 'todos';
 
 function renderLivrosAluno(_ignored) {
-  // ACAO 2: sempre usa window.livrosAluno — nunca outra variavel
   const container = document.getElementById('aluno-livros');
   if (!container) return;
 
-  // ACAO 1: log imediatamente antes de usar os dados
   console.log('RENDER DATA (renderLivrosAluno):', window.livrosAluno);
 
-  const dadosRaw = window.livrosAluno; // fonte unica de verdade
+  const LIVROS_CURSO = [
+    "PENTATEUCO",
+    "HISTÓRICOS E POÉTICOS",
+    "HISTÓRIA DE ISRAEL",
+    "PROFETAS MAIORES E MENORES",
+    "OS EVANGELHOS",
+    "ATOS DOS APÓSTOLOS",
+    "EPÍSTOLAS PAULINAS",
+    "EPÍSTOLAS GERAIS",
+    "APOCALIPSE",
+    "BIBLIOLOGIA",
+    "HISTÓRIA ECLESIÁSTICA",
+    "HAMARTIOLOGIA E SOTERIOLOGIA",
+    "ANTROPOLOGIA",
+    "EDUCAÇÃO CRISTÃ",
+    "SEITAS MODERNAS",
+    "GEOGRAFIA BÍBLICA",
+    "ESCATOLOGIA",
+    "EVANGELISMO",
+    "LIDERANÇA CRISTÃ",
+    "HERMENÊUTICA",
+    "TEONTOLOGIA",
+    "CRISTOLOGIA",
+    "ECLESIOLOGIA",
+    "HOMILÉTICA"
+  ];
 
-  if (!dadosRaw || dadosRaw.length === 0) {
-    container.innerHTML = '<div class="empty"><div class="empty-ic">📚</div><div class="empty-tx">Nenhum livro encontrado.</div></div>';
-    return;
-  }
+  let livrosLiberados = 7;
+  if (new Date().getDate() >= 25) livrosLiberados = 8;
 
-  const TOTAL_CURSO = 24; // total fixo do curso
-  const pagos = window.livrosAluno.filter(l => l.pagou).length;
-  const progresso = TOTAL_CURSO > 0 ? Math.round((pagos / TOTAL_CURSO) * 100) : 0;
+  const dadosAluno = Array.isArray(window.livrosAluno) ? window.livrosAluno : [];
 
-  let dados = window.livrosAluno;
-  if (window.filtroLivros === 'pagos') {
-    dados = dados.filter(l => l.pagou);
-  }
-  if (window.filtroLivros === 'pendentes') {
-    dados = dados.filter(l => !l.pagou);
-  }
+  const pagamentoMap = {};
+  dadosAluno.forEach(function(item) {
+    if (item && item.livro_codigo) {
+      pagamentoMap[item.livro_codigo] = item;
+    }
+  });
 
-  const btnStyle = (tipo) => `
-    padding:7px 14px;
-    border-radius:20px;
-    border:none;
-    font-size:13px;
-    font-weight:600;
-    cursor:pointer;
-    font-family:inherit;
-    background:${window.filtroLivros === tipo ? '#2563eb' : '#e5e7eb'};
-    color:${window.filtroLivros === tipo ? '#fff' : '#374151'};
-  `;
+  const totalPagos = dadosAluno.filter(function(l) { return l.pagou === true; }).length;
+  const progresso  = Math.round((totalPagos / 24) * 100);
 
-  container.innerHTML = `
-    <div style="margin-bottom:15px; padding:12px 14px; background:#EEF4FF; border:1px solid #D6E4FF; border-radius:12px; display:flex; align-items:center; gap:10px;">
-      <div style="font-size:22px; line-height:1;">📖</div>
-      <div>
-        <div style="font-size:14px; font-weight:600; color:#1a3a5c;">Progresso do curso</div>
-        <div style="font-size:13px; color:#2563EB; font-weight:500; margin-top:2px;">${progresso}% concluído — ${pagos} de ${TOTAL_CURSO} livros</div>
-      </div>
-    </div>
-    <div style="display:flex; gap:8px; margin-bottom:14px;">
-      <button style="${btnStyle('todos')}" onclick="setFiltroLivros('todos')">Todos</button>
-      <button style="${btnStyle('pagos')}" onclick="setFiltroLivros('pagos')">✅ Pagos</button>
-      <button style="${btnStyle('pendentes')}" onclick="setFiltroLivros('pendentes')">🔴 Pendentes</button>
-    </div>
-    ${dados.length === 0 ? '<div class="empty"><div class="empty-ic">🔍</div><div class="empty-tx">Nenhum livro neste filtro.</div></div>' : ''}
-    ${(() => {
-      // Calcular livro atual SEPARADAMENTE — somente para exibir badge, não para inferir pagamento
-      const pagosFiltro = window.livrosAluno.filter(l => l.pagou === true && (l.livros?.ordem ?? 9999) < 9999);
-      const maiorOrdemPaga = pagosFiltro.length > 0 ? Math.max(...pagosFiltro.map(l => l.livros?.ordem || 0)) : 0;
-      const ordemLivroAtual = maiorOrdemPaga + 1;
+  const estilos = {
+    entregue:          { bg:'#d4edda', border:'#28a745', labelCor:'#155724', label:'📦 ENTREGUE' },
+    pago_nao_entregue: { bg:'#fff3cd', border:'#ffc107', labelCor:'#856404', label:'💰 PAGO - AGUARDANDO ENTREGA' },
+    pendente:          { bg:'#f8d7da', border:'#dc3545', labelCor:'#721c24', label:'❌ PENDENTE' },
+    futuro:            { bg:'#e2e3e5', border:'#adb5bd', labelCor:'#6c757d', label:'⏳ EM BREVE' }
+  };
 
-      return dados.map((item) => {
-        // Warn se item não tiver livro correspondente
-        if (!item.livros || !item.livros.codigo) {
-          console.warn('Livro sem registro na tabela livros (render):', item.livro_codigo, item);
-        }
+  const cards = LIVROS_CURSO.map(function(nome, index) {
+    var codigo    = 'p' + (index + 1);
+    var indice1   = index + 1;
+    var dado      = pagamentoMap[codigo] || null;
+    var pagou     = dado && dado.pagou === true;
+    var temData   = dado && dado.data_pagamento;
 
-        const ordemItem = item.livros?.ordem ?? 9999;
+    var status;
+    if (indice1 > livrosLiberados) {
+      status = 'futuro';
+    } else if (!pagou) {
+      status = 'pendente';
+    } else if (pagou && temData) {
+      status = 'entregue';
+    } else {
+      status = 'pago_nao_entregue';
+    }
 
-        let statusText = '';
-        let statusColor = '';
-        let badgeHtml = '';
+    var s = estilos[status];
 
-        if (item.participou === false) {
-          statusText  = '⚫ Não participou';
-          statusColor = '#6b6b6b';
-          badgeHtml   = '';
-        } else if (item.pagou === true) {
-          // pagou=true no banco → PAGO — nunca usar ordem para inferir isso
-          statusText  = '🟢 Pago';
-          statusColor = '#16A34A';
-          badgeHtml   = '';
-        } else if (ordemItem === ordemLivroAtual) {
-          // Livro atual = próximo após o maior pago (apenas badge, não marca como pago)
-          statusText  = '📍 Livro Atual — aguardando pagamento';
-          statusColor = '#2563EB';
-          badgeHtml   = `<div style="display:inline-block;background:#2563eb;color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.4px;margin-bottom:6px;">📍 LIVRO ATUAL</div>`;
-        } else {
-          statusText  = '🔒 Pendente';
-          statusColor = '#9CA3AF';
-          badgeHtml   = '';
-        }
+    return '<div style="'
+      + 'background:' + s.bg + ';'
+      + 'border:2px solid ' + s.border + ';'
+      + 'border-radius:12px;'
+      + 'padding:14px 15px;'
+      + 'display:flex;'
+      + 'flex-direction:column;'
+      + 'gap:5px;'
+      + 'box-shadow:0 1px 5px rgba(0,0,0,0.07);'
+      + '">'
+        + '<div style="font-size:11px;color:#888;font-weight:700;letter-spacing:.6px;text-transform:uppercase;">' + codigo + '</div>'
+        + '<div style="font-size:13px;font-weight:700;color:#1e1e1e;line-height:1.3;">📚 ' + nome + '</div>'
+        + '<div style="'
+            + 'margin-top:4px;font-size:11.5px;font-weight:700;color:' + s.labelCor + ';'
+            + 'background:rgba(0,0,0,0.05);border-radius:6px;padding:4px 9px;'
+            + 'display:inline-block;align-self:flex-start;">'
+          + s.label
+        + '</div>'
+      + '</div>';
+  }).join('');
 
-        return `
-          <div style="
-            background:#EEF4FF;
-            border:${ordemItem === ordemLivroAtual ? '2px solid #2563EB' : '1px solid #D6E4FF'};
-            border-radius:12px;
-            padding:16px;
-            margin-bottom:12px;
-          ">
-            <div style="font-size:15px; font-weight:600; color:#1a3a5c; margin-bottom:6px;">
-              📚 ${item.livros?.nome || item.livro_codigo || 'Livro'}
-            </div>
-            ${badgeHtml}
-            <div style="color:${statusColor}; font-size:13px; font-weight:500; margin-top:2px;">
-              ${statusText}
-            </div>
-            ${item.pagou === true && item.forma_pagamento ? `<div style="font-size:12px; color:#888; margin-top:4px;">Forma: ${item.forma_pagamento}</div>` : ''}
-          </div>
-        `;
-      }).join('');
-    })()}
-  `;
+  container.innerHTML = ''
+    + '<div style="margin-bottom:15px;padding:12px 14px;background:#EEF4FF;border:1px solid #D6E4FF;border-radius:12px;display:flex;align-items:center;gap:10px;">'
+      + '<div style="font-size:22px;line-height:1;">📖</div>'
+      + '<div>'
+        + '<div style="font-size:14px;font-weight:600;color:#1a3a5c;">Progresso do curso</div>'
+        + '<div style="font-size:13px;color:#2563EB;font-weight:500;margin-top:2px;">' + progresso + '% concluído — ' + totalPagos + ' de 24 livros pagos</div>'
+      + '</div>'
+    + '</div>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;font-size:12px;font-weight:600;">'
+      + '<span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:#d4edda;border:2px solid #28a745;border-radius:3px;display:inline-block;"></span>Entregue</span>'
+      + '<span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:#fff3cd;border:2px solid #ffc107;border-radius:3px;display:inline-block;"></span>Aguardando entrega</span>'
+      + '<span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:#f8d7da;border:2px solid #dc3545;border-radius:3px;display:inline-block;"></span>Pendente</span>'
+      + '<span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:#e2e3e5;border:2px solid #adb5bd;border-radius:3px;display:inline-block;"></span>Em breve</span>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
+      + cards
+    + '</div>';
 }
 
 function setFiltroLivros(tipo) {
