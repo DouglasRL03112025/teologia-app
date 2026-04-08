@@ -588,7 +588,7 @@ select.inp{cursor:pointer}
           <span class="dnt" id="al-agenda-cal-mes"></span>
           <button class="dnb" onclick="agendaMudarMes(1)">›</button>
         </div>
-        <div style="display:flex;gap:14px;font-size:12px;margin-bottom:8px;flex-wrap:wrap">
+        <div style="display:flex;gap:14px;font-size:14px;color:var(--txt);font-weight:500;margin-bottom:8px;flex-wrap:wrap">
           <span><span style="display:inline-block;width:12px;height:12px;background:var(--vd);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Presente</span>
           <span><span style="display:inline-block;width:12px;height:12px;background:var(--vm);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Falta</span>
           <span><span style="display:inline-block;width:12px;height:12px;background:var(--dou);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Aula futura</span>
@@ -2726,7 +2726,7 @@ async function renderAlunoAgenda(){
   if (elFuturas) {
     const futuras = aulasDoMes.filter(a => a.data >= hojeStr);
     if (futuras.length === 0) {
-      elFuturas.innerHTML = '<p style="color:var(--cin);font-size:14px;text-align:center;padding:12px 0">Nenhuma aula futura neste mês.</p>';
+      elFuturas.innerHTML = '<p style="color:var(--cin);font-size:14px;text-align:center;padding:12px 0">Nenhuma aula programada para este mês.</p>';
     } else {
       elFuturas.innerHTML = '<div class="card-t" style="margin-bottom:8px">📆 Próximas aulas do mês</div>'
         + futuras.map(a => {
@@ -2761,8 +2761,9 @@ function agendaMostrarDia(k) {
   const d = new Date(k + 'T12:00:00');
   let html = `<div style="background:var(--azul-c);border-radius:var(--r);padding:12px 14px;font-size:14px">`;
   html += `<div style="font-weight:600;color:var(--azul);margin-bottom:6px">📅 ${DS[d.getDay()]}, ${fmtD(d)}</div>`;
-  if (v === true)  html += `<div style="color:var(--vd);font-weight:600">✅ Presença confirmada</div>`;
-  else if (v === false) html += `<div style="color:var(--vm);font-weight:600">❌ Falta registrada</div>`;
+  if (v === true)  html += `<div style="color:var(--vd);font-weight:600">✅ Presença confirmada</div><div style="color:var(--vd);font-size:13px;margin-top:2px">Status: Presente</div>`;
+  else if (v === false) html += `<div style="color:var(--vm);font-weight:600">❌ Falta registrada</div><div style="color:var(--vm);font-size:13px;margin-top:2px">Status: Faltou</div>`;
+  if (aula && v === undefined) html += `<div style="color:var(--am);font-size:13px;margin-top:2px;font-weight:500">Status: Aula programada</div>`;
   if (aula) {
     html += `<div style="margin-top:6px;color:var(--azul)"><strong>📖 ${aula.livro || 'Livro'}</strong></div>`;
     if (aula.descricao) html += `<div style="color:var(--cin);margin-top:2px">${aula.descricao}</div>`;
