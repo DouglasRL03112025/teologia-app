@@ -18,9 +18,7 @@
   --sh:0 6px 20px rgba(0,0,0,.13);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:#f4f6f8 !important;background-image:none !important;color:var(--txt);font-size:16px;line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
-html{background:#f4f6f8 !important;background-image:none !important}
-#pg-login{background:#f4f6f8 !important;background-image:none !important}
+body{font-family:'Inter',sans-serif;background:#f4f6f8 !important;color:var(--txt);font-size:16px;line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
 
 /* ── HEADER ── */
 header{background:var(--azul);color:#fff;padding:0 18px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.2)}
@@ -760,8 +758,10 @@ function fecharMod(id){ document.getElementById(id).classList.remove('on'); }
 function abrirMod(id){ document.getElementById(id).classList.add('on'); }
 
 /* ════ LOGIN ════ */
-document.getElementById('login-senha').addEventListener('keydown',e=>{ if(e.key==='Enter') fazerLogin(); });
-document.getElementById('admin-pw').addEventListener('keydown',e=>{ if(e.key==='Enter') verificarAdmin(); });
+const _elLoginSenha = document.getElementById('login-senha');
+if (_elLoginSenha) { _elLoginSenha.addEventListener('keydown',e=>{ if(e.key==='Enter') fazerLogin(); }); }
+const _elAdminPw = document.getElementById('admin-pw');
+if (_elAdminPw) { _elAdminPw.addEventListener('keydown',e=>{ if(e.key==='Enter') verificarAdmin(); }); }
 
 function normalizarTelefone(tel){
   if(!tel) return '';
@@ -782,9 +782,11 @@ function telefonesBatem(telDigitado, telSalvo){
 }
 
 async function fazerLogin(){
-  const telRaw = document.getElementById('login-tel').value.trim();
+  const _fldTel = document.getElementById('login-tel');
+  const _fldSenha = document.getElementById('login-senha');
+  const telRaw = _fldTel ? _fldTel.value.trim() : '';
   const tel = normalizarTelefone(telRaw);
-  const senha = document.getElementById('login-senha').value.trim();
+  const senha = _fldSenha ? _fldSenha.value.trim() : '';
 
   console.log('=== INÍCIO DO LOGIN ===');
   console.log('TEL DIGITADO:', telRaw);
@@ -1664,8 +1666,10 @@ function sair(){
   window.isAdmin = false; // Reset ao sair
   ['pg-admin','pg-aluno'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('pg-login').style.display='flex';
-  document.getElementById('login-tel').value='';
-  document.getElementById('login-senha').value='';
+  const _sairTel = document.getElementById('login-tel');
+  const _sairSenha = document.getElementById('login-senha');
+  if (_sairTel) { _sairTel.value=''; }
+  if (_sairSenha) { _sairSenha.value=''; }
   // Sign out do Supabase Auth em background
   supabaseClient.auth.signOut().catch(e => console.warn('[Auth] Erro ao sair:', e));
   console.log('[Auth] Sessão encerrada.');
