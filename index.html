@@ -144,6 +144,14 @@ select.inp{cursor:pointer}
 .pres-ro-d{font-size:14px;color:var(--cin)}
 .pres-ro-s{font-size:13px;font-weight:600;padding:4px 12px;border-radius:99px}
 .pres-p{background:var(--vd-c);color:var(--vd)}.pres-f{background:var(--vm-c);color:var(--vm)}.pres-n{background:var(--brd);color:var(--cin)}
+/* destaque visual: falta e presença na lista */
+.pres-ro.ro-falta{background:#fff4f4;border-color:#e8a0a0;border-width:1.5px}
+.pres-ro.ro-presente{background:#f4fbf6;border-color:#a8d5b5}
+/* badge de status geral de frequência */
+.pres-status-badge{display:inline-block;font-size:13px;font-weight:600;padding:4px 12px;border-radius:99px;margin-top:6px}
+.pres-status-ok{background:var(--vd-c);color:var(--vd)}
+.pres-status-warn{background:var(--am-c);color:var(--am)}
+.pres-status-bad{background:var(--vm-c);color:var(--vm)}
 
 /* ── PAGAMENTOS ── */
 .pgr{display:flex;align-items:center;gap:12px;padding:14px;background:#fff;border-radius:var(--r);margin-bottom:11px;border:1px solid var(--brd);box-shadow:var(--s)}
@@ -2581,11 +2589,17 @@ async function renderAlunoPresenca(){
   }
 
   if (elStats) {
+    const statusCls   = perc >= 75 ? 'pres-status-ok' : perc >= 50 ? 'pres-status-warn' : 'pres-status-bad';
+    const statusLabel = perc >= 75 ? '✔ Frequência boa' : perc >= 50 ? '⚠ Atenção' : '✖ Frequência baixa';
     elStats.innerHTML = `
       <div class="g3">
-        <div class="mc3"><div class="mc3n" style="color:var(--azul)">${total}</div><div class="mc3l">Aulas</div></div>
-        <div class="mc3"><div class="mc3n" style="color:var(--vd)">${presencas}</div><div class="mc3l">Presenças</div></div>
-        <div class="mc3"><div class="mc3n" style="color:var(--am)">${perc}%</div><div class="mc3l">Frequência</div></div>
+        <div class="mc3"><div class="mc3n" style="color:var(--azul);font-size:30px;font-weight:700">${total}</div><div class="mc3l">Aulas</div></div>
+        <div class="mc3"><div class="mc3n" style="color:var(--vd);font-size:30px;font-weight:700">${presencas}</div><div class="mc3l">Presenças</div></div>
+        <div class="mc3">
+          <div class="mc3n" style="color:var(--am);font-size:30px;font-weight:700">${perc}%</div>
+          <div class="mc3l">Frequência</div>
+          <span class="pres-status-badge ${statusCls}">${statusLabel}</span>
+        </div>
       </div>`;
   }
 
@@ -2598,7 +2612,8 @@ async function renderAlunoPresenca(){
       const d  = new Date(r.data + 'T12:00:00');
       const stClass = r.presente ? 'pres-p' : 'pres-f';
       const stLabel = r.presente ? 'Presente' : 'Falta';
-      return `<div class="pres-ro">
+      const roClass = r.presente ? 'ro-presente' : 'ro-falta';
+      return `<div class="pres-ro ${roClass}">
         <div>
           <div style="font-size:14px;font-weight:500">${r.livro || 'Aula'}</div>
           <div class="pres-ro-d">${DS[d.getDay()]}, ${fmtD(d)}</div>
