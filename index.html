@@ -2516,7 +2516,6 @@ function renderAlunoCadastro(){
     <div class="sl2"><span class="slb">Telefone</span><span style="font-size:18px">${a.tel?fmtTel(a.tel):'Não cadastrado'}</span></div>
     ${_emailExibido ? `<div class="sl2"><span class="slb">E-mail</span><span style="font-size:18px">${_emailExibido}</span></div>` : ''}
     <div class="sl2"><span class="slb">Turma</span><span style="font-size:18px">${a.turma||'Turma Única'}</span></div>
-    <div class="sl2"><span class="slb">Mensalidade</span><span style="font-size:18px">${a.valor?'R$ '+a.valor:'—'}</span></div>
     <div class="sl2"><span class="slb">Presenças este mês</span><span class="bdg bv">${tp}</span></div>
     <div class="sl2"><span class="slb">Faltas este mês</span><span class="bdg ${tf>=2?'br':'ba'}">${tf}</span></div>
     <div class="sl2"><span class="slb">Pagamento</span><span class="bdg ${_livrosPagos >= _livrosLiberados?'bv':'br'}">${_statusPagamento}</span></div>`;
