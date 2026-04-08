@@ -144,14 +144,6 @@ select.inp{cursor:pointer}
 .pres-ro-d{font-size:14px;color:var(--cin)}
 .pres-ro-s{font-size:13px;font-weight:600;padding:4px 12px;border-radius:99px}
 .pres-p{background:var(--vd-c);color:var(--vd)}.pres-f{background:var(--vm-c);color:var(--vm)}.pres-n{background:var(--brd);color:var(--cin)}
-/* destaque visual: falta e presença na lista */
-.pres-ro.ro-falta{background:#fff4f4;border-color:#e8a0a0;border-width:1.5px}
-.pres-ro.ro-presente{background:#f4fbf6;border-color:#a8d5b5}
-/* badge de status geral de frequência */
-.pres-status-badge{display:inline-block;font-size:13px;font-weight:600;padding:4px 12px;border-radius:99px;margin-top:6px}
-.pres-status-ok{background:var(--vd-c);color:var(--vd)}
-.pres-status-warn{background:var(--am-c);color:var(--am)}
-.pres-status-bad{background:var(--vm-c);color:var(--vm)}
 
 /* ── PAGAMENTOS ── */
 .pgr{display:flex;align-items:center;gap:12px;padding:14px;background:#fff;border-radius:var(--r);margin-bottom:11px;border:1px solid var(--brd);box-shadow:var(--s)}
@@ -1134,65 +1126,100 @@ async function renderPagamentosAlunoViaLivros() {
   const container = document.getElementById('aluno-pagamentos');
   if (!container) return;
   container.innerHTML = 'Carregando pagamentos...';
-  if (!window.livrosAluno || window.livrosAluno.length === 0) {
-    container.innerHTML = '<p>Nenhum pagamento encontrado.</p>';
-    return;
-  }
-  const dados = window.livrosAluno;
 
-  // Calcular livro atual SEPARADAMENTE — somente para badge, não para inferir pagamento
-  const pagosDados = dados.filter(l => l.pagou === true && (l.livros?.ordem ?? 9999) < 9999);
-  const maiorOrdemPaga = pagosDados.length > 0 ? Math.max(...pagosDados.map(l => l.livros?.ordem || 0)) : 0;
-  const ordemLivroAtual = maiorOrdemPaga + 1;
+  // ── 1) Lista fixa dos 24 livros do curso (ordem obrigatória) ──
+  const LIVROS_CURSO = [
+    { codigo: 'p1',  nome: 'Pentateuco' },
+    { codigo: 'p2',  nome: 'Históricos e Poéticos' },
+    { codigo: 'p3',  nome: 'História de Israel' },
+    { codigo: 'p4',  nome: 'Profetas Maiores e Menores' },
+    { codigo: 'p5',  nome: 'Os Evangelhos' },
+    { codigo: 'p6',  nome: 'Atos dos Apóstolos' },
+    { codigo: 'p7',  nome: 'Epístolas Paulinas' },
+    { codigo: 'p8',  nome: 'Epístolas Gerais' },
+    { codigo: 'p9',  nome: 'Apocalipse' },
+    { codigo: 'p10', nome: 'Bibliologia' },
+    { codigo: 'p11', nome: 'História Eclesiástica' },
+    { codigo: 'p12', nome: 'Hamartiologia e Soteriologia' },
+    { codigo: 'p13', nome: 'Antropologia' },
+    { codigo: 'p14', nome: 'Educação Cristã' },
+    { codigo: 'p15', nome: 'Seitas Modernas' },
+    { codigo: 'p16', nome: 'Geografia Bíblica' },
+    { codigo: 'p17', nome: 'Escatologia' },
+    { codigo: 'p18', nome: 'Evangelismo' },
+    { codigo: 'p19', nome: 'Liderança Cristã' },
+    { codigo: 'p20', nome: 'Hermenêutica' },
+    { codigo: 'p21', nome: 'Teontologia' },
+    { codigo: 'p22', nome: 'Cristologia' },
+    { codigo: 'p23', nome: 'Eclesiologia' },
+    { codigo: 'p24', nome: 'Homilética' }
+  ];
+  const TOTAL_CURSO = 24;
 
-  // Classificar cada livro: pagou===true → pago; caso contrário → pendente (ou não participou)
-  // NUNCA usar ordem para inferir pagamento
-  const classificados = dados.map(item => {
-    if (!item.livros || !item.livros.codigo) {
-      console.warn('Livro sem registro na tabela livros (pagamentos):', item.livro_codigo, item);
+  // ── 2) Calcular livros liberados pela data atual ──
+  const hoje = new Date();
+  let livrosLiberados = 7;
+  if (hoje.getDate() >= 25) livrosLiberados = 8;
+  if (livrosLiberados > TOTAL_CURSO) livrosLiberados = TOTAL_CURSO;
+
+  // ── 3) Identificar livros pagos via window.livrosAluno ──
+  const dadosAluno = window.livrosAluno || [];
+  const codigosPagos = new Set(
+    dadosAluno
+      .filter(l => l.pagou === true)
+      .map(l => l.livro_codigo || l.livros?.codigo)
+      .filter(Boolean)
+  );
+
+  // ── 4) Classificar cada um dos 24 livros ──
+  const classificados = LIVROS_CURSO.map((livro, idx) => {
+    const indice = idx + 1; // 1-based
+    const pago   = codigosPagos.has(livro.codigo);
+    // buscar dados extras do banco (forma/data pagamento) se existirem
+    const dadoBanco = dadosAluno.find(l =>
+      (l.livro_codigo === livro.codigo) || (l.livros?.codigo === livro.codigo)
+    );
+    if (indice <= livrosLiberados) {
+      return { ...livro, indice, tipo: pago ? 'pago' : 'pendente', dadoBanco };
+    } else {
+      return { ...livro, indice, tipo: 'futuro', dadoBanco };
     }
-    const ordemItem = item.livros?.ordem ?? 9999;
-    if (item.participou === false) return { ...item, _tipo: 'nao_participou' };
-    if (item.pagou === true) return { ...item, _tipo: 'pago' }; // única fonte de verdade
-    if (ordemItem === ordemLivroAtual) return { ...item, _tipo: 'atual' };
-    return { ...item, _tipo: 'pendente' };
   });
 
-  const pagos     = classificados.filter(l => l._tipo === 'pago').length;
-  const pendentes = classificados.filter(l => l._tipo === 'atual' || l._tipo === 'pendente').length;
+  // ── 5) Contadores — livros futuros NÃO entram ──
+  const qtdPagos     = classificados.filter(l => l.tipo === 'pago').length;
+  const qtdPendentes = classificados.filter(l => l.tipo === 'pendente').length;
 
+  // ── 6) Renderizar ──
   container.innerHTML = `
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
-      <div style="background:#ECFDF5; border:1px solid #BBF7D0; border-radius:12px; padding:14px; text-align:center;">
-        <div style="font-size:26px; font-weight:700; color:#16A34A; font-family:'Lora',serif; line-height:1.1;">${pagos}</div>
-        <div style="font-size:11px; color:#166534; margin-top:3px; font-weight:500; text-transform:uppercase; letter-spacing:.4px;">✅ Pagos</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+      <div style="background:#ECFDF5;border:1px solid #BBF7D0;border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:26px;font-weight:700;color:#16A34A;font-family:'Lora',serif;line-height:1.1;">${qtdPagos}</div>
+        <div style="font-size:11px;color:#166534;margin-top:3px;font-weight:500;text-transform:uppercase;letter-spacing:.4px;">✅ Pagos</div>
       </div>
-      <div style="background:#FEF2F2; border:1px solid #FECACA; border-radius:12px; padding:14px; text-align:center;">
-        <div style="font-size:26px; font-weight:700; color:#DC2626; font-family:'Lora',serif; line-height:1.1;">${pendentes}</div>
-        <div style="font-size:11px; color:#991B1B; margin-top:3px; font-weight:500; text-transform:uppercase; letter-spacing:.4px;">❌ Pendentes</div>
+      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:26px;font-weight:700;color:#DC2626;font-family:'Lora',serif;line-height:1.1;">${qtdPendentes}</div>
+        <div style="font-size:11px;color:#991B1B;margin-top:3px;font-weight:500;text-transform:uppercase;letter-spacing:.4px;">❌ Pendentes</div>
       </div>
     </div>
-    ${classificados.map(item => {
-      const nome = item.livros?.nome || item.nome || 'Livro';
+    ${classificados.map(livro => {
       let corFundo, corBorda, statusHtml;
-      if (item._tipo === 'pago') {
+      if (livro.tipo === 'pago') {
         corFundo = '#ECFDF5'; corBorda = '#BBF7D0';
-        statusHtml = `<div style="font-size:14px;font-weight:700;color:#16A34A;margin-bottom:${item.data_pagamento?'8px':'0'};">✅ PAGO</div>
-          ${item.data_pagamento ? `<div style="font-size:12px;color:#555;margin-top:2px;">Forma: ${item.forma_pagamento||'-'}</div><div style="font-size:12px;color:#555;margin-top:2px;">Data: ${new Date(item.data_pagamento).toLocaleDateString('pt-BR')}</div>` : ''}`;
-      } else if (item._tipo === 'atual') {
+        const db = livro.dadoBanco;
+        statusHtml = `<div style="font-size:14px;font-weight:700;color:#16A34A;margin-bottom:${db?.data_pagamento?'8px':'0'};">✅ PAGO</div>`
+          + (db?.data_pagamento ? `<div style="font-size:12px;color:#555;margin-top:2px;">Forma: ${db.forma_pagamento||'-'}</div><div style="font-size:12px;color:#555;margin-top:2px;">Data: ${new Date(db.data_pagamento).toLocaleDateString('pt-BR')}</div>` : '');
+      } else if (livro.tipo === 'pendente') {
         corFundo = '#FEF2F2'; corBorda = '#FECACA';
-        statusHtml = `<div style="font-size:14px;font-weight:700;color:#DC2626;">❌ PENDENTE — Livro Atual</div>`;
-      } else if (item._tipo === 'nao_participou') {
-        corFundo = '#F9FAFB'; corBorda = '#E5E7EB';
-        statusHtml = `<div style="font-size:14px;font-weight:500;color:#6B7280;">⚫ Não participou</div>`;
+        statusHtml = `<div style="font-size:14px;font-weight:700;color:#DC2626;">❌ PENDENTE</div>`;
       } else {
-        // pendente — aguardando
-        corFundo = '#F9FAFB'; corBorda = '#E5E7EB';
-        statusHtml = `<div style="font-size:14px;font-weight:500;color:#9CA3AF;">⏳ Pendente</div>`;
+        // futuro
+        corFundo = '#F3F4F6'; corBorda = '#D1D5DB';
+        statusHtml = `<div style="font-size:13px;font-weight:500;color:#9CA3AF;">⏳ Disponível em breve</div>`;
       }
       return `
         <div style="background:${corFundo};border:1px solid ${corBorda};border-radius:12px;padding:16px;margin-bottom:12px;">
-          <div style="font-size:14px;font-weight:600;color:#1a3a5c;margin-bottom:8px;">💳 ${nome}</div>
+          <div style="font-size:14px;font-weight:600;color:#1a3a5c;margin-bottom:8px;">💳 ${livro.indice}. ${livro.nome}</div>
           ${statusHtml}
         </div>
       `;
@@ -2589,17 +2616,11 @@ async function renderAlunoPresenca(){
   }
 
   if (elStats) {
-    const statusCls   = perc >= 75 ? 'pres-status-ok' : perc >= 50 ? 'pres-status-warn' : 'pres-status-bad';
-    const statusLabel = perc >= 75 ? '✔ Frequência boa' : perc >= 50 ? '⚠ Atenção' : '✖ Frequência baixa';
     elStats.innerHTML = `
       <div class="g3">
-        <div class="mc3"><div class="mc3n" style="color:var(--azul);font-size:30px;font-weight:700">${total}</div><div class="mc3l">Aulas</div></div>
-        <div class="mc3"><div class="mc3n" style="color:var(--vd);font-size:30px;font-weight:700">${presencas}</div><div class="mc3l">Presenças</div></div>
-        <div class="mc3">
-          <div class="mc3n" style="color:var(--am);font-size:30px;font-weight:700">${perc}%</div>
-          <div class="mc3l">Frequência</div>
-          <span class="pres-status-badge ${statusCls}">${statusLabel}</span>
-        </div>
+        <div class="mc3"><div class="mc3n" style="color:var(--azul)">${total}</div><div class="mc3l">Aulas</div></div>
+        <div class="mc3"><div class="mc3n" style="color:var(--vd)">${presencas}</div><div class="mc3l">Presenças</div></div>
+        <div class="mc3"><div class="mc3n" style="color:var(--am)">${perc}%</div><div class="mc3l">Frequência</div></div>
       </div>`;
   }
 
@@ -2612,8 +2633,7 @@ async function renderAlunoPresenca(){
       const d  = new Date(r.data + 'T12:00:00');
       const stClass = r.presente ? 'pres-p' : 'pres-f';
       const stLabel = r.presente ? 'Presente' : 'Falta';
-      const roClass = r.presente ? 'ro-presente' : 'ro-falta';
-      return `<div class="pres-ro ${roClass}">
+      return `<div class="pres-ro">
         <div>
           <div style="font-size:14px;font-weight:500">${r.livro || 'Aula'}</div>
           <div class="pres-ro-d">${DS[d.getDay()]}, ${fmtD(d)}</div>
