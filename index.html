@@ -275,8 +275,34 @@ select.inp{cursor:pointer}
       <button class="btn bp" onclick="loginAluno()" style="font-size:17px;padding:18px;font-weight:600;margin-bottom:12px">Entrar</button>
       <!-- ════ FIM LOGIN ════ -->
       <div class="login-divider">ou</div>
-      <button onclick="abrirModAdmin()" style="background:none;border:1.5px solid var(--brd);border-radius:var(--r);width:100%;padding:12px;font-size:14px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;color:var(--cin);transition:all .2s" onmouseover="this.style.borderColor='var(--azul)';this.style.color='var(--azul)'" onmouseout="this.style.borderColor='var(--brd)';this.style.color='var(--cin)'">
+      <button onclick="abrirLoginAdmin()" style="background:none;border:1.5px solid var(--brd);border-radius:var(--r);width:100%;padding:12px;font-size:14px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;color:var(--cin);transition:all .2s" onmouseover="this.style.borderColor='var(--azul)';this.style.color='var(--azul)'" onmouseout="this.style.borderColor='var(--brd)';this.style.color='var(--cin)'">
         🔐 Acesso Administrador
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="pg-login-admin" style="display:none">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="./logo.png" style="display:block;margin:0 auto;width:110px;height:110px;">
+    </div>
+    <div class="login-titulo">Admin IBICAMP</div>
+    <div class="login-sub">Acesso administrativo</div>
+    <div class="login-card">
+      <div class="campo">
+        <label>E-mail</label>
+        <input class="inp" id="admin-email" type="text" placeholder="Digite o e-mail do admin">
+      </div>
+      <div class="campo">
+        <label>Senha</label>
+        <input class="inp" id="admin-senha" type="password" placeholder="Digite a senha">
+      </div>
+      <button class="btn bp" onclick="loginAdmin()">
+        Entrar como Admin
+      </button>
+      <button class="btn bs" onclick="voltarParaLoginAluno()">
+        ← Voltar
       </button>
     </div>
   </div>
@@ -1647,6 +1673,25 @@ async function carregarExibirLivrosAdminPerfil(alunoId) {
 /* ════ FIM TAREFAS 1 e 2 ════ */
 
 function abrirModAdmin(){ abrirMod('mod-admin'); setTimeout(()=>document.getElementById('admin-pw').focus(),100); }
+
+function abrirLoginAdmin() {
+  document.getElementById('pg-login').style.display = 'none';
+  document.getElementById('pg-login-admin').style.display = 'flex';
+}
+function voltarParaLoginAluno() {
+  document.getElementById('pg-login-admin').style.display = 'none';
+  document.getElementById('pg-login').style.display = 'flex';
+}
+function loginAdmin() {
+  const email = document.getElementById('admin-email')?.value;
+  const senha = document.getElementById('admin-senha')?.value;
+  if (!email || !senha) {
+    alert('Preencha todos os campos');
+    return;
+  }
+  console.log('Login admin iniciado:', email);
+  // NÃO implementar autenticação ainda
+}
 
 async function verificarAdmin(){
   if(document.getElementById('admin-pw').value===ADMIN_PW){
