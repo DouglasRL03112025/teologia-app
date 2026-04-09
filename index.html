@@ -1682,15 +1682,44 @@ function voltarParaLoginAluno() {
   document.getElementById('pg-login-admin').style.display = 'none';
   document.getElementById('pg-login').style.display = 'flex';
 }
-function loginAdmin() {
+async function loginAdmin() {
   const email = document.getElementById('admin-email')?.value;
   const senha = document.getElementById('admin-senha')?.value;
   if (!email || !senha) {
     alert('Preencha todos os campos');
     return;
   }
-  console.log('Login admin iniciado:', email);
-  // NÃO implementar autenticação ainda
+  try {
+    // LOGIN NO SUPABASE
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: senha
+    });
+    if (error) {
+      console.error('Erro login:', error.message);
+      alert('E-mail ou senha inválidos');
+      return;
+    }
+    const user = data.user;
+    // VERIFICAR SE É ADMIN
+    const { data: adminData, error: adminError } = await supabase
+      .from('admins')
+      .select('email')
+      .eq('email', user.email)
+      .single();
+    if (adminError || !adminData) {
+      alert('Acesso negado: você não é administrador');
+      await supabase.auth.signOut();
+      return;
+    }
+    console.log('Admin autenticado:', user.email);
+    // MOSTRAR TELA ADMIN
+    document.getElementById('pg-login-admin').style.display = 'none';
+    document.getElementById('pg-admin').style.display = 'block';
+  } catch (err) {
+    console.error('Erro inesperado:', err);
+    alert('Erro inesperado ao fazer login');
+  }
 }
 
 async function verificarAdmin(){
