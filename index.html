@@ -1691,7 +1691,7 @@ async function loginAdmin() {
   }
   try {
     // LOGIN NO SUPABASE
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
       email: email,
       password: senha
     });
@@ -1702,14 +1702,14 @@ async function loginAdmin() {
     }
     const user = data.user;
     // VERIFICAR SE É ADMIN
-    const { data: adminData, error: adminError } = await supabase
+    const { data: adminData, error: adminError } = await supabaseClient
       .from('admins')
       .select('email')
       .eq('email', user.email)
       .single();
     if (adminError || !adminData) {
       alert('Acesso negado: você não é administrador');
-      await supabase.auth.signOut();
+      await supabaseClient.auth.signOut();
       return;
     }
     console.log('Admin autenticado:', user.email);
