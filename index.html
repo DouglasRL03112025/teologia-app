@@ -1869,9 +1869,9 @@ async function renderDashAdmin(){
 
   document.getElementById('a-metricas').innerHTML=`
     <div class="mc"><div class="mn">${tot}</div><div class="ml">Alunos ativos</div></div>
-    <div class="mc vd"><div class="mn">${pp}%</div><div class="ml">Frequência mensal</div></div>
-    <div class="mc do"><div class="mn">${pagos}</div><div class="ml">Pagamentos OK</div></div>
-    <div class="mc vm"><div class="mn">${pend}</div><div class="ml">Pag. pendentes</div></div>`;
+    <div class="mc vd"><div class="mn">${pp}%</div><div class="ml">Frequência (mês atual)</div></div>
+    <div class="mc do"><div class="mn">${pagos}</div><div class="ml">Pagamentos OK (no mês)</div></div>
+    <div class="mc vm"><div class="mn">${pend}</div><div class="ml">Pendentes (mês)</div></div>`;
 
   let alerts=[];
   // Alertas de faltas no mês
