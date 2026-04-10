@@ -328,7 +328,7 @@ select.inp{cursor:pointer}
       <div class="g4" id="a-metricas"></div>
       <div class="sl">Ações rápidas</div>
       <div class="ga">
-        <button class="ac dest" onclick="irAdmin('presenca')"><span class="ac-ic">✅</span>Lançar Presença</button>
+        <button class="ac dest" onclick="irAdmin('presenca')"><span class="ac-ic">📋</span>Lançar Presença</button>
         <button class="ac" onclick="irAdmin('pagamentos')"><span class="ac-ic">💰</span>Pagamentos</button>
         <button class="ac" onclick="irAdmin('alunos')"><span class="ac-ic">👥</span>Ver Alunos</button>
         <button class="ac" onclick="irAdmin('relatorios')"><span class="ac-ic">📊</span>Relatórios</button>
@@ -1716,8 +1716,6 @@ async function loginAdmin() {
     // MOSTRAR TELA ADMIN
     document.getElementById('pg-login-admin').style.display = 'none';
     document.getElementById('pg-admin').style.display = 'block';
-    await renderDashAdmin();
-    irAdmin('inicio');
   } catch (err) {
     console.error('Erro inesperado:', err);
     alert('Erro inesperado ao fazer login');
