@@ -1168,6 +1168,15 @@ async function renderPagamentosAlunoViaLivros() {
   if (!container) return;
   container.innerHTML = 'Carregando pagamentos...';
 
+  // ── 0) Garantir que livroAtualSistema esteja disponível ──
+  if (!window.livroAtualSistema) {
+    try {
+      window.livroAtualSistema = await obterLivroAtual(window.livrosAluno || []);
+    } catch(e) {
+      console.log("Erro ao obter livro atual (pagamentos):", e);
+    }
+  }
+
   // ── 1) Lista fixa dos 24 livros do curso (ordem obrigatória) ──
   const LIVROS_CURSO = [
     { codigo: 'p1',  nome: 'Pentateuco' },
