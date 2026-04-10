@@ -640,6 +640,7 @@ select.inp{cursor:pointer}
     <!-- LIVROS RECEBIDOS -->
     <div class="tela" id="al-livros">
       <div class="tit">📚 Meus Livros</div>
+      <p id="livro-atual-aluno" style="font-size:13px; opacity:0.7; margin-top:-8px">📖 Livro atual: <strong>carregando...</strong></p>
       <p class="sub">Controle de material</p>
       <!-- al-livros-lista REMOVIDO: era alimentado por D.livros_ent (localStorage) e causava exibicao incorreta -->
       <!-- unico container de livros agora é aluno-livros, alimentado pelo Supabase -->
@@ -1018,6 +1019,15 @@ async function carregarLivrosAluno() {
   window.livrosAluno = data;
   console.log('RESULTADO FINAL livrosAluno:', window.livrosAluno);
   console.log('[Livros] Carregados:', data.length, 'registros de aluno_livros');
+
+  // ETAPA 2+4: Obter e exibir livro atual do sistema (sem alterar nenhuma lógica existente)
+  const livroAtual = await obterLivroAtual(alunoLivros || []);
+  const elLivro = document.getElementById('livro-atual-aluno');
+  if (elLivro) {
+    elLivro.innerHTML = '📖 Livro atual: <strong>' +
+      (livroAtual ? 'Livro ' + livroAtual : 'não definido') +
+      '</strong>';
+  }
 }
 
 window.filtroLivros = 'todos';
@@ -3091,6 +3101,33 @@ if(!D.aulas_log) { D.aulas_log={}; }
   const supabaseUrl = 'https://avzyklukencvhmyuflwh.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2enlrbHVrZW5jdmhteXVmbHdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjc2MTcsImV4cCI6MjA4OTg0MzYxN30.Y_-bIpc56N1v4ix74nReBA85S2Mshcnl6h-E--HJ3W8';
   const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+  /* ════ FUNÇÃO GLOBAL: LIVRO ATUAL DO SISTEMA ════ */
+  async function obterLivroAtual(alunoLivros) {
+    let livroAtual = null;
+    try {
+      const { data } = await supabaseClient
+        .from('config_sistema')
+        .select('livro_atual_override')
+        .eq('id', 1)
+        .single();
+      if (data && data.livro_atual_override) {
+        return data.livro_atual_override;
+      }
+    } catch (e) {}
+    const contagem = {};
+    alunoLivros.forEach(r => {
+      if (!r.livro_codigo) return;
+      contagem[r.livro_codigo] = (contagem[r.livro_codigo] || 0) + 1;
+    });
+    const maisComum = Object.entries(contagem)
+      .sort((a, b) => b[1] - a[1])[0];
+    if (maisComum) {
+      livroAtual = parseInt(maisComum[0].replace('p', ''));
+    }
+    return livroAtual;
+  }
+  /* ════ FIM FUNÇÃO GLOBAL: LIVRO ATUAL ════ */
 
   async function testarConexao() {
     const { data, error } = await supabaseClient.from('alunos').select('*');
