@@ -1716,6 +1716,10 @@ async function loginAdmin() {
     // MOSTRAR TELA ADMIN
     document.getElementById('pg-login-admin').style.display = 'none';
     document.getElementById('pg-admin').style.display = 'block';
+    usuAtual = { id: user.id, nome: user.email, isAdmin: true };
+    window.isAdmin = true;
+    await renderDashAdmin();
+    irAdmin('inicio');
   } catch (err) {
     console.error('Erro inesperado:', err);
     alert('Erro inesperado ao fazer login');
