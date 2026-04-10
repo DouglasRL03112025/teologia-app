@@ -338,6 +338,7 @@ select.inp{cursor:pointer}
         <button class="ac oculto-auth" id="btn-vincular-auth" onclick="vincularAuthAlunos()"><span class="ac-ic">🔗</span>Vincular Auth</button>
         <button class="ac oculto-auth" id="btn-criar-usuarios-auth" onclick="criarUsuariosAuth()"><span class="ac-ic">🔑</span>Criar Usuários Auth</button>
         <!-- FIM TEMPORÁRIO -->
+        <button class="ac" onclick="definirLivroAtual()"><span class="ac-ic">📖</span>Definir livro atual</button>
       </div>
       <div class="sl">Alertas</div>
       <div id="a-alertas"></div>
@@ -3730,6 +3731,20 @@ if(!D.aulas_log) { D.aulas_log={}; }
 
   testarConexao();
   inicializarApp();
+
+  /* ════ DEFINIR LIVRO ATUAL (override manual) ════ */
+  async function definirLivroAtual() {
+    const valor = prompt("Digite o número do livro atual (1 a 24):");
+    if (!valor) return;
+    const numero = parseInt(valor);
+    if (isNaN(numero) || numero < 1 || numero > 24) { alert("Número inválido"); return; }
+    const { error } = await supabaseClient
+      .from('config_sistema')
+      .upsert({ id: 1, livro_atual_override: numero });
+    if (error) { alert("Erro ao salvar"); return; }
+    alert("Livro atual definido com sucesso!");
+    await renderDashAdmin();
+  }
 </script>
 </body>
 </html>
