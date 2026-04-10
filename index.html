@@ -1899,6 +1899,8 @@ async function renderDashAdmin(){
   const alunosUnicos = [...new Set(alunosPagaram)];
   const pagos = alunosUnicos.length;
   const pend = tot - pagos;
+  console.log("LIVRO ATUAL:", livroAtual);
+  console.log("TIPO livro_codigo:", alunoLivros.slice(0,5));
 
   document.getElementById('a-metricas').innerHTML=`
     <div class="mc"><div class="mn">${tot}</div><div class="ml">Alunos ativos</div></div>
