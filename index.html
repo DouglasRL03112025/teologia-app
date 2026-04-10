@@ -1973,6 +1973,31 @@ async function renderDashAdmin(){
     return regs.length > 0 && regs.some(r => !r.pagou);
   });
   if(pendNomes.length > 0) alerts.push(`<div class="al am"><span>💰</span><span><strong>${pendNomes.length} aluno${pendNomes.length>1?'s':''}</strong> com pagamento pendente</span></div>`);
+
+  // ── Alertas individuais por livro atual ──
+  if (livroAtual) {
+    al.forEach(function(aluno) {
+      const regsAluno = alunoLivros.filter(r => r.aluno_id === aluno.id);
+
+      // Livro atual — pendente ou aguardando entrega
+      const regAtual = regsAluno.find(r => parseInt((r.livro_codigo || '').replace('p', '')) === livroAtual);
+      if (!regAtual || !regAtual.pagou) {
+        alerts.push(`<div class="al vm"><span>🔴</span><span><strong>${fmtNome(aluno.nome)}</strong> — Livro ${livroAtual} pendente</span></div>`);
+      } else if (regAtual.pagou && !regAtual.data_pagamento) {
+        alerts.push(`<div class="al am"><span>🟡</span><span><strong>${fmtNome(aluno.nome)}</strong> — Livro ${livroAtual} pago, aguardando entrega</span></div>`);
+      }
+
+      // Livros anteriores — atrasados
+      for (let n = 1; n < livroAtual; n++) {
+        const codigo = 'p' + n;
+        const reg = regsAluno.find(r => r.livro_codigo === codigo);
+        if (!reg || !reg.pagou) {
+          alerts.push(`<div class="al vm"><span>🔴</span><span><strong>${fmtNome(aluno.nome)}</strong> — Livro ${n} atrasado</span></div>`);
+        }
+      }
+    });
+  }
+
   if(!alerts.length) alerts.push('<div class="al vd"><span>✅</span><span>Tudo em dia! Nenhum alerta no momento.</span></div>');
   document.getElementById('a-alertas').innerHTML=alerts.join('');
 }
