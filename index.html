@@ -1860,13 +1860,41 @@ async function renderDashAdmin(){
   const mp = datasUnicas.length * tot;
   const pp = mp > 0 ? Math.round(tp / mp * 100) : 0;
 
-  // Pagamentos: aluno "em dia" = TODOS os livros com participou !== false estão pagos
-  const alunosEmDia = al.filter(a => {
-    const regs = alunoLivros.filter(r => r.aluno_id === a.id && r.participou !== false);
-    return regs.length > 0 && regs.every(r => r.pagou === true);
-  });
-  const pagos = alunosEmDia.length;
-  const pend  = tot - pagos;
+  // Pagamentos: baseado no livro atual do sistema
+  let livroAtual = null;
+  try {
+    // Passo 1: verificar override manual em config_sistema
+    const { data: config } = await supabaseClient
+      .from('config_sistema')
+      .select('livro_atual_override')
+      .eq('id', 1)
+      .single();
+    if (config && config.livro_atual_override) {
+      livroAtual = config.livro_atual_override;
+    }
+  } catch(e) { /* tabela pode não existir ainda — segue sem override */ }
+
+  if (!livroAtual && alunoLivros.length > 0) {
+    // Passo 2: sem override → escolher livro com maior quantidade de alunos
+    const contagem = {};
+    alunoLivros.forEach(r => {
+      if (!r.livro_codigo) return;
+      contagem[r.livro_codigo] = (contagem[r.livro_codigo] || 0) + 1;
+    });
+    const livroMaisComum = Object.entries(contagem).sort((a, b) => b[1] - a[1])[0];
+    if (livroMaisComum) {
+      livroAtual = parseInt(livroMaisComum[0].replace('p', ''));
+    }
+  }
+
+  // Pagos: alunos que possuem o livro atual
+  const pagos = livroAtual
+    ? alunoLivros.filter(r => {
+        if (!r.livro_codigo) return false;
+        return parseInt(r.livro_codigo.replace('p', '')) === livroAtual;
+      }).length
+    : 0;
+  const pend = tot - pagos;
 
   document.getElementById('a-metricas').innerHTML=`
     <div class="mc"><div class="mn">${tot}</div><div class="ml">Alunos ativos</div></div>
