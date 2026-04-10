@@ -1024,6 +1024,7 @@ async function carregarLivrosAluno() {
   console.log("🔥 CHAMOU obterLivroAtual");
   const livroAtual = await obterLivroAtual(alunoLivros || []);
   console.log("📖 LIVRO ATUAL (ALUNO):", livroAtual);
+  window.livroAtualSistema = livroAtual || null;
   const elLivro = document.getElementById('livro-atual-aluno');
   if (elLivro) {
     elLivro.innerHTML = '📖 Livro atual: <strong>' +
@@ -1105,6 +1106,12 @@ function renderLivrosAluno(_ignored) {
       status = 'entregue';
     } else {
       status = 'pago_nao_entregue';
+    }
+
+    // Ajuste visual: se este livro é o livro atual do sistema e ainda aparece como 'futuro', exibir como disponível (pendente)
+    var numeroLivro = parseInt(codigo.replace('p', ''));
+    if (window.livroAtualSistema && numeroLivro === window.livroAtualSistema && status === 'futuro') {
+      status = 'pendente';
     }
 
     var s = estilos[status];
