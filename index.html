@@ -1227,9 +1227,25 @@ async function renderPagamentosAlunoViaLivros() {
     }
   });
 
+  // ── 4b) Ajuste visual: sobrescrever tipo com base no livroAtualSistema ──
+  const livroAtualSistema = window.livroAtualSistema || null;
+  if (livroAtualSistema) {
+    classificados.forEach(function(livro) {
+      const numeroLivro = parseInt(livro.codigo.replace('p', ''));
+      const pago = codigosPagos.has(livro.codigo);
+      if (numeroLivro > livroAtualSistema) {
+        livro.tipo = 'futuro';
+      } else if (numeroLivro === livroAtualSistema) {
+        livro.tipo = pago ? 'aguardando' : 'pendente';
+      } else {
+        livro.tipo = pago ? 'pago' : 'atrasado';
+      }
+    });
+  }
+
   // ── 5) Contadores — livros futuros NÃO entram ──
-  const qtdPagos     = classificados.filter(l => l.tipo === 'pago').length;
-  const qtdPendentes = classificados.filter(l => l.tipo === 'pendente').length;
+  const qtdPagos     = classificados.filter(l => l.tipo === 'pago' || l.tipo === 'aguardando').length;
+  const qtdPendentes = classificados.filter(l => l.tipo === 'pendente' || l.tipo === 'atrasado').length;
 
   // ── 6) Renderizar ──
   container.innerHTML = `
@@ -1253,6 +1269,12 @@ async function renderPagamentosAlunoViaLivros() {
       } else if (livro.tipo === 'pendente') {
         corFundo = '#FEF2F2'; corBorda = '#FECACA';
         statusHtml = `<div style="font-size:14px;font-weight:700;color:#DC2626;">❌ PENDENTE</div>`;
+      } else if (livro.tipo === 'aguardando') {
+        corFundo = '#FFFBEB'; corBorda = '#FCD34D';
+        statusHtml = `<div style="font-size:14px;font-weight:700;color:#B45309;">💰 AGUARDANDO ENTREGA</div>`;
+      } else if (livro.tipo === 'atrasado') {
+        corFundo = '#FEF2F2'; corBorda = '#FECACA';
+        statusHtml = `<div style="font-size:14px;font-weight:700;color:#DC2626;">⚠️ ATRASADO</div>`;
       } else {
         // futuro
         corFundo = '#F3F4F6'; corBorda = '#D1D5DB';
