@@ -1887,13 +1887,17 @@ async function renderDashAdmin(){
     }
   }
 
-  // Pagos: alunos que possuem o livro atual
-  const pagos = livroAtual
-    ? alunoLivros.filter(r => {
-        if (!r.livro_codigo) return false;
-        return parseInt(r.livro_codigo.replace('p', '')) === livroAtual;
-      }).length
-    : 0;
+  // Pagos: alunos únicos que possuem o livro atual
+  const alunosPagaram = livroAtual
+    ? alunoLivros
+        .filter(r => {
+          if (!r.livro_codigo) return false;
+          return parseInt(r.livro_codigo.replace('p', '')) === livroAtual;
+        })
+        .map(r => r.aluno_id)
+    : [];
+  const alunosUnicos = [...new Set(alunosPagaram)];
+  const pagos = alunosUnicos.length;
   const pend = tot - pagos;
 
   document.getElementById('a-metricas').innerHTML=`
