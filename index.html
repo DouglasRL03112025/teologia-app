@@ -1021,7 +1021,9 @@ async function carregarLivrosAluno() {
   console.log('[Livros] Carregados:', data.length, 'registros de aluno_livros');
 
   // ETAPA 2+4: Obter e exibir livro atual do sistema (sem alterar nenhuma lógica existente)
+  console.log("🔥 CHAMOU obterLivroAtual");
   const livroAtual = await obterLivroAtual(alunoLivros || []);
+  console.log("📖 LIVRO ATUAL (ALUNO):", livroAtual);
   const elLivro = document.getElementById('livro-atual-aluno');
   if (elLivro) {
     elLivro.innerHTML = '📖 Livro atual: <strong>' +
