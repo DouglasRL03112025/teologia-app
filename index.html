@@ -360,10 +360,10 @@ select.inp{cursor:pointer}
         <option value="">🎓 Todas as turmas</option>
       </select>
       <div class="filtros-admin">
-        <button class="ac">Todos</button>
-        <button class="ac">🔴 Pendentes</button>
-        <button class="ac">⚠️ Atrasados</button>
-        <button class="ac">🟡 Aguardando</button>
+        <button class="ac" onclick="window._admFiltro=''; aplicarFiltroVisualAdmin()">Todos</button>
+        <button class="ac" onclick="window._admFiltro='pendente'; aplicarFiltroVisualAdmin()">🔴 Pendentes</button>
+        <button class="ac" onclick="window._admFiltro='atrasado'; aplicarFiltroVisualAdmin()">⚠️ Atrasados</button>
+        <button class="ac" onclick="window._admFiltro='aguardando'; aplicarFiltroVisualAdmin()">🟡 Aguardando</button>
       </div>
       <div id="lista-alunos-admin"></div>
     </div>
