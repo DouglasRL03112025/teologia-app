@@ -111,6 +111,10 @@ select.inp{cursor:pointer}
 .busca{width:100%;padding:13px 15px 13px 42px;border:1.5px solid var(--brd);border-radius:var(--r);font-size:16px;font-family:'Inter',sans-serif;background:#fff}
 .busca:focus{outline:none;border-color:var(--azul)}
 
+/* ── FILTROS ADMIN ── */
+.filtros-admin{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.filtros-admin .ac{padding:9px 14px;font-size:13px;font-weight:600;border-radius:99px;flex:none;gap:5px}
+
 /* ── LISTA ALUNOS ── */
 .ar{display:flex;align-items:center;gap:13px;padding:14px;background:#fff;border-radius:var(--r);margin-bottom:9px;border:1px solid var(--brd);box-shadow:var(--s);cursor:pointer;transition:all .2s}
 .ar:hover{border-color:var(--azul);box-shadow:var(--sh);transform:translateY(-1px)}
@@ -355,6 +359,12 @@ select.inp{cursor:pointer}
       <select class="inp" id="filtro-turma-alunos" onchange="renderAlunosAdmin()" style="margin-bottom:14px;font-size:14px">
         <option value="">🎓 Todas as turmas</option>
       </select>
+      <div class="filtros-admin">
+        <button class="ac">Todos</button>
+        <button class="ac">🔴 Pendentes</button>
+        <button class="ac">⚠️ Atrasados</button>
+        <button class="ac">🟡 Aguardando</button>
+      </div>
       <div id="lista-alunos-admin"></div>
     </div>
 
