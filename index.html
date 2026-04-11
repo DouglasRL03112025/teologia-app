@@ -3295,10 +3295,15 @@ if(!D.aulas_log) { D.aulas_log={}; }
       const lista = document.getElementById('lista-alunos-admin');
       if (!lista) return;
       new MutationObserver(function() {
-        window._admSelecionados.clear();
-        admAtualizarBarraLote();
-        admInjetarCheckboxes();
+        // setTimeout(0) garante execução após o browser processar o DOM completo
+        setTimeout(function() {
+          window._admSelecionados.clear();
+          admAtualizarBarraLote();
+          admInjetarCheckboxes();
+        }, 0);
       }).observe(lista, { childList: true });
+      // Injeta imediatamente caso a lista já tenha cards ao inicializar
+      admInjetarCheckboxes();
     }
     // Tenta imediatamente; se o DOM ainda não existir, aguarda DOMContentLoaded
     if (document.readyState === 'loading') {
