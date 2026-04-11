@@ -373,8 +373,7 @@ select.inp{cursor:pointer}
       <div class="filtros-admin">
         <button class="ac" onclick="window._admFiltro=''; aplicarFiltroVisualAdmin()">Todos</button>
         <button class="ac" onclick="window._admFiltro='pendente'; aplicarFiltroVisualAdmin()">🔴 Pendentes</button>
-        <button class="ac" onclick="window._admFiltro='atrasado'; aplicarFiltroVisualAdmin()">⚠️ Atrasados</button>
-        <button class="ac" onclick="window._admFiltro='aguardando'; aplicarFiltroVisualAdmin()">🟡 Aguardando</button>
+        <button class="ac" onclick="window._admFiltro='em-dia'; aplicarFiltroVisualAdmin()">✅ Em dia</button>
       </div>
       <div id="adm-barra-lote">
         <div id="adm-barra-lote-info">0 alunos selecionados</div>
@@ -3216,14 +3215,14 @@ if(!D.aulas_log) { D.aulas_log={}; }
         card.style.display = '';
         return;
       }
+      // Lê o badge real gerado por renderAlunosAdmin (.bdg dentro do card)
+      const badge = card.querySelector('.bdg');
+      const badgeTexto = badge ? badge.innerText.toLowerCase() : texto;
       if (window._admFiltro === 'pendente') {
-        card.style.display = texto.includes('pendente') ? '' : 'none';
+        card.style.display = badgeTexto.includes('pendente') ? '' : 'none';
       }
-      if (window._admFiltro === 'atrasado') {
-        card.style.display = texto.includes('atrasado') ? '' : 'none';
-      }
-      if (window._admFiltro === 'aguardando') {
-        card.style.display = texto.includes('aguardando') ? '' : 'none';
+      if (window._admFiltro === 'em-dia') {
+        card.style.display = badgeTexto.includes('em dia') ? '' : 'none';
       }
     });
   }
