@@ -379,7 +379,8 @@ select.inp{cursor:pointer}
       <div id="adm-barra-lote">
         <div id="adm-barra-lote-info">0 alunos selecionados</div>
         <div id="adm-barra-lote-acoes">
-          <button class="btn-lote cancel" onclick="admLimparSelecao()">✕ Limpar</button>
+          <button class="btn-lote" onclick="admMarcarLotePago()">✅ Marcar como pago</button>
+          <button class="btn-lote cancel" onclick="admLimparSelecaoLote()">✕ Limpar seleção</button>
         </div>
       </div>
       <div id="lista-alunos-admin"></div>
@@ -3303,6 +3304,52 @@ if(!D.aulas_log) { D.aulas_log={}; }
       iniciarObserver();
     }
   })();
+  /* ── AÇÕES EM LOTE (Supabase) ── */
+
+  async function admMarcarLotePago() {
+    const ids = Array.from(window._admSelecionados);
+    if (!ids.length) { toast('⚠️ Nenhum aluno selecionado'); return; }
+
+    // Confirmação antes de qualquer escrita no banco
+    const nomes = ids.map(id => {
+      const card = document.querySelector(`#lista-alunos-admin .ar[data-aluno-id="${id}"]`);
+      return card ? card.querySelector('.an')?.textContent || id : id;
+    });
+    if (!confirm(`Marcar como pago todos os livros pendentes de ${ids.length} aluno(s)?\n\n${nomes.join('\n')}`)) return;
+
+    let erros = 0;
+    for (const alunoId of ids) {
+      try {
+        // Usa UPDATE (não upsert) em registros existentes — schema real: pagou boolean
+        const { error } = await supabaseClient
+          .from('aluno_livros')
+          .update({
+            pagou: true,
+            forma_pagamento: 'admin',
+            data_pagamento: new Date().toISOString()
+          })
+          .eq('aluno_id', alunoId)
+          .eq('pagou', false);   // só atualiza quem ainda não pagou
+        if (error) { console.error('[LOTE PAGO] aluno', alunoId, error); erros++; }
+      } catch(e) { console.error('[LOTE PAGO] exceção', alunoId, e); erros++; }
+    }
+
+    admLimparSelecao();
+    if (typeof renderPagamentosAlunoViaLivros === 'function') {
+      await renderPagamentosAlunoViaLivros();
+    }
+    toast(erros === 0
+      ? `✅ ${ids.length} aluno(s) marcado(s) como pago!`
+      : `⚠️ Concluído com ${erros} erro(s). Veja o console.`
+    );
+  }
+
+  function admLimparSelecaoLote() {
+    // Apenas limpa seleção visual — sem escrita no banco
+    admLimparSelecao();
+    toast('Seleção limpa');
+  }
+
   /* ── FIM SELEÇÃO MÚLTIPLA ── */
 
   const supabaseUrl = 'https://avzyklukencvhmyuflwh.supabase.co';
