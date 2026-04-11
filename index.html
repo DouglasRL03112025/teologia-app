@@ -3278,8 +3278,11 @@ if(!D.aulas_log) { D.aulas_log={}; }
       cb.className = 'sel-aluno';
       cb.checked   = window._admSelecionados.has(alunoId);
       if (cb.checked) card.classList.add('selecionado');
+      cb.addEventListener('click', function(e) {
+        e.stopPropagation(); // bloqueia clique físico de chegar ao onclick do card
+      });
       cb.addEventListener('change', function(e) {
-        e.stopPropagation(); // não abre perfil ao clicar no checkbox
+        e.stopPropagation();
         admToggleSelecionado(alunoId, this.checked);
       });
       card.insertBefore(cb, card.firstChild);
