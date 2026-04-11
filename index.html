@@ -2083,13 +2083,18 @@ async function renderAlunosAdmin(){
   if(!lista.length){ el.innerHTML='<div class="empty"><div class="empty-ic">👥</div><div class="empty-tx">Nenhum aluno encontrado.</div></div>'; return; }
 
   // Buscar aluno_livros para badge correto
-  const { data: alunoLivros } = await supabaseClient.from('aluno_livros').select('aluno_id, pagou, participou');
+  const { data: alunoLivros } = await supabaseClient.from('aluno_livros').select('aluno_id, pagou, participou, livro_codigo');
   const alLivros = alunoLivros || [];
 
   const cm=chM(hj());
   el.innerHTML=lista.map(a=>{
-    // Em dia = todos os livros com participou !== false estão pagos
-    const regs = alLivros.filter(r => r.aluno_id === a.id && r.participou !== false);
+    // Em dia = livro atual pago (usa window.livroAtualSistema se disponível)
+    const livroAtual = window.livroAtualSistema;
+    const regs = alLivros.filter(r =>
+      r.aluno_id === a.id &&
+      (!livroAtual || r.livro_codigo == livroAtual) &&
+      r.participou !== false
+    );
     const emDia = regs.length > 0 && regs.every(r => r.pagou === true);
     const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
     let pres=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') pres++; });
