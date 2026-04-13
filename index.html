@@ -1980,12 +1980,12 @@ async function renderDashAdmin(){
     }
   }
 
-  // Pagos: alunos únicos que possuem o livro atual
+  // Pagos: alunos únicos que possuem o livro atual com pagou === true
   const alunosPagaram = livroAtual
     ? alunoLivros
         .filter(r => {
           if (!r.livro_codigo) return false;
-          return parseInt(r.livro_codigo.replace('p', '')) === livroAtual;
+          return parseInt(r.livro_codigo.replace('p', '')) === livroAtual && r.pagou === true;
         })
         .map(r => r.aluno_id)
     : [];
