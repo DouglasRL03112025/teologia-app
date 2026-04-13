@@ -378,6 +378,8 @@ select.inp{cursor:pointer}
       <div id="adm-barra-lote">
         <div id="adm-barra-lote-info">0 alunos selecionados</div>
         <div id="adm-barra-lote-acoes">
+          <button class="btn-lote" onclick="admSelecionarTodos(Array.from(document.querySelectorAll('#lista-alunos-admin .ar[data-aluno-id]')).map(c=>c.getAttribute('data-aluno-id')))">☑ Selecionar todos</button>
+          <button class="btn-lote" onclick="admDesmarcarTodos()">☐ Desmarcar todos</button>
           <button class="btn-lote" onclick="admMarcarLotePago()">✅ Marcar como pago</button>
           <button class="btn-lote cancel" onclick="admLimparSelecaoLote()">✕ Limpar seleção</button>
         </div>
@@ -3419,6 +3421,30 @@ if(!D.aulas_log) { D.aulas_log={}; }
     // Apenas limpa seleção visual — sem escrita no banco
     admLimparSelecao();
     toast('Seleção limpa');
+  }
+
+  function admSelecionarTodos(alunosIds) {
+    if (!window._admSelecionados) return;
+    alunosIds.forEach(id => window._admSelecionados.add(id));
+    document.querySelectorAll('#lista-alunos-admin .ar').forEach(card => {
+      const id = card.getAttribute('data-aluno-id');
+      if (!id || !window._admSelecionados.has(id)) return;
+      card.classList.add('selecionado');
+      const cb = card.querySelector('.sel-aluno');
+      if (cb) cb.checked = true;
+    });
+    admAtualizarBarraLote();
+  }
+
+  function admDesmarcarTodos() {
+    if (!window._admSelecionados) return;
+    window._admSelecionados.clear();
+    document.querySelectorAll('#lista-alunos-admin .ar').forEach(card => {
+      card.classList.remove('selecionado');
+      const cb = card.querySelector('.sel-aluno');
+      if (cb) cb.checked = false;
+    });
+    admAtualizarBarraLote();
   }
 
   /* ── FIM SELEÇÃO MÚLTIPLA ── */
