@@ -2090,6 +2090,11 @@ async function renderAlunosAdmin(){
   el.innerHTML=lista.map(a=>{
     // Em dia = livro atual pago (usa window.livroAtualSistema se disponível)
     const livroAtual = window.livroAtualSistema;
+    console.log('LISTA', {
+      alunoId: a.id,
+      livroAtual: window.livroAtualSistema,
+      totalRegistros: alLivros.length
+    });
     const emDia = calcularStatusAluno(a.id, alLivros, livroAtual) === 'Em dia';
     const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
     let pres=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') pres++; });
@@ -2133,6 +2138,12 @@ async function carregarResumoLivrosAluno(alunoId) {
 
   // Status: usa a mesma fonte de verdade da lista
   const livroAtual = window.livroAtualSistema;
+  console.log('PERFIL', {
+    alunoId,
+    livroAtual: window.livroAtualSistema,
+    totalRegistros: data.length,
+    data
+  });
   const status = calcularStatusAluno(alunoId, data, livroAtual);
 
   return { pagos, pendentes, progresso, totalCurso, status };
