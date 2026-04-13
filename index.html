@@ -2120,7 +2120,7 @@ function calcularStatusAluno(alunoId, alLivros, livroAtual) {
 async function carregarResumoLivrosAluno(alunoId) {
   const { data, error } = await supabaseClient
     .from('aluno_livros')
-    .select('pagou, participou, livro_codigo')
+    .select('aluno_id, pagou, participou, livro_codigo')
     .eq('aluno_id', alunoId);
   if (error) {
     console.error('Erro ao carregar resumo:', error);
@@ -2133,7 +2133,7 @@ async function carregarResumoLivrosAluno(alunoId) {
 
   // Status: usa a mesma fonte de verdade da lista
   const livroAtual = window.livroAtualSistema;
-  const status = calcularStatusAluno(alunoId, data.map(item => ({ ...item, aluno_id: alunoId })), livroAtual);
+  const status = calcularStatusAluno(alunoId, data, livroAtual);
 
   return { pagos, pendentes, progresso, totalCurso, status };
 }
