@@ -2219,7 +2219,8 @@ async function verPerfilAdmin(id){
     </div>
     <div class="card"><div class="card-t">📝 Provas do Aluno</div><div id="admin-provas-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
     <div class="card"><div class="card-t">📚 Livros do Aluno (Supabase)</div><div id="admin-livros-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
-    <button class="btn bs" onclick="abrirModAluno('${id}')">✏️ Editar dados</button>`;
+    <button class="btn bs" onclick="abrirModAluno('${id}')">✏️ Editar dados</button>
+    <button class="btn bd bsm" style="margin-top:8px;width:100%" onclick="desmarcarPagamentoAluno('${id}')">↩️ Desmarcar pagamento do livro atual</button>\`;
   carregarExibirProvasAdminPerfil(id);
   carregarExibirLivrosAdminPerfil(id);
 }
@@ -3417,6 +3418,23 @@ if(!D.aulas_log) { D.aulas_log={}; }
   }
 
   /* ── FIM SELEÇÃO MÚLTIPLA ── */
+
+
+  /* ════ DESMARCAR PAGAMENTO — LIVRO ATUAL ════ */
+  async function desmarcarPagamentoAluno(alunoId) {
+    const livroAtual = window.livroAtualSistema;
+    if (!livroAtual) { alert('Livro atual não definido'); return; }
+    if (!confirm('Desmarcar pagamento do Livro ' + livroAtual + '?')) return;
+    const { error } = await supabaseClient
+      .from('aluno_livros')
+      .update({ pagou: false, data_pagamento: null, forma_pagamento: null })
+      .eq('aluno_id', alunoId)
+      .eq('livro_codigo', 'p' + livroAtual);
+    if (error) { alert('Erro ao desmarcar pagamento'); return; }
+    alert('Pagamento desmarcado com sucesso');
+    renderPagamentosAlunoViaLivros();
+  }
+  /* ════ FIM DESMARCAR PAGAMENTO ════ */
 
   const supabaseUrl = 'https://avzyklukencvhmyuflwh.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2enlrbHVrZW5jdmhteXVmbHdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjc2MTcsImV4cCI6MjA4OTg0MzYxN30.Y_-bIpc56N1v4ix74nReBA85S2Mshcnl6h-E--HJ3W8';
