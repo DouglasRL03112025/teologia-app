@@ -381,6 +381,7 @@ select.inp{cursor:pointer}
           <button class="btn-lote" onclick="admSelecionarTodos(Array.from(document.querySelectorAll('#lista-alunos-admin .ar[data-aluno-id]')).map(c=>c.getAttribute('data-aluno-id')))">☑ Selecionar todos</button>
           <button class="btn-lote" onclick="admDesmarcarTodos()">☐ Desmarcar todos</button>
           <button class="btn-lote" onclick="admMarcarLotePago()">✅ Marcar como pago</button>
+          <button class="btn-lote" onclick="admDesmarcarPagamentoLote()">❌ Desmarcar pagamento</button>
           <button class="btn-lote cancel" onclick="admLimparSelecaoLote()">✕ Limpar seleção</button>
         </div>
       </div>
@@ -3445,6 +3446,19 @@ if(!D.aulas_log) { D.aulas_log={}; }
       if (cb) cb.checked = false;
     });
     admAtualizarBarraLote();
+  }
+
+  async function admDesmarcarPagamentoLote() {
+    if (!window._admSelecionados || window._admSelecionados.size === 0) {
+      alert('Nenhum aluno selecionado');
+      return;
+    }
+    if (!confirm('Desmarcar pagamento dos alunos selecionados?')) return;
+    for (const alunoId of window._admSelecionados) {
+      await desmarcarPagamentoAluno(alunoId);
+    }
+    alert('Pagamentos desmarcados com sucesso');
+    admDesmarcarTodos();
   }
 
   /* ── FIM SELEÇÃO MÚLTIPLA ── */
