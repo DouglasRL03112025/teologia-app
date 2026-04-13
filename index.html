@@ -2090,12 +2090,7 @@ async function renderAlunosAdmin(){
   el.innerHTML=lista.map(a=>{
     // Em dia = livro atual pago (usa window.livroAtualSistema se disponível)
     const livroAtual = window.livroAtualSistema;
-    const regs = alLivros.filter(r =>
-      r.aluno_id === a.id &&
-      (!livroAtual || r.livro_codigo == livroAtual) &&
-      r.participou !== false
-    );
-    const emDia = regs.length > 0 && regs.every(r => r.pagou === true);
+    const emDia = calcularStatusAluno(a.id, alLivros, livroAtual) === 'Em dia';
     const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
     let pres=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') pres++; });
     const perc=pk.length>0?Math.round(pres/pk.length*100):null;
@@ -2109,6 +2104,18 @@ async function renderAlunosAdmin(){
     </div>`;
   }).join('');
 }
+/* ════ FONTE DE VERDADE: STATUS DO ALUNO ════ */
+function calcularStatusAluno(alunoId, alLivros, livroAtual) {
+  const regs = alLivros.filter(r =>
+    r.aluno_id === alunoId &&
+    Number(r.livro_codigo) === Number(livroAtual) &&
+    r.participou !== false
+  );
+  const emDia = regs.length > 0 && regs.every(r => r.pagou === true);
+  return emDia ? 'Em dia' : 'Pendente';
+}
+/* ════ FIM FONTE DE VERDADE ════ */
+
 /* ════ RESUMO LIVROS DO ALUNO (Supabase) ════ */
 async function carregarResumoLivrosAluno(alunoId) {
   const { data, error } = await supabaseClient
@@ -2124,14 +2131,9 @@ async function carregarResumoLivrosAluno(alunoId) {
   const pendentes = totalCurso - pagos;
   const progresso = totalCurso > 0 ? Math.round((pagos / totalCurso) * 100) : 0;
 
-  // Status alinhado com a lista: usa apenas o livro atual do sistema
+  // Status: usa a mesma fonte de verdade da lista
   const livroAtual = window.livroAtualSistema;
-  const regs = data.filter(item =>
-    item.participou !== false &&
-    Number(item.livro_codigo) === Number(livroAtual)
-  );
-  const emDia = regs.length > 0 && regs.every(r => r.pagou === true);
-  const status = emDia ? 'Em dia' : 'Pendente';
+  const status = calcularStatusAluno(alunoId, data.map(item => ({ ...item, aluno_id: alunoId })), livroAtual);
 
   return { pagos, pendentes, progresso, totalCurso, status };
 }
