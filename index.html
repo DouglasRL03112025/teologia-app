@@ -2042,6 +2042,23 @@ async function renderDashAdmin(){
   document.getElementById('a-alertas').innerHTML=alerts.join('');
 }
 
+/* ════ CARREGAR LIVRO ATUAL DO SISTEMA ════ */
+async function carregarLivroAtualSistema() {
+  try {
+    const { data, error } = await supabaseClient
+      .from('config_sistema')
+      .select('livro_atual_override')
+      .eq('id', 1)
+      .single();
+    if (!error && data && data.livro_atual_override) {
+      window.livroAtualSistema = data.livro_atual_override;
+    }
+  } catch(e) {
+    console.error('Erro ao carregar livro atual do sistema:', e);
+  }
+}
+/* ════ FIM CARREGAR LIVRO ATUAL ════ */
+
 /* ════ ALUNOS ADMIN ════ */
 function abrirModAluno(id){
   ['a-nome','a-tel','a-email','a-valor','a-senha'].forEach(f=>document.getElementById(f).value='');
@@ -2070,6 +2087,7 @@ function delAluno(){
   D.alunos=D.alunos.filter(a=>a.id!==id); salvar(); fecharMod('mod-aluno'); renderAlunosAdmin(); toast('Aluno removido.');
 }
 async function renderAlunosAdmin(){
+  await carregarLivroAtualSistema();
   popularFiltroTurma();
   const b=(document.getElementById('busca-admin')?.value||'').toLowerCase();
   const turmaFilt=document.getElementById('filtro-turma-alunos')?.value||'';
@@ -2123,6 +2141,7 @@ function calcularStatusAluno(alunoId, alLivros, livroAtual) {
 
 /* ════ RESUMO LIVROS DO ALUNO (Supabase) ════ */
 async function carregarResumoLivrosAluno(alunoId) {
+  await carregarLivroAtualSistema();
   const { data, error } = await supabaseClient
     .from('aluno_livros')
     .select('aluno_id, pagou, participou, livro_codigo')
