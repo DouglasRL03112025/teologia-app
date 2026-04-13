@@ -2220,7 +2220,7 @@ async function verPerfilAdmin(id){
     <div class="card"><div class="card-t">📝 Provas do Aluno</div><div id="admin-provas-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
     <div class="card"><div class="card-t">📚 Livros do Aluno (Supabase)</div><div id="admin-livros-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
     <button class="btn bs" onclick="abrirModAluno('${id}')">✏️ Editar dados</button>
-    <button class="btn bd bsm" style="margin-top:8px;width:100%" onclick="desmarcarPagamentoAluno('${id}')">↩️ Desmarcar pagamento do livro atual</button>`;
+    <button class="btn bd" style="margin-top:8px;width:100%;display:block" onclick="desmarcarPagamentoAluno('${id}')">↩️ Desmarcar pagamento do livro atual</button>`;
   carregarExibirProvasAdminPerfil(id);
   carregarExibirLivrosAdminPerfil(id);
 }
