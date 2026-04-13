@@ -2128,7 +2128,7 @@ async function carregarResumoLivrosAluno(alunoId) {
   const livroAtual = window.livroAtualSistema;
   const regs = data.filter(item =>
     item.participou !== false &&
-    (!livroAtual || item.livro_codigo == livroAtual)
+    (!livroAtual || Number(item.livro_codigo) === Number(livroAtual))
   );
   const emDia = regs.length > 0 && regs.every(r => r.pagou === true);
   const status = emDia ? 'Em dia' : 'Pendente';
