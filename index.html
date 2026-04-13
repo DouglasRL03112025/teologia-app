@@ -3379,6 +3379,9 @@ if(!D.aulas_log) { D.aulas_log={}; }
     });
     if (!confirm(`Marcar como pago o livro atual (Livro ${livroAtual}) para os alunos selecionados?\n\n${nomes.join('\n')}`)) return;
 
+    const forma = prompt('Forma de pagamento (pix, dinheiro, cartao):', 'pix');
+    if (forma === null) return; // cancelou o prompt
+
     let erros = 0;
     for (const alunoId of ids) {
       try {
@@ -3389,7 +3392,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
             livro_codigo: 'p' + livroAtual,
             pagou: true,
             data_pagamento: new Date().toISOString(),
-            forma_pagamento: 'pix'
+            forma_pagamento: forma || 'pix'
           }, {
             onConflict: ['aluno_id', 'livro_codigo']
           });
