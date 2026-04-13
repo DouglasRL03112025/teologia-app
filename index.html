@@ -3384,13 +3384,15 @@ if(!D.aulas_log) { D.aulas_log={}; }
       try {
         const { error } = await supabaseClient
           .from('aluno_livros')
-          .update({
+          .upsert({
+            aluno_id: alunoId,
+            livro_codigo: 'p' + livroAtual,
             pagou: true,
             data_pagamento: new Date().toISOString(),
             forma_pagamento: 'admin'
-          })
-          .eq('aluno_id', alunoId)
-          .eq('livro_codigo', 'p' + livroAtual);
+          }, {
+            onConflict: ['aluno_id', 'livro_codigo']
+          });
         if (error) { console.error('[LOTE PAGO] aluno', alunoId, error); erros++; }
       } catch(e) { console.error('[LOTE PAGO] exceção', alunoId, e); erros++; }
     }
