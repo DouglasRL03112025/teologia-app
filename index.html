@@ -2113,7 +2113,7 @@ async function renderAlunosAdmin(){
 async function carregarResumoLivrosAluno(alunoId) {
   const { data, error } = await supabaseClient
     .from('aluno_livros')
-    .select('pagou, participou')
+    .select('pagou, participou, livro_codigo')
     .eq('aluno_id', alunoId);
   if (error) {
     console.error('Erro ao carregar resumo:', error);
@@ -2123,7 +2123,17 @@ async function carregarResumoLivrosAluno(alunoId) {
   const pagos = data.filter(item => item.participou !== false && item.pagou === true).length;
   const pendentes = totalCurso - pagos;
   const progresso = totalCurso > 0 ? Math.round((pagos / totalCurso) * 100) : 0;
-  return { pagos, pendentes, progresso, totalCurso };
+
+  // Status alinhado com a lista: usa apenas o livro atual do sistema
+  const livroAtual = window.livroAtualSistema;
+  const regs = data.filter(item =>
+    item.participou !== false &&
+    (!livroAtual || item.livro_codigo == livroAtual)
+  );
+  const emDia = regs.length > 0 && regs.every(r => r.pagou === true);
+  const status = emDia ? 'Em dia' : 'Pendente';
+
+  return { pagos, pendentes, progresso, totalCurso, status };
 }
 /* ════ FIM RESUMO LIVROS ════ */
 
@@ -2157,7 +2167,7 @@ async function verPerfilAdmin(id){
     ${resumo ? `
     <div class="card" style="margin-bottom:14px">
       <div class="card-t">📚 Livros do Curso</div>
-      <div class="sl2"><span class="slb">Situação</span><span class="bdg ${resumo.pendentes > 0 ? 'br' : 'bv'}">${resumo.pendentes > 0 ? 'Pendente' : 'Em dia'}</span></div>
+      <div class="sl2"><span class="slb">Situação</span><span class="bdg ${resumo.status === 'Em dia' ? 'bv' : 'br'}">${resumo.status}</span></div>
       <div class="sl2"><span class="slb">Livros pagos</span><span class="slv">${resumo.pagos} / ${resumo.totalCurso}</span></div>
       <div class="sl2"><span class="slb">Pendentes</span><span class="slv" style="color:var(--vm)">${resumo.pendentes}</span></div>
       <div class="sl2"><span class="slb">Progresso</span><span class="slv">${resumo.progresso}%</span></div>
