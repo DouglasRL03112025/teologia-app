@@ -3424,6 +3424,8 @@ if(!D.aulas_log) { D.aulas_log={}; }
       ? `✅ ${ids.length} aluno(s) marcado(s) como pago!`
       : `⚠️ Concluído com ${erros} erro(s). Veja o console.`
     );
+    renderAlunosAdmin();
+    await renderDashAdmin();
   }
 
   function admLimparSelecaoLote() {
@@ -3466,8 +3468,8 @@ if(!D.aulas_log) { D.aulas_log={}; }
       await desmarcarPagamentoAlunoSilent(alunoId);
     }
     alert('Pagamentos desmarcados com sucesso');
-    renderAlunosAdmin();
-    renderDashAdmin();
+    await renderAlunosAdmin();
+    await renderDashAdmin();
     admDesmarcarTodos();
   }
 
