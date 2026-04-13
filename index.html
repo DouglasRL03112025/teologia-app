@@ -3427,12 +3427,14 @@ if(!D.aulas_log) { D.aulas_log={}; }
     if (!confirm('Desmarcar pagamento do Livro ' + livroAtual + '?')) return;
     const { error } = await supabaseClient
       .from('aluno_livros')
-      .update({ pagou: false, data_pagamento: null, forma_pagamento: null })
-      .eq('aluno_id', alunoId)
-      .eq('livro_codigo', 'p' + livroAtual);
-    if (error) { alert('Erro ao desmarcar pagamento'); return; }
+      .upsert(
+        { aluno_id: alunoId, livro_codigo: 'p' + livroAtual, pagou: false, data_pagamento: null, forma_pagamento: null },
+        { onConflict: ['aluno_id', 'livro_codigo'] }
+      );
+    if (error) { console.error('[DESMARCAR PAGAMENTO] Erro:', error); alert('Erro ao desmarcar pagamento'); return; }
     alert('Pagamento desmarcado com sucesso');
     renderPagamentosAlunoViaLivros();
+    if (typeof carregarExibirLivrosAdminPerfil === 'function') carregarExibirLivrosAdminPerfil(alunoId);
   }
   /* ════ FIM DESMARCAR PAGAMENTO ════ */
 
