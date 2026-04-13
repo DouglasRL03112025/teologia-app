@@ -3389,7 +3389,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
             livro_codigo: 'p' + livroAtual,
             pagou: true,
             data_pagamento: new Date().toISOString(),
-            forma_pagamento: 'admin'
+            forma_pagamento: 'pix'
           }, {
             onConflict: ['aluno_id', 'livro_codigo']
           });
