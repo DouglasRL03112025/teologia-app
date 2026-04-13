@@ -3455,7 +3455,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
     }
     if (!confirm('Desmarcar pagamento dos alunos selecionados?')) return;
     for (const alunoId of window._admSelecionados) {
-      await desmarcarPagamentoAluno(alunoId);
+      await desmarcarPagamentoAlunoSilent(alunoId);
     }
     alert('Pagamentos desmarcados com sucesso');
     admDesmarcarTodos();
@@ -3479,6 +3479,24 @@ if(!D.aulas_log) { D.aulas_log={}; }
     alert('Pagamento desmarcado com sucesso');
     renderPagamentosAlunoViaLivros();
     if (typeof carregarExibirLivrosAdminPerfil === 'function') carregarExibirLivrosAdminPerfil(alunoId);
+  }
+  async function desmarcarPagamentoAlunoSilent(alunoId) {
+    const livroAtual = window.livroAtualSistema;
+    const { error } = await supabaseClient
+      .from('aluno_livros')
+      .upsert(
+        {
+          aluno_id: alunoId,
+          livro_codigo: 'p' + livroAtual,
+          pagou: false,
+          data_pagamento: null,
+          forma_pagamento: null
+        },
+        { onConflict: ['aluno_id', 'livro_codigo'] }
+      );
+    if (error) {
+      console.error('[LOTE DESMARCAR] erro:', error);
+    }
   }
   /* ════ FIM DESMARCAR PAGAMENTO ════ */
 
