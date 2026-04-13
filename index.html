@@ -2136,7 +2136,7 @@ async function renderAlunosAdmin(){
 function calcularStatusAluno(alunoId, alLivros, livroAtual) {
   const regs = alLivros.filter(r =>
     r.aluno_id === alunoId &&
-    Number(r.livro_codigo) === Number(livroAtual) &&
+    String(r.livro_codigo).replace('p', '') === String(livroAtual) &&
     r.participou !== false
   );
   const emDia = regs.length > 0 && regs.every(r => r.pagou === true);
