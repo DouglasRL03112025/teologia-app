@@ -2047,12 +2047,17 @@ async function carregarLivroAtualSistema() {
   try {
     const { data, error } = await supabaseClient
       .from('config_sistema')
-      .select('livro_atual_override')
+      .select('*')
       .eq('id', 1)
       .single();
-    if (!error && data && data.livro_atual_override) {
-      window.livroAtualSistema = data.livro_atual_override;
+
+    console.log('CONFIG_SISTEMA', { data, error });
+
+    if (!error && data) {
+      window.livroAtualSistema = data.livro_atual || data.livro_atual_override;
+      console.log('livroAtual definido como:', window.livroAtualSistema);
     }
+
   } catch(e) {
     console.error('Erro ao carregar livro atual do sistema:', e);
   }
