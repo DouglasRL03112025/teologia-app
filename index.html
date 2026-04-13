@@ -1639,12 +1639,16 @@ async function atualizarNota(id, valor) {
 
 async function marcarLivroComoPago(idRegistro) {
   if (!window.isAdmin) { alert('Acesso restrito'); return; }
+  const data = prompt('Informe a data do pagamento (YYYY-MM-DD):', new Date().toISOString().slice(0,10));
+  if (!data) return;
+  const forma = prompt('Forma de pagamento: pix ou dinheiro');
+  if (!forma) return;
   const { error } = await supabaseClient
     .from('aluno_livros')
     .update({
       pagou: true,
-      forma_pagamento: 'admin',
-      data_pagamento: new Date().toISOString()
+      forma_pagamento: forma.toLowerCase(),
+      data_pagamento: data
     })
     .eq('id', idRegistro);
   if (error) {
@@ -2219,10 +2223,8 @@ async function verPerfilAdmin(id){
     </div>
     <div class="card"><div class="card-t">📝 Provas do Aluno</div><div id="admin-provas-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
     <div class="card"><div class="card-t">📚 Livros do Aluno (Supabase)</div><div id="admin-livros-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
-    <div class="card" style="margin-bottom:80px">
-      <button class="btn bs" onclick="abrirModAluno('${id}')">✏️ Editar dados</button>
-      <button class="btn bd" style="margin-top:8px;width:100%;display:block" onclick="desmarcarPagamentoAluno('${id}')">↩️ Desmarcar pagamento do livro atual</button>
-    </div>`;
+    <button class="btn bs" onclick="abrirModAluno('${id}')">✏️ Editar dados</button>
+    <button class="btn bd" style="margin-top:8px;width:100%;display:block" onclick="desmarcarPagamentoAluno('${id}')">↩️ Desmarcar pagamento do livro atual</button>`;
   carregarExibirProvasAdminPerfil(id);
   carregarExibirLivrosAdminPerfil(id);
 }
