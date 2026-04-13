@@ -3369,26 +3369,28 @@ if(!D.aulas_log) { D.aulas_log={}; }
     const ids = Array.from(window._admSelecionados);
     if (!ids.length) { toast('⚠️ Nenhum aluno selecionado'); return; }
 
+    const livroAtual = window.livroAtualSistema;
+    if (!livroAtual) { toast('⚠️ Livro atual do sistema não definido'); return; }
+
     // Confirmação antes de qualquer escrita no banco
     const nomes = ids.map(id => {
       const card = document.querySelector(`#lista-alunos-admin .ar[data-aluno-id="${id}"]`);
       return card ? card.querySelector('.an')?.textContent || id : id;
     });
-    if (!confirm(`Marcar como pago todos os livros pendentes de ${ids.length} aluno(s)?\n\n${nomes.join('\n')}`)) return;
+    if (!confirm(`Marcar como pago o livro atual (Livro ${livroAtual}) para os alunos selecionados?\n\n${nomes.join('\n')}`)) return;
 
     let erros = 0;
     for (const alunoId of ids) {
       try {
-        // Usa UPDATE (não upsert) em registros existentes — schema real: pagou boolean
         const { error } = await supabaseClient
           .from('aluno_livros')
           .update({
             pagou: true,
-            forma_pagamento: 'admin',
-            data_pagamento: new Date().toISOString()
+            data_pagamento: new Date().toISOString(),
+            forma_pagamento: 'admin'
           })
           .eq('aluno_id', alunoId)
-          .eq('pagou', false);   // só atualiza quem ainda não pagou
+          .eq('livro_codigo', 'p' + livroAtual);
         if (error) { console.error('[LOTE PAGO] aluno', alunoId, error); erros++; }
       } catch(e) { console.error('[LOTE PAGO] exceção', alunoId, e); erros++; }
     }
