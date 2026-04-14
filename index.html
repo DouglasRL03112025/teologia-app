@@ -371,9 +371,9 @@ select.inp{cursor:pointer}
         <option value="">🎓 Todas as turmas</option>
       </select>
       <div class="filtros-admin">
-        <button class="ac" onclick="window._admFiltro=''; aplicarFiltroVisualAdmin()">Todos</button>
-        <button class="ac" onclick="window._admFiltro='pendente'; aplicarFiltroVisualAdmin()">🔴 Pendentes</button>
-        <button class="ac" onclick="window._admFiltro='em-dia'; aplicarFiltroVisualAdmin()">✅ Em dia</button>
+        <button class="ac" onclick="admAplicarFiltro('todos')">Todos</button>
+        <button class="ac" onclick="admAplicarFiltro('pagos')">✅ Em dia</button>
+        <button class="ac" onclick="admAplicarFiltro('pendentes')">🔴 Pendentes</button>
       </div>
       <div id="adm-barra-lote">
         <div id="adm-barra-lote-info">0 alunos selecionados</div>
@@ -2106,12 +2106,19 @@ function delAluno(){
   const id=document.getElementById('aid').value; if(!id||!confirm('Excluir este aluno?')) return;
   D.alunos=D.alunos.filter(a=>a.id!==id); salvar(); fecharMod('mod-aluno'); renderAlunosAdmin(); toast('Aluno removido.');
 }
+window._filtroStatus = window._filtroStatus || 'todos';
+
+function admAplicarFiltro(status) {
+  window._filtroStatus = status;
+  renderAlunosAdmin();
+}
+
 async function renderAlunosAdmin(){
   await carregarLivroAtualSistema();
   popularFiltroTurma();
   const b=(document.getElementById('busca-admin')?.value||'').toLowerCase();
   const turmaFilt=document.getElementById('filtro-turma-alunos')?.value||'';
-  const lista=D.alunos.filter(a=>
+  let lista=D.alunos.filter(a=>
     (fmtNome(a.nome).toLowerCase().includes(b)||a.nome.toLowerCase().includes(b)) &&
     (!turmaFilt || (a.turma||'Turma Única')===turmaFilt)
   );
@@ -2123,6 +2130,16 @@ async function renderAlunosAdmin(){
   // Buscar aluno_livros para badge correto
   const { data: alunoLivros } = await supabaseClient.from('aluno_livros').select('aluno_id, pagou, participou, livro_codigo');
   const alLivros = alunoLivros || [];
+
+  // ── FILTRO RÁPIDO POR STATUS DE PAGAMENTO ──
+  const livroAtualFiltro = window.livroAtualSistema;
+  if (window._filtroStatus === 'pagos') {
+    lista = lista.filter(a => calcularStatusAluno(a.id, alLivros, livroAtualFiltro) === 'Em dia');
+  }
+  if (window._filtroStatus === 'pendentes') {
+    lista = lista.filter(a => calcularStatusAluno(a.id, alLivros, livroAtualFiltro) !== 'Em dia');
+  }
+  // ── FIM FILTRO RÁPIDO ──
 
   const cm=chM(hj());
   el.innerHTML=lista.map(a=>{
