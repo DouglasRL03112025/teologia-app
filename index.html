@@ -2126,18 +2126,6 @@ async function renderDashAdmin(){
         return num === livroAtual;
       });
 
-      // ── DIAGNÓSTICO: inspecionar campo entregue ──
-      if (atual) {
-        console.log('[DIAGNÓSTICO entregue]', {
-          aluno_id: aluno.id,
-          livro_codigo: atual.livro_codigo,
-          pagou: atual.pagou,
-          entregue: atual.entregue,
-          typeof_entregue: typeof atual.entregue
-        });
-      }
-      // ── FIM DIAGNÓSTICO ──
-
       const partes = [];
       if (atrasados.length > 0) {
         partes.push(atrasados.length + ' livro' + (atrasados.length > 1 ? 's' : '') + ' atrasado' + (atrasados.length > 1 ? 's' : ''));
@@ -2147,7 +2135,7 @@ async function renderDashAdmin(){
       if (!atual || !atual.pagou) {
         partes.push('Livro ' + livroAtual + ' pendente');
         cls = 'vm'; icone = '🔴';
-      } else if (atual.pagou && !atual.data_pagamento) {
+      } else if (atual.pagou && atual.entregue !== true) {
         partes.push('Livro ' + livroAtual + ' aguardando entrega');
         cls = 'am'; icone = '🟡';
       } else if (atrasados.length > 0) {
