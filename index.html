@@ -3536,33 +3536,69 @@ if(!D.aulas_log) { D.aulas_log={}; }
     const livroAtual = window.livroAtualSistema;
     if (!livroAtual) { alert('Livro atual não definido'); return; }
     if (!confirm('Desmarcar pagamento do Livro ' + livroAtual + '?')) return;
+
+    // Busca o id exato do registro na tabela aluno_livros
+    const { data: registros, error: erroConsulta } = await supabaseClient
+      .from('aluno_livros')
+      .select('id')
+      .eq('aluno_id', alunoId)
+      .eq('livro_codigo', 'p' + livroAtual)
+      .single();
+
+    if (erroConsulta || !registros) {
+      alert('Registro não encontrado para este aluno e livro');
+      return;
+    }
+
+    const idRegistro = registros.id;
+
     const { error } = await supabaseClient
       .from('aluno_livros')
-      .upsert(
-        { aluno_id: alunoId, livro_codigo: 'p' + livroAtual, pagou: false, data_pagamento: null, forma_pagamento: null },
-        { onConflict: ['aluno_id', 'livro_codigo'] }
-      );
-    if (error) { console.error('[DESMARCAR PAGAMENTO] Erro:', error); alert('Erro ao desmarcar pagamento'); return; }
+      .update({ pagou: false, data_pagamento: null, forma_pagamento: null })
+      .eq('id', idRegistro);
+
+    if (error) {
+      console.error('[DESMARCAR PAGAMENTO] Erro:', error);
+      alert('Erro ao desmarcar pagamento');
+      return;
+    }
+
     alert('Pagamento desmarcado com sucesso');
-    renderPagamentosAlunoViaLivros();
-    if (typeof carregarExibirLivrosAdminPerfil === 'function') carregarExibirLivrosAdminPerfil(alunoId);
+    if (typeof carregarExibirLivrosAdminPerfil === 'function') {
+      await carregarExibirLivrosAdminPerfil(alunoId);
+    }
+    await renderAlunosAdmin();
   }
+
   async function desmarcarPagamentoAlunoSilent(alunoId) {
     const livroAtual = window.livroAtualSistema;
+    if (!livroAtual) {
+      console.warn('[LOTE DESMARCAR] livroAtual não definido para aluno', alunoId);
+      return;
+    }
+
+    // Busca o id exato do registro na tabela aluno_livros
+    const { data: registros, error: erroConsulta } = await supabaseClient
+      .from('aluno_livros')
+      .select('id')
+      .eq('aluno_id', alunoId)
+      .eq('livro_codigo', 'p' + livroAtual)
+      .single();
+
+    if (erroConsulta || !registros) {
+      console.warn('[LOTE DESMARCAR] Registro não encontrado:', alunoId, 'livro p' + livroAtual);
+      return;
+    }
+
+    const idRegistro = registros.id;
+
     const { error } = await supabaseClient
       .from('aluno_livros')
-      .upsert(
-        {
-          aluno_id: alunoId,
-          livro_codigo: 'p' + livroAtual,
-          pagou: false,
-          data_pagamento: null,
-          forma_pagamento: null
-        },
-        { onConflict: ['aluno_id', 'livro_codigo'] }
-      );
+      .update({ pagou: false, data_pagamento: null, forma_pagamento: null })
+      .eq('id', idRegistro);
+
     if (error) {
-      console.error('[LOTE DESMARCAR] erro:', error);
+      console.error('[LOTE DESMARCAR] Erro ao desmarcar aluno', alunoId, ':', error);
     }
   }
   /* ════ FIM DESMARCAR PAGAMENTO ════ */
