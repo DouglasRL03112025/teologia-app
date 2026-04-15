@@ -1665,8 +1665,25 @@ async function confirmarPagamentoModal() {
 
 async function marcarLivroComoPago(idRegistro, dataManual, formaManual) {
   if (!window.isAdmin) { alert('Acesso restrito'); return; }
+  if (!idRegistro) { console.error('[PAGAMENTO] idRegistro inválido:', idRegistro); alert('Erro: registro não identificado'); return; }
+
   const data = dataManual || new Date().toISOString().slice(0,10);
   const forma = formaManual || 'pix';
+
+  // 1. Verificar que o registro existe antes de atualizar
+  const { data: registroExistente, error: erroVerif } = await supabaseClient
+    .from('aluno_livros')
+    .select('id, pagou')
+    .eq('id', idRegistro)
+    .single();
+
+  if (erroVerif || !registroExistente) {
+    console.error('[PAGAMENTO] Registro não encontrado para id:', idRegistro, erroVerif);
+    alert('Erro: registro de pagamento não encontrado no banco');
+    return;
+  }
+
+  // 2. Atualizar exatamente o registro existente (sem upsert, sem insert)
   const { error } = await supabaseClient
     .from('aluno_livros')
     .update({
@@ -1675,11 +1692,13 @@ async function marcarLivroComoPago(idRegistro, dataManual, formaManual) {
       data_pagamento: data
     })
     .eq('id', idRegistro);
+
   if (error) {
-    console.error('Erro ao atualizar pagamento:', error);
+    console.error('[PAGAMENTO] Erro ao atualizar pagamento:', error);
     alert('Erro ao marcar como pago');
     return;
   }
+
   alert('Livro marcado como pago');
   // Recarrega os livros do aluno atual no perfil admin
   const container = document.getElementById('admin-livros-aluno');
@@ -2417,24 +2436,39 @@ async function renderPagAdmin(){
 /* Marcar/desmarcar pagamento de um livro individual em aluno_livros */
 async function tgPagLivro(idRegistro, estaPago, alunoId, nomeAluno) {
   if (!window.isAdmin) { alert('Acesso restrito'); return; }
+  if (!idRegistro) { console.error('[PAG ADMIN] idRegistro inválido:', idRegistro); toast('Erro: registro não identificado'); return; }
+
   try {
+    // Verificar que o registro existe antes de atualizar
+    const { data: registroExistente, error: erroVerif } = await supabaseClient
+      .from('aluno_livros')
+      .select('id, pagou')
+      .eq('id', idRegistro)
+      .single();
+
+    if (erroVerif || !registroExistente) {
+      console.error('[PAG ADMIN] Registro nao encontrado para id:', idRegistro, erroVerif);
+      toast('Erro: registro nao encontrado no banco');
+      return;
+    }
+
     if (estaPago) {
       const { error } = await supabaseClient.from('aluno_livros')
         .update({ pagou: false, data_pagamento: null, forma_pagamento: null })
         .eq('id', idRegistro);
       if (error) throw error;
-      toast('↩ Pagamento de ' + nomeAluno + ' revertido');
+      toast('Pagamento de ' + nomeAluno + ' revertido');
     } else {
       const { error } = await supabaseClient.from('aluno_livros')
         .update({ pagou: true, forma_pagamento: 'admin', data_pagamento: new Date().toISOString() })
         .eq('id', idRegistro);
       if (error) throw error;
-      toast('✓ Livro de ' + nomeAluno + ' marcado como pago!');
+      toast('Livro de ' + nomeAluno + ' marcado como pago!');
     }
     await renderPagAdmin();
   } catch(e) {
     console.error('[PAG ADMIN] Erro ao salvar:', e);
-    toast('❌ Erro ao salvar. Tente novamente.');
+    toast('Erro ao salvar. Tente novamente.');
   }
 }
 
