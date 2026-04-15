@@ -2027,46 +2027,41 @@ async function renderDashAdmin(){
     const f = presDoMes.filter(p => p.aluno_id === a.id && p.presente === false).length;
     if(f>=2) alerts.push(`<div class="al vm"><span>⚠️</span><span><strong>${fmtNome(a.nome)}</strong> — ${f} falta${f>1?'s':''} este mês</span></div>`);
   });
-  // Alerta de pagamentos pendentes
-  const pendNomes = al.filter(a => {
-    const regs = alunoLivros.filter(r => r.aluno_id === a.id && r.participou !== false);
-    return regs.length > 0 && regs.some(r => !r.pagou);
-  });
-  if(pendNomes.length > 0) alerts.push(`<div class="al am"><span>💰</span><span><strong>${pendNomes.length} aluno${pendNomes.length>1?'s':''}</strong> com pagamento pendente</span></div>`);
-
   // ── Alertas individuais por livro atual ──
+  // Cada aluno é processado UMA única vez, usando apenas o registro do livro atual.
+  // Lógica:
+  //   - Sem registro do livro atual → ignorar
+  //   - pagou === false → 🔴 pendente
+  //   - pagou === true e entregue !== true → 🟡 aguardando entrega
+  //   - entregue === true → NÃO exibir
   if (livroAtual) {
+    // Garantir unicidade: um registro por aluno_id + livro_codigo (pegar o primeiro encontrado)
+    const alunosProcessados = new Set();
+    let pendentesCount = 0;
+
     al.forEach(function(aluno) {
-      const livrosAluno = alunoLivros.filter(r => r.aluno_id === aluno.id);
+      if (alunosProcessados.has(aluno.id)) return;
+      alunosProcessados.add(aluno.id);
 
-      const atrasados = livrosAluno.filter(r => {
+      // Usar .find() para garantir apenas UM registro do livro atual por aluno
+      const atual = alunoLivros.find(r => {
         const num = parseInt((r.livro_codigo || '').replace('p', ''));
-        return num < livroAtual && !r.pagou;
+        return r.aluno_id === aluno.id && num === livroAtual;
       });
 
-      const atual = livrosAluno.find(r => {
-        const num = parseInt((r.livro_codigo || '').replace('p', ''));
-        return num === livroAtual;
-      });
+      // Sem registro do livro atual → ignorar
+      if (!atual) return;
 
-      const partes = [];
-      if (atrasados.length > 0) {
-        partes.push(atrasados.length + ' livro' + (atrasados.length > 1 ? 's' : '') + ' atrasado' + (atrasados.length > 1 ? 's' : ''));
-      }
+      // entregue === true → não mostrar
+      if (atual.entregue === true) return;
 
-      let cls = '', icone = '';
-      if (!atual || !atual.pagou) {
-        partes.push('Livro ' + livroAtual + ' pendente');
-        cls = 'vm'; icone = '🔴';
-      } else if (atual.pagou && !atual.data_pagamento) {
-        partes.push('Livro ' + livroAtual + ' aguardando entrega');
-        cls = 'am'; icone = '🟡';
-      } else if (atrasados.length > 0) {
-        cls = 'vm'; icone = '🔴';
-      }
-
-      if (partes.length > 0 && cls) {
-        alerts.push(`<div class="al ${cls}"><span>${icone}</span><span><strong>${fmtNome(aluno.nome)}</strong> — ${partes.join(' + ')}</span></div>`);
+      if (!atual.pagou) {
+        // 🔴 pendente
+        pendentesCount++;
+        alerts.push(`<div class="al vm"><span>🔴</span><span><strong>${fmtNome(aluno.nome)}</strong> — Livro ${livroAtual} pendente</span></div>`);
+      } else if (atual.pagou && atual.entregue !== true) {
+        // 🟡 aguardando entrega
+        alerts.push(`<div class="al am"><span>🟡</span><span><strong>${fmtNome(aluno.nome)}</strong> — Livro ${livroAtual} aguardando entrega</span></div>`);
       }
     });
   }
