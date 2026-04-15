@@ -1814,21 +1814,58 @@ async function carregarExibirLivrosAdminPerfil(alunoId) {
 /* ════ CONFIRMAR ENTREGA DE LIVRO (ADMIN) ════ */
 async function confirmarEntregaLivro(alunoId, livroCodigo) {
   if (!window.isAdmin) { alert('Acesso restrito'); return; }
-  if (!confirm('Confirmar entrega do livro ' + livroCodigo + ' para este aluno?')) return;
 
-  const { error } = await supabaseClient
+  // Log para diagnóstico
+  console.log('[EntregaLivro] Iniciando confirmação de entrega');
+  console.log('[EntregaLivro] alunoId:', alunoId);
+  console.log('[EntregaLivro] livroCodigo:', livroCodigo);
+
+  // Garantia: livroCodigo deve estar no formato "pN" (ex: "p7")
+  const codigoFinal = String(livroCodigo).startsWith('p')
+    ? livroCodigo
+    : 'p' + livroCodigo;
+  console.log('[EntregaLivro] codigoFinal (usado no update):', codigoFinal);
+
+  if (!confirm('Confirmar entrega do livro ' + codigoFinal + ' para este aluno?')) return;
+
+  // Verificar se o registro existe antes de tentar o update
+  const { data: registros, error: erroSelect } = await supabaseClient
     .from('aluno_livros')
-    .update({ entregue: true })
+    .select('id, aluno_id, livro_codigo, pagou, entregue')
     .eq('aluno_id', alunoId)
-    .eq('livro_codigo', livroCodigo);
+    .eq('livro_codigo', codigoFinal);
 
-  if (error) {
-    console.error('[Entrega] Erro ao confirmar entrega:', error);
-    alert('Erro ao confirmar entrega. Tente novamente.');
+  if (erroSelect) {
+    console.error('[EntregaLivro] Erro ao verificar registro:', erroSelect);
+    alert('Erro ao verificar registro no banco. Veja o console.');
     return;
   }
 
+  console.log('[EntregaLivro] Registros encontrados:', registros);
+
+  if (!registros || registros.length === 0) {
+    console.error('[EntregaLivro] Nenhum registro encontrado para alunoId=' + alunoId + ' e livro_codigo=' + codigoFinal);
+    alert('Registro não encontrado para este aluno e livro. Nenhuma alteração foi feita.');
+    return;
+  }
+
+  // Executar o update
+  const { error: erroUpdate } = await supabaseClient
+    .from('aluno_livros')
+    .update({ entregue: true })
+    .eq('aluno_id', alunoId)
+    .eq('livro_codigo', codigoFinal);
+
+  if (erroUpdate) {
+    console.error('[EntregaLivro] Erro ao confirmar entrega:', erroUpdate);
+    alert('Erro ao confirmar entrega: ' + (erroUpdate.message || JSON.stringify(erroUpdate)));
+    return;
+  }
+
+  console.log('[EntregaLivro] Entrega confirmada com sucesso!');
   toast('📦 Entrega confirmada com sucesso!');
+
+  // Recarregar lista de livros do aluno e atualizar dashboard/alertas
   await carregarExibirLivrosAdminPerfil(alunoId);
   await renderDashAdmin();
 }
