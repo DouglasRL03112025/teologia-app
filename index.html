@@ -2126,6 +2126,18 @@ async function renderDashAdmin(){
         return num === livroAtual;
       });
 
+      // ── DIAGNÓSTICO: inspecionar campo entregue ──
+      if (atual) {
+        console.log('[DIAGNÓSTICO entregue]', {
+          aluno_id: aluno.id,
+          livro_codigo: atual.livro_codigo,
+          pagou: atual.pagou,
+          entregue: atual.entregue,
+          typeof_entregue: typeof atual.entregue
+        });
+      }
+      // ── FIM DIAGNÓSTICO ──
+
       const partes = [];
       if (atrasados.length > 0) {
         partes.push(atrasados.length + ' livro' + (atrasados.length > 1 ? 's' : '') + ' atrasado' + (atrasados.length > 1 ? 's' : ''));
