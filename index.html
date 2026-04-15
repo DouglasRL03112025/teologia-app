@@ -1985,10 +1985,9 @@ async function renderDashAdmin(){
   const mp = datasUnicas.length * tot;
   const pp = mp > 0 ? Math.round(tp / mp * 100) : 0;
 
-  // Pagamentos: baseado no livro atual do sistema
+  // Pagamentos: baseado APENAS no override manual definido em config_sistema
   let livroAtual = null;
   try {
-    // Passo 1: verificar override manual em config_sistema
     const { data: config } = await supabaseClient
       .from('config_sistema')
       .select('livro_atual_override')
@@ -1997,20 +1996,7 @@ async function renderDashAdmin(){
     if (config && config.livro_atual_override) {
       livroAtual = config.livro_atual_override;
     }
-  } catch(e) { /* tabela pode não existir ainda — segue sem override */ }
-
-  if (!livroAtual && alunoLivros.length > 0) {
-    // Passo 2: sem override → escolher livro com maior quantidade de alunos
-    const contagem = {};
-    alunoLivros.forEach(r => {
-      if (!r.livro_codigo) return;
-      contagem[r.livro_codigo] = (contagem[r.livro_codigo] || 0) + 1;
-    });
-    const livroMaisComum = Object.entries(contagem).sort((a, b) => b[1] - a[1])[0];
-    if (livroMaisComum) {
-      livroAtual = parseInt(livroMaisComum[0].replace('p', ''));
-    }
-  }
+  } catch(e) { /* tabela pode não existir ainda */ }
 
   // Pagos: alunos únicos que possuem o livro atual com pagou === true
   const alunosPagaram = livroAtual
@@ -2101,7 +2087,7 @@ async function carregarLivroAtualSistema() {
     console.log('CONFIG_SISTEMA', { data, error });
 
     if (!error && data) {
-      window.livroAtualSistema = data.livro_atual || data.livro_atual_override;
+      window.livroAtualSistema = data.livro_atual_override || null;
       console.log('livroAtual definido como:', window.livroAtualSistema);
     }
 
@@ -3643,7 +3629,6 @@ if(!D.aulas_log) { D.aulas_log={}; }
 
   /* ════ FUNÇÃO GLOBAL: LIVRO ATUAL DO SISTEMA ════ */
   async function obterLivroAtual(alunoLivros) {
-    let livroAtual = null;
     try {
       const { data } = await supabaseClient
         .from('config_sistema')
@@ -3654,17 +3639,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
         return data.livro_atual_override;
       }
     } catch (e) {}
-    const contagem = {};
-    alunoLivros.forEach(r => {
-      if (!r.livro_codigo) return;
-      contagem[r.livro_codigo] = (contagem[r.livro_codigo] || 0) + 1;
-    });
-    const maisComum = Object.entries(contagem)
-      .sort((a, b) => b[1] - a[1])[0];
-    if (maisComum) {
-      livroAtual = parseInt(maisComum[0].replace('p', ''));
-    }
-    return livroAtual;
+    return null;
   }
   /* ════ FIM FUNÇÃO GLOBAL: LIVRO ATUAL ════ */
 
