@@ -2075,18 +2075,25 @@ async function renderDashAdmin(){
     }
   } catch(e) { /* tabela pode não existir ainda */ }
 
-  // Pagos: alunos únicos que possuem o livro atual com pagou === true
-  const alunosPagaram = livroAtual
-    ? alunoLivros
-        .filter(r => {
-          if (!r.livro_codigo) return false;
-          return parseInt(r.livro_codigo.replace('p', '')) === livroAtual && r.pagou === true;
-        })
-        .map(r => r.aluno_id)
-    : [];
-  const alunosUnicos = [...new Set(alunosPagaram)];
-  const pagos = alunosUnicos.length;
-  const pend = tot - pagos;
+  // Pagos e Pendentes: baseado EXCLUSIVAMENTE no livro atual
+  // Regra: para cada aluno, busca o registro exato do livro atual via .find()
+  // Conta como PAGO apenas se o registro existir E pagou === true
+  // Conta como PENDENTE apenas se o registro existir E pagou === false
+  // Alunos sem registro para o livro atual são IGNORADOS nos dois contadores
+  let pagos = 0;
+  let pend = 0;
+  if (livroAtual) {
+    al.forEach(aluno => {
+      const codigoAtual = 'p' + livroAtual;
+      const registro = alunoLivros.find(r => r.aluno_id === aluno.id && r.livro_codigo === codigoAtual);
+      if (!registro) return; // sem registro para o livro atual → ignora
+      if (registro.pagou === true) {
+        pagos++;
+      } else {
+        pend++;
+      }
+    });
+  }
   console.log("LIVRO ATUAL:", livroAtual);
   console.log("TIPO livro_codigo:", alunoLivros.slice(0,5));
   const elLivro = document.getElementById('a-livro-atual');
@@ -2104,11 +2111,12 @@ async function renderDashAdmin(){
     const f = presDoMes.filter(p => p.aluno_id === a.id && p.presente === false).length;
     if(f>=2) alerts.push(`<div class="al vm"><span>⚠️</span><span><strong>${fmtNome(a.nome)}</strong> — ${f} falta${f>1?'s':''} este mês</span></div>`);
   });
-  // Alerta de pagamentos pendentes
-  const pendNomes = al.filter(a => {
-    const regs = alunoLivros.filter(r => r.aluno_id === a.id && r.participou !== false);
-    return regs.length > 0 && regs.some(r => !r.pagou);
-  });
+  // Alerta de pagamentos pendentes — considera APENAS o livro atual via .find()
+  const pendNomes = livroAtual ? al.filter(a => {
+    const codigoAtual = 'p' + livroAtual;
+    const registro = alunoLivros.find(r => r.aluno_id === a.id && r.livro_codigo === codigoAtual);
+    return registro !== undefined && registro.pagou === false;
+  }) : [];
   if(pendNomes.length > 0) alerts.push(`<div class="al am"><span>💰</span><span><strong>${pendNomes.length} aluno${pendNomes.length>1?'s':''}</strong> com pagamento pendente</span></div>`);
 
   // ── Alertas individuais por livro atual ──
