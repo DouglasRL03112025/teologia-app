@@ -2287,7 +2287,9 @@ async function renderAlunosAdmin(){
 
   function _renderCard(a) {
     const livroAtual = window.livroAtualSistema;
-    const emDia = calcularStatusAluno(a.id, alLivros, livroAtual) === 'Em dia';
+    const statusAluno = calcularStatusAluno(a.id, alLivros, livroAtual);
+    const bdgClass = statusAluno === 'Em dia' ? 'bv' : statusAluno === 'Aguardando' ? 'ba' : 'br';
+    const bdgLabel = statusAluno === 'Em dia' ? 'Em dia' : statusAluno === 'Aguardando' ? 'Aguardando' : 'Pendente';
     const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
     let pres=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') pres++; });
     const perc=pk.length>0?Math.round(pres/pk.length*100):null;
@@ -2297,7 +2299,7 @@ async function renderAlunosAdmin(){
         <div class="an">${fmtNome(a.nome)}</div>
         <div class="as2">${a.turma||'Turma Única'}${a.tel?' · '+fmtTel(a.tel):''}${perc!==null?' · '+perc+'% freq.':''}</div>
       </div>
-      <span class="bdg ${emDia?'bv':'br'}">${emDia?'Em dia':'Pendente'}</span>
+      <span class="bdg ${bdgClass}">${bdgLabel}</span>
     </div>`;
   }
 
@@ -2336,8 +2338,11 @@ function calcularStatusAluno(alunoId, alLivros, livroAtual) {
     String(r.livro_codigo).replace('p', '') === String(livroAtual) &&
     r.participou !== false
   );
-  const emDia = regs.length > 0 && regs.every(r => r.pagou === true);
-  return emDia ? 'Em dia' : 'Pendente';
+  if (regs.length === 0) return 'Pendente';
+  const todosPageram = regs.every(r => r.pagou === true);
+  if (!todosPageram) return 'Pendente';
+  const todosEntregues = regs.every(r => r.entregue === true);
+  return todosEntregues ? 'Em dia' : 'Aguardando';
 }
 /* ════ FIM FONTE DE VERDADE ════ */
 
