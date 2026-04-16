@@ -2238,7 +2238,7 @@ async function renderAlunosAdmin(){
   if(!lista.length){ el.innerHTML='<div class="empty"><div class="empty-ic">👥</div><div class="empty-tx">Nenhum aluno encontrado.</div></div>'; return; }
 
   // Buscar aluno_livros para badge correto
-  const { data: alunoLivros } = await supabaseClient.from('aluno_livros').select('aluno_id, pagou, participou, livro_codigo');
+  const { data: alunoLivros } = await supabaseClient.from('aluno_livros').select('aluno_id, pagou, entregue, participou, livro_codigo').range(0, 9999);
   const alLivros = alunoLivros || [];
 
   // ── FILTRO RÁPIDO POR STATUS DE PAGAMENTO ──
