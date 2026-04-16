@@ -375,6 +375,13 @@ select.inp{cursor:pointer}
         <button class="ac" onclick="admAplicarFiltro('pagos')">✅ Em dia</button>
         <button class="ac" onclick="admAplicarFiltro('pendentes')">🔴 Pendentes</button>
       </div>
+      <!-- CHECKBOX MASTER -->
+      <div id="adm-master-row" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border-radius:var(--r);margin-bottom:10px;border:1px solid var(--brd);box-shadow:var(--s)">
+        <input type="checkbox" id="adm-master-check" class="sel-aluno" title="Selecionar todos os alunos visíveis" onchange="admToggleMaster(this.checked)">
+        <label for="adm-master-check" style="font-size:14px;font-weight:500;cursor:pointer;margin:0;color:var(--txt)">Selecionar todos</label>
+        <span id="adm-master-count" style="margin-left:auto;font-size:12px;color:var(--cin)"></span>
+      </div>
+
       <div id="adm-barra-lote">
         <div id="adm-barra-lote-info">0 alunos selecionados</div>
         <div id="adm-barra-lote-acoes">
@@ -2075,24 +2082,18 @@ async function renderDashAdmin(){
     }
   } catch(e) { /* tabela pode não existir ainda */ }
 
-  // Pagos/Pendentes: baseado EXCLUSIVAMENTE no livro atual via .find()
-  // Regra:
-  //   - sem registro para o livro atual → pendente
-  //   - registro com pagou === true     → pago
-  //   - registro com pagou === false    → pendente
-  let pagos = 0;
-  let pend = 0;
-  if (livroAtual) {
-    al.forEach(aluno => {
-      const codigoAtual = 'p' + livroAtual;
-      const registro = alunoLivros.find(r => r.aluno_id === aluno.id && r.livro_codigo === codigoAtual);
-      if (registro && registro.pagou === true) {
-        pagos++;
-      } else {
-        pend++; // sem registro OU pagou === false
-      }
-    });
-  }
+  // Pagos: alunos únicos que possuem o livro atual com pagou === true
+  const alunosPagaram = livroAtual
+    ? alunoLivros
+        .filter(r => {
+          if (!r.livro_codigo) return false;
+          return parseInt(r.livro_codigo.replace('p', '')) === livroAtual && r.pagou === true;
+        })
+        .map(r => r.aluno_id)
+    : [];
+  const alunosUnicos = [...new Set(alunosPagaram)];
+  const pagos = alunosUnicos.length;
+  const pend = tot - pagos;
   console.log("LIVRO ATUAL:", livroAtual);
   console.log("TIPO livro_codigo:", alunoLivros.slice(0,5));
   const elLivro = document.getElementById('a-livro-atual');
@@ -2110,13 +2111,11 @@ async function renderDashAdmin(){
     const f = presDoMes.filter(p => p.aluno_id === a.id && p.presente === false).length;
     if(f>=2) alerts.push(`<div class="al vm"><span>⚠️</span><span><strong>${fmtNome(a.nome)}</strong> — ${f} falta${f>1?'s':''} este mês</span></div>`);
   });
-  // Alerta de pagamentos pendentes — considera APENAS o livro atual via .find()
-  // Mesma regra do contador: sem registro OU pagou === false → pendente
-  const pendNomes = livroAtual ? al.filter(a => {
-    const codigoAtual = 'p' + livroAtual;
-    const registro = alunoLivros.find(r => r.aluno_id === a.id && r.livro_codigo === codigoAtual);
-    return !registro || registro.pagou === false;
-  }) : [];
+  // Alerta de pagamentos pendentes
+  const pendNomes = al.filter(a => {
+    const regs = alunoLivros.filter(r => r.aluno_id === a.id && r.participou !== false);
+    return regs.length > 0 && regs.some(r => !r.pagou);
+  });
   if(pendNomes.length > 0) alerts.push(`<div class="al am"><span>💰</span><span><strong>${pendNomes.length} aluno${pendNomes.length>1?'s':''}</strong> com pagamento pendente</span></div>`);
 
   // ── Alertas individuais por livro atual ──
@@ -3465,6 +3464,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
       if (cb) cb.checked = false;
     });
     admAtualizarBarraLote();
+    admAtualizarMaster();
   }
 
   function admInjetarCheckboxes() {
@@ -3486,9 +3486,59 @@ if(!D.aulas_log) { D.aulas_log={}; }
       cb.addEventListener('change', function(e) {
         e.stopPropagation();
         admToggleSelecionado(alunoId, this.checked);
+        admAtualizarMaster();
       });
       card.insertBefore(cb, card.firstChild);
     });
+  }
+
+  /* ── CHECKBOX MASTER ── */
+  function admAtualizarMaster() {
+    const master = document.getElementById('adm-master-check');
+    const counter = document.getElementById('adm-master-count');
+    if (!master) return;
+    const cards = Array.from(document.querySelectorAll('#lista-alunos-admin .ar[data-aluno-id]'))
+      .filter(c => c.style.display !== 'none');
+    const total = cards.length;
+    const selecionados = cards.filter(c => {
+      const cb = c.querySelector('.sel-aluno');
+      return cb && cb.checked;
+    }).length;
+    if (total === 0) {
+      master.checked = false;
+      master.indeterminate = false;
+    } else if (selecionados === total) {
+      master.checked = true;
+      master.indeterminate = false;
+    } else if (selecionados > 0) {
+      master.checked = false;
+      master.indeterminate = true;
+    } else {
+      master.checked = false;
+      master.indeterminate = false;
+    }
+    if (counter) {
+      counter.textContent = total > 0 ? (selecionados + ' / ' + total + ' selecionado' + (selecionados !== 1 ? 's' : '')) : '';
+    }
+  }
+
+  function admToggleMaster(checked) {
+    const cards = Array.from(document.querySelectorAll('#lista-alunos-admin .ar[data-aluno-id]'))
+      .filter(c => c.style.display !== 'none');
+    cards.forEach(card => {
+      const id = card.getAttribute('data-aluno-id');
+      if (!id) return;
+      const cb = card.querySelector('.sel-aluno');
+      if (cb) cb.checked = checked;
+      card.classList.toggle('selecionado', checked);
+      if (checked) {
+        window._admSelecionados.add(id);
+      } else {
+        window._admSelecionados.delete(id);
+      }
+    });
+    admAtualizarBarraLote();
+    admAtualizarMaster();
   }
 
   /* MutationObserver: detecta cada vez que renderAlunosAdmin reescreve a lista */
@@ -3502,10 +3552,12 @@ if(!D.aulas_log) { D.aulas_log={}; }
           window._admSelecionados.clear();
           admAtualizarBarraLote();
           admInjetarCheckboxes();
+          admAtualizarMaster();
         }, 0);
       }).observe(lista, { childList: true });
       // Injeta imediatamente caso a lista já tenha cards ao inicializar
       admInjetarCheckboxes();
+      admAtualizarMaster();
     }
     // Tenta imediatamente; se o DOM ainda não existir, aguarda DOMContentLoaded
     if (document.readyState === 'loading') {
@@ -3605,6 +3657,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
       if (cb) cb.checked = true;
     });
     admAtualizarBarraLote();
+    admAtualizarMaster();
   }
 
   function admDesmarcarTodos() {
@@ -3616,6 +3669,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
       if (cb) cb.checked = false;
     });
     admAtualizarBarraLote();
+    admAtualizarMaster();
   }
 
   async function admDesmarcarPagamentoLote() {
