@@ -127,8 +127,14 @@ select.inp{cursor:pointer}
 .btn-lote.cancel{background:transparent;border-color:rgba(255,255,255,.25)}
 
 /* ── LISTA ALUNOS ── */
-.ar{display:flex;align-items:center;gap:13px;padding:14px;background:#fff;border-radius:var(--r);margin-bottom:9px;border:1px solid var(--brd);box-shadow:var(--s);cursor:pointer;transition:all .2s}
+.ar{display:flex;align-items:center;gap:13px;padding:14px;background:#fff;border-radius:var(--r);margin-bottom:0;border:1px solid var(--brd);box-shadow:var(--s);cursor:pointer;transition:all .2s}
 .ar:hover{border-color:var(--azul);box-shadow:var(--sh);transform:translateY(-1px)}
+
+/* ── GRID LISTA ALUNOS ADMIN ── */
+#lista-alunos-admin .grupo-alunos-admin{margin-bottom:18px}
+.grid-cards-alunos{display:grid;grid-template-columns:1fr;gap:9px}
+@media(min-width:540px){.grid-cards-alunos{grid-template-columns:1fr 1fr}}
+@media(min-width:900px){.grid-cards-alunos{grid-template-columns:1fr 1fr 1fr}}
 .av{width:46px;height:46px;border-radius:50%;background:var(--azul-c);color:var(--azul);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0;font-family:'Lora',serif}
 .ai{flex:1;min-width:0}
 .an{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2291,19 +2297,9 @@ async function renderAlunosAdmin(){
 
   function _renderGrupo(icone, titulo, corFundo, corTexto, alunos) {
     if (!alunos.length) return '';
-    return `<div style="
-        display:flex;align-items:center;gap:8px;
-        margin:18px 0 10px;
-        padding:8px 12px;
-        border-radius:var(--r);
-        background:${corFundo};
-        border-left:4px solid ${corTexto};
-      ">
-        <span style="font-size:16px">${icone}</span>
-        <span style="font-size:13px;font-weight:700;color:${corTexto};text-transform:uppercase;letter-spacing:.6px">${titulo}</span>
-        <span style="margin-left:auto;font-size:12px;font-weight:600;color:${corTexto};opacity:.7">${alunos.length} aluno${alunos.length!==1?'s':''}</span>
-      </div>`
-      + alunos.map(_renderCard).join('');
+    const hdr = '<div style="display:flex;align-items:center;gap:8px;margin:0 0 10px;padding:8px 12px;border-radius:var(--r);background:' + corFundo + ';border-left:4px solid ' + corTexto + '"><span style="font-size:16px">' + icone + '</span><span style="font-size:13px;font-weight:700;color:' + corTexto + ';text-transform:uppercase;letter-spacing:.6px">' + titulo + '</span><span style="margin-left:auto;font-size:12px;font-weight:600;color:' + corTexto + ';opacity:.7">' + alunos.length + ' aluno' + (alunos.length!==1?'s':'') + '</span></div>';
+    const cards = '<div class="grid-cards-alunos">' + alunos.map(_renderCard).join('') + '</div>';
+    return '<div class="grupo-alunos-admin">' + hdr + cards + '</div>';
   }
 
   el.innerHTML =
@@ -2313,7 +2309,7 @@ async function renderAlunosAdmin(){
 
   // Fallback: se nenhum grupo renderizou (ex: livro atual não definido), exibe lista plana
   if (!el.innerHTML.trim()) {
-    el.innerHTML = lista.map(_renderCard).join('');
+    el.innerHTML = '<div class="grid-cards-alunos">' + lista.map(_renderCard).join('') + '</div>';
   }
   // ── FIM AGRUPAMENTO VISUAL ──
 }
