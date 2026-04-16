@@ -373,6 +373,7 @@ select.inp{cursor:pointer}
       <div class="filtros-admin">
         <button class="ac" onclick="admAplicarFiltro('todos')">Todos</button>
         <button class="ac" onclick="admAplicarFiltro('pagos')">✅ Em dia</button>
+        <button class="ac" onclick="admAplicarFiltro('aguardando')">🟡 Aguardando Entrega</button>
         <button class="ac" onclick="admAplicarFiltro('pendentes')">🔴 Pendentes</button>
       </div>
       <!-- CHECKBOX MASTER -->
@@ -2246,8 +2247,11 @@ async function renderAlunosAdmin(){
   if (window._filtroStatus === 'pagos') {
     lista = lista.filter(a => calcularStatusAluno(a.id, alLivros, livroAtualFiltro) === 'Em dia');
   }
+  if (window._filtroStatus === 'aguardando') {
+    lista = lista.filter(a => calcularStatusAluno(a.id, alLivros, livroAtualFiltro) === 'Aguardando');
+  }
   if (window._filtroStatus === 'pendentes') {
-    lista = lista.filter(a => { const s = calcularStatusAluno(a.id, alLivros, livroAtualFiltro); return s !== null && s !== 'Em dia'; });
+    lista = lista.filter(a => calcularStatusAluno(a.id, alLivros, livroAtualFiltro) === 'Pendente');
   }
   // ── FIM FILTRO RÁPIDO ──
 
