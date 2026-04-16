@@ -2114,7 +2114,7 @@ async function renderDashAdmin(){
   // Alerta de pagamentos pendentes
   const pendNomes = al.filter(a => {
     const regs = alunoLivros.filter(r => r.aluno_id === a.id && r.participou !== false);
-    return regs.length > 0 && regs.some(r => !r.pagou);
+    return regs.length > 0 && regs.some(r => r.pagou === false);
   });
   if(pendNomes.length > 0) alerts.push(`<div class="al am"><span>💰</span><span><strong>${pendNomes.length} aluno${pendNomes.length>1?'s':''}</strong> com pagamento pendente</span></div>`);
 
@@ -2139,10 +2139,10 @@ async function renderDashAdmin(){
       }
 
       let cls = '', icone = '';
-      if (!atual || !atual.pagou) {
+      if (atual && atual.pagou === false) {
         partes.push('Livro ' + livroAtual + ' pendente');
         cls = 'vm'; icone = '🔴';
-      } else if (atual.pagou && atual.entregue !== true) {
+      } else if (atual && atual.pagou && atual.entregue !== true) {
         partes.push('Livro ' + livroAtual + ' aguardando entrega');
         cls = 'am'; icone = '🟡';
       } else if (atrasados.length > 0) {
