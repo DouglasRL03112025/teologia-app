@@ -2075,22 +2075,21 @@ async function renderDashAdmin(){
     }
   } catch(e) { /* tabela pode não existir ainda */ }
 
-  // Pagos e Pendentes: baseado EXCLUSIVAMENTE no livro atual
-  // Regra: para cada aluno, busca o registro exato do livro atual via .find()
-  // Conta como PAGO apenas se o registro existir E pagou === true
-  // Conta como PENDENTE apenas se o registro existir E pagou === false
-  // Alunos sem registro para o livro atual são IGNORADOS nos dois contadores
+  // Pagos/Pendentes: baseado EXCLUSIVAMENTE no livro atual via .find()
+  // Regra:
+  //   - sem registro para o livro atual → pendente
+  //   - registro com pagou === true     → pago
+  //   - registro com pagou === false    → pendente
   let pagos = 0;
   let pend = 0;
   if (livroAtual) {
     al.forEach(aluno => {
       const codigoAtual = 'p' + livroAtual;
       const registro = alunoLivros.find(r => r.aluno_id === aluno.id && r.livro_codigo === codigoAtual);
-      if (!registro) return; // sem registro para o livro atual → ignora
-      if (registro.pagou === true) {
+      if (registro && registro.pagou === true) {
         pagos++;
       } else {
-        pend++;
+        pend++; // sem registro OU pagou === false
       }
     });
   }
@@ -2112,10 +2111,11 @@ async function renderDashAdmin(){
     if(f>=2) alerts.push(`<div class="al vm"><span>⚠️</span><span><strong>${fmtNome(a.nome)}</strong> — ${f} falta${f>1?'s':''} este mês</span></div>`);
   });
   // Alerta de pagamentos pendentes — considera APENAS o livro atual via .find()
+  // Mesma regra do contador: sem registro OU pagou === false → pendente
   const pendNomes = livroAtual ? al.filter(a => {
     const codigoAtual = 'p' + livroAtual;
     const registro = alunoLivros.find(r => r.aluno_id === a.id && r.livro_codigo === codigoAtual);
-    return registro !== undefined && registro.pagou === false;
+    return !registro || registro.pagou === false;
   }) : [];
   if(pendNomes.length > 0) alerts.push(`<div class="al am"><span>💰</span><span><strong>${pendNomes.length} aluno${pendNomes.length>1?'s':''}</strong> com pagamento pendente</span></div>`);
 
