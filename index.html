@@ -2247,7 +2247,7 @@ async function renderAlunosAdmin(){
     lista = lista.filter(a => calcularStatusAluno(a.id, alLivros, livroAtualFiltro) === 'Em dia');
   }
   if (window._filtroStatus === 'pendentes') {
-    lista = lista.filter(a => calcularStatusAluno(a.id, alLivros, livroAtualFiltro) !== 'Em dia');
+    lista = lista.filter(a => { const s = calcularStatusAluno(a.id, alLivros, livroAtualFiltro); return s !== null && s !== 'Em dia'; });
   }
   // ── FIM FILTRO RÁPIDO ──
 
@@ -2260,29 +2260,11 @@ async function renderAlunosAdmin(){
 
   lista.forEach(a=>{
     const livroAtual = window.livroAtualSistema;
-    console.log('LISTA', {
-      alunoId: a.id,
-      livroAtual: window.livroAtualSistema,
-      totalRegistros: alLivros.length
-    });
-    const codigoAtual = 'p' + livroAtual;
-    const regAtual = alLivros.find(r =>
-      r.aluno_id === a.id &&
-      String(r.livro_codigo) === String(codigoAtual) &&
-      r.participou !== false
-    );
-
-    // Critérios idênticos aos usados nos alertas do dashboard
-    if (regAtual && regAtual.pagou === false) {
-      listaPendentes.push(a);
-    } else if (regAtual && regAtual.pagou === true && regAtual.entregue !== true) {
-      listaAguardando.push(a);
-    } else if (regAtual && regAtual.pagou === true && regAtual.entregue === true) {
-      listaEmDia.push(a);
-    } else {
-      // Sem registro no livro atual: trata como pendente
-      listaPendentes.push(a);
-    }
+    const status = calcularStatusAluno(a.id, alLivros, livroAtual);
+    if (status === 'Em dia')      listaEmDia.push(a);
+    else if (status === 'Aguardando') listaAguardando.push(a);
+    else if (status === 'Pendente')   listaPendentes.push(a);
+    // status === null: sem registro no livro atual — não classificar
   });
 
   function _renderCard(a) {
@@ -2333,16 +2315,14 @@ async function renderAlunosAdmin(){
 }
 /* ════ FONTE DE VERDADE: STATUS DO ALUNO ════ */
 function calcularStatusAluno(alunoId, alLivros, livroAtual) {
-  const regs = alLivros.filter(r =>
+  const reg = alLivros.find(r =>
     r.aluno_id === alunoId &&
-    String(r.livro_codigo).replace('p', '') === String(livroAtual) &&
-    r.participou !== false
+    String(r.livro_codigo) === 'p' + String(livroAtual)
   );
-  if (regs.length === 0) return 'Pendente';
-  const todosPageram = regs.every(r => r.pagou === true);
-  if (!todosPageram) return 'Pendente';
-  const todosEntregues = regs.every(r => r.entregue === true);
-  return todosEntregues ? 'Em dia' : 'Aguardando';
+  if (!reg) return null;
+  if (reg.pagou !== true) return 'Pendente';
+  if (reg.entregue !== true) return 'Aguardando';
+  return 'Em dia';
 }
 /* ════ FIM FONTE DE VERDADE ════ */
 
