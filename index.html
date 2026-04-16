@@ -2061,6 +2061,7 @@ async function renderDashAdmin(){
   const tot = al.length;
   const presencas = resPres.data || [];
   const alunoLivros = resAlunoLivros.data || [];
+  console.log('[DEBUG LIVROS]', alunoLivros.slice(0, 10));
 
   // Frequência do mês atual (baseada em registros de presença)
   const presDoMes = presencas.filter(p => p.data && p.data.startsWith(cm));
@@ -2115,6 +2116,12 @@ async function renderDashAdmin(){
   const pendNomes = al.filter(a => {
     const codigoAtual = 'p' + livroAtual;
     const atual = alunoLivros.find(r => r.aluno_id === a.id && r.livro_codigo === codigoAtual);
+    console.log('[DEBUG ATUAL]', {
+      aluno: a.nome,
+      livroAtual: livroAtual,
+      codigoEsperado: 'p' + livroAtual,
+      encontrado: atual ? atual.livro_codigo : null
+    });
     return atual && atual.pagou === false;
   });
   if(pendNomes.length > 0) alerts.push(`<div class="al am"><span>💰</span><span><strong>${pendNomes.length} aluno${pendNomes.length>1?'s':''}</strong> com pagamento pendente</span></div>`);
