@@ -127,20 +127,20 @@ select.inp{cursor:pointer}
 .btn-lote.cancel{background:transparent;border-color:rgba(255,255,255,.25)}
 
 /* ── LISTA ALUNOS ── */
-.ar{display:flex;align-items:center;gap:13px;padding:14px;background:#fff;border-radius:var(--r);margin-bottom:9px;border:1px solid var(--brd);box-shadow:var(--s);cursor:pointer;transition:all .2s}
-.ar:hover{border-color:var(--azul);box-shadow:var(--sh);transform:translateY(-1px)}
+.ar{display:flex;align-items:center;gap:13px;padding:15px 16px;background:#fff;border-radius:var(--r);margin-bottom:8px;border:1px solid #e8e4dc;box-shadow:0 1px 4px rgba(0,0,0,.06),0 2px 10px rgba(0,0,0,.04);cursor:pointer;transition:box-shadow .18s,border-color .18s,transform .18s}
+.ar:hover{border-color:#a8bdd4;box-shadow:0 4px 16px rgba(26,58,92,.13);transform:translateY(-1px)}
+.ar:active{transform:scale(.985);box-shadow:0 1px 4px rgba(0,0,0,.08)}
 
-/* ── GRID LISTA ALUNOS ADMIN ── */
-#lista-alunos-admin .grupo-alunos-admin{margin-bottom:20px}
-.grid-cards-alunos{display:grid;grid-template-columns:1fr;gap:10px}
-.grid-cards-alunos .ar{margin-bottom:0}
-@media(min-width:540px){.grid-cards-alunos{grid-template-columns:1fr 1fr}}
-@media(min-width:900px){.grid-cards-alunos{grid-template-columns:1fr 1fr 1fr}}
-.av{width:46px;height:46px;border-radius:50%;background:var(--azul-c);color:var(--azul);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0;font-family:'Lora',serif}
+/* ── GRUPOS LISTA ADMIN ── */
+#lista-alunos-admin .grupo-alunos-admin{margin-bottom:28px}
+.grid-cards-alunos{display:block}
+.grid-cards-alunos .ar{margin-bottom:8px}
+.grid-cards-alunos .ar:last-child{margin-bottom:0}
+.av{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--azul-c) 0%,#d0e4f5 100%);color:var(--azul);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0;font-family:'Lora',serif;box-shadow:0 1px 4px rgba(26,58,92,.12)}
 .ai{flex:1;min-width:0}
-.an{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.as2{font-size:12px;color:var(--cin);margin-top:2px}
-.bdg{font-size:14px;font-weight:600;padding:4px 10px;border-radius:99px;flex-shrink:0}
+.an{font-size:15px;font-weight:600;color:var(--azul-e);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em}
+.as2{font-size:12px;color:#888;margin-top:3px;line-height:1.4}
+.bdg{font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;flex-shrink:0;letter-spacing:.2px}
 .bv{background:var(--vd-c);color:var(--vd)}.br{background:var(--vm-c);color:var(--vm)}.ba{background:var(--am-c);color:var(--am)}
 
 /* ── PERFIL ── */
