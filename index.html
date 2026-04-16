@@ -2252,14 +2252,41 @@ async function renderAlunosAdmin(){
   // ── FIM FILTRO RÁPIDO ──
 
   const cm=chM(hj());
-  el.innerHTML=lista.map(a=>{
-    // Em dia = livro atual pago (usa window.livroAtualSistema se disponível)
+
+  // ── AGRUPAMENTO VISUAL (apenas renderização — nenhuma lógica alterada) ──
+  const listaPendentes   = [];
+  const listaAguardando  = [];
+  const listaEmDia       = [];
+
+  lista.forEach(a=>{
     const livroAtual = window.livroAtualSistema;
     console.log('LISTA', {
       alunoId: a.id,
       livroAtual: window.livroAtualSistema,
       totalRegistros: alLivros.length
     });
+    const codigoAtual = 'p' + livroAtual;
+    const regAtual = alLivros.find(r =>
+      r.aluno_id === a.id &&
+      String(r.livro_codigo) === String(codigoAtual) &&
+      r.participou !== false
+    );
+
+    // Critérios idênticos aos usados nos alertas do dashboard
+    if (regAtual && regAtual.pagou === false) {
+      listaPendentes.push(a);
+    } else if (regAtual && regAtual.pagou === true && regAtual.entregue !== true) {
+      listaAguardando.push(a);
+    } else if (regAtual && regAtual.pagou === true && regAtual.entregue === true) {
+      listaEmDia.push(a);
+    } else {
+      // Sem registro no livro atual: trata como pendente
+      listaPendentes.push(a);
+    }
+  });
+
+  function _renderCard(a) {
+    const livroAtual = window.livroAtualSistema;
     const emDia = calcularStatusAluno(a.id, alLivros, livroAtual) === 'Em dia';
     const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
     let pres=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') pres++; });
@@ -2272,7 +2299,35 @@ async function renderAlunosAdmin(){
       </div>
       <span class="bdg ${emDia?'bv':'br'}">${emDia?'Em dia':'Pendente'}</span>
     </div>`;
-  }).join('');
+  }
+
+  function _renderGrupo(icone, titulo, corFundo, corTexto, alunos) {
+    if (!alunos.length) return '';
+    return `<div style="
+        display:flex;align-items:center;gap:8px;
+        margin:18px 0 10px;
+        padding:8px 12px;
+        border-radius:var(--r);
+        background:${corFundo};
+        border-left:4px solid ${corTexto};
+      ">
+        <span style="font-size:16px">${icone}</span>
+        <span style="font-size:13px;font-weight:700;color:${corTexto};text-transform:uppercase;letter-spacing:.6px">${titulo}</span>
+        <span style="margin-left:auto;font-size:12px;font-weight:600;color:${corTexto};opacity:.7">${alunos.length} aluno${alunos.length!==1?'s':''}</span>
+      </div>`
+      + alunos.map(_renderCard).join('');
+  }
+
+  el.innerHTML =
+    _renderGrupo('🔴', 'Pendentes',          'var(--vm-c)', 'var(--vm)', listaPendentes)  +
+    _renderGrupo('🟡', 'Aguardando Entrega', 'var(--am-c)', 'var(--am)', listaAguardando) +
+    _renderGrupo('🟢', 'Em Dia',             'var(--vd-c)', 'var(--vd)', listaEmDia);
+
+  // Fallback: se nenhum grupo renderizou (ex: livro atual não definido), exibe lista plana
+  if (!el.innerHTML.trim()) {
+    el.innerHTML = lista.map(_renderCard).join('');
+  }
+  // ── FIM AGRUPAMENTO VISUAL ──
 }
 /* ════ FONTE DE VERDADE: STATUS DO ALUNO ════ */
 function calcularStatusAluno(alunoId, alLivros, livroAtual) {
