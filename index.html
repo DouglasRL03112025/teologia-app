@@ -4752,7 +4752,13 @@ if(!D.aulas_log) { D.aulas_log={}; }
       .upsert({ id: 1, livro_atual_override: numero });
     if (error) { alert("Erro ao salvar"); return; }
     alert("Livro atual definido com sucesso!");
-    await renderDashAdmin();
+    // Atualiza estado global
+    window.livroAtualSistema = numero;
+    // Re-render das telas (sem reload)
+    try {
+      if (typeof renderDashAdmin === 'function') { renderDashAdmin(); }
+      if (typeof renderPagAdmin === 'function') { renderPagAdmin(); }
+    } catch(e) { console.warn('Erro ao re-renderizar telas:', e); }
   }
 </script>
 <!-- ── MODAL PAGAMENTO ── -->
