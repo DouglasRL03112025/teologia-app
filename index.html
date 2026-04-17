@@ -2671,7 +2671,8 @@ async function renderPagAdmin(){
     _pagCache = alunoLivros;
 
     /* ── RESUMO FINANCEIRO DO LIVRO ATUAL ── */
-    const livroAtual = window.livroAtualSistema || null;
+    const livroAtual = window.livroAtualSistema || (window.configSistema && window.configSistema.livro_atual) || null;
+    console.log('[FINANCEIRO] livroAtual:', livroAtual);
     if (livroAtual) {
       const codigoAtualFinanceiro = 'p' + livroAtual;
       let totalPagosFinanceiro    = 0;
