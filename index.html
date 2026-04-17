@@ -1787,7 +1787,7 @@ async function marcarLivroComoPago(idRegistro, dataManual, formaManual) {
     .single();
 
   if (!erroEstado && registroAtual && registroAtual.pagou === true) {
-    alert('Pagamento já foi registrado');
+    mostrarMensagem('Pagamento já foi registrado', 'erro');
     return;
   }
   // ── FIM VALIDAÇÃO ──
@@ -1951,11 +1951,11 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
 
   if (!erroValidacao && registroValidacao) {
     if (registroValidacao.pagou !== true) {
-      alert('Não é possível entregar antes do pagamento');
+      mostrarMensagem('Não é possível entregar antes do pagamento', 'erro');
       return;
     }
     if (registroValidacao.entregue === true) {
-      alert('Entrega já confirmada');
+      mostrarMensagem('Entrega já confirmada', 'erro');
       return;
     }
   }
