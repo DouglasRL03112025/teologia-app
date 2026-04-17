@@ -2670,6 +2670,58 @@ async function renderPagAdmin(){
     const alunoLivros = alunoLivrosRes.data || [];
     _pagCache = alunoLivros;
 
+    /* ── RESUMO FINANCEIRO DO LIVRO ATUAL ── */
+    const livroAtual = window.livroAtualSistema || null;
+    if (livroAtual) {
+      const codigoAtualFinanceiro = 'p' + livroAtual;
+      let totalPagosFinanceiro    = 0;
+      let totalPixFinanceiro      = 0;
+      let totalDinheiroFinanceiro = 0;
+      let totalPendentesFinanceiro = 0;
+
+      alunoLivros.forEach(r => {
+        if (r.livro_codigo !== codigoAtualFinanceiro) return;
+        if (r.pagou === true) {
+          totalPagosFinanceiro++;
+          const forma = (r.forma_pagamento || '').toLowerCase().trim();
+          if (forma === 'pix') totalPixFinanceiro++;
+          else if (forma === 'dinheiro') totalDinheiroFinanceiro++;
+        } else {
+          totalPendentesFinanceiro++;
+        }
+      });
+
+      const blocoFinanceiroPag = document.createElement('div');
+      blocoFinanceiroPag.id = 'resumo-financeiro-pagamentos';
+      blocoFinanceiroPag.innerHTML = `
+        <div style="margin-bottom:12px;padding:12px;border:1px solid var(--brd);border-radius:var(--r);background:#fff">
+          <strong>💰 Resumo do Livro Atual (Livro ${livroAtual})</strong><br><br>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <div style="flex:1;min-width:120px;padding:8px;border-radius:6px;background:var(--vd-c)">
+              Total pagos<br><strong>${totalPagosFinanceiro}</strong>
+            </div>
+            <div style="flex:1;min-width:120px;padding:8px;border-radius:6px;background:var(--azul-c)">
+              PIX<br><strong>${totalPixFinanceiro}</strong>
+            </div>
+            <div style="flex:1;min-width:120px;padding:8px;border-radius:6px;background:var(--dou-c)">
+              Dinheiro<br><strong>${totalDinheiroFinanceiro}</strong>
+            </div>
+            <div style="flex:1;min-width:120px;padding:8px;border-radius:6px;background:#f8d7da">
+              Pendentes<br><strong>${totalPendentesFinanceiro}</strong>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const containerPagamentos = document.getElementById('a-lista-pag');
+      if (containerPagamentos) {
+        const existente = document.getElementById('resumo-financeiro-pagamentos');
+        if (existente) existente.remove();
+        containerPagamentos.prepend(blocoFinanceiroPag);
+      }
+    }
+    /* ── FIM RESUMO FINANCEIRO ── */
+
     if (!alunos.length) {
       lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--cin)">Nenhum aluno ativo.</div>';
       return;
