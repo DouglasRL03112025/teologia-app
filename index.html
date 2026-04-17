@@ -2673,53 +2673,25 @@ async function renderPagAdmin(){
     /* ── RESUMO FINANCEIRO DO LIVRO ATUAL ── */
     const livroAtual = window.livroAtualSistema || (window.configSistema && window.configSistema.livro_atual) || null;
     console.log('[FINANCEIRO] livroAtual:', livroAtual);
+    let blocoFinanceiroHTML = '';
     if (livroAtual) {
-      const codigoAtualFinanceiro = 'p' + livroAtual;
-      let totalPagosFinanceiro    = 0;
-      let totalPixFinanceiro      = 0;
-      let totalDinheiroFinanceiro = 0;
-      let totalPendentesFinanceiro = 0;
-
+      const codigoAtual = 'p' + livroAtual;
+      let totalPagos    = 0;
+      let totalPix      = 0;
+      let totalDinheiro = 0;
+      let totalPendentes = 0;
       alunoLivros.forEach(r => {
-        if (r.livro_codigo !== codigoAtualFinanceiro) return;
+        if (r.livro_codigo !== codigoAtual) return;
         if (r.pagou === true) {
-          totalPagosFinanceiro++;
+          totalPagos++;
           const forma = (r.forma_pagamento || '').toLowerCase().trim();
-          if (forma === 'pix') totalPixFinanceiro++;
-          else if (forma === 'dinheiro') totalDinheiroFinanceiro++;
+          if (forma === 'pix') totalPix++;
+          else if (forma === 'dinheiro') totalDinheiro++;
         } else {
-          totalPendentesFinanceiro++;
+          totalPendentes++;
         }
       });
-
-      const blocoFinanceiroPag = document.createElement('div');
-      blocoFinanceiroPag.id = 'resumo-financeiro-pagamentos';
-      blocoFinanceiroPag.innerHTML = `
-        <div style="margin-bottom:12px;padding:12px;border:1px solid var(--brd);border-radius:var(--r);background:#fff">
-          <strong>💰 Resumo do Livro Atual (Livro ${livroAtual})</strong><br><br>
-          <div style="display:flex;gap:10px;flex-wrap:wrap">
-            <div style="flex:1;min-width:120px;padding:8px;border-radius:6px;background:var(--vd-c)">
-              Total pagos<br><strong>${totalPagosFinanceiro}</strong>
-            </div>
-            <div style="flex:1;min-width:120px;padding:8px;border-radius:6px;background:var(--azul-c)">
-              PIX<br><strong>${totalPixFinanceiro}</strong>
-            </div>
-            <div style="flex:1;min-width:120px;padding:8px;border-radius:6px;background:var(--dou-c)">
-              Dinheiro<br><strong>${totalDinheiroFinanceiro}</strong>
-            </div>
-            <div style="flex:1;min-width:120px;padding:8px;border-radius:6px;background:#f8d7da">
-              Pendentes<br><strong>${totalPendentesFinanceiro}</strong>
-            </div>
-          </div>
-        </div>
-      `;
-
-      const containerPagamentos = document.getElementById('a-lista-pag');
-      if (containerPagamentos) {
-        const existente = document.getElementById('resumo-financeiro-pagamentos');
-        if (existente) existente.remove();
-        containerPagamentos.prepend(blocoFinanceiroPag);
-      }
+      blocoFinanceiroHTML = `<div style="margin-bottom:12px;padding:12px;border:1px solid var(--brd);border-radius:var(--r);background:#fff"><strong>&#x1F4B0; Resumo do Livro Atual</strong><br><br><div style="display:flex;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:120px;padding:8px;border-radius:6px;background:var(--vd-c)">Total pagos<br><strong>${totalPagos}</strong></div><div style="flex:1;min-width:120px;padding:8px;border-radius:6px;background:var(--azul-c)">PIX<br><strong>${totalPix}</strong></div><div style="flex:1;min-width:120px;padding:8px;border-radius:6px;background:var(--dou-c)">Dinheiro<br><strong>${totalDinheiro}</strong></div><div style="flex:1;min-width:120px;padding:8px;border-radius:6px;background:#f8d7da">Pendentes<br><strong>${totalPendentes}</strong></div></div></div>`;
     }
     /* ── FIM RESUMO FINANCEIRO ── */
 
@@ -2728,7 +2700,7 @@ async function renderPagAdmin(){
       return;
     }
 
-    lista.innerHTML = alunos.map(aluno => {
+    lista.innerHTML = blocoFinanceiroHTML + alunos.map(aluno => {
       // Para cada livro do catálogo, busca o registro em aluno_livros
       const livrosDoAluno = livros.map(livro => {
         const reg = alunoLivros.find(r =>
