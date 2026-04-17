@@ -4196,7 +4196,9 @@ if(!D.aulas_log) { D.aulas_log={}; }
     } catch(e) {
       console.error('Erro na inicialização do Supabase:', e);
     }
-    await verificarSessao();
+    if (adminJaLogado !== 'true') {
+      await verificarSessao();
+    }
   }
 
   /* ════ SUPABASE AUTH ════ */
