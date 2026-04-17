@@ -1928,23 +1928,6 @@ async function carregarExibirLivrosAdminPerfil(alunoId) {
           ">
           📦 Confirmar entrega
         </button>` : ''}
-        ${pago && item.entregue === true && !naoParticipou && window.isAdmin ? `<button
-          onclick="desfazerEntregaLivro('${alunoId}', '${item.livro_codigo}', this)"
-          style="
-            padding:6px 13px;
-            border:none;
-            border-radius:99px;
-            background:var(--cin);
-            color:#fff;
-            font-size:12px;
-            font-weight:600;
-            font-family:inherit;
-            cursor:pointer;
-            white-space:nowrap;
-            flex-shrink:0;
-          ">
-          ↩ Desfazer entrega
-        </button>` : ''}
       </div>
     `;
   }).join('');
@@ -2042,62 +2025,6 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
   }
 }
 /* ════ FIM CONFIRMAR ENTREGA DE LIVRO (ADMIN) ════ */
-
-/* ════ DESFAZER ENTREGA DE LIVRO (ADMIN) ════ */
-async function desfazerEntregaLivro(alunoId, livroCodigo, btn) {
-  if (!window.isAdmin) { alert('Acesso restrito'); return; }
-
-  const codigoFinal = String(livroCodigo).startsWith('p') ? livroCodigo : 'p' + livroCodigo;
-  const textoOriginal = btn ? btn.textContent : '↩ Desfazer entrega';
-
-  // ── VALIDAÇÕES ──
-  const { data: registro, error: erroSelect } = await supabaseClient
-    .from('aluno_livros')
-    .select('id, pagou, entregue')
-    .eq('aluno_id', alunoId)
-    .eq('livro_codigo', codigoFinal)
-    .single();
-
-  if (!registro) {
-    mostrarMensagem('Registro não encontrado', 'erro');
-    return;
-  }
-  if (registro.entregue !== true) {
-    mostrarMensagem('Entrega ainda não foi confirmada', 'aviso');
-    return;
-  }
-  // ── FIM VALIDAÇÕES ──
-
-  if (!confirm('Deseja desfazer a entrega deste livro?')) return;
-
-  // ── PROTEÇÃO CONTRA CLIQUE DUPLO ──
-  if (btn && btn.disabled) return;
-  if (btn) { btn.disabled = true; btn.textContent = 'Processando...'; }
-
-  try {
-    const { error: erroUpdate } = await supabaseClient
-      .from('aluno_livros')
-      .update({ entregue: false })
-      .eq('aluno_id', alunoId)
-      .eq('livro_codigo', codigoFinal);
-
-    if (erroUpdate) {
-      console.error('[DesfazerEntrega] Erro:', erroUpdate);
-      mostrarMensagem('Erro ao desfazer entrega', 'erro');
-      return;
-    }
-
-    mostrarMensagem('Entrega desfeita com sucesso', 'sucesso');
-    await carregarExibirLivrosAdminPerfil(alunoId);
-    await renderDashAdmin();
-  } catch(e) {
-    console.error('[DesfazerEntrega] Exceção:', e);
-    mostrarMensagem('Erro ao desfazer entrega', 'erro');
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = textoOriginal; }
-  }
-}
-/* ════ FIM DESFAZER ENTREGA DE LIVRO (ADMIN) ════ */
 
 /* ════ FIM MARCAR LIVRO COMO PAGO (ADMIN) ════ */
 
@@ -2386,6 +2313,50 @@ async function renderDashAdmin(){
 
   if(!alerts.length) alerts.push('<div class="al vd"><span>✅</span><span>Tudo em dia! Nenhum alerta no momento.</span></div>');
   document.getElementById('a-alertas').innerHTML=alerts.join('');
+
+  // ── RESUMO FINANCEIRO (somente leitura, isolado) ──
+  const containerDashboard = document.getElementById('a-inicio');
+  if (containerDashboard && livroAtual) {
+    const codigoAtualFinanceiro = 'p' + livroAtual;
+    let totalPagosFinanceiro = 0;
+    let totalPixFinanceiro = 0;
+    let totalDinheiroFinanceiro = 0;
+
+    alunoLivros.forEach(r => {
+      if (r.livro_codigo !== codigoAtualFinanceiro) return;
+      if (r.pagou !== true) return;
+      totalPagosFinanceiro++;
+      const forma = (r.forma_pagamento || '').toLowerCase().trim();
+      if (forma === 'pix') totalPixFinanceiro++;
+      else if (forma === 'dinheiro') totalDinheiroFinanceiro++;
+    });
+
+    const blocoAnterior = containerDashboard.querySelector('.card-financeiro');
+    if (blocoAnterior) blocoAnterior.remove();
+
+    const blocoFinanceiro = document.createElement('div');
+    blocoFinanceiro.className = 'card-financeiro';
+    blocoFinanceiro.innerHTML = `
+      <div style="margin-top:12px;padding:14px 16px;border:1px solid var(--brd);border-radius:var(--r);background:#fff;box-shadow:var(--s)">
+        <div style="font-size:13px;font-weight:700;color:var(--azul);margin-bottom:10px">💰 Financeiro — Livro ${livroAtual}</div>
+        <div style="display:flex;gap:10px">
+          <div style="flex:1;background:var(--vd-c);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:22px;font-weight:700;color:var(--vd);font-family:'Lora',serif">${totalPagosFinanceiro}</div>
+            <div style="font-size:11px;color:var(--cin);margin-top:2px;text-transform:uppercase;letter-spacing:.4px">Total pagos</div>
+          </div>
+          <div style="flex:1;background:var(--azul-c);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:22px;font-weight:700;color:var(--azul);font-family:'Lora',serif">${totalPixFinanceiro}</div>
+            <div style="font-size:11px;color:var(--cin);margin-top:2px;text-transform:uppercase;letter-spacing:.4px">PIX</div>
+          </div>
+          <div style="flex:1;background:var(--dou-c);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:22px;font-weight:700;color:var(--am);font-family:'Lora',serif">${totalDinheiroFinanceiro}</div>
+            <div style="font-size:11px;color:var(--cin);margin-top:2px;text-transform:uppercase;letter-spacing:.4px">Dinheiro</div>
+          </div>
+        </div>
+      </div>`;
+    containerDashboard.appendChild(blocoFinanceiro);
+  }
+  // ── FIM RESUMO FINANCEIRO ──
 }
 
 /* ════ CARREGAR LIVRO ATUAL DO SISTEMA ════ */
