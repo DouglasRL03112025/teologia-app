@@ -2671,6 +2671,7 @@ async function renderPagAdmin(){
     _pagCache = alunoLivros;
 
     /* ── RESUMO FINANCEIRO DO LIVRO ATUAL ── */
+    if (!window.livroAtualSistema) { await carregarLivroAtualSistema(); }
     const livroAtual = window.livroAtualSistema || (window.configSistema && window.configSistema.livro_atual) || null;
     console.log('[FINANCEIRO] livroAtual:', livroAtual);
     let blocoFinanceiroHTML = '';
@@ -2691,7 +2692,30 @@ async function renderPagAdmin(){
           totalPendentes++;
         }
       });
-      blocoFinanceiroHTML = `<div style="margin-bottom:12px;padding:12px;border:1px solid var(--brd);border-radius:var(--r);background:#fff"><strong>&#x1F4B0; Resumo do Livro Atual</strong><br><br><div style="display:flex;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:120px;padding:8px;border-radius:6px;background:var(--vd-c)">Total pagos<br><strong>${totalPagos}</strong></div><div style="flex:1;min-width:120px;padding:8px;border-radius:6px;background:var(--azul-c)">PIX<br><strong>${totalPix}</strong></div><div style="flex:1;min-width:120px;padding:8px;border-radius:6px;background:var(--dou-c)">Dinheiro<br><strong>${totalDinheiro}</strong></div><div style="flex:1;min-width:120px;padding:8px;border-radius:6px;background:#f8d7da">Pendentes<br><strong>${totalPendentes}</strong></div></div></div>`;
+      const totalAlunos = totalPagos + totalPendentes;
+      const percPagos = totalAlunos > 0 ? Math.round((totalPagos / totalAlunos) * 100) : 0;
+      blocoFinanceiroHTML = `<div style="margin-bottom:16px;padding:14px 16px;border:1px solid var(--brd);border-radius:var(--r);background:#fff;box-shadow:var(--s)">
+        <div style="font-family:'Lora',serif;font-size:15px;font-weight:700;color:var(--azul);margin-bottom:4px">💰 Resumo Financeiro — Livro ${livroAtual}</div>
+        <div style="font-size:12px;color:var(--cin);margin-bottom:12px">${percPagos}% dos alunos com registro pagaram (${totalPagos} de ${totalAlunos})</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="padding:10px;border-radius:8px;background:var(--vd-c);border:1px solid #b8dfc8">
+            <div style="font-size:11px;color:var(--cin);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">✅ Pagos</div>
+            <div style="font-size:26px;font-weight:700;color:var(--vd);font-family:'Lora',serif">${totalPagos}</div>
+          </div>
+          <div style="padding:10px;border-radius:8px;background:var(--vm-c);border:1px solid #f0b8b8">
+            <div style="font-size:11px;color:var(--cin);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">❌ Pendentes</div>
+            <div style="font-size:26px;font-weight:700;color:var(--vm);font-family:'Lora',serif">${totalPendentes}</div>
+          </div>
+          <div style="padding:10px;border-radius:8px;background:var(--azul-c);border:1px solid #b8cfe0">
+            <div style="font-size:11px;color:var(--cin);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">📱 PIX</div>
+            <div style="font-size:26px;font-weight:700;color:var(--azul);font-family:'Lora',serif">${totalPix}</div>
+          </div>
+          <div style="padding:10px;border-radius:8px;background:var(--dou-c);border:1px solid #e0d0a0">
+            <div style="font-size:11px;color:var(--cin);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">💵 Dinheiro</div>
+            <div style="font-size:26px;font-weight:700;color:var(--am);font-family:'Lora',serif">${totalDinheiro}</div>
+          </div>
+        </div>
+      </div>`;
     }
     /* ── FIM RESUMO FINANCEIRO ── */
 
