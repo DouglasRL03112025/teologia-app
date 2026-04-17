@@ -1670,11 +1670,23 @@ function fecharModalPagamento() {
 }
 
 async function confirmarPagamentoModal() {
-  const data = document.getElementById('mp-data').value;
-  const forma = document.getElementById('mp-forma').value;
-  if (!_mpRegistroId || !data) { alert('Dados inválidos'); return; }
-  await marcarLivroComoPago(_mpRegistroId, data, forma);
-  fecharModalPagamento();
+  const btnConfirmar = document.querySelector('#modal-pagamento .btn.bp');
+  const textoOriginal = btnConfirmar ? btnConfirmar.textContent : 'Confirmar';
+
+  if (btnConfirmar && btnConfirmar.disabled) return;
+  if (btnConfirmar) { btnConfirmar.disabled = true; btnConfirmar.textContent = 'Processando...'; }
+
+  try {
+    const data = document.getElementById('mp-data').value;
+    const forma = document.getElementById('mp-forma').value;
+    if (!_mpRegistroId || !data) { alert('Dados inválidos'); return; }
+    await marcarLivroComoPago(_mpRegistroId, data, forma);
+    fecharModalPagamento();
+  } catch(e) {
+    console.error('[confirmarPagamentoModal] Erro:', e);
+  } finally {
+    if (btnConfirmar) { btnConfirmar.disabled = false; btnConfirmar.textContent = textoOriginal; }
+  }
 }
 /* ── FIM MODAL PAGAMENTO ── */
 
@@ -1805,7 +1817,7 @@ async function carregarExibirLivrosAdminPerfil(alunoId) {
           ✓ Marcar como pago
         </button>` : ''}
         ${pago && item.entregue !== true && !naoParticipou && window.isAdmin ? `<button
-          onclick="confirmarEntregaLivro('${alunoId}', '${item.livro_codigo}')"
+          onclick="confirmarEntregaLivro('${alunoId}', '${item.livro_codigo}', this)"
           style="
             padding:6px 13px;
             border:none;
@@ -1827,62 +1839,74 @@ async function carregarExibirLivrosAdminPerfil(alunoId) {
 }
 
 /* ════ CONFIRMAR ENTREGA DE LIVRO (ADMIN) ════ */
-async function confirmarEntregaLivro(alunoId, livroCodigo) {
+async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
   if (!window.isAdmin) { alert('Acesso restrito'); return; }
 
-  // Log para diagnóstico
-  console.log('[EntregaLivro] Iniciando confirmação de entrega');
-  console.log('[EntregaLivro] alunoId:', alunoId);
-  console.log('[EntregaLivro] livroCodigo:', livroCodigo);
+  const btn = btnEl || null;
+  const textoOriginal = btn ? btn.textContent : 'Confirmar Entrega';
 
-  // Garantia: livroCodigo deve estar no formato "pN" (ex: "p7")
-  const codigoFinal = String(livroCodigo).startsWith('p')
-    ? livroCodigo
-    : 'p' + livroCodigo;
-  console.log('[EntregaLivro] codigoFinal (usado no update):', codigoFinal);
+  if (btn && btn.disabled) return;
+  if (btn) { btn.disabled = true; btn.textContent = 'Processando...'; }
 
-  if (!confirm('Confirmar entrega do livro ' + codigoFinal + ' para este aluno?')) return;
+  try {
+    // Log para diagnóstico
+    console.log('[EntregaLivro] Iniciando confirmação de entrega');
+    console.log('[EntregaLivro] alunoId:', alunoId);
+    console.log('[EntregaLivro] livroCodigo:', livroCodigo);
 
-  // Verificar se o registro existe antes de tentar o update
-  const { data: registros, error: erroSelect } = await supabaseClient
-    .from('aluno_livros')
-    .select('id, aluno_id, livro_codigo, pagou, entregue')
-    .eq('aluno_id', alunoId)
-    .eq('livro_codigo', codigoFinal);
+    // Garantia: livroCodigo deve estar no formato "pN" (ex: "p7")
+    const codigoFinal = String(livroCodigo).startsWith('p')
+      ? livroCodigo
+      : 'p' + livroCodigo;
+    console.log('[EntregaLivro] codigoFinal (usado no update):', codigoFinal);
 
-  if (erroSelect) {
-    console.error('[EntregaLivro] Erro ao verificar registro:', erroSelect);
-    alert('Erro ao verificar registro no banco. Veja o console.');
-    return;
+    if (!confirm('Confirmar entrega do livro ' + codigoFinal + ' para este aluno?')) return;
+
+    // Verificar se o registro existe antes de tentar o update
+    const { data: registros, error: erroSelect } = await supabaseClient
+      .from('aluno_livros')
+      .select('id, aluno_id, livro_codigo, pagou, entregue')
+      .eq('aluno_id', alunoId)
+      .eq('livro_codigo', codigoFinal);
+
+    if (erroSelect) {
+      console.error('[EntregaLivro] Erro ao verificar registro:', erroSelect);
+      alert('Erro ao verificar registro no banco. Veja o console.');
+      return;
+    }
+
+    console.log('[EntregaLivro] Registros encontrados:', registros);
+
+    if (!registros || registros.length === 0) {
+      console.error('[EntregaLivro] Nenhum registro encontrado para alunoId=' + alunoId + ' e livro_codigo=' + codigoFinal);
+      alert('Registro não encontrado para este aluno e livro. Nenhuma alteração foi feita.');
+      return;
+    }
+
+    // Executar o update
+    const { error: erroUpdate } = await supabaseClient
+      .from('aluno_livros')
+      .update({ entregue: true })
+      .eq('aluno_id', alunoId)
+      .eq('livro_codigo', codigoFinal);
+
+    if (erroUpdate) {
+      console.error('[EntregaLivro] Erro ao confirmar entrega:', erroUpdate);
+      alert('Erro ao confirmar entrega: ' + (erroUpdate.message || JSON.stringify(erroUpdate)));
+      return;
+    }
+
+    console.log('[EntregaLivro] Entrega confirmada com sucesso!');
+    toast('📦 Entrega confirmada com sucesso!');
+
+    // Recarregar lista de livros do aluno e atualizar dashboard/alertas
+    await carregarExibirLivrosAdminPerfil(alunoId);
+    await renderDashAdmin();
+  } catch(e) {
+    console.error('[EntregaLivro] Exceção:', e);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = textoOriginal; }
   }
-
-  console.log('[EntregaLivro] Registros encontrados:', registros);
-
-  if (!registros || registros.length === 0) {
-    console.error('[EntregaLivro] Nenhum registro encontrado para alunoId=' + alunoId + ' e livro_codigo=' + codigoFinal);
-    alert('Registro não encontrado para este aluno e livro. Nenhuma alteração foi feita.');
-    return;
-  }
-
-  // Executar o update
-  const { error: erroUpdate } = await supabaseClient
-    .from('aluno_livros')
-    .update({ entregue: true })
-    .eq('aluno_id', alunoId)
-    .eq('livro_codigo', codigoFinal);
-
-  if (erroUpdate) {
-    console.error('[EntregaLivro] Erro ao confirmar entrega:', erroUpdate);
-    alert('Erro ao confirmar entrega: ' + (erroUpdate.message || JSON.stringify(erroUpdate)));
-    return;
-  }
-
-  console.log('[EntregaLivro] Entrega confirmada com sucesso!');
-  toast('📦 Entrega confirmada com sucesso!');
-
-  // Recarregar lista de livros do aluno e atualizar dashboard/alertas
-  await carregarExibirLivrosAdminPerfil(alunoId);
-  await renderDashAdmin();
 }
 /* ════ FIM CONFIRMAR ENTREGA DE LIVRO (ADMIN) ════ */
 
