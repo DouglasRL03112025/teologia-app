@@ -4179,8 +4179,8 @@ if(!D.aulas_log) { D.aulas_log={}; }
     const adminJaLogado = localStorage.getItem('adminLogado');
     if (adminJaLogado === 'true') {
       try {
-        if (typeof renderDashAdmin === 'function') {
-          await renderDashAdmin();
+        if (typeof irAdmin === 'function') {
+          irAdmin('inicio');
         }
       } catch(e) {
         console.warn('Erro ao restaurar sessão admin:', e);
