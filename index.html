@@ -2670,9 +2670,8 @@ async function renderPagAdmin(){
     const alunoLivros = alunoLivrosRes.data || [];
     _pagCache = alunoLivros;
 
-    // ── FILTRAR APENAS O LIVRO SELECIONADO NA NAVEGAÇÃO ──
+    // ── CÓDIGO DO LIVRO SELECIONADO NA NAVEGAÇÃO ──
     const codigoVisual = 'p' + livroVisualAtual;
-    const livroSelecionado = livros.filter(l => l.codigo === codigoVisual);
 
     /* ── RESUMO FINANCEIRO DO LIVRO VISUAL ── */
     console.log('[FINANCEIRO] livroVisualAtual:', livroVisualAtual);
@@ -2726,57 +2725,43 @@ async function renderPagAdmin(){
     }
 
     lista.innerHTML = blocoFinanceiroHTML + alunos.map(aluno => {
-      // Mostra apenas o livro atualmente selecionado na navegação
-      const livrosDoAluno = livroSelecionado.map(livro => {
-        const reg = alunoLivros.find(r =>
-          r.aluno_id === aluno.id &&
-          r.livro_codigo === livro.codigo
-        );
-        const pago = reg?.pagou === true;
-        const valorExib = parseFloat(reg?.valor || livro.valor || aluno.valor || 0);
-        const valorStr  = valorExib ? ' · R$ ' + valorExib.toFixed(2) : '';
-        const dtStr     = reg?.data_pagamento
-          ? ' · ' + new Date(reg.data_pagamento).toLocaleDateString('pt-BR') : '';
-        const fmStr     = reg?.forma_pagamento ? ' · ' + reg.forma_pagamento : '';
-        const statusInfo = reg
-          ? (pago
-              ? '✅ Pago' + dtStr + fmStr + valorStr
-              : '❌ Pendente' + valorStr)
-          : '— Sem registro';
-        return { livro, reg, pago, statusInfo };
-      });
+      // Busca o registro do aluno para o livro selecionado
+      const registro = alunoLivros.find(r =>
+        r.aluno_id === aluno.id && r.livro_codigo === codigoVisual
+      );
+      const pago = registro?.pagou === true;
 
-      const qtdPagos = livrosDoAluno.filter(l => l.pago).length;
-      const qtdPend  = livrosDoAluno.filter(l => l.reg && !l.pago).length;
-      const emDia    = livrosDoAluno.filter(l => l.reg).length > 0 && qtdPend === 0;
+      let statusTexto = '— Sem registro';
+      let statusClasse = 'ba';
+      let botaoClasse = 'pgb';
 
-      const livrosHtml = livrosDoAluno.map(({ livro, reg, pago, statusInfo }) =>
-        `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd)">
-          <div style="flex:1">
-            <div style="font-size:14px;font-weight:500">📚 ${livro.nome || livro.codigo}</div>
-            <div style="font-size:12px;color:var(--cin)">${statusInfo}</div>
-          </div>
-          ${reg && window.isAdmin ? `<button class="pgb ${pago?'pg':'pe'}"
-            onclick="tgPagLivro('${reg.id}', ${pago}, '${aluno.id}', '${(aluno.nome||'').replace(/'/g,"\\'")}')">
-            ${pago ? '✓ Pago' : '✕ Pendente'}
-          </button>` : ''}
-        </div>`
-      ).join('');
+      if (registro) {
+        if (pago) {
+          const dt = registro.data_pagamento
+            ? ' · ' + new Date(registro.data_pagamento).toLocaleDateString('pt-BR') : '';
+          const fm = registro.forma_pagamento ? ' · ' + registro.forma_pagamento : '';
+          statusTexto = '✅ Pago' + dt + fm;
+          statusClasse = 'bv';
+          botaoClasse = 'pg';
+        } else {
+          statusTexto = '❌ Pendente';
+          statusClasse = 'br';
+          botaoClasse = 'pe';
+        }
+      }
 
       const nomeAluno = (aluno.nome||'').split(' ').map(p=>p.charAt(0)+p.slice(1).toLowerCase()).join(' ');
-      const totalLivros = livroSelecionado.length;
-      return `<div class="pgr ${emDia?'liv-rec':'liv-pend'}"
-        style="flex-direction:column;align-items:stretch;padding:0;overflow:hidden">
-        <div style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer"
-          onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
-          <div class="pgi">
-            <div class="pgn">${nomeAluno}</div>
-            <div class="pgd">${totalLivros} livro${totalLivros!==1?'s':''} · ${qtdPagos} pago${qtdPagos!==1?'s':''}</div>
-          </div>
-          <span class="bdg ${emDia?'bv':qtdPend>0?'br':'ba'}">${emDia?'Em dia':qtdPend>0?qtdPend+' pendente'+(qtdPend!==1?'s':''):'Sem registro'}</span>
+      return `<div class="ar" style="justify-content:space-between">
+        <div class="pgi">
+          <div class="pgn">${nomeAluno}</div>
+          <div class="pgd">📚 Livro ${livroVisualAtual}</div>
         </div>
-        <div style="display:none;border-top:1px solid var(--brd);padding:8px 14px 12px;background:#fafafa">
-          ${livrosHtml || '<div style="font-size:13px;color:var(--cin);padding:4px 0">Livro não encontrado no catálogo.</div>'}
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          <span class="bdg ${statusClasse}">${statusTexto}</span>
+          ${registro && window.isAdmin ? `<button class="pgb ${botaoClasse}"
+            onclick="tgPagLivro('${registro.id}', ${pago}, '${aluno.id}', '${(aluno.nome||'').replace(/'/g,"\\'")}')">
+            ${pago ? '✓ Pago' : '✕ Pendente'}
+          </button>` : ''}
         </div>
       </div>`;
     }).join('');
