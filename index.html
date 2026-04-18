@@ -4178,6 +4178,9 @@ if(!D.aulas_log) { D.aulas_log={}; }
     // ── Restaurar sessão admin após F5 ──
     const adminJaLogado = localStorage.getItem('adminLogado');
     if (adminJaLogado === 'true') {
+      window.isAdmin = true;
+    }
+    if (adminJaLogado === 'true') {
       try {
         if (typeof irAdmin === 'function') {
           irAdmin('inicio');
