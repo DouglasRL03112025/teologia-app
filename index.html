@@ -1002,6 +1002,7 @@ async function loginAluno() {
 
 /* ════ TAREFA 2 — Carregar aluno logado pelo auth_id ════ */
 async function carregarAlunoLogado(authId) {
+  if (window.isAdmin === true) { return; }
   const { data, error } = await supabaseClient
     .from('alunos')
     .select('*')
@@ -4374,6 +4375,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
   /* ════ PERSISTÊNCIA DE SESSÃO ════ */
 
   async function verificarSessao() {
+    if (window.isAdmin === true) { return; }
     const { data } = await supabaseClient.auth.getSession();
     const user = data.session?.user;
     if (user) {
