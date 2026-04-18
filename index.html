@@ -938,6 +938,7 @@ function telefonesBatem(telDigitado, telSalvo){
 }
 
 async function fazerLogin(){
+  if (window.isAdmin === true) { return; }
   const _fldTel = document.getElementById('login-tel');
   const _fldSenha = document.getElementById('login-senha');
   const telRaw = _fldTel ? _fldTel.value.trim() : '';
@@ -983,6 +984,7 @@ async function fazerLogin(){
 
 /* ════ TAREFA 1 — Login real com Supabase Auth ════ */
 async function loginAluno() {
+  if (window.isAdmin === true) { return; }
   const email = document.getElementById('email').value.trim();
   const senha = document.getElementById('senha').value.trim();
 
@@ -2038,6 +2040,7 @@ function abrirLoginAdmin() {
   document.getElementById('pg-login-admin').style.display = 'flex';
 }
 function voltarParaLoginAluno() {
+  if (window.isAdmin === true) { return; }
   document.getElementById('pg-login-admin').style.display = 'none';
   document.getElementById('pg-login').style.display = 'flex';
 }
