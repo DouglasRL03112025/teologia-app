@@ -2654,6 +2654,7 @@ async function renderPagAdmin(){
       <div style="font-size:15px;font-weight:700;color:var(--azul);font-family:'Lora',serif;text-align:center">💰 Pagamentos — Livro ${livroVisualAtual}</div>
       <button onclick="navegarLivro(1)" style="background:var(--azul-c);border:1px solid var(--brd);border-radius:8px;width:34px;height:34px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" ${livroVisualAtual >= 24 ? 'disabled style="opacity:.4;cursor:default"' : ''}>→</button>
     </div>
+    <div id="a-pag-contadores" style="display:flex;gap:8px;margin-top:10px"></div>
     <div style="display:flex;gap:8px;margin-top:10px">
       <button onclick="definirFiltroPagamento('todos')" style="${ativo('todos')};border:1px solid;border-radius:99px;padding:6px 14px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s">Todos</button>
       <button onclick="definirFiltroPagamento('pagos')" style="${ativo('pagos')};border:1px solid;border-radius:99px;padding:6px 14px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s">✅ Pagos</button>
@@ -2727,6 +2728,27 @@ async function renderPagAdmin(){
       </div>`;
     }
     /* ── FIM RESUMO FINANCEIRO ── */
+
+    // ── CONTADORES INFORMATIVOS (array original, independente do filtro) ──
+    let cntPagos = 0, cntPendentes = 0, cntSemRegistro = 0;
+    alunos.forEach(aluno => {
+      const reg = alunoLivros.find(r => r.aluno_id === aluno.id && r.livro_codigo === codigoVisual);
+      if (reg) { reg.pagou === true ? cntPagos++ : cntPendentes++; }
+      else { cntSemRegistro++; }
+    });
+    const contEl = document.getElementById('a-pag-contadores');
+    if (contEl) {
+      const cardCnt = (n, label, cor) =>
+        `<div style="flex:1;text-align:center;padding:10px 6px;border-radius:var(--r);border:1px solid var(--brd);background:#fff;box-shadow:var(--s)">
+          <div style="font-size:24px;font-weight:700;font-family:'Lora',serif;color:${cor}">${n}</div>
+          <div style="font-size:11px;color:var(--cin);margin-top:2px;text-transform:uppercase;letter-spacing:.4px">${label}</div>
+        </div>`;
+      contEl.innerHTML =
+        cardCnt(cntPagos,       'Pagos',        'var(--vd)') +
+        cardCnt(cntPendentes,   'Pendentes',    'var(--vm)') +
+        cardCnt(cntSemRegistro, 'Sem registro', 'var(--cin)');
+    }
+    // ── FIM CONTADORES ──
 
     // ── FILTRO DE STATUS (só visualização) ──
     const alunosFiltradosPag = alunos.filter(aluno => {
