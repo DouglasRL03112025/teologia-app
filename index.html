@@ -2632,11 +2632,26 @@ function salvarPres(){
 /* ════ PAGAMENTOS ADMIN — fonte: aluno_livros (mesma da área do aluno) ════ */
 let _mp=new Date();         // mantido: usado pelo seletor de mês no HTML
 let _pagCache = [];         // mantido por compatibilidade
+let livroVisualAtual = null; // navegação de livros na tela de pagamentos (só visualização)
 
 function mudarMes(d){ _mp.setMonth(_mp.getMonth()+d); renderPagAdmin(); }
 
 async function renderPagAdmin(){
-  document.getElementById('a-mes-pag').textContent = 'Pagamentos por Livro';
+  // ── INICIALIZAR LIVRO VISUAL (somente visualização, não altera o global) ──
+  if (livroVisualAtual === null) {
+    livroVisualAtual = window.livroAtualSistema || 1;
+  }
+
+  // ── TÍTULO COM NAVEGAÇÃO ──
+  const tituloEl = document.getElementById('a-mes-pag');
+  if (tituloEl) {
+    tituloEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <button onclick="navegarLivro(-1)" style="background:var(--azul-c);border:1px solid var(--brd);border-radius:8px;width:34px;height:34px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" ${livroVisualAtual <= 1 ? 'disabled style="opacity:.4;cursor:default"' : ''}>←</button>
+      <div style="font-size:15px;font-weight:700;color:var(--azul);font-family:\'Lora\',serif;text-align:center">💰 Pagamentos — Livro ${livroVisualAtual}</div>
+      <button onclick="navegarLivro(1)" style="background:var(--azul-c);border:1px solid var(--brd);border-radius:8px;width:34px;height:34px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" ${livroVisualAtual >= 24 ? 'disabled style="opacity:.4;cursor:default"' : ''}>→</button>
+    </div>`;
+  }
+
   const lista = document.getElementById('a-lista-pag');
   lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--cin)">⏳ Carregando…</div>';
 
@@ -2655,19 +2670,20 @@ async function renderPagAdmin(){
     const alunoLivros = alunoLivrosRes.data || [];
     _pagCache = alunoLivros;
 
-    /* ── RESUMO FINANCEIRO DO LIVRO ATUAL ── */
-    if (!window.livroAtualSistema) { await carregarLivroAtualSistema(); }
-    const livroAtual = window.livroAtualSistema || (window.configSistema && window.configSistema.livro_atual) || null;
-    console.log('[FINANCEIRO] livroAtual:', livroAtual);
+    // ── FILTRAR APENAS O LIVRO SELECIONADO NA NAVEGAÇÃO ──
+    const codigoVisual = 'p' + livroVisualAtual;
+    const livroSelecionado = livros.filter(l => l.codigo === codigoVisual);
+
+    /* ── RESUMO FINANCEIRO DO LIVRO VISUAL ── */
+    console.log('[FINANCEIRO] livroVisualAtual:', livroVisualAtual);
     let blocoFinanceiroHTML = '';
-    if (livroAtual) {
-      const codigoAtual = 'p' + livroAtual;
+    {
       let totalPagos    = 0;
       let totalPix      = 0;
       let totalDinheiro = 0;
       let totalPendentes = 0;
       alunoLivros.forEach(r => {
-        if (r.livro_codigo !== codigoAtual) return;
+        if (r.livro_codigo !== codigoVisual) return;
         if (r.pagou === true) {
           totalPagos++;
           const forma = (r.forma_pagamento || '').toLowerCase().trim();
@@ -2680,7 +2696,7 @@ async function renderPagAdmin(){
       const totalAlunos = totalPagos + totalPendentes;
       const percPagos = totalAlunos > 0 ? Math.round((totalPagos / totalAlunos) * 100) : 0;
       blocoFinanceiroHTML = `<div style="margin-bottom:16px;padding:14px 16px;border:1px solid var(--brd);border-radius:var(--r);background:#fff;box-shadow:var(--s)">
-        <div style="font-family:'Lora',serif;font-size:15px;font-weight:700;color:var(--azul);margin-bottom:4px">💰 Resumo Financeiro — Livro ${livroAtual}</div>
+        <div style="font-family:'Lora',serif;font-size:15px;font-weight:700;color:var(--azul);margin-bottom:4px">💰 Resumo Financeiro — Livro ${livroVisualAtual}</div>
         <div style="font-size:12px;color:var(--cin);margin-bottom:12px">${percPagos}% dos alunos com registro pagaram (${totalPagos} de ${totalAlunos})</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div style="padding:10px;border-radius:8px;background:var(--vd-c);border:1px solid #b8dfc8">
@@ -2705,13 +2721,13 @@ async function renderPagAdmin(){
     /* ── FIM RESUMO FINANCEIRO ── */
 
     if (!alunos.length) {
-      lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--cin)">Nenhum aluno ativo.</div>';
+      lista.innerHTML = blocoFinanceiroHTML + '<div style="text-align:center;padding:20px;color:var(--cin)">Nenhum aluno ativo.</div>';
       return;
     }
 
     lista.innerHTML = blocoFinanceiroHTML + alunos.map(aluno => {
-      // Para cada livro do catálogo, busca o registro em aluno_livros
-      const livrosDoAluno = livros.map(livro => {
+      // Mostra apenas o livro atualmente selecionado na navegação
+      const livrosDoAluno = livroSelecionado.map(livro => {
         const reg = alunoLivros.find(r =>
           r.aluno_id === aluno.id &&
           r.livro_codigo === livro.codigo
@@ -2748,18 +2764,19 @@ async function renderPagAdmin(){
       ).join('');
 
       const nomeAluno = (aluno.nome||'').split(' ').map(p=>p.charAt(0)+p.slice(1).toLowerCase()).join(' ');
+      const totalLivros = livroSelecionado.length;
       return `<div class="pgr ${emDia?'liv-rec':'liv-pend'}"
         style="flex-direction:column;align-items:stretch;padding:0;overflow:hidden">
         <div style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer"
           onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
           <div class="pgi">
             <div class="pgn">${nomeAluno}</div>
-            <div class="pgd">${livros.length} livro${livros.length!==1?'s':''} · ${qtdPagos} pago${qtdPagos!==1?'s':''}</div>
+            <div class="pgd">${totalLivros} livro${totalLivros!==1?'s':''} · ${qtdPagos} pago${qtdPagos!==1?'s':''}</div>
           </div>
-          <span class="bdg ${emDia?'bv':'br'}">${emDia?'Em dia':qtdPend+' pendente'+(qtdPend!==1?'s':'')}</span>
+          <span class="bdg ${emDia?'bv':qtdPend>0?'br':'ba'}">${emDia?'Em dia':qtdPend>0?qtdPend+' pendente'+(qtdPend!==1?'s':''):'Sem registro'}</span>
         </div>
         <div style="display:none;border-top:1px solid var(--brd);padding:8px 14px 12px;background:#fafafa">
-          ${livrosHtml || '<div style="font-size:13px;color:var(--cin);padding:4px 0">Nenhum livro no catálogo.</div>'}
+          ${livrosHtml || '<div style="font-size:13px;color:var(--cin);padding:4px 0">Livro não encontrado no catálogo.</div>'}
         </div>
       </div>`;
     }).join('');
@@ -2767,6 +2784,17 @@ async function renderPagAdmin(){
   } catch(e) {
     console.error('[PAG ADMIN] Erro:', e);
     lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--vm)">❌ Erro ao carregar pagamentos</div>';
+  }
+}
+
+/* ── NAVEGAÇÃO DE LIVROS (somente visualização — não altera window.livroAtualSistema) ── */
+function navegarLivro(direcao) {
+  if (livroVisualAtual === null) return;
+  const novo = livroVisualAtual + direcao;
+  if (novo < 1 || novo > 24) return;
+  livroVisualAtual = novo;
+  if (typeof renderPagAdmin === 'function') {
+    renderPagAdmin();
   }
 }
 
