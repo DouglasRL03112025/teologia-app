@@ -4176,8 +4176,9 @@ if(!D.aulas_log) { D.aulas_log={}; }
 
   async function inicializarApp() {
     // ── Restaurar sessão admin após F5 ──
+    const { data: { session } } = await supabaseClient.auth.getSession();
     const adminJaLogado = localStorage.getItem('adminLogado');
-    if (adminJaLogado === 'true') {
+    if (session && adminJaLogado === 'true') {
       window.isAdmin = true;
       if (typeof irAdmin === 'function') {
         irAdmin('inicio');
