@@ -764,17 +764,6 @@ select.inp{cursor:pointer}
 </div>
 
 <!-- ══ MODAL ADMIN LOGIN ══ -->
-<div class="ov" id="mod-admin">
-  <div class="mod">
-    <button class="mf" onclick="fecharMod('mod-admin')">×</button>
-    <div class="mt">🔐 Acesso Administrador</div>
-    <div class="campo"><label>Senha do administrador</label>
-      <input class="inp" id="admin-pw" type="password" placeholder="••••••" style="font-size:20px;letter-spacing:4px">
-    </div>
-    <button class="btn bp" onclick="verificarAdmin()">Entrar como Admin</button>
-  </div>
-</div>
-
 <!-- ══ MODAL NOVO/EDITAR ALUNO (admin) ══ -->
 <div class="ov" id="mod-aluno">
   <div class="mod">
@@ -824,7 +813,7 @@ const AULAS_MOD = {
   '🎤 Homilética':['Tipos de Sermão','Estrutura Homilética','Pregação Expositiva','Pregação Prática']
 };
 
-const ADMIN_PW = 'ibicamp2025';
+// ADMIN_PW removido — autenticação admin exclusivamente via Supabase Auth
 const DB_KEY = 'teologia_v4';
 
 /* ════ DB ════ */
@@ -916,8 +905,7 @@ function abrirMod(id){ document.getElementById(id).classList.add('on'); }
 /* ════ LOGIN ════ */
 const _elLoginSenha = document.getElementById('login-senha');
 if (_elLoginSenha) { _elLoginSenha.addEventListener('keydown',e=>{ if(e.key==='Enter') fazerLogin(); }); }
-const _elAdminPw = document.getElementById('admin-pw');
-if (_elAdminPw) { _elAdminPw.addEventListener('keydown',e=>{ if(e.key==='Enter') verificarAdmin(); }); }
+// Listener admin-pw removido junto com modal legado
 
 function normalizarTelefone(tel){
   if(!tel) return '';
@@ -2033,7 +2021,7 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
 
 /* ════ FIM TAREFAS 1 e 2 ════ */
 
-function abrirModAdmin(){ abrirMod('mod-admin'); setTimeout(()=>document.getElementById('admin-pw').focus(),100); }
+// abrirModAdmin() removido — login admin usa pg-login-admin dedicado
 
 function abrirLoginAdmin() {
   document.getElementById('pg-login').style.display = 'none';
@@ -2089,31 +2077,22 @@ async function loginAdmin() {
   }
 }
 
-async function verificarAdmin(){
-  if(document.getElementById('admin-pw').value===ADMIN_PW){
-    fecharMod('mod-admin'); document.getElementById('admin-pw').value='';
-    usuAtual = {id:'admin',nome:'Administrador',isAdmin:true};
-    window.isAdmin = true;
-    document.getElementById('pg-login').style.display='none';
-    document.getElementById('pg-admin').style.display='block';
-    await renderDashAdmin();
-    irAdmin('inicio');
-    autenticarAdminSupabase().catch(e => console.warn('[Auth Admin] Falha silenciosa:', e));
-  } else { toast('⚠ Senha incorreta'); }
-}
+// verificarAdmin() removido: acesso admin agora exclusivamente via loginAdmin() + Supabase Auth
 
-function sair(){
-  usuAtual=null;
-  window.isAdmin = false; // Reset ao sair
-  localStorage.removeItem('adminLogado'); // Limpar persistência de sessão admin
+async function sair(){
+  // Encerrar sessão no Supabase Auth (fonte de verdade)
+  await supabaseClient.auth.signOut().catch(e => console.warn('[Auth] Erro ao sair:', e));
+
+  usuAtual = null;
+  window.isAdmin = false;
+  localStorage.removeItem('adminLogado');
+
   ['pg-admin','pg-aluno'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('pg-login').style.display='flex';
   const _sairTel = document.getElementById('login-tel');
   const _sairSenha = document.getElementById('login-senha');
   if (_sairTel) { _sairTel.value=''; }
   if (_sairSenha) { _sairSenha.value=''; }
-  // Sign out do Supabase Auth em background
-  supabaseClient.auth.signOut().catch(e => console.warn('[Auth] Erro ao sair:', e));
   console.log('[Auth] Sessão encerrada.');
 }
 
@@ -4179,36 +4158,48 @@ if(!D.aulas_log) { D.aulas_log={}; }
   }
 
   async function inicializarApp() {
-    // ── RESTAURA ADMIN SINCRONO (ANTES DE TUDO) ──
-    const adminJaLogado = localStorage.getItem('adminLogado');
-    if (adminJaLogado === 'true') {
-      window.isAdmin = true;
-    }
-    // ── FIM RESTAURAÇÃO ──
-
-    // ── Restaurar sessão admin após F5 ──
-    if (adminJaLogado === 'true') {
-      window.isAdmin = true;
-
-      if (typeof irAdmin === 'function') {
-        irAdmin('inicio');
-      }
-
-      return;
-    }
-    // ── Fim restauração ──
+    // ── RESTAURAR SESSÃO VIA SUPABASE AUTH (fonte de verdade) ──
     try {
-      await carregarAlunosSupabase();
-      await carregarNotasSupabase();
-      await carregarPresencaSupabase();
-      console.log('✓ Dados carregados do Supabase. App pronto.');
-      salvar();
+      const { data: { session } } = await supabaseClient.auth.getSession();
+
+      if (session && session.user) {
+        const email = session.user.email;
+        const isAdminEmail = email === 'admin@ibicamp.com';
+
+        if (isAdminEmail) {
+          // Sessão admin válida → restaurar painel admin
+          console.log('[Auth] Sessão admin restaurada via Supabase Auth:', email);
+          window.isAdmin = true;
+          localStorage.setItem('adminLogado', 'true'); // apoio de leitura rápida
+          usuAtual = { id: session.user.id, nome: email, isAdmin: true };
+          document.getElementById('pg-login').style.display = 'none';
+          document.getElementById('pg-login-admin').style.display = 'none';
+          document.getElementById('pg-admin').style.display = 'block';
+          await carregarAlunosSupabase().catch(e => console.error('[Init] Erro alunos:', e));
+          await renderDashAdmin().catch(e => console.error('[Init] Erro dash:', e));
+          irAdmin('inicio');
+          return;
+        } else {
+          // Sessão de aluno válida → restaurar painel aluno
+          console.log('[Auth] Sessão aluno restaurada via Supabase Auth:', email);
+          window.isAdmin = false;
+          localStorage.removeItem('adminLogado');
+          await carregarAlunosSupabase().catch(e => console.error('[Init] Erro alunos:', e));
+          await carregarNotasSupabase().catch(e => console.error('[Init] Erro notas:', e));
+          await carregarPresencaSupabase().catch(e => console.error('[Init] Erro presenças:', e));
+          salvar();
+          await carregarAlunoLogado(session.user.id);
+          return;
+        }
+      }
     } catch(e) {
-      console.error('Erro na inicialização do Supabase:', e);
+      console.error('[Init] Erro ao verificar sessão Supabase:', e);
     }
-    if (adminJaLogado !== 'true') {
-      await verificarSessao();
-    }
+
+    // Sem sessão ativa → limpar qualquer resíduo de localStorage e mostrar login
+    localStorage.removeItem('adminLogado');
+    window.isAdmin = false;
+    console.log('[Auth] Nenhuma sessão ativa. Exibindo tela de login.');
   }
 
   /* ════ SUPABASE AUTH ════ */
@@ -4228,29 +4219,6 @@ if(!D.aulas_log) { D.aulas_log={}; }
 
     console.warn('[Auth] Usuário não encontrado ou credencial inválida no Supabase Auth:', signInError?.message);
     return null;
-  }
-
-  // Autentica admin no Supabase Auth
-  async function autenticarAdminSupabase() {
-    const email = 'admin@ibicamp.com';
-    const senha = 'ibicamp2025';
-
-    const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
-
-    if (!signInError && signInData.session) {
-      console.log('[Auth] Admin autenticado no Supabase Auth. Tipo: admin | Email:', email);
-      return signInData.session;
-    }
-
-    // Cria conta admin se não existir
-    const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password: senha });
-    if (signUpError) {
-      console.warn('[Auth] Não foi possível criar conta admin no Supabase Auth:', signUpError.message);
-      return null;
-    }
-
-    console.log('[Auth] Conta admin criada no Supabase Auth. Tipo: admin | Email:', email);
-    return signUpData.session;
   }
 
   // Verifica sessão ativa e tipo de usuário
@@ -4385,7 +4353,6 @@ if(!D.aulas_log) { D.aulas_log={}; }
   /* ════ PERSISTÊNCIA DE SESSÃO ════ */
 
   async function verificarSessao() {
-    if (window.isAdmin === true) { return; }
     const { data } = await supabaseClient.auth.getSession();
     const user = data.session?.user;
     if (user) {
