@@ -4164,9 +4164,9 @@ if(!D.aulas_log) { D.aulas_log={}; }
 
       if (session && session.user) {
         const email = session.user.email;
-        const isAdminEmail = email === 'admin@ibicamp.com';
+        const isAdmin = session.user.id === '615ec79d-0cd3-48d9-a415-f5c9aa69d0b6';
 
-        if (isAdminEmail) {
+        if (isAdmin) {
           // Sessão admin válida → restaurar painel admin
           console.log('[Auth] Sessão admin restaurada via Supabase Auth:', email);
           window.isAdmin = true;
