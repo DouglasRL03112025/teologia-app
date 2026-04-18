@@ -4356,6 +4356,13 @@ if(!D.aulas_log) { D.aulas_log={}; }
     const { data } = await supabaseClient.auth.getSession();
     const user = data.session?.user;
     if (user) {
+      if (user.email === 'admin@ibicamp.com') {
+        window.isAdmin = true;
+        if (typeof irAdmin === 'function') {
+          irAdmin('inicio');
+        }
+        return;
+      }
       await carregarAlunoLogado(user.id);
     }
   }
