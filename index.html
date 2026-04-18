@@ -4356,7 +4356,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
     const { data } = await supabaseClient.auth.getSession();
     const user = data.session?.user;
     if (user) {
-      if (user.email === 'admin@ibicamp.com') {
+      if (user.id === '615ec79d-0cd3-48d9-a415-f5c9aa69d0b6') {
         window.isAdmin = true;
         if (typeof irAdmin === 'function') {
           irAdmin('inicio');
