@@ -2633,6 +2633,7 @@ function salvarPres(){
 let _mp=new Date();         // mantido: usado pelo seletor de mês no HTML
 let _pagCache = [];         // mantido por compatibilidade
 let livroVisualAtual = null; // navegação de livros na tela de pagamentos (só visualização)
+let filtroStatusPagamento = 'todos'; // 'todos' | 'pagos' | 'pendentes'
 
 function mudarMes(d){ _mp.setMonth(_mp.getMonth()+d); renderPagAdmin(); }
 
@@ -2645,10 +2646,18 @@ async function renderPagAdmin(){
   // ── TÍTULO COM NAVEGAÇÃO ──
   const tituloEl = document.getElementById('a-mes-pag');
   if (tituloEl) {
+    const ativo = (tipo) => filtroStatusPagamento === tipo
+      ? 'background:var(--azul);color:#fff;border-color:var(--azul)'
+      : 'background:#fff;color:var(--azul);border-color:var(--brd)';
     tituloEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
       <button onclick="navegarLivro(-1)" style="background:var(--azul-c);border:1px solid var(--brd);border-radius:8px;width:34px;height:34px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" ${livroVisualAtual <= 1 ? 'disabled style="opacity:.4;cursor:default"' : ''}>←</button>
-      <div style="font-size:15px;font-weight:700;color:var(--azul);font-family:\'Lora\',serif;text-align:center">💰 Pagamentos — Livro ${livroVisualAtual}</div>
+      <div style="font-size:15px;font-weight:700;color:var(--azul);font-family:'Lora',serif;text-align:center">💰 Pagamentos — Livro ${livroVisualAtual}</div>
       <button onclick="navegarLivro(1)" style="background:var(--azul-c);border:1px solid var(--brd);border-radius:8px;width:34px;height:34px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" ${livroVisualAtual >= 24 ? 'disabled style="opacity:.4;cursor:default"' : ''}>→</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button onclick="definirFiltroPagamento('todos')" style="${ativo('todos')};border:1px solid;border-radius:99px;padding:6px 14px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s">Todos</button>
+      <button onclick="definirFiltroPagamento('pagos')" style="${ativo('pagos')};border:1px solid;border-radius:99px;padding:6px 14px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s">✅ Pagos</button>
+      <button onclick="definirFiltroPagamento('pendentes')" style="${ativo('pendentes')};border:1px solid;border-radius:99px;padding:6px 14px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s">❌ Pendentes</button>
     </div>`;
   }
 
@@ -2719,12 +2728,20 @@ async function renderPagAdmin(){
     }
     /* ── FIM RESUMO FINANCEIRO ── */
 
-    if (!alunos.length) {
-      lista.innerHTML = blocoFinanceiroHTML + '<div style="text-align:center;padding:20px;color:var(--cin)">Nenhum aluno ativo.</div>';
+    // ── FILTRO DE STATUS (só visualização) ──
+    const alunosFiltradosPag = alunos.filter(aluno => {
+      const reg = alunoLivros.find(r => r.aluno_id === aluno.id && r.livro_codigo === codigoVisual);
+      if (filtroStatusPagamento === 'pagos')     return reg && reg.pagou === true;
+      if (filtroStatusPagamento === 'pendentes') return !reg || reg.pagou === false;
+      return true; // 'todos'
+    });
+
+    if (!alunosFiltradosPag.length) {
+      lista.innerHTML = blocoFinanceiroHTML + '<div style="text-align:center;padding:20px;color:var(--cin)">Nenhum aluno encontrado para este filtro.</div>';
       return;
     }
 
-    lista.innerHTML = blocoFinanceiroHTML + alunos.map(aluno => {
+    lista.innerHTML = blocoFinanceiroHTML + alunosFiltradosPag.map(aluno => {
       // Busca o registro do aluno para o livro selecionado
       const registro = alunoLivros.find(r =>
         r.aluno_id === aluno.id && r.livro_codigo === codigoVisual
@@ -2778,6 +2795,13 @@ function navegarLivro(direcao) {
   const novo = livroVisualAtual + direcao;
   if (novo < 1 || novo > 24) return;
   livroVisualAtual = novo;
+  if (typeof renderPagAdmin === 'function') {
+    renderPagAdmin();
+  }
+}
+
+function definirFiltroPagamento(tipo) {
+  filtroStatusPagamento = tipo;
   if (typeof renderPagAdmin === 'function') {
     renderPagAdmin();
   }
