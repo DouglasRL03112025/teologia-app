@@ -4176,9 +4176,15 @@ if(!D.aulas_log) { D.aulas_log={}; }
   }
 
   async function inicializarApp() {
+    // ── RESTAURA ADMIN SINCRONO (ANTES DE TUDO) ──
+    const adminJaLogado = localStorage.getItem('adminLogado');
+    if (adminJaLogado === 'true') {
+      window.isAdmin = true;
+    }
+    // ── FIM RESTAURAÇÃO ──
+
     // ── Restaurar sessão admin após F5 ──
     const { data: { session } } = await supabaseClient.auth.getSession();
-    const adminJaLogado = localStorage.getItem('adminLogado');
     if (session && adminJaLogado === 'true') {
       window.isAdmin = true;
       if (typeof irAdmin === 'function') {
