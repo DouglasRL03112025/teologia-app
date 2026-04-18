@@ -4184,13 +4184,14 @@ if(!D.aulas_log) { D.aulas_log={}; }
     // ── FIM RESTAURAÇÃO ──
 
     // ── Restaurar sessão admin após F5 ──
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session && adminJaLogado === 'true') {
+    if (adminJaLogado === 'true') {
       window.isAdmin = true;
+
       if (typeof irAdmin === 'function') {
         irAdmin('inicio');
       }
-      return; // ← ESSENCIAL: interrompe o restante da função
+
+      return;
     }
     // ── Fim restauração ──
     try {
