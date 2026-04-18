@@ -4179,15 +4179,10 @@ if(!D.aulas_log) { D.aulas_log={}; }
     const adminJaLogado = localStorage.getItem('adminLogado');
     if (adminJaLogado === 'true') {
       window.isAdmin = true;
-    }
-    if (adminJaLogado === 'true') {
-      try {
-        if (typeof irAdmin === 'function') {
-          irAdmin('inicio');
-        }
-      } catch(e) {
-        console.warn('Erro ao restaurar sessão admin:', e);
+      if (typeof irAdmin === 'function') {
+        irAdmin('inicio');
       }
+      return; // ← ESSENCIAL: interrompe o restante da função
     }
     // ── Fim restauração ──
     try {
