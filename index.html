@@ -520,24 +520,15 @@ select.inp{cursor:pointer}
 
     <!-- MATERIAL ADMIN -->
     <div class="tela" id="a-material">
-      <div class="tit">Livros e Provas</div>
-      <div class="tabs" id="tabs-mat">
-        <button class="tab on" onclick="abaMat('livros',this)">📚 Livros</button>
-        <button class="tab" onclick="abaMat('provas',this)">📝 Provas</button>
-        <button class="tab" onclick="abaMat('notas',this)">🔢 Notas</button>
-      </div>
-      <div id="mat-livros"></div>
+      <div id="painel-mat-cabecalho"></div>
+      <div id="painel-mat-lista"></div>
+      <!-- containers legados mantidos para não quebrar chamadas existentes -->
+      <div id="mat-livros" style="display:none"></div>
       <div id="mat-provas" style="display:none"></div>
       <div id="mat-notas" style="display:none">
-        <div class="campo" style="margin-bottom:14px"><label>Selecionar Prova</label>
-          <select class="inp" id="sel-prova" onchange="renderNotasAdmin()">
-            <option value="">— Selecione —</option>
-            <option value="p1">Prova 1</option><option value="p2">Prova 2</option>
-            <option value="p3">Prova 3</option><option value="p4">Prova 4</option>
-          </select>
-        </div>
         <div id="lista-notas"></div>
-        <button class="btn bp" id="btn-sv-notas" style="display:none" onclick="salvarNotas()">✓ Salvar Notas</button>
+        <button id="btn-sv-notas" style="display:none" onclick="salvarNotas()">✓ Salvar Notas</button>
+        <select id="sel-prova" style="display:none"></select>
       </div>
     </div>
 
@@ -2873,38 +2864,221 @@ async function tgPag(id){ await renderPagAdmin(); }
 
 /* ════ MATERIAL ADMIN ════ */
 function abaMat(aba,btn){
-  document.querySelectorAll('#tabs-mat .tab').forEach(t=>t.classList.remove('on')); btn.classList.add('on');
-  ['livros','provas','notas'].forEach(a=>document.getElementById('mat-'+a).style.display=a===aba?'block':'none');
-  renderMatAdmin(aba);
+  // abaMat mantida por compatibilidade — abre o painel unificado
+  renderPainelMaterial();
 }
-function renderMatAdmin(aba){ if(aba==='livros') renderLivrosAdmin(); if(aba==='provas') renderProvasAdmin(); if(aba==='notas') renderNotasAdmin(); }
-function renderLivrosAdmin(){
-  const al=ativos(); let h='';
-  D.livros_curso.forEach(l=>{ const e=D.livros_ent[l.id]||{}; const q=al.filter(a=>e[a.id]===true).length;
-    h+=`<div style="margin-bottom:14px"><div style="font-size:14px;font-weight:600;color:var(--azul);margin-bottom:8px;display:flex;justify-content:space-between"><span>📖 ${l.nome}</span><span style="color:var(--cin);font-weight:400">${q}/${al.length}</span></div>
-    ${al.map(a=>{ const ev=(D.livros_ent[l.id]||{})[a.id]===true; return `<div class="tr"><div><div class="tn">${fmtNome(a.nome)}</div><div class="ts2">${ev?'✓ Recebido':'Pendente'}</div></div><label class="tg"><input type="checkbox" ${ev?'checked':''} onchange="tgLivro('${l.id}','${a.id}',this.checked)"><span class="tsl"></span></label></div>`; }).join('')}</div>`; });
-  document.getElementById('mat-livros').innerHTML=h;
+
+function tgLivro(lid,aid,v){
+  if (!window.isAdmin) { alert('Acesso restrito'); return; }
+  if (!D.livros_ent[lid]) D.livros_ent[lid] = {};
+  D.livros_ent[lid][aid] = v;
+  salvar();
+  const a = D.alunos.find(x => x.id === aid);
+  toast(v ? `📚 Livro entregue a ${fmtNome(a.nome)}!` : 'Marcado como pendente');
+  renderPainelMaterial();
 }
-function tgLivro(lid,aid,v){ if (!window.isAdmin) { alert('Acesso restrito'); return; } if(!D.livros_ent[lid]) D.livros_ent[lid]={}; D.livros_ent[lid][aid]=v; salvar(); const a=D.alunos.find(x=>x.id===aid); toast(v?`📚 Livro entregue a ${fmtNome(a.nome)}!`:'Marcado como pendente'); renderLivrosAdmin(); }
-function renderProvasAdmin(){
-  const al=ativos(); let h='';
-  const todasProvasP = Object.keys(D.provas||{}).filter(p => /^p\d+$/.test(p)).sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
-  // Garante ao menos p1–p4 visíveis se não houver nenhuma
-  const listaProvas = todasProvasP.length ? todasProvasP : ['p1','p2','p3','p4'];
-  listaProvas.forEach((p)=>{ const num=parseInt(p.slice(1)); const pf=D.provas[p]||{}; const q=al.filter(a=>pf[a.id]===true).length;
-    h+=`<div style="margin-bottom:14px"><div style="font-size:14px;font-weight:600;color:var(--azul);margin-bottom:8px;display:flex;justify-content:space-between"><span>📝 Prova ${num}</span><span style="color:var(--cin);font-weight:400">${q}/${al.length}</span></div>
-    ${al.map(a=>{ const f=pf[a.id]===true; return `<div class="tr"><div><div class="tn">${fmtNome(a.nome)}</div><div class="ts2">${f?'✓ Realizada':'Pendente'}</div></div><label class="tg"><input type="checkbox" ${f?'checked':''} onchange="tgProva('${p}','${a.id}',this.checked)"><span class="tsl"></span></label></div>`; }).join('')}</div>`; });
-  document.getElementById('mat-provas').innerHTML=h;
+
+function tgProva(pid,aid,v){
+  if (!window.isAdmin) { alert('Acesso restrito'); return; }
+  if (!D.provas[pid]) D.provas[pid] = {};
+  D.provas[pid][aid] = v;
+  salvar();
+  const a = D.alunos.find(x => x.id === aid);
+  toast(v ? `📝 Prova registrada para ${fmtNome(a.nome)}!` : 'Marcado como pendente');
+  renderPainelMaterial();
 }
-function tgProva(pid,aid,v){ if (!window.isAdmin) { alert('Acesso restrito'); return; } if(!D.provas[pid]) D.provas[pid]={}; D.provas[pid][aid]=v; salvar(); const a=D.alunos.find(x=>x.id===aid); toast(v?`📝 Prova registrada para ${fmtNome(a.nome)}!`:'Marcado como pendente'); renderProvasAdmin(); }
-function renderNotasAdmin(){
-  const pid=document.getElementById('sel-prova')?.value; const btn=document.getElementById('btn-sv-notas');
-  if(!pid){ document.getElementById('lista-notas').innerHTML=''; if(btn) btn.style.display='none'; return; }
-  if(btn) btn.style.display='block';
-  const al=ativos(); const np=D.notas[pid]||{};
-  document.getElementById('lista-notas').innerHTML=al.map(a=>{ const n=np[a.id]!==undefined?np[a.id]:'';
-    return `<div class="nr"><span class="nn">${fmtNome(a.nome)}</span><div class="niw"><input class="ni" id="nt-${a.id}" type="number" min="0" max="10" step="0.1" placeholder="—" value="${n}" oninput="updChip('${a.id}',this.value)"><span class="nc ${(n!==''&&n!==null&&n!==undefined)?(n>=7?'bv':n>=5?'ba':'br'):''}" id="chip-${a.id}">${(n!==''&&n!==null&&n!==undefined)?Number(parseFloat(n)).toFixed(1):''}</span></div></div>`; }).join('');
+
+/* ════ PAINEL UNIFICADO: LIVROS, PROVAS E NOTAS ════ */
+
+// Seletores persistentes do painel
+let _painelLivro = null;   // id do livro selecionado ex: 'l1'
+let _painelProva = null;   // id da prova selecionada ex: 'p1'
+let _painelFiltro = 'todos'; // 'todos'|'pagos'|'pendentes'|'sem-nota'|'sem-prova'
+
+function renderMatAdmin(aba){
+  // Compatibilidade: ignora aba, sempre renderiza o painel unificado
+  renderPainelMaterial();
 }
+
+function renderPainelMaterial() {
+  const cabEl = document.getElementById('painel-mat-cabecalho');
+  const listaEl = document.getElementById('painel-mat-lista');
+  if (!cabEl || !listaEl) return;
+
+  const al = ativos();
+
+  // ── Detectar livro e prova padrão se ainda não definidos ──
+  if (!_painelLivro && D.livros_curso.length) {
+    _painelLivro = D.livros_curso[D.livros_curso.length - 1].id; // último livro do curso
+  }
+  if (!_painelProva) {
+    const provasDisponiveis = Object.keys(D.provas || {}).filter(p => /^p\d+$/.test(p)).sort((a,b) => parseInt(b.slice(1)) - parseInt(a.slice(1)));
+    _painelProva = provasDisponiveis[0] || 'p1';
+  }
+
+  const livroAtual = D.livros_curso.find(l => l.id === _painelLivro);
+  const provaNum   = _painelProva ? parseInt(_painelProva.slice(1)) : '?';
+
+  // ── Estilos dos botões de seletor ──
+  const selLivro = (id) => `style="padding:6px 11px;border-radius:8px;border:1.5px solid ${_painelLivro===id?'var(--azul)':'var(--brd)'};background:${_painelLivro===id?'var(--azul)':'#fff'};color:${_painelLivro===id?'#fff':'var(--txt)'};font-size:12px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer"`;
+  const selProva = (id) => `style="padding:6px 11px;border-radius:8px;border:1.5px solid ${_painelProva===id?'var(--azul)':'var(--brd)'};background:${_painelProva===id?'var(--azul)':'#fff'};color:${_painelProva===id?'#fff':'var(--txt)'};font-size:12px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer"`;
+  const selFiltro = (f) => `style="padding:6px 14px;border-radius:99px;border:1.5px solid ${_painelFiltro===f?'var(--azul)':'var(--brd)'};background:${_painelFiltro===f?'var(--azul)':'#fff'};color:${_painelFiltro===f?'#fff':'var(--azul)'};font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer"`;
+
+  // ── Livros disponíveis no seletor ──
+  const botoesLivros = D.livros_curso.map(l =>
+    `<button onclick="_painelLivro='${l.id}';renderPainelMaterial()" ${selLivro(l.id)}>${l.nome.split('–')[0].split('-')[0].trim()}</button>`
+  ).join('');
+
+  // ── Provas disponíveis ──
+  const todasProvas = Object.keys(D.provas || {}).filter(p => /^p\d+$/.test(p)).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));
+  const listaProvasBtn = (todasProvas.length ? todasProvas : ['p1','p2','p3','p4']).map(p =>
+    `<button onclick="_painelProva='${p}';renderPainelMaterial()" ${selProva(p)}>P${p.slice(1)}</button>`
+  ).join('');
+
+  // ── Cabeçalho ──
+  cabEl.innerHTML = `
+    <div style="margin-bottom:6px">
+      <div style="font-family:'Lora',serif;font-size:21px;font-weight:700;color:var(--azul);margin-bottom:2px">📊 Painel Geral</div>
+      <div style="font-size:13px;color:var(--cin)">Livro selecionado: <strong>${livroAtual?.nome || '—'}</strong> · Prova: <strong>P${provaNum}</strong></div>
+    </div>
+
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--cin);margin-bottom:6px">📚 Livro</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${botoesLivros}</div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--cin);margin-bottom:6px">📝 Prova</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${listaProvasBtn}</div>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--brd)">
+      <button onclick="_painelFiltro='todos';renderPainelMaterial()" ${selFiltro('todos')}>Todos</button>
+      <button onclick="_painelFiltro='pagos';renderPainelMaterial()" ${selFiltro('pagos')}>✅ Pagos</button>
+      <button onclick="_painelFiltro='pendentes';renderPainelMaterial()" ${selFiltro('pendentes')}>❌ Pendentes</button>
+      <button onclick="_painelFiltro='sem-nota';renderPainelMaterial()" ${selFiltro('sem-nota')}>📊 Sem nota</button>
+      <button onclick="_painelFiltro='sem-prova';renderPainelMaterial()" ${selFiltro('sem-prova')}>📝 Sem prova</button>
+    </div>`;
+
+  // ── Filtrar alunos ──
+  const lid = _painelLivro;
+  const pid = _painelProva;
+  const alunosFiltrados = al.filter(a => {
+    const entregue  = (D.livros_ent[lid]||{})[a.id] === true;
+    const fezProva  = (D.provas[pid]||{})[a.id]     === true;
+    const nota      = (D.notas[pid]||{})[a.id];
+    const temNota   = nota !== undefined && nota !== null && nota !== '';
+    if (_painelFiltro === 'pagos')     return entregue;
+    if (_painelFiltro === 'pendentes') return !entregue;
+    if (_painelFiltro === 'sem-nota')  return !temNota;
+    if (_painelFiltro === 'sem-prova') return !fezProva;
+    return true;
+  });
+
+  if (!alunosFiltrados.length) {
+    listaEl.innerHTML = '<div style="text-align:center;padding:28px;color:var(--cin)">Nenhum aluno neste filtro.</div>';
+    return;
+  }
+
+  // ── Render de cada aluno ──
+  listaEl.innerHTML = alunosFiltrados.map(a => {
+    const lid = _painelLivro;
+    const pid = _painelProva;
+
+    const entregue = (D.livros_ent[lid]||{})[a.id] === true;
+    const fezProva = (D.provas[pid]||{})[a.id]     === true;
+    const nota     = (D.notas[pid]||{})[a.id];
+    const temNota  = nota !== undefined && nota !== null && nota !== '';
+    const notaNum  = temNota ? parseFloat(nota) : null;
+    const notaCls  = temNota ? (notaNum >= 7 ? 'bv' : notaNum >= 5 ? 'ba' : 'br') : '';
+
+    // badges de status
+    const bdgLivro  = entregue
+      ? '<span class="bdg bv" style="font-size:11px">✓ Entregue</span>'
+      : '<span class="bdg br" style="font-size:11px">✕ Pendente</span>';
+    const bdgProva  = fezProva
+      ? '<span class="bdg bv" style="font-size:11px">✓ Fez</span>'
+      : '<span class="bdg ba" style="font-size:11px">Não fez</span>';
+    const bdgNota   = temNota
+      ? `<span class="bdg ${notaCls}" style="font-size:11px">${notaNum.toFixed(1)}</span>`
+      : '<span class="bdg" style="font-size:11px;background:#f0f0f0;color:var(--cin)">—</span>';
+
+    // input nota inline
+    const notaVal = temNota ? notaNum.toFixed(1) : '';
+
+    return `<div class="card" style="margin-bottom:10px;padding:14px 16px">
+      <!-- linha 1: nome -->
+      <div style="font-size:15px;font-weight:700;color:var(--azul-e);margin-bottom:10px">${fmtNome(a.nome)}</div>
+
+      <!-- linha 2: status grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:var(--fnd);border-radius:8px;padding:8px;text-align:center">
+          <div style="font-size:10px;color:var(--cin);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">📚 Livro</div>
+          ${bdgLivro}
+        </div>
+        <div style="background:var(--fnd);border-radius:8px;padding:8px;text-align:center">
+          <div style="font-size:10px;color:var(--cin);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">📝 Prova</div>
+          ${bdgProva}
+        </div>
+        <div style="background:var(--fnd);border-radius:8px;padding:8px;text-align:center">
+          <div style="font-size:10px;color:var(--cin);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">📊 Nota</div>
+          ${bdgNota}
+        </div>
+        <div style="background:var(--fnd);border-radius:8px;padding:8px;text-align:center">
+          <div style="font-size:10px;color:var(--cin);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">✏️ Lançar</div>
+          <input type="number" min="0" max="10" step="0.1" placeholder="—"
+            value="${notaVal}"
+            id="nt-${a.id}"
+            style="width:100%;padding:4px 6px;border:1px solid var(--brd);border-radius:6px;font-size:13px;font-family:'Inter',sans-serif;text-align:center;background:#fff"
+            oninput="updChip('${a.id}',this.value)">
+        </div>
+      </div>
+
+      <!-- linha 3: ações -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button onclick="tgLivro('${lid}','${a.id}',${!entregue})"
+          style="flex:1;min-width:100px;padding:8px 10px;border-radius:8px;border:none;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;background:${entregue?'var(--vd-c)':'var(--vm-c)'};color:${entregue?'var(--vd)':'var(--vm)'}">
+          ${entregue ? '✓ Entregue' : '✕ Entregar'}
+        </button>
+        <button onclick="tgProva('${pid}','${a.id}',${!fezProva})"
+          style="flex:1;min-width:100px;padding:8px 10px;border-radius:8px;border:none;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;background:${fezProva?'var(--vd-c)':'var(--am-c)'};color:${fezProva?'var(--vd)':'var(--am)'}">
+          ${fezProva ? '✓ Fez prova' : '✕ Marcar prova'}
+        </button>
+        <button onclick="_salvarNotaAluno('${a.id}','${pid}')"
+          style="flex:1;min-width:80px;padding:8px 10px;border-radius:8px;border:none;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;background:var(--azul-c);color:var(--azul)">
+          💾 Salvar nota
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Salva nota de um único aluno sem recarregar tudo
+async function _salvarNotaAluno(aid, pid) {
+  if (!window.isAdmin) { alert('Acesso restrito'); return; }
+  const el = document.getElementById('nt-' + aid);
+  if (!el) return;
+  const v = parseFloat(el.value);
+  if (!D.notas[pid]) D.notas[pid] = {};
+  if (!isNaN(v) && el.value !== '') {
+    const nota = Math.min(10, Math.max(0, v));
+    D.notas[pid][aid] = nota;
+    await sincronizarNotaSupabase(aid, pid, nota).catch(e => console.error('[Nota]', e));
+  } else {
+    delete D.notas[pid][aid];
+    await removerNotaSupabase(aid, pid).catch(e => console.error('[Nota]', e));
+  }
+  salvar();
+  toast('✓ Nota salva!');
+  renderPainelMaterial();
+}
+
+// Compatibilidade: tgLivro e tgProva chamam renderPainelMaterial em vez das antigas funções de tab
+function renderLivrosAdmin(){ renderPainelMaterial(); }
+function renderProvasAdmin(){ renderPainelMaterial(); }
+function renderNotasAdmin(){  renderPainelMaterial(); }
+
+/* ════ FIM PAINEL UNIFICADO ════ */
 function updChip(id,v){ const c=document.getElementById('chip-'+id); if(!c) return; const n=parseFloat(v); if(isNaN(n)||v===''||v===null){ c.textContent=''; c.className='nc'; return; } c.textContent=(n!==null&&n!==undefined)?Number(n).toFixed(1):''; c.className='nc '+(n>=7?'bv':n>=5?'ba':'br'); }
 async function salvarNotas(){
   if (!window.isAdmin) { alert('Acesso restrito'); return; }
