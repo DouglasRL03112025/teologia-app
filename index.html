@@ -263,6 +263,13 @@ select.inp{cursor:pointer}
 .rep-warn{color:var(--am)}
 .rep-bad{color:var(--vm)}
 
+/* ── PAINEL MATERIAL: PRIORIDADE VISUAL ── */
+.aluno-card{border-radius:var(--rl);margin-bottom:10px;padding:14px 16px;border:1px solid var(--brd);box-shadow:var(--s)}
+.aluno-card.problema{border-left:4px solid #e74c3c;background:#fff5f5}
+.aluno-card.pendente{border-left:4px solid #f39c12;background:#fffaf3}
+.aluno-card.ok{border-left:4px solid #2ecc71;background:#f4fff7}
+.alerta{font-size:12px;font-weight:600;margin-bottom:10px}
+
 /* ── DASHBOARD GRID ── */
 .dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 @media(max-width:499px){
@@ -2981,8 +2988,26 @@ function renderPainelMaterial() {
     return;
   }
 
+  // ── CLASSIFICAÇÃO + ORDENAÇÃO POR PRIORIDADE ──
+  const _calcStatus = (a) => {
+    const entregue = (D.livros_ent[lid]||{})[a.id] === true;
+    const fezProva = (D.provas[pid]||{})[a.id]     === true;
+    const nota     = (D.notas[pid]||{})[a.id];
+    const temNota  = nota !== undefined && nota !== null && nota !== '';
+    if (entregue && !fezProva && temNota === false) { /* não conta como problema */ }
+    if (entregue && !temNota && fezProva) return { status: 'problema', alerta: '📝 Fez prova mas SEM nota' };
+    if (entregue && !fezProva)            return { status: 'pendente',  alerta: '⏳ Pendente' };
+    if (!entregue)                        return { status: 'pendente',  alerta: '⏳ Pendente' };
+    return                                       { status: 'ok',        alerta: '✅ Completo' };
+  };
+
+  const ordemPrioridade = { problema: 0, pendente: 1, ok: 2 };
+  const alunosOrdenados = alunosFiltrados
+    .map(a => ({ ...a, ..._calcStatus(a) }))
+    .sort((a, b) => ordemPrioridade[a.status] - ordemPrioridade[b.status]);
+
   // ── Render de cada aluno ──
-  listaEl.innerHTML = alunosFiltrados.map(a => {
+  listaEl.innerHTML = alunosOrdenados.map(a => {
 
     const entregue = (D.livros_ent[lid]||{})[a.id] === true;
     const fezProva = (D.provas[pid]||{})[a.id]     === true;
@@ -3005,9 +3030,10 @@ function renderPainelMaterial() {
     // input nota inline
     const notaVal = temNota ? notaNum.toFixed(1) : '';
 
-    return `<div class="card" style="margin-bottom:10px;padding:14px 16px">
-      <!-- linha 1: nome -->
-      <div style="font-size:15px;font-weight:700;color:var(--azul-e);margin-bottom:10px">${fmtNome(a.nome)}</div>
+    return `<div class="aluno-card ${a.status}">
+      <!-- linha 1: nome + alerta -->
+      <div style="font-size:15px;font-weight:700;color:var(--azul-e);margin-bottom:4px">${fmtNome(a.nome)}</div>
+      <div class="alerta" style="color:${a.status==='problema'?'#e74c3c':a.status==='pendente'?'#f39c12':'#27ae60'}">${a.alerta}</div>
 
       <!-- linha 2: status grid -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px">
