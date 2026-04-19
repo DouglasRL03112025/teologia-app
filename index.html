@@ -2907,31 +2907,31 @@ function renderPainelMaterial() {
 
   const al = ativos();
 
-  // ── Detectar livro e prova padrão se ainda não definidos ──
-  if (!_painelLivro && D.livros_curso.length) {
-    _painelLivro = D.livros_curso[D.livros_curso.length - 1].id; // último livro do curso
-  }
-  if (!_painelProva) {
-    const provasDisponiveis = Object.keys(D.provas || {}).filter(p => /^p\d+$/.test(p)).sort((a,b) => parseInt(b.slice(1)) - parseInt(a.slice(1)));
-    _painelProva = provasDisponiveis[0] || 'p1';
-  }
+  // ── Listas FIXAS — render baseado no que deve existir, não no que existe ──
+  const TOTAL_LIVROS = 24;
+  const TOTAL_PROVAS = 6;
+  const livros = Array.from({ length: TOTAL_LIVROS }, (_, i) => ({ id: i + 1, nome: `Livro ${i + 1}` }));
+  const provas = Array.from({ length: TOTAL_PROVAS }, (_, i) => `p${i + 1}`);
 
-  const livroAtual = D.livros_curso.find(l => l.id === _painelLivro);
-  const provaNum   = _painelProva ? parseInt(_painelProva.slice(1)) : '?';
+  // ── Padrões: último livro e última prova ──
+  if (!_painelLivro) _painelLivro = TOTAL_LIVROS;
+  if (!_painelProva) _painelProva = `p${TOTAL_PROVAS}`;
+
+  const livroAtual = livros.find(l => l.id === _painelLivro);
+  const provaNum   = parseInt((_painelProva || 'p1').slice(1));
 
   // ── Estilos dos botões de seletor ──
-  const selLivro = (id) => `style="padding:6px 11px;border-radius:8px;border:1.5px solid ${_painelLivro===id?'var(--azul)':'var(--brd)'};background:${_painelLivro===id?'var(--azul)':'#fff'};color:${_painelLivro===id?'#fff':'var(--txt)'};font-size:12px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer"`;
-  const selProva = (id) => `style="padding:6px 11px;border-radius:8px;border:1.5px solid ${_painelProva===id?'var(--azul)':'var(--brd)'};background:${_painelProva===id?'var(--azul)':'#fff'};color:${_painelProva===id?'#fff':'var(--txt)'};font-size:12px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer"`;
-  const selFiltro = (f) => `style="padding:6px 14px;border-radius:99px;border:1.5px solid ${_painelFiltro===f?'var(--azul)':'var(--brd)'};background:${_painelFiltro===f?'var(--azul)':'#fff'};color:${_painelFiltro===f?'#fff':'var(--azul)'};font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer"`;
+  const selLivro  = (id) => `style="padding:5px 10px;border-radius:8px;border:1.5px solid ${_painelLivro===id?'var(--azul)':'var(--brd)'};background:${_painelLivro===id?'var(--azul)':'#fff'};color:${_painelLivro===id?'#fff':'var(--txt)'};font-size:12px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer"`;
+  const selProva  = (id) => `style="padding:5px 10px;border-radius:8px;border:1.5px solid ${_painelProva===id?'var(--azul)':'var(--brd)'};background:${_painelProva===id?'var(--azul)':'#fff'};color:${_painelProva===id?'#fff':'var(--txt)'};font-size:12px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer"`;
+  const selFiltro = (f)  => `style="padding:6px 14px;border-radius:99px;border:1.5px solid ${_painelFiltro===f?'var(--azul)':'var(--brd)'};background:${_painelFiltro===f?'var(--azul)':'#fff'};color:${_painelFiltro===f?'#fff':'var(--azul)'};font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer"`;
 
-  // ── Livros disponíveis no seletor ──
-  const botoesLivros = D.livros_curso.map(l =>
-    `<button onclick="_painelLivro='${l.id}';renderPainelMaterial()" ${selLivro(l.id)}>${l.nome.split('–')[0].split('-')[0].trim()}</button>`
+  // ── Botões de livros (Livro 1 … Livro 24) ──
+  const botoesLivros = livros.map(l =>
+    `<button onclick="_painelLivro=${l.id};renderPainelMaterial()" ${selLivro(l.id)}>L${l.id}</button>`
   ).join('');
 
-  // ── Provas disponíveis ──
-  const todasProvas = Object.keys(D.provas || {}).filter(p => /^p\d+$/.test(p)).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));
-  const listaProvasBtn = (todasProvas.length ? todasProvas : ['p1','p2','p3','p4']).map(p =>
+  // ── Botões de provas (P1 … P6) ──
+  const listaProvasBtn = provas.map(p =>
     `<button onclick="_painelProva='${p}';renderPainelMaterial()" ${selProva(p)}>P${p.slice(1)}</button>`
   ).join('');
 
@@ -2961,7 +2961,8 @@ function renderPainelMaterial() {
     </div>`;
 
   // ── Filtrar alunos ──
-  const lid = _painelLivro;
+  // D.livros_ent usa chaves 'l1','l2'… ; _painelLivro é número
+  const lid = 'l' + _painelLivro;
   const pid = _painelProva;
   const alunosFiltrados = al.filter(a => {
     const entregue  = (D.livros_ent[lid]||{})[a.id] === true;
@@ -2982,8 +2983,6 @@ function renderPainelMaterial() {
 
   // ── Render de cada aluno ──
   listaEl.innerHTML = alunosFiltrados.map(a => {
-    const lid = _painelLivro;
-    const pid = _painelProva;
 
     const entregue = (D.livros_ent[lid]||{})[a.id] === true;
     const fezProva = (D.provas[pid]||{})[a.id]     === true;
