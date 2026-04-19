@@ -265,9 +265,11 @@ select.inp{cursor:pointer}
 
 /* ── PAINEL MATERIAL: PRIORIDADE VISUAL ── */
 .aluno-card{border-radius:var(--rl);margin-bottom:10px;padding:14px 16px;border:1px solid var(--brd);box-shadow:var(--s)}
-.aluno-card.problema{border-left:4px solid #e74c3c;background:#fff5f5}
-.aluno-card.pendente{border-left:4px solid #f39c12;background:#fffaf3}
-.aluno-card.ok{border-left:4px solid #2ecc71;background:#f4fff7}
+.aluno-card.problema{border-left:6px solid #dc2626;background:#fff5f5}
+.aluno-card.pendente{border-left:6px solid #f59e0b;background:#fffaf3}
+.aluno-card.neutro  {border-left:6px solid #6b7280;background:#f9f9f9}
+.aluno-card.ok      {border-left:6px solid #16a34a;background:#f4fff7}
+.alerta{font-size:12px;margin-top:4px;font-weight:500}
 .alerta{font-size:12px;font-weight:600;margin-bottom:10px}
 
 /* ── DASHBOARD GRID ── */
@@ -2988,23 +2990,60 @@ function renderPainelMaterial() {
     return;
   }
 
-  // ── CLASSIFICAÇÃO + ORDENAÇÃO POR PRIORIDADE ──
-  const _calcStatus = (a) => {
-    const entregue = (D.livros_ent[lid]||{})[a.id] === true;
-    const fezProva = (D.provas[pid]||{})[a.id]     === true;
-    const nota     = (D.notas[pid]||{})[a.id];
-    const temNota  = nota !== undefined && nota !== null && nota !== '';
-    if (entregue && !fezProva && temNota === false) { /* não conta como problema */ }
-    if (entregue && !temNota && fezProva) return { status: 'problema', alerta: '📝 Fez prova mas SEM nota' };
-    if (entregue && !fezProva)            return { status: 'pendente',  alerta: '⏳ Pendente' };
-    if (!entregue)                        return { status: 'pendente',  alerta: '⏳ Pendente' };
-    return                                       { status: 'ok',        alerta: '✅ Completo' };
-  };
+  // ── FUNÇÕES AUXILIARES DE STATUS ──
+  function provaFoiAplicada(pid) {
+    const prova = D.provas?.[pid];
+    if (!prova) return false;
+    return Object.values(prova).some(v => v === true || v === false);
+  }
 
-  const ordemPrioridade = { problema: 0, pendente: 1, ok: 2 };
+  function getStatusProva(pid, aid) {
+    const aplicada = provaFoiAplicada(pid);
+    const valor = D.provas?.[pid]?.[aid];
+    if (!aplicada) return 'nao_aplicada';
+    if (valor === true) return 'fez';
+    return 'nao_fez';
+  }
+
+  function getStatusLivro(lid, aid) {
+    return D.livros_ent?.[lid]?.[aid] === true ? 'entregue' : 'pendente';
+  }
+
+  function getStatusNota(pid, aid) {
+    const nota = D.notas?.[pid]?.[aid];
+    if (nota === undefined || nota === null || nota === '') return 'sem_nota';
+    return 'com_nota';
+  }
+
+  function classificarAluno(aid, lid, pid) {
+    const livro = getStatusLivro(lid, aid);
+    const prova = getStatusProva(pid, aid);
+    const nota  = getStatusNota(pid, aid);
+
+    // 🔴 PROBLEMA — fez prova mas não tem nota lançada
+    if (prova === 'fez' && nota === 'sem_nota') {
+      return { status: 'problema', prioridade: 1, alerta: '⚠️ Fez prova mas está sem nota' };
+    }
+    // 🟡 PENDENTE — livro não entregue
+    if (livro === 'pendente') {
+      return { status: 'pendente', prioridade: 2, alerta: '📚 Livro não entregue' };
+    }
+    // 🟡 PENDENTE — prova aplicada e não fez
+    if (prova === 'nao_fez') {
+      return { status: 'pendente', prioridade: 3, alerta: '📝 Prova não realizada' };
+    }
+    // ⚪ NEUTRO — prova ainda não aplicada para ninguém
+    if (prova === 'nao_aplicada') {
+      return { status: 'neutro', prioridade: 4, alerta: '⏳ Prova ainda não aplicada' };
+    }
+    // 🟢 OK — tudo certo
+    return { status: 'ok', prioridade: 5, alerta: '✅ Tudo certo' };
+  }
+
+  // ── CLASSIFICAÇÃO + ORDENAÇÃO POR PRIORIDADE ──
   const alunosOrdenados = alunosFiltrados
-    .map(a => ({ ...a, ..._calcStatus(a) }))
-    .sort((a, b) => ordemPrioridade[a.status] - ordemPrioridade[b.status]);
+    .map(a => ({ ...a, ...classificarAluno(a.id, lid, pid) }))
+    .sort((a, b) => a.prioridade - b.prioridade);
 
   // ── Render de cada aluno ──
   listaEl.innerHTML = alunosOrdenados.map(a => {
@@ -3020,9 +3059,12 @@ function renderPainelMaterial() {
     const bdgLivro  = entregue
       ? '<span class="bdg bv" style="font-size:11px">✓ Entregue</span>'
       : '<span class="bdg br" style="font-size:11px">✕ Pendente</span>';
-    const bdgProva  = fezProva
-      ? '<span class="bdg bv" style="font-size:11px">✓ Fez</span>'
-      : '<span class="bdg ba" style="font-size:11px">Não fez</span>';
+    const bdgProva = (() => {
+      const sp = getStatusProva(pid, a.id);
+      if (sp === 'fez')         return '<span class="bdg bv" style="font-size:11px">✓ Fez</span>';
+      if (sp === 'nao_aplicada') return '<span class="bdg" style="font-size:11px;background:#f0f0f0;color:var(--cin)">⏳ N/A</span>';
+      return '<span class="bdg ba" style="font-size:11px">Não fez</span>';
+    })();
     const bdgNota   = temNota
       ? `<span class="bdg ${notaCls}" style="font-size:11px">${notaNum.toFixed(1)}</span>`
       : '<span class="bdg" style="font-size:11px;background:#f0f0f0;color:var(--cin)">—</span>';
@@ -3033,7 +3075,7 @@ function renderPainelMaterial() {
     return `<div class="aluno-card ${a.status}">
       <!-- linha 1: nome + alerta -->
       <div style="font-size:15px;font-weight:700;color:var(--azul-e);margin-bottom:4px">${fmtNome(a.nome)}</div>
-      <div class="alerta" style="color:${a.status==='problema'?'#e74c3c':a.status==='pendente'?'#f39c12':'#27ae60'}">${a.alerta}</div>
+      <div class="alerta" style="color:${a.status==='problema'?'#dc2626':a.status==='pendente'?'#d97706':a.status==='neutro'?'#6b7280':'#16a34a'}">${a.alerta}</div>
 
       <!-- linha 2: status grid -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px">
