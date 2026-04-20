@@ -3134,7 +3134,11 @@ function renderPainelMaterial() {
   }
 
   function getStatusLivro(lid, aid) {
-    return _buscarPorId(D.livros_ent?.[lid], aid) === true ? 'entregue' : 'pendente';
+    const entregue = _buscarPorId(D.livros_ent?.[lid], aid) === true;
+    const pagou    = _buscarPorId(D.pagamentos?.[lid], aid) === true;
+    if (entregue) return 'entregue';
+    if (pagou)    return 'pago';
+    return 'pendente';
   }
 
   function getStatusNota(pid, aid) {
