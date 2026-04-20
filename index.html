@@ -608,6 +608,26 @@ select.inp{cursor:pointer}
       </div>
     </div>
 
+    <!-- PAINEL DE PROVAS ADMIN -->
+    <div class="tela" id="adm-provas">
+      <div class="tit">📝 Provas</div>
+      <p class="sub">Gerencie o status das provas por disciplina</p>
+
+      <!-- Seletor de prova -->
+      <div style="background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;box-shadow:var(--s)">
+        <label style="font-size:12px;font-weight:600;color:var(--cin);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Selecionar Prova</label>
+        <select id="provas-select-prova" class="inp" onchange="renderPainelProvas()" style="margin:0;font-size:14px">
+          <option value="">— escolha uma prova —</option>
+        </select>
+      </div>
+
+      <!-- Resumo -->
+      <div id="provas-resumo" style="display:none"></div>
+
+      <!-- Lista de alunos -->
+      <div id="provas-lista"></div>
+    </div>
+
     <!-- RELATÓRIO POR ALUNO -->
     <div class="tela" id="adm-relatorio">
       <div class="tit">📊 Relatório por aluno</div>
@@ -653,6 +673,9 @@ select.inp{cursor:pointer}
     </button>
     <button class="nb" id="nb-relatorios" onclick="irAdmin('relatorios')">
       <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Relat.
+    </button>
+    <button class="nb" id="nb-provas" onclick="irAdmin('provas')">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Provas
     </button>
   </nav>
 </div>
@@ -1563,20 +1586,18 @@ async function renderProvasAluno() {
     var codigo  = 'p' + indice1;
     var registro = mapaProvas[codigo] || null;
     var nota     = registro ? registro.nota : undefined;
-    var temNota   = nota !== null && nota !== undefined;
-    var fezProva  = registro && registro.fez_prova === true;
-    var devolvida = registro && registro.devolvida === true;
+    var temNota  = nota !== null && nota !== undefined;
+    var fezProva = registro && (registro.fez_prova === true || temNota);
 
     var status;
     if (indice1 > livrosLiberados) {
       status = 'futuro';
-    } else if (!fezProva) {
+    } else if (!registro && !fezProva) {
       status = 'nao_fez';
     } else if (fezProva && !temNota) {
       status = 'feita';
-    } else if (temNota && !devolvida) {
-      status = 'corrigida';
-    } else if (devolvida) {
+    } else if (temNota) {
+      // simulação: nota existe → devolvida
       status = 'devolvida';
       comNota.push(Number(nota));
     } else {
@@ -2099,16 +2120,16 @@ async function sair(){
 }
 
 /* ════ NAV ADMIN ════ */
-const TELAS_ADMIN=['inicio','alunos','perfil','presenca','pagamentos','material','relatorios','relatorio','config','aulas'];
-const NB_MAP={inicio:'nb-inicio',alunos:'nb-alunos',perfil:'nb-alunos',presenca:'nb-presenca',material:'nb-material',relatorios:'nb-relatorios',relatorio:'nb-relatorios'};
+const TELAS_ADMIN=['inicio','alunos','perfil','presenca','pagamentos','material','relatorios','relatorio','config','aulas','provas'];
+const NB_MAP={inicio:'nb-inicio',alunos:'nb-alunos',perfil:'nb-alunos',presenca:'nb-presenca',material:'nb-material',relatorios:'nb-relatorios',relatorio:'nb-relatorios',provas:'nb-provas'};
 
 function irAdmin(t){
   TELAS_ADMIN.forEach(id=>{
-    const elId = id === 'aulas' ? 'adm-aulas' : id === 'presenca' ? 'adm-presenca' : id === 'relatorio' ? 'adm-relatorio' : 'a-'+id;
+    const elId = id === 'aulas' ? 'adm-aulas' : id === 'presenca' ? 'adm-presenca' : id === 'relatorio' ? 'adm-relatorio' : id === 'provas' ? 'adm-provas' : 'a-'+id;
     const el=document.getElementById(elId); if(el) el.classList.remove('on');
   });
   document.querySelectorAll('#nav-admin .nb').forEach(b=>b.classList.remove('on'));
-  const elId = t === 'aulas' ? 'adm-aulas' : t === 'presenca' ? 'adm-presenca' : t === 'relatorio' ? 'adm-relatorio' : 'a-'+t;
+  const elId = t === 'aulas' ? 'adm-aulas' : t === 'presenca' ? 'adm-presenca' : t === 'relatorio' ? 'adm-relatorio' : t === 'provas' ? 'adm-provas' : 'a-'+t;
   const el=document.getElementById(elId); if(el) el.classList.add('on');
   const nb=NB_MAP[t]?document.getElementById(NB_MAP[t]):null; if(nb) nb.classList.add('on');
   window.scrollTo(0,0);
@@ -2121,6 +2142,7 @@ function irAdmin(t){
   if(t==='relatorio') admRelCarregar();
   if(t==='config') initConfig();
   if(t==='aulas') carregarAulas();
+  if(t==='provas') iniciarPainelProvas();
 }
 
 /* ════ NAV ALUNO ════ */
@@ -5216,6 +5238,127 @@ if(!D.aulas_log) { D.aulas_log={}; }
       if (typeof renderPagAdmin === 'function') { renderPagAdmin(); }
     } catch(e) { console.warn('Erro ao re-renderizar telas:', e); }
   }
+
+/* ════ PAINEL DE PROVAS ADMIN ════ */
+async function iniciarPainelProvas() {
+  var sel = document.getElementById('provas-select-prova');
+  if (sel.options.length <= 1) {
+    for (var i = 1; i <= 24; i++) {
+      var opt = document.createElement('option');
+      opt.value = 'p' + i;
+      opt.textContent = 'P' + i + ' — Prova ' + i;
+      sel.appendChild(opt);
+    }
+  }
+  document.getElementById('provas-resumo').style.display = 'none';
+  document.getElementById('provas-lista').innerHTML = '';
+}
+
+async function renderPainelProvas() {
+  var codigo = document.getElementById('provas-select-prova').value;
+  var resumoEl = document.getElementById('provas-resumo');
+  var listaEl  = document.getElementById('provas-lista');
+  if (!codigo) { resumoEl.style.display='none'; listaEl.innerHTML=''; return; }
+
+  listaEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--cin)">Carregando...</div>';
+
+  var res1 = await supabaseClient.from('alunos').select('id,nome').eq('ativo',true).order('nome');
+  var alunos = res1.data || [];
+  var res2 = await supabaseClient.from('provas_aluno').select('*').eq('livro_codigo', codigo);
+  var provas = res2.data || [];
+
+  var mapa = {};
+  provas.forEach(function(p){ mapa[p.aluno_id] = p; });
+
+  var tots = { total:0, nao_fez:0, feita:0, corrigida:0, devolvida:0 };
+  alunos.forEach(function(a){
+    tots.total++;
+    var r = mapa[a.id];
+    if (!r || !r.fez_prova)               tots.nao_fez++;
+    else if (r.fez_prova && r.nota==null)  tots.feita++;
+    else if (r.nota!=null && !r.devolvida) tots.corrigida++;
+    else if (r.devolvida)                  tots.devolvida++;
+  });
+
+  var coresRes = [
+    {label:'Total',    val:tots.total,      bg:'#e8f0f8', cor:'#1a3a5c'},
+    {label:'Não fez',  val:tots.nao_fez,    bg:'#f3f4f6', cor:'#6b7280'},
+    {label:'Feita',    val:tots.feita,      bg:'#fef9c3', cor:'#92400e'},
+    {label:'Corrigida',val:tots.corrigida,  bg:'#dbeafe', cor:'#1e40af'},
+    {label:'Devolvida',val:tots.devolvida,  bg:'#d4edda', cor:'#155724'}
+  ];
+  resumoEl.style.display = 'grid';
+  resumoEl.style.gridTemplateColumns = 'repeat(5,1fr)';
+  resumoEl.style.gap = '8px';
+  resumoEl.style.marginBottom = '14px';
+  resumoEl.innerHTML = coresRes.map(function(c){
+    return '<div style="background:'+c.bg+';border-radius:var(--r);padding:10px 8px;text-align:center">'
+      +'<div style="font-size:20px;font-weight:700;color:'+c.cor+'">'+c.val+'</div>'
+      +'<div style="font-size:10px;color:'+c.cor+';font-weight:600;margin-top:2px">'+c.label+'</div></div>';
+  }).join('');
+
+  var estilos = {
+    nao_fez:   {bg:'#f3f4f6',brd:'#d1d5db',cor:'#6b7280',label:'Não realizada'},
+    feita:     {bg:'#fef9c3',brd:'#fbbf24',cor:'#92400e',label:'Aguard. correção'},
+    corrigida: {bg:'#dbeafe',brd:'#3b82f6',cor:'#1e40af',label:'Corrigida'},
+    devolvida: {bg:'#d4edda',brd:'#28a745',cor:'#155724',label:'Devolvida'}
+  };
+
+  listaEl.innerHTML = alunos.map(function(a){
+    var r = mapa[a.id];
+    var status = !r || !r.fez_prova         ? 'nao_fez'
+      : r.fez_prova && r.nota==null          ? 'feita'
+      : r.nota!=null && !r.devolvida         ? 'corrigida'
+      : 'devolvida';
+    var st = estilos[status];
+    var notaHtml = r && r.nota!=null
+      ? '<span style="font-size:14px;font-weight:700;color:var(--vd)">'+r.nota+'</span>'
+      : '<span style="font-size:12px;color:var(--cin)">—</span>';
+    var rid = r ? r.id : null;
+    var btns = '';
+    if (status === 'nao_fez')
+      btns += '<button onclick="provasMarcarFez(''+a.id+'',''+codigo+'')" style="flex:1;padding:7px;font-size:12px;background:#fef9c3;border:1px solid #fbbf24;border-radius:8px;cursor:pointer;font-weight:600;color:#92400e">✔ Marcar Fez</button>';
+    if (rid)
+      btns += '<button onclick="provasLancarNota(''+rid+'')" style="flex:1;padding:7px;font-size:12px;background:#dbeafe;border:1px solid #3b82f6;border-radius:8px;cursor:pointer;font-weight:600;color:#1e40af">✏ Lançar Nota</button>';
+    if (rid && !r.devolvida)
+      btns += '<button onclick="provasMarcarDevolvida(''+rid+'')" style="flex:1;padding:7px;font-size:12px;background:#d4edda;border:1px solid #28a745;border-radius:8px;cursor:pointer;font-weight:600;color:#155724">📦 Devolvida</button>';
+    return '<div style="background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;box-shadow:var(--s)">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+      +'<span style="font-weight:600;font-size:14px;flex:1">'+a.nome+'</span>'
+      +notaHtml
+      +'<span style="background:'+st.bg+';border:1px solid '+st.brd+';color:'+st.cor+';border-radius:20px;padding:2px 9px;font-size:11px;font-weight:600">'+st.label+'</span>'
+      +'</div>'
+      +(btns ? '<div style="display:flex;gap:8px;flex-wrap:wrap">'+btns+'</div>' : '')
+      +'</div>';
+  }).join('');
+}
+
+async function provasMarcarFez(alunoId, codigo) {
+  var { error } = await supabaseClient.from('provas_aluno')
+    .upsert({ aluno_id:alunoId, livro_codigo:codigo, fez_prova:true, corrigida:true, devolvida:false },
+            { onConflict:'aluno_id,livro_codigo' });
+  if (error) { alert('Erro: '+error.message); return; }
+  renderPainelProvas();
+}
+
+async function provasLancarNota(id) {
+  var notaStr = prompt('Digite a nota:');
+  if (notaStr === null) return;
+  var nota = parseFloat(notaStr.replace(',','.'));
+  if (isNaN(nota)) { alert('Nota inválida.'); return; }
+  var { error } = await supabaseClient.from('provas_aluno')
+    .update({ nota:nota, fez_prova:true, corrigida:true }).eq('id', id);
+  if (error) { alert('Erro: '+error.message); return; }
+  renderPainelProvas();
+}
+
+async function provasMarcarDevolvida(id) {
+  var { error } = await supabaseClient.from('provas_aluno')
+    .update({ devolvida:true, corrigida:true }).eq('id', id);
+  if (error) { alert('Erro: '+error.message); return; }
+  renderPainelProvas();
+}
+/* ════ FIM PAINEL DE PROVAS ADMIN ════ */
 </script>
 <!-- ── MODAL PAGAMENTO ── -->
 <div id="modal-pagamento" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center">
