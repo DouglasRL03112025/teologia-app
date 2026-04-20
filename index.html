@@ -2895,22 +2895,26 @@ function abaMat(aba,btn){
 
 function tgLivro(lid,aid,v){
   if (!window.isAdmin) { alert('Acesso restrito'); return; }
+  _painelTravado = true;
   if (!D.livros_ent[lid]) D.livros_ent[lid] = {};
   D.livros_ent[lid][aid] = v;
   salvar();
   const a = D.alunos.find(x => x.id === aid);
   toast(v ? `📚 Livro entregue a ${fmtNome(a.nome)}!` : 'Marcado como pendente');
   renderPainelMaterial();
+  setTimeout(() => { _painelTravado = false; renderPainelMaterial(); }, 500);
 }
 
 function tgProva(pid,aid,v){
   if (!window.isAdmin) { alert('Acesso restrito'); return; }
+  _painelTravado = true;
   if (!D.provas[pid]) D.provas[pid] = {};
   D.provas[pid][aid] = v;
   salvar();
   const a = D.alunos.find(x => x.id === aid);
   toast(v ? `📝 Prova registrada para ${fmtNome(a.nome)}!` : 'Marcado como pendente');
   renderPainelMaterial();
+  setTimeout(() => { _painelTravado = false; renderPainelMaterial(); }, 500);
 }
 
 /* ════ PAINEL UNIFICADO: LIVROS, PROVAS E NOTAS ════ */
@@ -3026,6 +3030,7 @@ function _buscarPorId(bloco, aid) {
 let _painelLivro = null;   // id do livro selecionado ex: 'l1'
 let _painelProva = null;   // id da prova selecionada ex: 'p1'
 let _painelFiltro = 'todos'; // 'todos'|'pagos'|'pendentes'|'sem-nota'|'sem-prova'
+let _painelTravado = false;  // true enquanto uma ação está em curso — congela a ordenação
 
 function renderMatAdmin(aba){
   // Compatibilidade: ignora aba, sempre renderiza o painel unificado
@@ -3164,9 +3169,11 @@ function renderPainelMaterial() {
   }
 
   // ── CLASSIFICAÇÃO + ORDENAÇÃO POR PRIORIDADE ──
-  const alunosOrdenados = alunosFiltrados
-    .map(a => ({ ...a, ...classificarAluno(a.id, lid, pid) }))
-    .sort((a, b) => a.prioridade - b.prioridade);
+  const alunosClassificados = alunosFiltrados
+    .map(a => ({ ...a, ...classificarAluno(a.id, lid, pid) }));
+  const alunosOrdenados = _painelTravado
+    ? alunosClassificados                                       // travado: mantém ordem atual
+    : alunosClassificados.sort((a, b) => a.prioridade - b.prioridade); // livre: ordena normalmente
 
   // ── Render de cada aluno ──
   listaEl.innerHTML = alunosOrdenados.map(a => {
@@ -3260,6 +3267,7 @@ function renderPainelMaterial() {
 // Salva nota de um único aluno sem recarregar tudo
 async function _salvarNotaAluno(aid, pid) {
   if (!window.isAdmin) { alert('Acesso restrito'); return; }
+  _painelTravado = true;
   const el = document.getElementById('nt-' + aid);
   if (!el) return;
   const v = parseFloat(el.value);
@@ -3275,6 +3283,7 @@ async function _salvarNotaAluno(aid, pid) {
   salvar();
   toast('✓ Nota salva!');
   renderPainelMaterial();
+  setTimeout(() => { _painelTravado = false; renderPainelMaterial(); }, 500);
 }
 
 // Compatibilidade: tgLivro e tgProva chamam renderPainelMaterial em vez das antigas funções de tab
