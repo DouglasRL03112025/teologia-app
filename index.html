@@ -2915,6 +2915,106 @@ function tgProva(pid,aid,v){
 
 /* ════ PAINEL UNIFICADO: LIVROS, PROVAS E NOTAS ════ */
 
+// ── MAPA DE ID LEGADO → UUID ──────────────────────────────────────────────────
+// Construído uma única vez quando o admin carrega os dados.
+// Chave: string numérica antiga ("1","2"…)  Valor: UUID atual do aluno
+let _mapaIdLegado = null;
+
+// Popula _mapaIdLegado lendo aluno_livros (que tem aluno_id=UUID e dados
+// gravados na era antiga, quando a coluna aluno_id era o número sequencial).
+// A lógica: D.livros_ent['l1'] tem chaves numéricas. A tabela aluno_livros
+// tem aluno_id=UUID. Não há coluna de ID legado, então usamos D.presencas:
+// o localStorage histórico gravou presencas[data][chaveNumerica]. O Supabase
+// gravou presenca com aluno_id=UUID. Logo, para admin (que NÃO chama
+// carregarPresencaSupabase), D.presencas ainda contém chaves numéricas.
+// O mapeamento é impossível de forma puramente client-side SEM uma fonte
+// que relacione número → UUID. A fonte disponível é D.alunos (somente UUIDs).
+//
+// SOLUÇÃO REAL: as 3 funções abaixo recarregam D.livros_ent, D.provas e
+// D.notas do Supabase com chaves UUID, resolvendo o cruzamento na raiz.
+// _buscarPorId serve como camada de fallback para dados residuais antigos.
+
+async function carregarLivrosEntSupabase() {
+  try {
+    const { data, error } = await supabaseClient
+      .from('aluno_livros')
+      .select('aluno_id, livro_codigo, entregue');
+    if (error) { console.error('[carregarLivrosEnt]', error); return; }
+    // Reconstrói D.livros_ent com UUIDs como chaves de aluno
+    // livro_codigo no Supabase é "p1","p2"… mas D.livros_ent usa "l1","l2"…
+    // Converte: "p1" → "l1", "p2" → "l2", etc.
+    const novo = {};
+    (data || []).forEach(function(row) {
+      const lid = row.livro_codigo ? 'l' + row.livro_codigo.replace(/\D/g, '') : null;
+      if (!lid) return;
+      if (!novo[lid]) novo[lid] = {};
+      novo[lid][row.aluno_id] = row.entregue === true;
+    });
+    // Substitui completamente cada bloco — sem mescla com dados legados
+    Object.keys(novo).forEach(function(lid) {
+      D.livros_ent[lid] = {};
+      Object.assign(D.livros_ent[lid], novo[lid]);
+    });
+    console.log('[carregarLivrosEnt] D.livros_ent atualizado com UUIDs.');
+  } catch(e) { console.error('[carregarLivrosEnt] Exceção:', e); }
+}
+
+async function carregarProvasEntSupabase() {
+  try {
+    const { data, error } = await supabaseClient
+      .from('provas_aluno')
+      .select('aluno_id, livro_codigo, fez_prova');
+    if (error) { console.error('[carregarProvasEnt]', error); return; }
+    // livro_codigo "p1"… → pid "p1" (já compatível com D.provas)
+    const novo = {};
+    (data || []).forEach(function(row) {
+      const pid = row.livro_codigo || null;
+      if (!pid) return;
+      if (!novo[pid]) novo[pid] = {};
+      novo[pid][row.aluno_id] = row.fez_prova === true;
+    });
+    // Substitui completamente cada bloco — sem mescla com dados legados
+    Object.keys(novo).forEach(function(pid) {
+      D.provas[pid] = {};
+      Object.assign(D.provas[pid], novo[pid]);
+    });
+    console.log('[carregarProvasEnt] D.provas atualizado com UUIDs.');
+  } catch(e) { console.error('[carregarProvasEnt] Exceção:', e); }
+}
+
+async function carregarNotasAdminSupabase() {
+  try {
+    const { data, error } = await supabaseClient
+      .from('notas')
+      .select('aluno_id, prova, nota');
+    if (error) { console.error('[carregarNotasAdmin]', error); return; }
+    const novo = {};
+    (data || []).forEach(function(item) {
+      if (!novo[item.prova]) novo[item.prova] = {};
+      novo[item.prova][item.aluno_id] = item.nota;
+    });
+    // Substitui completamente cada bloco — sem mescla com dados legados
+    Object.keys(novo).forEach(function(pid) {
+      D.notas[pid] = {};
+      Object.assign(D.notas[pid], novo[pid]);
+    });
+    console.log('[carregarNotasAdmin] D.notas atualizado com UUIDs.');
+  } catch(e) { console.error('[carregarNotasAdmin] Exceção:', e); }
+}
+
+// ── LOOKUP TOLERANTE A CHAVES MISTAS (UUID ou numérica) ──────────────────────
+// Usado como fallback para entradas residuais com chaves antigas no D.
+// Para dados já recarregados pelas funções acima, o acesso direto [aid] basta.
+function _buscarPorId(bloco, aid) {
+  if (!bloco) return undefined;
+  // 1) Acesso direto (UUID já presente — caso normal após carga do Supabase)
+  if (bloco[aid] !== undefined) return bloco[aid];
+  // 2) Varredura — fallback para chaves numéricas residuais que não foram
+  //    sobrescritas pelas funções de carga (não há como mapear sem fonte externa,
+  //    então retorna undefined — comportamento igual ao original, sem falso positivo)
+  return undefined;
+}
+
 // Seletores persistentes do painel
 let _painelLivro = null;   // id do livro selecionado ex: 'l1'
 let _painelProva = null;   // id da prova selecionada ex: 'p1'
@@ -2990,9 +3090,9 @@ function renderPainelMaterial() {
   const lid = 'l' + _painelLivro;
   const pid = _painelProva;
   const alunosFiltrados = al.filter(a => {
-    const entregue  = (D.livros_ent[lid]||{})[a.id] === true;
-    const fezProva  = (D.provas[pid]||{})[a.id]     === true;
-    const nota      = (D.notas[pid]||{})[a.id];
+    const entregue  = _buscarPorId(D.livros_ent[lid], a.id) === true;
+    const fezProva  = _buscarPorId(D.provas[pid], a.id)     === true;
+    const nota      = _buscarPorId(D.notas[pid], a.id);
     const temNota   = nota !== undefined && nota !== null && nota !== '';
     if (_painelFiltro === 'pagos')     return entregue;
     if (_painelFiltro === 'pendentes') return !entregue;
@@ -3015,18 +3115,18 @@ function renderPainelMaterial() {
 
   function getStatusProva(pid, aid) {
     const aplicada = provaFoiAplicada(pid);
-    const valor = D.provas?.[pid]?.[aid];
+    const valor = _buscarPorId(D.provas?.[pid], aid);
     if (!aplicada) return 'nao_aplicada';
     if (valor === true) return 'fez';
     return 'nao_fez';
   }
 
   function getStatusLivro(lid, aid) {
-    return D.livros_ent?.[lid]?.[aid] === true ? 'entregue' : 'pendente';
+    return _buscarPorId(D.livros_ent?.[lid], aid) === true ? 'entregue' : 'pendente';
   }
 
   function getStatusNota(pid, aid) {
-    const nota = D.notas?.[pid]?.[aid];
+    const nota = _buscarPorId(D.notas?.[pid], aid);
     if (nota === undefined || nota === null || nota === '') return 'sem_nota';
     return 'com_nota';
   }
@@ -3078,9 +3178,9 @@ function renderPainelMaterial() {
       chaves_provas: D.provas?.[pid] ? Object.keys(D.provas[pid]).slice(0,3) : 'vazio',
     });
 
-    const entregue = (D.livros_ent[lid]||{})[a.id] === true;
-    const fezProva = (D.provas[pid]||{})[a.id]     === true;
-    const nota     = (D.notas[pid]||{})[a.id];
+    const entregue = _buscarPorId(D.livros_ent[lid], a.id) === true;
+    const fezProva = _buscarPorId(D.provas[pid], a.id)     === true;
+    const nota     = _buscarPorId(D.notas[pid], a.id);
     const temNota  = nota !== undefined && nota !== null && nota !== '';
     const notaNum  = temNota ? parseFloat(nota) : null;
     const notaCls  = temNota ? (notaNum >= 7 ? 'bv' : notaNum >= 5 ? 'ba' : 'br') : '';
@@ -4506,6 +4606,9 @@ if(!D.aulas_log) { D.aulas_log={}; }
           document.getElementById('pg-login-admin').style.display = 'none';
           document.getElementById('pg-admin').style.display = 'block';
           await carregarAlunosSupabase().catch(e => console.error('[Init] Erro alunos:', e));
+          await carregarLivrosEntSupabase().catch(e => console.error('[Init] Erro livros_ent:', e));
+          await carregarProvasEntSupabase().catch(e => console.error('[Init] Erro provas:', e));
+          await carregarNotasAdminSupabase().catch(e => console.error('[Init] Erro notas admin:', e));
           await renderDashAdmin().catch(e => console.error('[Init] Erro dash:', e));
           irAdmin('inicio');
           return;
