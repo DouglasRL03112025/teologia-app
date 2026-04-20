@@ -2941,14 +2941,21 @@ async function carregarLivrosEntSupabase() {
       .select('aluno_id, livro_codigo, entregue');
     if (error) { console.error('[carregarLivrosEnt]', error); return; }
     // Reconstrói D.livros_ent com UUIDs como chaves de aluno
-    // livro_codigo no Supabase é "p1","p2"… mas D.livros_ent usa "l1","l2"…
-    // Converte: "p1" → "l1", "p2" → "l2", etc.
+    // livro_codigo no Supabase pode ser "p1","p2",… ou "l1","l2",…
+    // Normaliza: extrai somente dígitos e monta "l" + numero
     const novo = {};
-    (data || []).forEach(function(row) {
-      const lid = row.livro_codigo ? 'l' + row.livro_codigo.replace(/\D/g, '') : null;
-      if (!lid) return;
+    (data || []).forEach(function(item) {
+      const codigo = item.livro_codigo;
+      const numero = String(codigo || '').replace(/[^\d]/g, '');
+      if (!numero) return; // ignora registros sem número válido
+      const lid = 'l' + numero;
+      console.log('LIVRO LOAD', {
+        raw: item.livro_codigo,
+        convertido: lid,
+        aluno: item.aluno_id
+      });
       if (!novo[lid]) novo[lid] = {};
-      novo[lid][row.aluno_id] = row.entregue === true;
+      novo[lid][item.aluno_id] = item.entregue === true;
     });
     // Substitui completamente cada bloco — sem mescla com dados legados
     Object.keys(novo).forEach(function(lid) {
@@ -3034,13 +3041,13 @@ function renderPainelMaterial() {
 
   // ── Listas FIXAS — render baseado no que deve existir, não no que existe ──
   const TOTAL_LIVROS = 24;
-  const TOTAL_PROVAS = 6;
+  const TOTAL_PROVAS = 24;
   const livros = Array.from({ length: TOTAL_LIVROS }, (_, i) => ({ id: i + 1, nome: `Livro ${i + 1}` }));
-  const provas = Array.from({ length: TOTAL_PROVAS }, (_, i) => `p${i + 1}`);
+  const provas = Array.from({ length: TOTAL_PROVAS }, (_, i) => ({ id: 'p' + (i + 1), nome: 'P' + (i + 1) }));
 
   // ── Padrões: último livro e última prova ──
   if (!_painelLivro) _painelLivro = TOTAL_LIVROS;
-  if (!_painelProva) _painelProva = `p${TOTAL_PROVAS}`;
+  if (!_painelProva) _painelProva = 'p' + TOTAL_PROVAS;
 
   const livroAtual = livros.find(l => l.id === _painelLivro);
   const provaNum   = parseInt((_painelProva || 'p1').slice(1));
@@ -3050,14 +3057,14 @@ function renderPainelMaterial() {
   const selProva  = (id) => `style="padding:5px 10px;border-radius:8px;border:1.5px solid ${_painelProva===id?'var(--azul)':'var(--brd)'};background:${_painelProva===id?'var(--azul)':'#fff'};color:${_painelProva===id?'#fff':'var(--txt)'};font-size:12px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer"`;
   const selFiltro = (f)  => `style="padding:6px 14px;border-radius:99px;border:1.5px solid ${_painelFiltro===f?'var(--azul)':'var(--brd)'};background:${_painelFiltro===f?'var(--azul)':'#fff'};color:${_painelFiltro===f?'#fff':'var(--azul)'};font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer"`;
 
-  // ── Botões de livros (Livro 1 … Livro 24) ──
+  // ── Botões de livros (Livro 1 … Livro 24) — grid 2 linhas de 12 ──
   const botoesLivros = livros.map(l =>
     `<button onclick="_painelLivro=${l.id};renderPainelMaterial()" ${selLivro(l.id)}>L${l.id}</button>`
   ).join('');
 
-  // ── Botões de provas (P1 … P6) ──
+  // ── Botões de provas (P1 … P24) — grid 2 linhas de 12 ──
   const listaProvasBtn = provas.map(p =>
-    `<button onclick="_painelProva='${p}';renderPainelMaterial()" ${selProva(p)}>P${p.slice(1)}</button>`
+    `<button onclick="_painelProva='${p.id}';renderPainelMaterial()" ${selProva(p.id)}>P${p.id.slice(1)}</button>`
   ).join('');
 
   // ── Cabeçalho ──
@@ -3069,12 +3076,12 @@ function renderPainelMaterial() {
 
     <div style="margin-bottom:10px">
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--cin);margin-bottom:6px">📚 Livro</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">${botoesLivros}</div>
+      <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px">${botoesLivros}</div>
     </div>
 
     <div style="margin-bottom:14px">
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--cin);margin-bottom:6px">📝 Prova</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">${listaProvasBtn}</div>
+      <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px">${listaProvasBtn}</div>
     </div>
 
     <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--brd)">
