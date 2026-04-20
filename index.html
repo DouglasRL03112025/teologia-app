@@ -5317,11 +5317,11 @@ async function renderPainelProvas() {
     var rid = r ? r.id : null;
     var btns = '';
     if (status === 'nao_fez')
-      btns += '<button onclick="provasMarcarFez(''+a.id+'',''+codigo+'')" style="flex:1;padding:7px;font-size:12px;background:#fef9c3;border:1px solid #fbbf24;border-radius:8px;cursor:pointer;font-weight:600;color:#92400e">✔ Marcar Fez</button>';
+      btns += '<button onclick="provasMarcarFez(\'' + a.id + '\',\'' + codigo + '\')" style="flex:1;padding:7px;font-size:12px;background:#fef9c3;border:1px solid #fbbf24;border-radius:8px;cursor:pointer;font-weight:600;color:#92400e">✔ Marcar Fez</button>';
     if (rid)
-      btns += '<button onclick="provasLancarNota(''+rid+'')" style="flex:1;padding:7px;font-size:12px;background:#dbeafe;border:1px solid #3b82f6;border-radius:8px;cursor:pointer;font-weight:600;color:#1e40af">✏ Lançar Nota</button>';
+      btns += '<button onclick="provasLancarNota(\'' + rid + '\')" style="flex:1;padding:7px;font-size:12px;background:#dbeafe;border:1px solid #3b82f6;border-radius:8px;cursor:pointer;font-weight:600;color:#1e40af">✏ Lançar Nota</button>';
     if (rid && !r.devolvida)
-      btns += '<button onclick="provasMarcarDevolvida(''+rid+'')" style="flex:1;padding:7px;font-size:12px;background:#d4edda;border:1px solid #28a745;border-radius:8px;cursor:pointer;font-weight:600;color:#155724">📦 Devolvida</button>';
+      btns += '<button onclick="provasMarcarDevolvida(\'' + rid + '\')" style="flex:1;padding:7px;font-size:12px;background:#d4edda;border:1px solid #28a745;border-radius:8px;cursor:pointer;font-weight:600;color:#155724">📦 Devolvida</button>';
     return '<div style="background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;box-shadow:var(--s)">'
       +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
       +'<span style="font-weight:600;font-size:14px;flex:1">'+a.nome+'</span>'
