@@ -1605,6 +1605,16 @@ async function renderProvasAluno() {
     var indice1 = index + 1;
     var codigo  = 'p' + indice1;
     var registro = mapaProvas[codigo] || null;
+    var livro = mapaLivros[codigo] || null;
+    var statusLivro;
+    if (!livro || livro.pagou !== true) {
+      statusLivro = 'pendente';
+    } else if (livro.pagou === true && livro.entregue !== true) {
+      statusLivro = 'aguardando';
+    } else if (livro.entregue === true) {
+      statusLivro = 'entregue';
+    }
+    console.log('[Livro]', codigo, '| statusLivro:', statusLivro, '| dados:', livro);
     var nota     = registro ? registro.nota : undefined;
     var temNota   = nota !== null && nota !== undefined;
     var fezProva  = registro && registro.fez_prova === true;
