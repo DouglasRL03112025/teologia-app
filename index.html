@@ -1162,15 +1162,14 @@ async function carregarLivrosAluno(alunoId) {
   console.log('RESULTADO FINAL livrosAluno:', window.livrosAluno);
   console.log('[Livros] Carregados:', data.length, 'registros de aluno_livros');
 
-  // ETAPA 2+4: Obter e exibir livro atual do sistema (sem alterar nenhuma lógica existente)
-  console.log("🔥 CHAMOU obterLivroAtual");
-  const livroAtual = await obterLivroAtual(alunoLivros || []);
-  console.log("📖 LIVRO ATUAL (ALUNO):", livroAtual);
-  window.livroAtualSistema = livroAtual || null;
+  // Busca livro atual definido pelo admin em config_sistema.livro_atual_override
+  // NÃO usa obterLivroAtual (que calculava por data como fallback)
+  await carregarLivroAtualSistema();
+  console.log("📖 LIVRO ATUAL (ADMIN):", window.livroAtualSistema);
   const elLivro = document.getElementById('livro-atual-aluno');
   if (elLivro) {
     elLivro.innerHTML = '📖 Livro atual: <strong>' +
-      (livroAtual ? 'Livro ' + livroAtual : 'não definido') +
+      (window.livroAtualSistema ? 'Livro ' + window.livroAtualSistema : 'não definido') +
       '</strong>';
   }
 }
@@ -1210,8 +1209,9 @@ function renderLivrosAluno(_ignored) {
     "HOMILÉTICA"
   ];
 
-  let livrosLiberados = 7;
-  if (new Date().getDate() >= 25) livrosLiberados = 8;
+  // Usa o livro atual definido pelo admin (config_sistema.livro_atual_override)
+  // NÃO calcula por data — o admin é a única fonte de verdade
+  const livrosLiberados = window.livroAtualSistema || 7;
 
   const dadosAluno = Array.isArray(window.livrosAluno) ? window.livrosAluno : [];
 
@@ -1310,10 +1310,10 @@ async function renderPagamentosAlunoViaLivros() {
   if (!container) return;
   container.innerHTML = 'Carregando pagamentos...';
 
-  // ── 0) Garantir que livroAtualSistema esteja disponível ──
+  // ── 0) Garantir que livroAtualSistema esteja disponível (fonte: admin via config_sistema) ──
   if (!window.livroAtualSistema) {
     try {
-      window.livroAtualSistema = await obterLivroAtual(window.livrosAluno || []);
+      await carregarLivroAtualSistema();
     } catch(e) {
       console.log("Erro ao obter livro atual (pagamentos):", e);
     }
@@ -1348,11 +1348,10 @@ async function renderPagamentosAlunoViaLivros() {
   ];
   const TOTAL_CURSO = 24;
 
-  // ── 2) Calcular livros liberados pela data atual ──
-  const hoje = new Date();
-  let livrosLiberados = 7;
-  if (hoje.getDate() >= 25) livrosLiberados = 8;
-  if (livrosLiberados > TOTAL_CURSO) livrosLiberados = TOTAL_CURSO;
+  // ── 2) Livros liberados = livro atual definido pelo admin (config_sistema.livro_atual_override) ──
+  // NÃO calcula por data — o admin é a única fonte de verdade
+  const livroAtualSistema = window.livroAtualSistema || null;
+  const livrosLiberados = Math.min(livroAtualSistema || 7, TOTAL_CURSO);
 
   // ── 3) Identificar livros pagos via window.livrosAluno ──
   const dadosAluno = window.livrosAluno || [];
@@ -1363,36 +1362,26 @@ async function renderPagamentosAlunoViaLivros() {
       .filter(Boolean)
   );
 
-  // ── 4) Classificar cada um dos 24 livros ──
+  // ── 4) Classificar cada um dos 24 livros com base no livro atual do admin ──
   const classificados = LIVROS_CURSO.map((livro, idx) => {
     const indice = idx + 1; // 1-based
     const pago   = codigosPagos.has(livro.codigo);
-    // buscar dados extras do banco (forma/data pagamento) se existirem
     const dadoBanco = dadosAluno.find(l =>
       (l.livro_codigo === livro.codigo) || (l.livros?.codigo === livro.codigo)
     );
-    if (indice <= livrosLiberados) {
-      return { ...livro, indice, tipo: pago ? 'pago' : 'pendente', dadoBanco };
-    } else {
+    if (!livroAtualSistema) {
+      // sem config do admin: usa threshold padrão
+      return { ...livro, indice, tipo: indice <= livrosLiberados ? (pago ? 'pago' : 'pendente') : 'futuro', dadoBanco };
+    }
+    const numeroLivro = indice;
+    if (numeroLivro > livroAtualSistema) {
       return { ...livro, indice, tipo: 'futuro', dadoBanco };
+    } else if (numeroLivro === livroAtualSistema) {
+      return { ...livro, indice, tipo: pago ? 'aguardando' : 'pendente', dadoBanco };
+    } else {
+      return { ...livro, indice, tipo: pago ? 'pago' : 'atrasado', dadoBanco };
     }
   });
-
-  // ── 4b) Ajuste visual: sobrescrever tipo com base no livroAtualSistema ──
-  const livroAtualSistema = window.livroAtualSistema || null;
-  if (livroAtualSistema) {
-    classificados.forEach(function(livro) {
-      const numeroLivro = parseInt(livro.codigo.replace('p', ''));
-      const pago = codigosPagos.has(livro.codigo);
-      if (numeroLivro > livroAtualSistema) {
-        livro.tipo = 'futuro';
-      } else if (numeroLivro === livroAtualSistema) {
-        livro.tipo = pago ? 'aguardando' : 'pendente';
-      } else {
-        livro.tipo = pago ? 'pago' : 'atrasado';
-      }
-    });
-  }
 
   // ── 5) Contadores — livros futuros NÃO entram ──
   const qtdPagos     = classificados.filter(l => l.tipo === 'pago' || l.tipo === 'aguardando').length;
