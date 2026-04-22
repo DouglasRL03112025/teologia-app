@@ -2065,7 +2065,7 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
     // Executar o update
     const { error: erroUpdate } = await supabaseClient
       .from('aluno_livros')
-      .update({ entregue: true })
+      .update({ entregue: true, pagou: true })
       .eq('aluno_id', alunoId)
       .eq('livro_codigo', codigoFinal);
 
