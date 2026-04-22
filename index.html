@@ -1597,7 +1597,8 @@ async function renderProvasAluno() {
     nao_fez:   { bg:'#f3f4f6', border:'#d1d5db', cor:'#6b7280' },
     feita:     { bg:'#fef9c3', border:'#fbbf24', cor:'#92400e' },
     corrigida: { bg:'#dbeafe', border:'#3b82f6', cor:'#1e40af' },
-    devolvida: { bg:'#d4edda', border:'#28a745', cor:'#155724' }
+    devolvida: { bg:'#d4edda', border:'#28a745', cor:'#155724' },
+    bloqueado: { bg:'#f9fafb', border:'#e5e7eb', cor:'#9ca3af' }
   };
 
   var comNota = [];
@@ -1621,25 +1622,31 @@ async function renderProvasAluno() {
     var devolvida = registro && registro.devolvida === true;
 
     var status;
-    if (!registro && indice1 > livrosLiberados) {
-      status = 'futuro';
-    } else if (!registro || registro.fez_prova !== true) {
-      status = 'nao_fez';
-    } else if (registro.fez_prova === true && registro.nota == null) {
-      status = 'feita';
-    } else if (registro.nota != null && registro.devolvida !== true) {
-      status = 'corrigida';
-    } else if (registro.devolvida === true) {
-      status = 'devolvida';
-      comNota.push(Number(nota));
+    if (statusLivro !== 'entregue') {
+      status = 'bloqueado';
     } else {
-      status = 'nao_fez';
+      if (!registro && indice1 > livrosLiberados) {
+        status = 'futuro';
+      } else if (!registro || registro.fez_prova !== true) {
+        status = 'nao_fez';
+      } else if (registro.fez_prova === true && registro.nota == null) {
+        status = 'feita';
+      } else if (registro.nota != null && registro.devolvida !== true) {
+        status = 'corrigida';
+      } else if (registro.devolvida === true) {
+        status = 'devolvida';
+        comNota.push(Number(nota));
+      } else {
+        status = 'nao_fez';
+      }
     }
 
     var s = estilos[status];
 
     var linhaStatus = '';
-    if (status === 'futuro') {
+    if (status === 'bloqueado') {
+      linhaStatus = '<div style="font-size:11.5px;font-weight:700;color:' + s.cor + ';background:rgba(0,0,0,0.05);border-radius:6px;padding:4px 9px;display:inline-block;margin-top:5px;">🔒 AGUARDANDO ENTREGA DO LIVRO</div>';
+    } else if (status === 'futuro') {
       linhaStatus = '<div style="font-size:11.5px;font-weight:700;color:' + s.cor + ';background:rgba(0,0,0,0.05);border-radius:6px;padding:4px 9px;display:inline-block;margin-top:5px;">⏳ EM BREVE</div>';
     } else if (status === 'nao_fez') {
       linhaStatus = '<div style="font-size:11.5px;font-weight:700;color:' + s.cor + ';background:rgba(0,0,0,0.05);border-radius:6px;padding:4px 9px;display:inline-block;margin-top:5px;">❌ NÃO REALIZADA</div>';
