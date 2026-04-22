@@ -2193,16 +2193,9 @@ async function irAluno(t){
     try {
       const provas = await carregarProvasAluno(usuAtual.id);
       console.log('Provas carregadas:', provas);
-      if (provas && provas.length > 0) {
-        await renderProvasAluno();
-      } else {
-        console.warn('SEM PROVAS NO BANCO');
-        return;
-      }
+      await renderProvasAluno();
     } catch (e) {
       console.error('Erro nas provas:', e);
-      console.warn('SEM PROVAS NO BANCO');
-      return;
     }
   }
 }
