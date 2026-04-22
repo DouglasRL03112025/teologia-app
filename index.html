@@ -5328,7 +5328,9 @@ async function renderPainelProvas() {
     var rid = r ? r.id : null;
     var btns = '';
     if (status === 'nao_fez')
-      btns += '<button onclick="provasMarcarFez(\'' + a.id + '\',\'' + codigo + '\')" style="flex:1;padding:7px;font-size:12px;background:#fef9c3;border:1px solid #fbbf24;border-radius:8px;cursor:pointer;font-weight:600;color:#92400e">✔ Marcar Fez</button>';
+      btns += '<button onclick="provasMarcarFez(\'' + a.id + '\',\'' + codigo + '\', true)" style="flex:1;padding:7px;font-size:12px;background:#fef9c3;border:1px solid #fbbf24;border-radius:8px;cursor:pointer;font-weight:600;color:#92400e">✔ Marcar Fez</button>';
+    else
+      btns += '<button onclick="provasMarcarFez(\'' + a.id + '\',\'' + codigo + '\', false)" style="flex:1;padding:7px;font-size:12px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:8px;cursor:pointer;font-weight:600;color:#6b7280">✖ Desmarcar</button>';
     if (rid)
       btns += '<button onclick="provasLancarNota(\'' + rid + '\')" style="flex:1;padding:7px;font-size:12px;background:#dbeafe;border:1px solid #3b82f6;border-radius:8px;cursor:pointer;font-weight:600;color:#1e40af">✏ Lançar Nota</button>';
     if (rid && !r.devolvida)
@@ -5344,10 +5346,12 @@ async function renderPainelProvas() {
   }).join('');
 }
 
-async function provasMarcarFez(alunoId, codigo) {
+async function provasMarcarFez(alunoId, codigo, novoValor) {
+  var payload = novoValor === false
+    ? { aluno_id:alunoId, livro_codigo:codigo, fez_prova:false, nota:null, devolvida:false }
+    : { aluno_id:alunoId, livro_codigo:codigo, fez_prova:true, corrigida:true, devolvida:false };
   var { error } = await supabaseClient.from('provas_aluno')
-    .upsert({ aluno_id:alunoId, livro_codigo:codigo, fez_prova:true, corrigida:true, devolvida:false },
-            { onConflict:'aluno_id,livro_codigo' });
+    .upsert(payload, { onConflict:'aluno_id,livro_codigo' });
   if (error) { alert('Erro: '+error.message); return; }
   renderPainelProvas();
 }
