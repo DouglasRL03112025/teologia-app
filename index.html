@@ -1557,20 +1557,23 @@ async function renderProvasAluno() {
   let livrosLiberados = 7;
   if (new Date().getDate() >= 25) livrosLiberados = 8;
 
-  var dadosBrutos = [];
-  try {
-    dadosBrutos = await montarProvasComLivros(usuAtual.id);
-  } catch(e) {
-    console.error('[renderProvasAluno] Erro ao montar provas:', e);
-  }
-  if (!Array.isArray(dadosBrutos)) dadosBrutos = [];
-
-  // Mapeia registros existentes por código p1..p24
+  // Leitura direta do banco — sem intermediários
   var mapaProvas = {};
-  dadosBrutos.forEach(function(p) {
-    var cod = p.prova || p.livro_codigo || '';
-    if (cod) mapaProvas[cod] = p;
-  });
+  try {
+    var { data: dadosBanco, error: erroBanco } = await supabaseClient
+      .from('provas_aluno')
+      .select('aluno_id, livro_codigo, fez_prova, nota, devolvida')
+      .eq('aluno_id', usuAtual.id);
+    if (erroBanco) {
+      console.error('[renderProvasAluno] Erro Supabase:', erroBanco);
+    } else if (Array.isArray(dadosBanco)) {
+      dadosBanco.forEach(function(p) {
+        if (p.livro_codigo) mapaProvas[p.livro_codigo] = p;
+      });
+    }
+  } catch(e) {
+    console.error('[renderProvasAluno] Erro ao carregar provas:', e);
+  }
 
   var estilos = {
     futuro:    { bg:'#e2e3e5', border:'#adb5bd', cor:'#6c757d' },
@@ -1593,13 +1596,13 @@ async function renderProvasAluno() {
     var status;
     if (indice1 > livrosLiberados) {
       status = 'futuro';
-    } else if (!fezProva) {
+    } else if (!registro || registro.fez_prova !== true) {
       status = 'nao_fez';
-    } else if (fezProva && !temNota) {
+    } else if (registro.fez_prova === true && registro.nota == null) {
       status = 'feita';
-    } else if (temNota && !devolvida) {
+    } else if (registro.nota != null && registro.devolvida !== true) {
       status = 'corrigida';
-    } else if (devolvida) {
+    } else if (registro.devolvida === true) {
       status = 'devolvida';
       comNota.push(Number(nota));
     } else {
