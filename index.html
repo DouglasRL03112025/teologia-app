@@ -1594,7 +1594,7 @@ async function renderProvasAluno() {
     var devolvida = registro && registro.devolvida === true;
 
     var status;
-    if (indice1 > livrosLiberados) {
+    if (!registro && indice1 > livrosLiberados) {
       status = 'futuro';
     } else if (!registro || registro.fez_prova !== true) {
       status = 'nao_fez';
