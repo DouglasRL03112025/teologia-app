@@ -1099,8 +1099,9 @@ async function criarProvasParaAluno(alunoId) {
 
 /* ════ LIVROS DO ALUNO — TAREFAS 1 e 2 ════ */
 
-async function carregarLivrosAluno() {
+async function carregarLivrosAluno(alunoId) {
   if (!usuAtual || !usuAtual.id) return;
+  if (!alunoId) alunoId = usuAtual.id;
 
   console.log('ID DO USUÁRIO:', usuAtual?.id);
 
@@ -1108,7 +1109,7 @@ async function carregarLivrosAluno() {
   const { data: alunoLivros, error: error1 } = await supabaseClient
     .from('aluno_livros')
     .select('*')
-    .eq('aluno_id', usuAtual.id);
+    .eq('aluno_id', alunoId);
 
   // AÇÃO 3: Log obrigatório do resultado bruto
   console.log('alunoLivros:', alunoLivros);
@@ -2225,13 +2226,13 @@ async function irAluno(t){
     const legadoLivros = document.getElementById('al-livros-lista');
     if (legadoLivros) legadoLivros.innerHTML = '';
 
-    await carregarLivrosAluno();
+    await carregarLivrosAluno(usuAtual.id);
 
     // ACAO 1: Log imediatamente antes da renderizacao
     console.log('RENDER DATA:', window.livrosAluno);
 
     // ACAO 3: usar window.livrosAluno explicitamente
-    renderLivrosAluno(window.livrosAluno);
+    await renderLivrosAluno(window.livrosAluno);
   }
   if(t==='notas') {
     try {
