@@ -5332,8 +5332,16 @@ async function renderPainelProvas() {
 }
 
 async function provasMarcarFez(alunoId, codigo) {
+  var { data: atual, error: erroLeitura } = await supabaseClient
+    .from('provas_aluno')
+    .select('fez_prova')
+    .eq('aluno_id', alunoId)
+    .eq('livro_codigo', codigo)
+    .maybeSingle();
+  if (erroLeitura) { alert('Erro: '+erroLeitura.message); return; }
+  var novoValor = !(atual && atual.fez_prova);
   var { error } = await supabaseClient.from('provas_aluno')
-    .upsert({ aluno_id:alunoId, livro_codigo:codigo, fez_prova:true, corrigida:true, devolvida:false },
+    .upsert({ aluno_id:alunoId, livro_codigo:codigo, fez_prova:novoValor },
             { onConflict:'aluno_id,livro_codigo' });
   if (error) { alert('Erro: '+error.message); return; }
   renderPainelProvas();
