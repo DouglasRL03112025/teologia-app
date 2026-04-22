@@ -1652,6 +1652,15 @@ async function renderProvasAluno() {
                    + '<div style="font-size:11.5px;font-weight:700;color:' + s.cor + ';background:rgba(0,0,0,0.05);border-radius:6px;padding:3px 9px;display:inline-block;margin-top:3px;">📦 PROVA DEVOLVIDA</div>';
     }
 
+    var textoLivro =
+      statusLivro === 'pendente'   ? '❌ Pendente'
+    : statusLivro === 'aguardando' ? '⏳ Aguardando entrega'
+    : statusLivro === 'entregue'   ? '✅ Entregue'
+    : '';
+    var linhaLivro = textoLivro
+      ? '<div style="font-size:11px;font-weight:600;color:#555;background:rgba(0,0,0,0.04);border-radius:5px;padding:3px 8px;display:inline-block;margin-top:4px;">📚 Livro: ' + textoLivro + '</div>'
+      : '';
+
     return '<div style="'
         + 'background:' + s.bg + ';'
         + 'border:2px solid ' + s.border + ';'
@@ -1665,6 +1674,7 @@ async function renderProvasAluno() {
           + '<div style="font-size:11px;color:#888;font-weight:700;letter-spacing:.6px;text-transform:uppercase;">' + codigo + '</div>'
           + '<div style="font-size:13px;font-weight:700;color:#1e1e1e;line-height:1.3;">📖 ' + nome + '</div>'
           + linhaStatus
+          + linhaLivro
         + '</div>';
   }).join('');
 
