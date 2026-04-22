@@ -5311,10 +5311,16 @@ async function renderPainelProvas() {
 
   listaEl.innerHTML = alunos.map(function(a){
     var r = mapa[a.id];
-    var status = !r || !r.fez_prova         ? 'nao_fez'
-      : r.fez_prova && r.nota==null          ? 'feita'
-      : r.nota!=null && !r.devolvida         ? 'corrigida'
-      : 'devolvida';
+    var status;
+    if (!r || r.fez_prova !== true) {
+      status = 'nao_fez';
+    } else if (r.fez_prova === true && r.nota == null) {
+      status = 'feita';
+    } else if (r.nota != null && r.devolvida !== true) {
+      status = 'corrigida';
+    } else if (r.devolvida === true) {
+      status = 'devolvida';
+    }
     var st = estilos[status];
     var notaHtml = r && r.nota!=null
       ? '<span style="font-size:14px;font-weight:700;color:var(--vd)">'+r.nota+'</span>'
