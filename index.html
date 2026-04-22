@@ -2193,9 +2193,16 @@ async function irAluno(t){
     try {
       const provas = await carregarProvasAluno(usuAtual.id);
       console.log('Provas carregadas:', provas);
-      await renderProvasAluno();
+      if (provas && provas.length > 0) {
+        await renderProvasAluno();
+      } else {
+        console.warn('SEM PROVAS NO BANCO');
+        return;
+      }
     } catch (e) {
       console.error('Erro nas provas:', e);
+      console.warn('SEM PROVAS NO BANCO');
+      return;
     }
   }
 }
@@ -5316,8 +5323,6 @@ async function renderPainelProvas() {
     var btns = '';
     if (status === 'nao_fez')
       btns += '<button onclick="provasMarcarFez(\'' + a.id + '\',\'' + codigo + '\')" style="flex:1;padding:7px;font-size:12px;background:#fef9c3;border:1px solid #fbbf24;border-radius:8px;cursor:pointer;font-weight:600;color:#92400e">✔ Marcar Fez</button>';
-    else
-      btns += '<button onclick="provasMarcarFez(\'' + a.id + '\',\'' + codigo + '\')" style="flex:1;padding:7px;font-size:12px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:8px;cursor:pointer;font-weight:600;color:#6b7280">↩ Desmarcar</button>';
     if (rid)
       btns += '<button onclick="provasLancarNota(\'' + rid + '\')" style="flex:1;padding:7px;font-size:12px;background:#dbeafe;border:1px solid #3b82f6;border-radius:8px;cursor:pointer;font-weight:600;color:#1e40af">✏ Lançar Nota</button>';
     if (rid && !r.devolvida)
@@ -5334,16 +5339,8 @@ async function renderPainelProvas() {
 }
 
 async function provasMarcarFez(alunoId, codigo) {
-  var { data: atual, error: erroLeitura } = await supabaseClient
-    .from('provas_aluno')
-    .select('fez_prova')
-    .eq('aluno_id', alunoId)
-    .eq('livro_codigo', codigo)
-    .maybeSingle();
-  if (erroLeitura) { alert('Erro: '+erroLeitura.message); return; }
-  var novoValor = !(atual && atual.fez_prova);
   var { error } = await supabaseClient.from('provas_aluno')
-    .upsert({ aluno_id:alunoId, livro_codigo:codigo, fez_prova:novoValor },
+    .upsert({ aluno_id:alunoId, livro_codigo:codigo, fez_prova:true, corrigida:true, devolvida:false },
             { onConflict:'aluno_id,livro_codigo' });
   if (error) { alert('Erro: '+error.message); return; }
   renderPainelProvas();
