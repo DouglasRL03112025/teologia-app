@@ -5181,11 +5181,13 @@ if(!D.aulas_log) { D.aulas_log={}; }
       const valor = admPresEstado[aluno.id];
       if (valor === null || valor === undefined) continue; // não marcado → não gravar
       try {
+        console.log('🔥 SALVANDO PRESENÇA:', { aluno_id: aluno.id, data: dataSel, presente: valor });
         const { error } = await supabaseClient.from('presenca')
           .upsert(
             { aluno_id: aluno.id, data: dataSel, presente: valor },
             { onConflict: 'aluno_id,data' }
           );
+        if (error) { console.error('❌ ERRO SUPABASE:', error); } else { console.log('✅ SALVO COM SUCESSO'); }
         if (error) {
           console.error('[PRES ADMIN] upsert erro', aluno.id, error);
           erros++;
