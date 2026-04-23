@@ -696,6 +696,11 @@ select.inp{cursor:pointer}
     <!-- MEU CADASTRO -->
     <div class="tela on" id="al-cadastro">
       <div id="al-perfil-banner"></div>
+
+      <!-- ══ DASHBOARD DO ALUNO — gerado por renderAlunoInicio() ══ -->
+      <div id="al-inicio-dashboard"></div>
+      <!-- ══ FIM DASHBOARD DO ALUNO ══ -->
+
       <div class="card">
         <div class="card-t">📌 Meus dados</div>
         <div id="al-dados"></div>
@@ -3783,7 +3788,204 @@ function apagarTudo(){ if(!confirm('APAGAR TODOS OS DADOS? Irreversível!')) ret
 /* ════════════════════════════════════════════
    ÁREA DO ALUNO — LEITURA APENAS
 ════════════════════════════════════════════ */
-function renderAlunoInicio(){ /* chamado ao entrar */ }
+/* ════ DASHBOARD DO ALUNO — renderAlunoInicio ════
+   Regras:
+   - NÃO altera nenhuma função existente
+   - Apenas LÊ dados já existentes: window.livroAtualSistema,
+     window.livrosAluno, window.provasAluno, window.presencasAluno
+   - Busca próxima aula via Supabase (tabela aulas) — sem nova lógica de livros/provas
+   ════════════════════════════════════════════════ */
+async function renderAlunoInicio() {
+  var el = document.getElementById('al-inicio-dashboard');
+  if (!el) return;
+
+  /* ── 1. LIVRO ATUAL ─────────────────────────────── */
+  var livroAtual = window.livroAtualSistema || null;
+  var livroNome  = livroAtual ? 'Livro ' + livroAtual : 'Não definido';
+
+  /* ── 2. DADOS DO LIVRO ATUAL (pagamento e entrega) ── */
+  var dadosAluno   = window.livrosAluno || [];
+  var codigoAtual  = livroAtual ? 'p' + livroAtual : null;
+  var registroAtual = codigoAtual
+    ? dadosAluno.find(function(l){ return l.livro_codigo === codigoAtual; })
+    : null;
+
+  var pagou    = registroAtual && registroAtual.pagou    === true;
+  var entregue = registroAtual && registroAtual.entregue === true;
+
+  var statusPag = pagou ? 'Pago' : 'Pendente';
+  var statusEnt = entregue
+    ? 'Entregue'
+    : pagou
+      ? 'Aguardando entrega'
+      : 'Não liberado';
+
+  /* ── 3. PROVA DO LIVRO ATUAL ────────────────────── */
+  /* usa a mesma lógica de renderProvasAluno:
+     fez_prova === true e nota != null → devolvida / corrigida
+     fez_prova === true e nota == null → feita (aguardando correção)
+     fez_prova !== true               → não realizada              */
+  var provas    = window.provasAluno || [];
+  var regProva  = codigoAtual
+    ? provas.find(function(p){ return p.livro_codigo === codigoAtual; })
+    : null;
+
+  var statusProva;
+  if (!regProva || regProva.fez_prova !== true) {
+    statusProva = 'Não realizada';
+  } else if (regProva.fez_prova === true && (regProva.nota === null || regProva.nota === undefined)) {
+    statusProva = 'Aguardando correção';
+  } else if (regProva.nota !== null && regProva.nota !== undefined && regProva.devolvida !== true) {
+    statusProva = 'Corrigida — nota ' + Number(regProva.nota).toFixed(1);
+  } else if (regProva.devolvida === true) {
+    statusProva = 'Devolvida — nota ' + Number(regProva.nota).toFixed(1);
+  } else {
+    statusProva = 'Não realizada';
+  }
+
+  /* ── 4. PRÓXIMA AULA ────────────────────────────── */
+  /* Usa D.aulas_log já carregado no sistema (sem nenhuma query nova).
+     Fallback: window._agendaAulasPorData se agenda já foi aberta. */
+  var proximaAula = 'Sem aulas futuras';
+  try {
+    var hojeStr = new Date().toISOString().slice(0, 10);
+
+    /* Fonte 1: D.aulas_log — { "YYYY-MM-DD": { modulo, aula } } */
+    var logAulas = (D && D.aulas_log) ? D.aulas_log : {};
+
+    /* Fonte 2: window._agendaAulasPorData — preenchido por renderAlunoAgenda() */
+    var agendaMap = window._agendaAulasPorData || {};
+
+    /* Mescla as duas fontes num único mapa por data */
+    var mapaUnificado = {};
+    Object.keys(logAulas).forEach(function(dt) {
+      mapaUnificado[dt] = { modulo: logAulas[dt].modulo || '', aula: logAulas[dt].aula || '' };
+    });
+    Object.keys(agendaMap).forEach(function(dt) {
+      if (!mapaUnificado[dt]) {
+        mapaUnificado[dt] = { modulo: agendaMap[dt].livro || '', aula: agendaMap[dt].descricao || '' };
+      }
+    });
+
+    /* Filtra datas >= hoje e pega a mais próxima */
+    var datasFuturas = Object.keys(mapaUnificado)
+      .filter(function(dt) { return dt >= hojeStr; })
+      .sort();
+
+    if (datasFuturas.length > 0) {
+      var proximaData = datasFuturas[0];
+      var entrada     = mapaUnificado[proximaData];
+      var d           = new Date(proximaData + 'T12:00:00');
+      proximaAula = DS[d.getDay()] + ', ' + fmtD(d)
+        + (entrada.modulo ? ' • ' + entrada.modulo : '')
+        + (entrada.aula   ? ' — ' + entrada.aula   : '');
+    }
+  } catch(e) { /* silencioso */ }
+
+  /* ── 5. ALERTAS ─────────────────────────────────── */
+  var alertas = [];
+  if (!pagou)                      alertas.push({ cls:'vm', ic:'💰', msg:'Pagamento pendente' });
+  if (pagou && !entregue)          alertas.push({ cls:'am', ic:'📦', msg:'Livro aguardando entrega' });
+  if (!regProva || regProva.fez_prova !== true)
+                                   alertas.push({ cls:'am', ic:'📝', msg:'Prova pendente' });
+
+  /* ── 6. CORES AUXILIARES ─────────────────────────── */
+  function corPag(p)  { return p ? '#16a34a' : '#dc2626'; }
+  function bgPag(p)   { return p ? '#f0fdf4' : '#fef2f2'; }
+  function brdPag(p)  { return p ? '#bbf7d0' : '#fecaca'; }
+  function corEnt(e, pg) {
+    if (e)  return '#16a34a';
+    if (pg) return '#b45309';
+    return '#9ca3af';
+  }
+  function bgEnt(e, pg) {
+    if (e)  return '#f0fdf4';
+    if (pg) return '#fffbeb';
+    return '#f9fafb';
+  }
+  function brdEnt(e, pg) {
+    if (e)  return '#bbf7d0';
+    if (pg) return '#fcd34d';
+    return '#e5e7eb';
+  }
+  function corProva(r) {
+    if (!r || r.fez_prova !== true) return '#9ca3af';
+    if (r.devolvida === true)       return '#16a34a';
+    if (r.nota !== null && r.nota !== undefined) return '#1e40af';
+    return '#b45309';
+  }
+  function bgProva(r) {
+    if (!r || r.fez_prova !== true) return '#f9fafb';
+    if (r.devolvida === true)       return '#f0fdf4';
+    if (r.nota !== null && r.nota !== undefined) return '#eff6ff';
+    return '#fffbeb';
+  }
+  function brdProva(r) {
+    if (!r || r.fez_prova !== true) return '#e5e7eb';
+    if (r.devolvida === true)       return '#bbf7d0';
+    if (r.nota !== null && r.nota !== undefined) return '#bfdbfe';
+    return '#fcd34d';
+  }
+
+  /* ── 7. HTML DO DASHBOARD ────────────────────────── */
+  var alertasHtml = alertas.length
+    ? alertas.map(function(a){
+        return '<div class="al ' + a.cls + '" style="margin-bottom:8px">'
+          + '<span>' + a.ic + '</span>'
+          + '<span>' + a.msg + '</span>'
+          + '</div>';
+      }).join('')
+    : '<div class="al vd"><span>✅</span><span>Tudo em ordem! Nenhum alerta no momento.</span></div>';
+
+  el.innerHTML =
+    /* Cabeçalho */
+    '<div style="font-family:\'Lora\',serif;font-size:19px;font-weight:700;color:var(--azul);margin-bottom:4px;margin-top:4px">📊 Meu Painel</div>'
+    + '<p style="font-size:13px;color:var(--cin);margin-bottom:14px">Resumo do seu progresso</p>'
+
+    /* Livro atual */
+    + '<div class="card" style="margin-bottom:12px">'
+      + '<div class="card-t">📖 Livro Atual</div>'
+      + '<div style="font-size:16px;font-weight:600;color:var(--azul)">' + livroNome + '</div>'
+    + '</div>'
+
+    /* Cards de status */
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">'
+
+      /* Pagamento */
+      + '<div style="background:' + bgPag(pagou) + ';border:1px solid ' + brdPag(pagou) + ';border-radius:var(--r);padding:13px 10px;text-align:center">'
+        + '<div style="font-size:20px;margin-bottom:5px">💰</div>'
+        + '<div style="font-size:12px;font-weight:700;color:' + corPag(pagou) + '">' + statusPag + '</div>'
+        + '<div style="font-size:10px;color:var(--cin);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Pagamento</div>'
+      + '</div>'
+
+      /* Entrega */
+      + '<div style="background:' + bgEnt(entregue, pagou) + ';border:1px solid ' + brdEnt(entregue, pagou) + ';border-radius:var(--r);padding:13px 10px;text-align:center">'
+        + '<div style="font-size:20px;margin-bottom:5px">📦</div>'
+        + '<div style="font-size:12px;font-weight:700;color:' + corEnt(entregue, pagou) + '">' + statusEnt + '</div>'
+        + '<div style="font-size:10px;color:var(--cin);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Entrega</div>'
+      + '</div>'
+
+      /* Prova */
+      + '<div style="background:' + bgProva(regProva) + ';border:1px solid ' + brdProva(regProva) + ';border-radius:var(--r);padding:13px 10px;text-align:center">'
+        + '<div style="font-size:20px;margin-bottom:5px">📝</div>'
+        + '<div style="font-size:12px;font-weight:700;color:' + corProva(regProva) + '">' + statusProva + '</div>'
+        + '<div style="font-size:10px;color:var(--cin);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Prova</div>'
+      + '</div>'
+    + '</div>'
+
+    /* Próxima aula */
+    + '<div class="card" style="margin-bottom:12px">'
+      + '<div class="card-t">📅 Próxima Aula</div>'
+      + '<div style="font-size:14px;color:var(--azul);font-weight:500">' + proximaAula + '</div>'
+    + '</div>'
+
+    /* Alertas */
+    + '<div class="card" style="margin-bottom:16px">'
+      + '<div class="card-t">⚠️ Alertas</div>'
+      + alertasHtml
+    + '</div>';
+}
+/* ════ FIM DASHBOARD DO ALUNO ════ */
 
 function renderAlunoCadastro(){
   const a=usuAtual;
