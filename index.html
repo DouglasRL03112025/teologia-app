@@ -4981,8 +4981,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
         .from('aulas').select('*').eq('id', id).single();
       if (erroAula) { console.error('[Aulas] Erro ao buscar aula:', erroAula); toast('❌ Erro ao excluir aula'); return; }
       if (aula.data) {
-        const filtro = supabaseClient.from('presenca').delete().eq('data', aula.data);
-        const { error: erroPres } = aula.livro ? await filtro.eq('livro', aula.livro) : await filtro;
+        const { error: erroPres } = await supabaseClient.from('presenca').delete().eq('data', aula.data);
         if (erroPres) console.error('[Aulas] Erro ao excluir presenças:', erroPres);
       }
       const { error } = await supabaseClient.from('aulas').delete().eq('id', id);
@@ -5179,7 +5178,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
 
     for (const aluno of admPresAlunos) {
       const valor = admPresEstado[aluno.id];
-      if (valor === null || valor === undefined) continue; // não marcado → não gravar
+      if (valor === undefined) continue; // nunca tocado → não gravar
       try {
         console.log('🔥 SALVANDO PRESENÇA:', { aluno_id: aluno.id, data: dataSel, presente: valor });
         const { error } = await supabaseClient.from('presenca')
