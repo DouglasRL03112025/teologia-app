@@ -4981,8 +4981,13 @@ if(!D.aulas_log) { D.aulas_log={}; }
         .from('aulas').select('*').eq('id', id).single();
       if (erroAula) { console.error('[Aulas] Erro ao buscar aula:', erroAula); toast('❌ Erro ao excluir aula'); return; }
       if (aula.data) {
+        console.log('🧨 DELETE PRESENÇA:', { aulaData: aula.data });
+        const { data: antesDelete } = await supabaseClient.from('presenca').select('*').eq('data', aula.data);
+        console.log('ANTES DELETE:', antesDelete);
         const { error: erroPres } = await supabaseClient.from('presenca').delete().eq('data', aula.data);
         if (erroPres) console.error('[Aulas] Erro ao excluir presenças:', erroPres);
+        const { data: depoisDelete } = await supabaseClient.from('presenca').select('*').eq('data', aula.data);
+        console.log('DEPOIS DELETE:', depoisDelete);
       }
       const { error } = await supabaseClient.from('aulas').delete().eq('id', id);
       if (error) { console.error('[Aulas] Erro ao excluir aula:', error); toast('❌ Erro ao excluir aula'); return; }
