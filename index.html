@@ -5167,7 +5167,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
     return (p[0][0] + p[p.length-1][0]).toUpperCase();
   }
 
-  /* ── Salvar: UPDATE se existe, INSERT se não existe ── */
+  /* ── Salvar: upsert com onConflict (aluno_id, data) ── */
   async function admPresSalvar() {
     if (!admPresAulaAtual) { toast('⚠️ Selecione uma aula primeiro'); return; }
     const btn = document.getElementById('adm-pres-btn-salvar');
@@ -5181,20 +5181,16 @@ if(!D.aulas_log) { D.aulas_log={}; }
       const valor = admPresEstado[aluno.id];
       if (valor === null || valor === undefined) continue; // não marcado → não gravar
       try {
-        if (admPresRegistros[aluno.id]) {
-          // UPDATE
-          const { error } = await supabaseClient.from('presenca')
-            .update({ presente: valor })
-            .eq('aluno_id', aluno.id).eq('data', dataSel);
-          if (error) { console.error('[PRES ADMIN] update', aluno.id, error); erros++; }
-          else admPresRegistros[aluno.id].presente = valor;
+        const { error } = await supabaseClient.from('presenca')
+          .upsert(
+            { aluno_id: aluno.id, data: dataSel, presente: valor },
+            { onConflict: 'aluno_id,data' }
+          );
+        if (error) {
+          console.error('[PRES ADMIN] upsert erro', aluno.id, error);
+          erros++;
         } else {
-          // INSERT
-          const { data: ins, error } = await supabaseClient.from('presenca')
-            .insert({ aluno_id: aluno.id, data: dataSel, livro: livroSel, presente: valor })
-            .select().single();
-          if (error) { console.error('[PRES ADMIN] insert', aluno.id, error); erros++; }
-          else if (ins) admPresRegistros[aluno.id] = { id: ins.id, presente: valor };
+          if (admPresRegistros[aluno.id]) admPresRegistros[aluno.id].presente = valor;
         }
       } catch(e) { console.error('[PRES ADMIN] exceção', aluno.id, e); erros++; }
     }
