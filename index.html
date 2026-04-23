@@ -3930,58 +3930,61 @@ async function renderAlunoInicio() {
   /* ── 7. HTML DO DASHBOARD ────────────────────────── */
   var alertasHtml = alertas.length
     ? alertas.map(function(a){
-        return '<div class="al ' + a.cls + '" style="margin-bottom:8px">'
-          + '<span>' + a.ic + '</span>'
+        return '<div style="display:flex;align-items:center;gap:8px;background:#fffbeb;border:1px solid #fde68a;border-radius:99px;padding:7px 14px;margin-bottom:7px;font-size:13px;font-weight:600;color:#92400e">'
+          + '<span style="font-size:14px">' + a.ic + '</span>'
           + '<span>' + a.msg + '</span>'
           + '</div>';
       }).join('')
-    : '<div class="al vd"><span>✅</span><span>Tudo em ordem! Nenhum alerta no momento.</span></div>';
+    : '<div style="display:flex;align-items:center;gap:8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:99px;padding:7px 14px;font-size:13px;font-weight:600;color:#166534"><span>✅</span><span>Tudo em ordem por aqui!</span></div>';
 
   el.innerHTML =
-    /* Cabeçalho */
-    '<div style="font-family:\'Lora\',serif;font-size:19px;font-weight:700;color:var(--azul);margin-bottom:4px;margin-top:4px">📊 Meu Painel</div>'
-    + '<p style="font-size:13px;color:var(--cin);margin-bottom:14px">Resumo do seu progresso</p>'
 
-    /* Livro atual */
-    + '<div class="card" style="margin-bottom:12px">'
-      + '<div class="card-t">📖 Livro Atual</div>'
-      + '<div style="font-size:16px;font-weight:600;color:var(--azul)">' + livroNome + '</div>'
+    /* ── Cabeçalho ── */
+    '<div style="margin-bottom:18px">'
+      + '<div style="font-family:\'Lora\',serif;font-size:20px;font-weight:700;color:var(--azul);letter-spacing:-.2px">Meu Painel</div>'
+      + '<div style="font-size:13px;color:var(--cin);margin-top:3px">Acompanhe sua situação no curso</div>'
     + '</div>'
 
-    /* Cards de status */
+    /* ── Livro atual ── */
+    + '<div style="background:var(--azul);border-radius:16px;padding:18px 20px;margin-bottom:14px;box-shadow:0 4px 14px rgba(26,58,92,.18)">'
+      + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.6);margin-bottom:6px">📖 Livro em estudo</div>'
+      + '<div style="font-size:22px;font-weight:700;color:#fff;font-family:\'Lora\',serif;line-height:1.2">' + livroNome + '</div>'
+    + '</div>'
+
+    /* ── Cards de status ── */
     + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">'
 
       /* Pagamento */
-      + '<div style="background:' + bgPag(pagou) + ';border:1px solid ' + brdPag(pagou) + ';border-radius:var(--r);padding:13px 10px;text-align:center">'
-        + '<div style="font-size:20px;margin-bottom:5px">💰</div>'
-        + '<div style="font-size:12px;font-weight:700;color:' + corPag(pagou) + '">' + statusPag + '</div>'
-        + '<div style="font-size:10px;color:var(--cin);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Livro atual</div>'
+      + '<div style="background:' + bgPag(pagou) + ';border:1.5px solid ' + brdPag(pagou) + ';border-radius:14px;padding:16px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05)">'
+        + '<div style="font-size:24px;margin-bottom:7px;line-height:1">💰</div>'
+        + '<div style="font-size:11px;font-weight:700;color:' + corPag(pagou) + ';line-height:1.3">' + statusPag + '</div>'
+        + '<div style="font-size:10px;color:var(--cin);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Pagamento</div>'
       + '</div>'
 
       /* Entrega */
-      + '<div style="background:' + bgEnt(entregue, pagou) + ';border:1px solid ' + brdEnt(entregue, pagou) + ';border-radius:var(--r);padding:13px 10px;text-align:center">'
-        + '<div style="font-size:20px;margin-bottom:5px">📦</div>'
-        + '<div style="font-size:12px;font-weight:700;color:' + corEnt(entregue, pagou) + '">' + statusEnt + '</div>'
-        + '<div style="font-size:10px;color:var(--cin);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Entrega</div>'
+      + '<div style="background:' + bgEnt(entregue, pagou) + ';border:1.5px solid ' + brdEnt(entregue, pagou) + ';border-radius:14px;padding:16px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05)">'
+        + '<div style="font-size:24px;margin-bottom:7px;line-height:1">📦</div>'
+        + '<div style="font-size:11px;font-weight:700;color:' + corEnt(entregue, pagou) + ';line-height:1.3">' + statusEnt + '</div>'
+        + '<div style="font-size:10px;color:var(--cin);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Material</div>'
       + '</div>'
 
       /* Prova */
-      + '<div style="background:' + bgProva(regProva) + ';border:1px solid ' + brdProva(regProva) + ';border-radius:var(--r);padding:13px 10px;text-align:center">'
-        + '<div style="font-size:20px;margin-bottom:5px">📝</div>'
-        + '<div style="font-size:12px;font-weight:700;color:' + corProva(regProva) + '">' + statusProva + '</div>'
-        + '<div style="font-size:10px;color:var(--cin);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Prova</div>'
+      + '<div style="background:' + bgProva(regProva) + ';border:1.5px solid ' + brdProva(regProva) + ';border-radius:14px;padding:16px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05)">'
+        + '<div style="font-size:24px;margin-bottom:7px;line-height:1">📝</div>'
+        + '<div style="font-size:11px;font-weight:700;color:' + corProva(regProva) + ';line-height:1.3">' + statusProva + '</div>'
+        + '<div style="font-size:10px;color:var(--cin);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Avaliação</div>'
       + '</div>'
     + '</div>'
 
-    /* Próxima aula */
-    + '<div class="card" style="margin-bottom:12px">'
-      + '<div class="card-t">📅 Próxima Aula</div>'
-      + '<div style="font-size:14px;color:var(--azul);font-weight:500">' + proximaAula + '</div>'
+    /* ── Próxima aula ── */
+    + '<div style="background:#fff;border:1px solid var(--brd);border-radius:14px;padding:16px 18px;margin-bottom:14px;box-shadow:0 2px 6px rgba(0,0,0,.05)">'
+      + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--cin);margin-bottom:8px">📅 Próxima Aula</div>'
+      + '<div style="font-size:' + (proximaAula === 'Nenhuma aula agendada' ? '13px;color:var(--cin);font-style:italic' : '14px;color:var(--azul);font-weight:600') + '">' + proximaAula + '</div>'
     + '</div>'
 
-    /* Alertas */
-    + '<div class="card" style="margin-bottom:16px">'
-      + '<div class="card-t">⚠️ Alertas</div>'
+    /* ── Alertas ── */
+    + '<div style="margin-bottom:16px">'
+      + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--cin);margin-bottom:8px">⚠️ Alertas</div>'
       + alertasHtml
     + '</div>';
 }
