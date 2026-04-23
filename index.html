@@ -4493,7 +4493,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
 
     const { error } = await supabaseClient
       .from('aluno_livros')
-      .update({ pagou: false, data_pagamento: null, forma_pagamento: null })
+      .update({ pagou: false, entregue: false, data_pagamento: null, forma_pagamento: null })
       .eq('id', idRegistro);
 
     if (error) {
@@ -4533,7 +4533,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
 
     const { error } = await supabaseClient
       .from('aluno_livros')
-      .update({ pagou: false, data_pagamento: null, forma_pagamento: null })
+      .update({ pagou: false, entregue: false, data_pagamento: null, forma_pagamento: null })
       .eq('id', idRegistro);
 
     if (error) {
