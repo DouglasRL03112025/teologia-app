@@ -1237,17 +1237,17 @@ function renderLivrosAluno(_ignored) {
     var indice1   = index + 1;
     var dado      = pagamentoMap[codigo] || null;
     var pagou     = dado && dado.pagou === true;
-    var temData   = dado && dado.data_pagamento;
+    var entregue  = dado && dado.entregue === true;
 
     var status;
     if (indice1 > livrosLiberados) {
       status = 'futuro';
-    } else if (!pagou) {
-      status = 'pendente';
-    } else if (pagou && temData) {
+    } else if (entregue) {
       status = 'entregue';
-    } else {
+    } else if (pagou) {
       status = 'pago_nao_entregue';
+    } else {
+      status = 'pendente';
     }
 
     // Ajuste visual: se este livro é o livro atual do sistema e ainda aparece como 'futuro', exibir como disponível (pendente)
