@@ -705,7 +705,7 @@ select.inp{cursor:pointer}
         <div class="card-t">📌 Meus dados</div>
         <div id="al-dados"></div>
       </div>
-      <button class="btn bs" onclick="abrirModEditarAluno()">✏️ Editar dados pessoais</button>
+      <button class="btn bs" onclick="abrirModEditarAluno()" style="transition:transform .1s ease" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">✏️ Editar dados pessoais</button>
     </div>
 
     <!-- AGENDA DE AULAS -->
@@ -3930,26 +3930,37 @@ async function renderAlunoInicio() {
   /* ── 7. HTML DO DASHBOARD ────────────────────────── */
   var alertasHtml = alertas.length
     ? alertas.map(function(a){
-        return '<div style="display:flex;align-items:center;gap:10px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:10px 14px;margin-bottom:8px">'
-          + '<span style="font-size:18px;flex-shrink:0">' + a.ic + '</span>'
+        return '<div style="display:flex;align-items:center;gap:10px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:10px 14px;margin-bottom:8px;cursor:pointer;transition:all .2s ease"'
+          + ' onmouseover="this.style.background=\'#fef3c7\';this.style.borderColor=\'#f59e0b\';this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 4px 12px rgba(245,158,11,.15)\'"'
+          + ' onmouseout="this.style.background=\'#fffbeb\';this.style.borderColor=\'#fde68a\';this.style.transform=\'translateY(0)\';this.style.boxShadow=\'none\'">'
+          + '<span style="font-size:18px;flex-shrink:0;transition:transform .2s ease" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'">' + a.ic + '</span>'
           + '<span style="font-size:13px;font-weight:600;color:#78350f;line-height:1.4">' + a.msg + '</span>'
           + '</div>';
       }).join('')
-    : '<div style="display:flex;align-items:center;gap:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:10px 14px">'
+    : '<div style="display:flex;align-items:center;gap:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:10px 14px;transition:all .2s ease"'
+        + ' onmouseover="this.style.background=\'#dcfce7\';this.style.borderColor=\'#86efac\'"'
+        + ' onmouseout="this.style.background=\'#f0fdf4\';this.style.borderColor=\'#bbf7d0\'">'
         + '<span style="font-size:18px">✅</span>'
         + '<span style="font-size:13px;font-weight:600;color:#166534">Tudo em ordem por aqui!</span>'
       + '</div>';
 
   el.innerHTML =
 
+    /* ── keyframes inline ── */
+    '<style>'
+      + '@keyframes _fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}'
+    + '</style>'
+
     /* ── Cabeçalho ── */
-    '<div style="margin-bottom:20px">'
+    + '<div style="margin-bottom:20px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:0s">'
       + '<div style="font-family:\'Lora\',serif;font-size:21px;font-weight:700;color:var(--azul);letter-spacing:-.3px;line-height:1.2">Meu Painel</div>'
       + '<div style="font-size:13px;color:var(--cin);margin-top:4px;opacity:.85">Acompanhe sua situação no curso</div>'
     + '</div>'
 
     /* ── Hero: Livro atual ── */
-    + '<div style="background:linear-gradient(135deg,#1a3a5c 0%,#0f2540 100%);border-radius:18px;padding:22px 20px 20px;margin-bottom:18px;box-shadow:0 6px 20px rgba(15,37,64,.28);position:relative;overflow:hidden">'
+    + '<div style="background:linear-gradient(135deg,#1a3a5c 0%,#0f2540 100%);border-radius:18px;padding:22px 20px 20px;margin-bottom:18px;box-shadow:0 6px 20px rgba(15,37,64,.28);position:relative;overflow:hidden;transition:all .2s ease;cursor:pointer;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.05s"'
+      + ' onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 10px 28px rgba(15,37,64,.38)\';this.style.filter=\'brightness(1.05)\'"'
+      + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 6px 20px rgba(15,37,64,.28)\';this.style.filter=\'brightness(1)\'">'
       + '<div style="position:absolute;top:-18px;right:-18px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.04)"></div>'
       + '<div style="position:absolute;bottom:-24px;right:18px;width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.06)"></div>'
       + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.5);margin-bottom:8px">📖 Livro em estudo</div>'
@@ -3958,32 +3969,40 @@ async function renderAlunoInicio() {
     + '</div>'
 
     /* ── Cards de status ── */
-    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px">'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.1s">'
 
       /* Pagamento */
-      + '<div style="background:' + bgPag(pagou) + ';border:1.5px solid ' + brdPag(pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:transform .15s">'
-        + '<div style="font-size:28px;margin-bottom:8px;line-height:1">💰</div>'
+      + '<div style="background:' + bgPag(pagou) + ';border:1.5px solid ' + brdPag(pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .2s ease;cursor:pointer"'
+        + ' onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 6px 18px rgba(0,0,0,.14)\'"'
+        + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.08)\'">'
+        + '<div style="font-size:28px;margin-bottom:8px;line-height:1;transition:transform .2s ease" onmouseover="this.style.transform=\'scale(1.05)\'" onmouseout="this.style.transform=\'scale(1)\'">💰</div>'
         + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--cin);opacity:.7;margin-bottom:5px">Pagamento</div>'
         + '<div style="font-size:12px;font-weight:700;color:' + corPag(pagou) + ';line-height:1.3">' + statusPag + '</div>'
       + '</div>'
 
       /* Entrega */
-      + '<div style="background:' + bgEnt(entregue, pagou) + ';border:1.5px solid ' + brdEnt(entregue, pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:transform .15s">'
-        + '<div style="font-size:28px;margin-bottom:8px;line-height:1">📦</div>'
+      + '<div style="background:' + bgEnt(entregue, pagou) + ';border:1.5px solid ' + brdEnt(entregue, pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .2s ease;cursor:pointer"'
+        + ' onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 6px 18px rgba(0,0,0,.14)\'"'
+        + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.08)\'">'
+        + '<div style="font-size:28px;margin-bottom:8px;line-height:1;transition:transform .2s ease" onmouseover="this.style.transform=\'scale(1.05)\'" onmouseout="this.style.transform=\'scale(1)\'">📦</div>'
         + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--cin);opacity:.7;margin-bottom:5px">Material</div>'
         + '<div style="font-size:12px;font-weight:700;color:' + corEnt(entregue, pagou) + ';line-height:1.3">' + statusEnt + '</div>'
       + '</div>'
 
       /* Prova */
-      + '<div style="background:' + bgProva(regProva) + ';border:1.5px solid ' + brdProva(regProva) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:transform .15s">'
-        + '<div style="font-size:28px;margin-bottom:8px;line-height:1">📝</div>'
+      + '<div style="background:' + bgProva(regProva) + ';border:1.5px solid ' + brdProva(regProva) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .2s ease;cursor:pointer"'
+        + ' onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 6px 18px rgba(0,0,0,.14)\'"'
+        + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.08)\'">'
+        + '<div style="font-size:28px;margin-bottom:8px;line-height:1;transition:transform .2s ease" onmouseover="this.style.transform=\'scale(1.05)\'" onmouseout="this.style.transform=\'scale(1)\'">📝</div>'
         + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--cin);opacity:.7;margin-bottom:5px">Avaliação</div>'
         + '<div style="font-size:12px;font-weight:700;color:' + corProva(regProva) + ';line-height:1.3">' + statusProva + '</div>'
       + '</div>'
     + '</div>'
 
     /* ── Próxima aula ── */
-    + '<div style="background:#fff;border:1px solid var(--brd);border-radius:16px;padding:18px 20px;margin-bottom:18px;box-shadow:0 3px 10px rgba(0,0,0,.06)">'
+    + '<div style="background:#fff;border:1px solid var(--brd);border-radius:16px;padding:18px 20px;margin-bottom:18px;box-shadow:0 3px 10px rgba(0,0,0,.06);transition:all .2s ease;cursor:pointer;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.15s"'
+      + ' onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 6px 18px rgba(0,0,0,.12)\'"'
+      + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.06)\'">'
       + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:10px">📅 Próxima Aula</div>'
       + (proximaAula === 'Nenhuma aula agendada'
           ? '<div style="font-size:13px;color:var(--cin);font-style:italic;opacity:.7;text-align:center;padding:4px 0">Nenhuma aula agendada no momento</div>'
@@ -3992,7 +4011,7 @@ async function renderAlunoInicio() {
     + '</div>'
 
     /* ── Alertas ── */
-    + '<div style="margin-bottom:20px">'
+    + '<div style="margin-bottom:20px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.2s">'
       + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:10px">Notificações</div>'
       + alertasHtml
     + '</div>';
