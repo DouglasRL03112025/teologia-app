@@ -3813,11 +3813,11 @@ async function renderAlunoInicio() {
   var pagou    = registroAtual && registroAtual.pagou    === true;
   var entregue = registroAtual && registroAtual.entregue === true;
 
-  var statusPag = pagou ? 'Pago' : 'Pendente';
+  var statusPag = pagou ? 'Pagamento confirmado' : 'Pagamento pendente';
   var statusEnt = entregue
     ? 'Entregue'
     : pagou
-      ? 'Aguardando entrega'
+      ? 'Aguardando entrega do material'
       : 'Não liberado';
 
   /* ── 3. PROVA DO LIVRO ATUAL ────────────────────── */
@@ -3846,7 +3846,7 @@ async function renderAlunoInicio() {
   /* ── 4. PRÓXIMA AULA ────────────────────────────── */
   /* Usa D.aulas_log já carregado no sistema (sem nenhuma query nova).
      Fallback: window._agendaAulasPorData se agenda já foi aberta. */
-  var proximaAula = 'Sem aulas futuras';
+  var proximaAula = 'Nenhuma aula agendada';
   try {
     var hojeStr = new Date().toISOString().slice(0, 10);
 
@@ -3885,9 +3885,9 @@ async function renderAlunoInicio() {
   /* ── 5. ALERTAS ─────────────────────────────────── */
   var alertas = [];
   if (!pagou)                      alertas.push({ cls:'vm', ic:'💰', msg:'Pagamento pendente' });
-  if (pagou && !entregue)          alertas.push({ cls:'am', ic:'📦', msg:'Livro aguardando entrega' });
+  if (pagou && !entregue)          alertas.push({ cls:'am', ic:'📦', msg:'Você tem um livro aguardando entrega' });
   if (!regProva || regProva.fez_prova !== true)
-                                   alertas.push({ cls:'am', ic:'📝', msg:'Prova pendente' });
+                                   alertas.push({ cls:'am', ic:'📝', msg:'Você tem uma prova pendente' });
 
   /* ── 6. CORES AUXILIARES ─────────────────────────── */
   function corPag(p)  { return p ? '#16a34a' : '#dc2626'; }
@@ -3955,7 +3955,7 @@ async function renderAlunoInicio() {
       + '<div style="background:' + bgPag(pagou) + ';border:1px solid ' + brdPag(pagou) + ';border-radius:var(--r);padding:13px 10px;text-align:center">'
         + '<div style="font-size:20px;margin-bottom:5px">💰</div>'
         + '<div style="font-size:12px;font-weight:700;color:' + corPag(pagou) + '">' + statusPag + '</div>'
-        + '<div style="font-size:10px;color:var(--cin);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Pagamento</div>'
+        + '<div style="font-size:10px;color:var(--cin);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Livro atual</div>'
       + '</div>'
 
       /* Entrega */
