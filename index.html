@@ -3930,61 +3930,70 @@ async function renderAlunoInicio() {
   /* ── 7. HTML DO DASHBOARD ────────────────────────── */
   var alertasHtml = alertas.length
     ? alertas.map(function(a){
-        return '<div style="display:flex;align-items:center;gap:8px;background:#fffbeb;border:1px solid #fde68a;border-radius:99px;padding:7px 14px;margin-bottom:7px;font-size:13px;font-weight:600;color:#92400e">'
-          + '<span style="font-size:14px">' + a.ic + '</span>'
-          + '<span>' + a.msg + '</span>'
+        return '<div style="display:flex;align-items:center;gap:10px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:10px 14px;margin-bottom:8px">'
+          + '<span style="font-size:18px;flex-shrink:0">' + a.ic + '</span>'
+          + '<span style="font-size:13px;font-weight:600;color:#78350f;line-height:1.4">' + a.msg + '</span>'
           + '</div>';
       }).join('')
-    : '<div style="display:flex;align-items:center;gap:8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:99px;padding:7px 14px;font-size:13px;font-weight:600;color:#166534"><span>✅</span><span>Tudo em ordem por aqui!</span></div>';
+    : '<div style="display:flex;align-items:center;gap:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:10px 14px">'
+        + '<span style="font-size:18px">✅</span>'
+        + '<span style="font-size:13px;font-weight:600;color:#166534">Tudo em ordem por aqui!</span>'
+      + '</div>';
 
   el.innerHTML =
 
     /* ── Cabeçalho ── */
-    '<div style="margin-bottom:18px">'
-      + '<div style="font-family:\'Lora\',serif;font-size:20px;font-weight:700;color:var(--azul);letter-spacing:-.2px">Meu Painel</div>'
-      + '<div style="font-size:13px;color:var(--cin);margin-top:3px">Acompanhe sua situação no curso</div>'
+    '<div style="margin-bottom:20px">'
+      + '<div style="font-family:\'Lora\',serif;font-size:21px;font-weight:700;color:var(--azul);letter-spacing:-.3px;line-height:1.2">Meu Painel</div>'
+      + '<div style="font-size:13px;color:var(--cin);margin-top:4px;opacity:.85">Acompanhe sua situação no curso</div>'
     + '</div>'
 
-    /* ── Livro atual ── */
-    + '<div style="background:var(--azul);border-radius:16px;padding:18px 20px;margin-bottom:14px;box-shadow:0 4px 14px rgba(26,58,92,.18)">'
-      + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.6);margin-bottom:6px">📖 Livro em estudo</div>'
-      + '<div style="font-size:22px;font-weight:700;color:#fff;font-family:\'Lora\',serif;line-height:1.2">' + livroNome + '</div>'
+    /* ── Hero: Livro atual ── */
+    + '<div style="background:linear-gradient(135deg,#1a3a5c 0%,#0f2540 100%);border-radius:18px;padding:22px 20px 20px;margin-bottom:18px;box-shadow:0 6px 20px rgba(15,37,64,.28);position:relative;overflow:hidden">'
+      + '<div style="position:absolute;top:-18px;right:-18px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.04)"></div>'
+      + '<div style="position:absolute;bottom:-24px;right:18px;width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.06)"></div>'
+      + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.5);margin-bottom:8px">📖 Livro em estudo</div>'
+      + '<div style="font-size:24px;font-weight:700;color:#fff;font-family:\'Lora\',serif;line-height:1.2;margin-bottom:6px">' + livroNome + '</div>'
+      + '<div style="display:inline-block;background:rgba(201,168,76,.18);border:1px solid rgba(201,168,76,.35);border-radius:99px;padding:3px 12px;font-size:11px;font-weight:700;color:#c9a84c;letter-spacing:.4px">EM ANDAMENTO</div>'
     + '</div>'
 
     /* ── Cards de status ── */
-    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px">'
 
       /* Pagamento */
-      + '<div style="background:' + bgPag(pagou) + ';border:1.5px solid ' + brdPag(pagou) + ';border-radius:14px;padding:16px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05)">'
-        + '<div style="font-size:24px;margin-bottom:7px;line-height:1">💰</div>'
-        + '<div style="font-size:11px;font-weight:700;color:' + corPag(pagou) + ';line-height:1.3">' + statusPag + '</div>'
-        + '<div style="font-size:10px;color:var(--cin);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Pagamento</div>'
+      + '<div style="background:' + bgPag(pagou) + ';border:1.5px solid ' + brdPag(pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:transform .15s">'
+        + '<div style="font-size:28px;margin-bottom:8px;line-height:1">💰</div>'
+        + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--cin);opacity:.7;margin-bottom:5px">Pagamento</div>'
+        + '<div style="font-size:12px;font-weight:700;color:' + corPag(pagou) + ';line-height:1.3">' + statusPag + '</div>'
       + '</div>'
 
       /* Entrega */
-      + '<div style="background:' + bgEnt(entregue, pagou) + ';border:1.5px solid ' + brdEnt(entregue, pagou) + ';border-radius:14px;padding:16px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05)">'
-        + '<div style="font-size:24px;margin-bottom:7px;line-height:1">📦</div>'
-        + '<div style="font-size:11px;font-weight:700;color:' + corEnt(entregue, pagou) + ';line-height:1.3">' + statusEnt + '</div>'
-        + '<div style="font-size:10px;color:var(--cin);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Material</div>'
+      + '<div style="background:' + bgEnt(entregue, pagou) + ';border:1.5px solid ' + brdEnt(entregue, pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:transform .15s">'
+        + '<div style="font-size:28px;margin-bottom:8px;line-height:1">📦</div>'
+        + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--cin);opacity:.7;margin-bottom:5px">Material</div>'
+        + '<div style="font-size:12px;font-weight:700;color:' + corEnt(entregue, pagou) + ';line-height:1.3">' + statusEnt + '</div>'
       + '</div>'
 
       /* Prova */
-      + '<div style="background:' + bgProva(regProva) + ';border:1.5px solid ' + brdProva(regProva) + ';border-radius:14px;padding:16px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05)">'
-        + '<div style="font-size:24px;margin-bottom:7px;line-height:1">📝</div>'
-        + '<div style="font-size:11px;font-weight:700;color:' + corProva(regProva) + ';line-height:1.3">' + statusProva + '</div>'
-        + '<div style="font-size:10px;color:var(--cin);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Avaliação</div>'
+      + '<div style="background:' + bgProva(regProva) + ';border:1.5px solid ' + brdProva(regProva) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:transform .15s">'
+        + '<div style="font-size:28px;margin-bottom:8px;line-height:1">📝</div>'
+        + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--cin);opacity:.7;margin-bottom:5px">Avaliação</div>'
+        + '<div style="font-size:12px;font-weight:700;color:' + corProva(regProva) + ';line-height:1.3">' + statusProva + '</div>'
       + '</div>'
     + '</div>'
 
     /* ── Próxima aula ── */
-    + '<div style="background:#fff;border:1px solid var(--brd);border-radius:14px;padding:16px 18px;margin-bottom:14px;box-shadow:0 2px 6px rgba(0,0,0,.05)">'
-      + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--cin);margin-bottom:8px">📅 Próxima Aula</div>'
-      + '<div style="font-size:' + (proximaAula === 'Nenhuma aula agendada' ? '13px;color:var(--cin);font-style:italic' : '14px;color:var(--azul);font-weight:600') + '">' + proximaAula + '</div>'
+    + '<div style="background:#fff;border:1px solid var(--brd);border-radius:16px;padding:18px 20px;margin-bottom:18px;box-shadow:0 3px 10px rgba(0,0,0,.06)">'
+      + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:10px">📅 Próxima Aula</div>'
+      + (proximaAula === 'Nenhuma aula agendada'
+          ? '<div style="font-size:13px;color:var(--cin);font-style:italic;opacity:.7;text-align:center;padding:4px 0">Nenhuma aula agendada no momento</div>'
+          : '<div style="font-size:15px;font-weight:700;color:var(--azul);line-height:1.4">' + proximaAula + '</div>'
+        )
     + '</div>'
 
     /* ── Alertas ── */
-    + '<div style="margin-bottom:16px">'
-      + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--cin);margin-bottom:8px">⚠️ Alertas</div>'
+    + '<div style="margin-bottom:20px">'
+      + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:10px">Notificações</div>'
       + alertasHtml
     + '</div>';
 }
