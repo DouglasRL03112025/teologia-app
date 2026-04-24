@@ -4257,12 +4257,6 @@ async function renderAlunoAgenda(){
     + '}'
     + '</style>'
 
-    /* ── Título ── delay 0s ── */
-    + '<div style="margin-bottom:20px;opacity:0;animation:_fadeUpSafe .4s ease forwards;animation-delay:0s">'
-      + '<div style="font-family:\'Lora\',serif;font-size:22px;font-weight:700;color:var(--azul);letter-spacing:-.3px;line-height:1.2">Agenda de Aulas</div>'
-      + '<div style="font-size:13px;color:var(--cin);margin-top:4px;opacity:.6;letter-spacing:.2px">Histórico e próximas aulas</div>'
-    + '</div>'
-
     /* ── Grid 3 cards ── */
     + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:4px">'
 
@@ -4334,7 +4328,7 @@ async function renderAlunoAgenda(){
         + ` onmouseout="if(!this.classList.contains('cd-selected')){this.style.transform='';this.style.boxShadow=''}"`
         + ` onmousedown="this.style.transform='scale(0.95)'"`
         + ` onmouseup="this.style.transform='scale(1.1)'"`
-        + ` onclick="window._diaSelecionado='${k}';agendaMostrarDia('${k}');renderAlunoAgenda()">${d}</div>`;
+        + ` onclick="window._diaSelecionado='${k}';agendaMostrarDia('${k}')">${d}</div>`;
     }
     elCal.innerHTML = cal;
   }
