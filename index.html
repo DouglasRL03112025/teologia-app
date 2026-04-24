@@ -3930,16 +3930,16 @@ async function renderAlunoInicio() {
   /* ── 7. HTML DO DASHBOARD ────────────────────────── */
   var alertasHtml = alertas.length
     ? alertas.map(function(a){
-        return '<div style="display:flex;align-items:center;gap:10px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:10px 14px;margin-bottom:8px;cursor:pointer;transition:all .2s ease"'
-          + ' onmouseover="this.style.background=\'#fef3c7\';this.style.borderColor=\'#f59e0b\';this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 4px 12px rgba(245,158,11,.15)\'"'
-          + ' onmouseout="this.style.background=\'#fffbeb\';this.style.borderColor=\'#fde68a\';this.style.transform=\'translateY(0)\';this.style.boxShadow=\'none\'">'
-          + '<span style="font-size:18px;flex-shrink:0;transition:transform .2s ease" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'">' + a.ic + '</span>'
+        return '<div style="display:flex;align-items:center;gap:10px;background:#fff8e1;border:1.5px solid #f59e0b;border-radius:16px;padding:12px 16px;margin-bottom:10px;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 6px rgba(0,0,0,.06)"'
+          + ' onmouseover="this.style.background=\'#fef3c7\';this.style.borderColor=\'#d97706\';this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 6px 16px rgba(245,158,11,.18)\'"'
+          + ' onmouseout="this.style.background=\'#fff8e1\';this.style.borderColor=\'#f59e0b\';this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 2px 6px rgba(0,0,0,.06)\'">'
+          + '<span style="font-size:18px;flex-shrink:0;transition:transform .2s cubic-bezier(.4,0,.2,1)" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'">' + a.ic + '</span>'
           + '<span style="font-size:13px;font-weight:600;color:#78350f;line-height:1.4">' + a.msg + '</span>'
           + '</div>';
       }).join('')
-    : '<div style="display:flex;align-items:center;gap:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:10px 14px;transition:all .2s ease"'
-        + ' onmouseover="this.style.background=\'#dcfce7\';this.style.borderColor=\'#86efac\'"'
-        + ' onmouseout="this.style.background=\'#f0fdf4\';this.style.borderColor=\'#bbf7d0\'">'
+    : '<div style="display:flex;align-items:center;gap:10px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:16px;padding:12px 16px;transition:all .2s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 6px rgba(0,0,0,.06)"'
+        + ' onmouseover="this.style.background=\'#dcfce7\';this.style.borderColor=\'#4ade80\'"'
+        + ' onmouseout="this.style.background=\'#f0fdf4\';this.style.borderColor=\'#86efac\'">'
         + '<span style="font-size:18px">✅</span>'
         + '<span style="font-size:13px;font-weight:600;color:#166534">Tudo em ordem por aqui!</span>'
       + '</div>';
@@ -3953,96 +3953,96 @@ async function renderAlunoInicio() {
       + '@keyframes _pulse{0%{opacity:.55}50%{opacity:1}100%{opacity:.55}}'
     + '</style>'
 
-    /* ══ WRAPPER GLOBAL — transição de entrada suave (anti-teleporte) ══ */
-    + '<div style="opacity:0;transform:translateY(8px);animation:_fadeScreen .35s ease forwards;">'
+    /* ══ SKELETON — separado, some ao final via script inline ══ */
+    + '<div id="_skel_dash" style="display:block;flex-direction:column;gap:12px;animation:_pulse 1.2s infinite ease-in-out;margin-bottom:20px">'
+      + '<div style="height:80px;border-radius:16px;background:#e8e8e8;margin-bottom:12px"></div>'
+      + '<div style="height:80px;border-radius:16px;background:#e8e8e8;margin-bottom:12px"></div>'
+      + '<div style="height:80px;border-radius:16px;background:#e8e8e8"></div>'
+    + '</div>'
 
-      /* ── Skeleton loading — 3 blocos simulando cards, somem quando conteúdo renderiza ── */
-      + '<div id="_skel_dash" style="display:flex;flex-direction:column;gap:12px;animation:_pulse 1.2s infinite ease-in-out;margin-bottom:20px">'
-        + '<div style="height:70px;border-radius:12px;background:#eee"></div>'
-        + '<div style="height:70px;border-radius:12px;background:#eee"></div>'
-        + '<div style="height:70px;border-radius:12px;background:#eee"></div>'
-      + '</div>'
+    /* ══ CONTEÚDO REAL — oculto inicialmente, revelado pelo script inline ══ */
+    + '<div id="_real_dash" style="display:none;animation:_fadeScreen .35s ease forwards;">'
 
       /* ── Cabeçalho ── delay 0s ── */
-      + '<div style="margin-bottom:24px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:0s;transition:all .25s ease">'
+      + '<div style="margin-bottom:24px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:0s;transition:all .2s cubic-bezier(.4,0,.2,1)">'
         + '<div style="font-family:\'Lora\',serif;font-size:21px;font-weight:700;color:var(--azul);letter-spacing:-.3px;line-height:1.2">Meu Painel</div>'
-        + '<div style="font-size:13px;color:var(--cin);margin-top:4px;opacity:.85">Acompanhe sua situação no curso</div>'
+        + '<div style="font-size:13px;color:var(--cin);margin-top:4px;opacity:.6;letter-spacing:.3px">Acompanhe sua situação no curso</div>'
       + '</div>'
 
       /* ── Hero: Livro atual ── delay .05s ── */
-      + '<div style="background:linear-gradient(135deg,#1a3a5c 0%,#0f2540 100%);border-radius:18px;padding:24px 22px 22px;margin-bottom:22px;box-shadow:0 6px 20px rgba(15,37,64,.28);position:relative;overflow:hidden;transition:all .25s ease;cursor:pointer;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.05s"'
+      + '<div style="background:linear-gradient(135deg,#1a3a5c 0%,#0f2540 100%);border-radius:16px;padding:24px 22px 22px;margin-bottom:24px;box-shadow:0 6px 20px rgba(15,37,64,.28);position:relative;overflow:hidden;transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.05s"'
         + ' onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 12px 32px rgba(15,37,64,.42)\';this.style.filter=\'brightness(1.06)\'"'
         + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 6px 20px rgba(15,37,64,.28)\';this.style.filter=\'brightness(1)\'"'
-        + ' onmousedown="this.style.transform=\'scale(0.98)\'"'
+        + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
         + ' onmouseup="this.style.transform=\'translateY(-2px)\'">'
         + '<div style="position:absolute;top:-18px;right:-18px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.04)"></div>'
         + '<div style="position:absolute;bottom:-28px;right:22px;width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.06)"></div>'
         + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.5);margin-bottom:10px">📖 Livro em estudo</div>'
-        + '<div style="font-size:24px;font-weight:700;color:#fff;font-family:\'Lora\',serif;line-height:1.2;margin-bottom:8px">' + livroNome + '</div>'
-        + '<div style="display:inline-block;background:rgba(201,168,76,.18);border:1px solid rgba(201,168,76,.35);border-radius:99px;padding:4px 14px;font-size:11px;font-weight:700;color:#c9a84c;letter-spacing:.4px">EM ANDAMENTO</div>'
+        + '<div style="font-size:22px;font-weight:800;color:#fff;font-family:\'Lora\',serif;line-height:1.2;margin-bottom:10px;letter-spacing:.3px">' + livroNome + '</div>'
+        + '<div style="display:inline-block;background:#f4c542;border:none;border-radius:99px;padding:3px 12px;font-size:10px;font-weight:700;color:#5a3a00;letter-spacing:.4px">EM ANDAMENTO</div>'
       + '</div>'
 
       /* ── Cards de status ── delay .1s ── */
-      + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:22px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.1s">'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.1s">'
 
         /* Pagamento */
-        + '<div style="background:' + bgPag(pagou) + ';border:1.5px solid ' + brdPag(pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .25s ease;cursor:pointer"'
-          + ' onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,.15)\';this.style.transform=\'scale(1.02)\'"'
-          + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.08)\';this.style.transform=\'scale(1)\'"'
-          + ' onmousedown="this.style.transform=\'scale(0.98)\'"'
+        + '<div style="background:' + bgPag(pagou) + ';border:1.5px solid ' + brdPag(pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer"'
+          + ' onmouseover="this.style.transform=\'scale(1.02)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,.15)\'"'
+          + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.08)\'"'
+          + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
           + ' onmouseup="this.style.transform=\'scale(1)\'">'
-          + '<div style="font-size:28px;margin-bottom:8px;line-height:1;transition:transform .2s ease" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'">💰</div>'
+          + '<div style="font-size:28px;margin-bottom:8px;line-height:1;transition:transform .2s cubic-bezier(.4,0,.2,1)" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'">💰</div>'
           + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--cin);opacity:.7;margin-bottom:5px">Pagamento</div>'
           + '<div style="font-size:12px;font-weight:700;color:' + corPag(pagou) + ';line-height:1.3">' + statusPag + '</div>'
         + '</div>'
 
         /* Entrega */
-        + '<div style="background:' + bgEnt(entregue, pagou) + ';border:1.5px solid ' + brdEnt(entregue, pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .25s ease;cursor:pointer"'
+        + '<div style="background:' + bgEnt(entregue, pagou) + ';border:1.5px solid ' + brdEnt(entregue, pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer"'
           + ' onmouseover="this.style.transform=\'scale(1.02)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,.15)\'"'
           + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.08)\'"'
-          + ' onmousedown="this.style.transform=\'scale(0.98)\'"'
+          + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
           + ' onmouseup="this.style.transform=\'scale(1)\'">'
-          + '<div style="font-size:28px;margin-bottom:8px;line-height:1;transition:transform .2s ease" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'">📦</div>'
+          + '<div style="font-size:28px;margin-bottom:8px;line-height:1;transition:transform .2s cubic-bezier(.4,0,.2,1)" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'">📦</div>'
           + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--cin);opacity:.7;margin-bottom:5px">Material</div>'
           + '<div style="font-size:12px;font-weight:700;color:' + corEnt(entregue, pagou) + ';line-height:1.3">' + statusEnt + '</div>'
         + '</div>'
 
         /* Prova */
-        + '<div style="background:' + bgProva(regProva) + ';border:1.5px solid ' + brdProva(regProva) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .25s ease;cursor:pointer"'
+        + '<div style="background:' + bgProva(regProva) + ';border:1.5px solid ' + brdProva(regProva) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer"'
           + ' onmouseover="this.style.transform=\'scale(1.02)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,.15)\'"'
           + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.08)\'"'
-          + ' onmousedown="this.style.transform=\'scale(0.98)\'"'
+          + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
           + ' onmouseup="this.style.transform=\'scale(1)\'">'
-          + '<div style="font-size:28px;margin-bottom:8px;line-height:1;transition:transform .2s ease" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'">📝</div>'
+          + '<div style="font-size:28px;margin-bottom:8px;line-height:1;transition:transform .2s cubic-bezier(.4,0,.2,1)" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'">📝</div>'
           + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--cin);opacity:.7;margin-bottom:5px">Avaliação</div>'
           + '<div style="font-size:12px;font-weight:700;color:' + corProva(regProva) + ';line-height:1.3">' + statusProva + '</div>'
         + '</div>'
       + '</div>'
 
       /* ── Próxima aula ── delay .15s ── */
-      + '<div style="background:#fff;border:1px solid var(--brd);border-radius:16px;padding:20px 22px;margin-bottom:22px;box-shadow:0 3px 10px rgba(0,0,0,.06);transition:all .25s ease;cursor:pointer;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.15s"'
+      + '<div style="background:#fff;border:1px solid var(--brd);border-radius:16px;padding:20px 22px;margin-bottom:24px;box-shadow:0 3px 10px rgba(0,0,0,.06);transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.15s"'
         + ' onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,.12)\';this.style.borderColor=\'var(--azul)\'"'
         + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.06)\';this.style.borderColor=\'var(--brd)\'"'
-        + ' onmousedown="this.style.transform=\'scale(0.98)\'"'
+        + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
         + ' onmouseup="this.style.transform=\'translateY(-2px)\'">'
         + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:10px">📅 Próxima Aula</div>'
         + (proximaAula === 'Nenhuma aula agendada'
-            ? '<div style="font-size:13px;color:var(--cin);font-style:italic;opacity:.7;text-align:center;padding:4px 0">Nenhuma aula agendada no momento</div>'
+            ? '<div style="font-size:13px;color:var(--cin);font-style:italic;opacity:.6;text-align:center;padding:4px 0">Você não possui aulas próximas</div>'
             : '<div style="font-size:15px;font-weight:700;color:var(--azul);line-height:1.4">' + proximaAula + '</div>'
           )
       + '</div>'
 
       /* ── Alertas ── delay .2s ── */
-      + '<div style="margin-bottom:28px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.2s;transition:all .25s ease">'
+      + '<div style="margin-bottom:28px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.2s;transition:all .2s cubic-bezier(.4,0,.2,1)">'
         + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:12px">Notificações</div>'
         + alertasHtml
       + '</div>'
 
-    /* ══ FIM WRAPPER GLOBAL ══ */
+    /* ══ FIM CONTEÚDO REAL ══ */
     + '</div>'
 
-    /* ── Remove skeleton imediatamente via display:none (já substituído pelo innerHTML real) ── */
-    + '<script>(function(){var s=document.getElementById("_skel_dash");if(s)s.style.display="none";}());<\/script>';
+    /* ── Script inline: oculta skeleton e exibe conteúdo real sem setTimeout ── */
+    + '<script>(function(){var s=document.getElementById("_skel_dash");var r=document.getElementById("_real_dash");if(s)s.style.display="none";if(r)r.style.display="block";}());<\/script>';
 }
 /* ════ FIM DASHBOARD DO ALUNO ════ */
 
