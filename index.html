@@ -4320,20 +4320,43 @@ async function renderAlunoAgenda(){
   if (elFuturas) {
     const futuras = aulasDoMes.filter(a => a.data >= hojeStr);
     if (futuras.length === 0) {
-      elFuturas.innerHTML = '<div style="text-align:center;font-size:14px;color:var(--cin);font-style:italic;opacity:.6;padding:18px 0">Você não possui aulas agendadas</div>';
+      elFuturas.innerHTML = '<div style="text-align:center;font-size:14px;color:var(--cin);font-style:italic;opacity:.6;padding:24px 0">Você ainda não possui aulas agendadas</div>';
     } else {
       elFuturas.innerHTML = '<div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--azul);margin-bottom:14px;padding-bottom:7px;border-bottom:2px solid var(--azul-c)">📅 Agenda de Aulas</div>'
         + futuras.map(function(a, i) {
             const d = new Date(a.data + 'T12:00:00');
-            const delay = i * 60;
-            return '<div style="background:#fff;border:1px solid var(--brd);border-radius:16px;padding:16px 18px;margin-bottom:12px;box-shadow:0 3px 10px rgba(0,0,0,.06);transition:transform .18s,box-shadow .18s;animation:_fadeUpAgenda .35s ease both;animation-delay:' + delay + 'ms"'
-              + ' onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,.13)\'"'
-              + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.06)\'"'
+            const delay = i * 0.05;
+            const isNext = i === 0;
+            const baseBox = isNext
+              ? '0 10px 26px rgba(0,0,0,.12)'
+              : '0 6px 18px rgba(0,0,0,.08)';
+            const hoverBox = '0 12px 28px rgba(0,0,0,.15)';
+            const badge = isNext
+              ? '<div style="font-size:10px;font-weight:700;background:var(--azul);color:#fff;padding:3px 10px;border-radius:999px;width:fit-content;margin-bottom:6px;letter-spacing:.5px">PRÓXIMA AULA</div>'
+              : '';
+            return '<div style="'
+              + 'background:#fff;'
+              + 'border-radius:18px;'
+              + 'padding:18px 20px;'
+              + 'box-shadow:' + baseBox + ';'
+              + 'margin-bottom:14px;'
+              + 'display:flex;'
+              + 'flex-direction:column;'
+              + 'gap:6px;'
+              + 'transition:all .2s cubic-bezier(.4,0,.2,1);'
+              + 'animation:_fadeUpAgenda .4s ease forwards;'
+              + 'animation-delay:' + delay + 's;'
+              + 'opacity:0;'
+              + (isNext ? 'border:2px solid var(--azul);' : 'border:1px solid transparent;')
+              + '"'
+              + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'' + hoverBox + '\'"'
+              + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'' + baseBox + '\'"'
               + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
-              + ' onmouseup="this.style.transform=\'translateY(-2px)\'">'
-              + '<div style="font-size:13px;font-weight:700;color:var(--azul);margin-bottom:5px">' + DS[d.getDay()] + ', ' + fmtD(d) + (a.hora ? ' — ' + a.hora : '') + '</div>'
-              + '<div style="font-size:14px;font-weight:600;color:var(--txt)">' + (a.descricao || 'Aula programada') + '</div>'
-              + (a.livro ? '<div style="font-size:12px;color:var(--cin);opacity:.7;margin-top:3px">' + a.livro + '</div>' : '')
+              + ' onmouseup="this.style.transform=\'translateY(-3px)\'">'
+              + badge
+              + '<div style="font-size:14px;font-weight:700;color:var(--azul)">' + DS[d.getDay()] + ', ' + fmtD(d) + (a.hora ? ' — ' + a.hora : '') + '</div>'
+              + '<div style="font-size:15px;font-weight:700;color:#111">' + (a.descricao || 'Aula programada') + '</div>'
+              + (a.livro ? '<div style="font-size:12px;color:var(--cin);opacity:.7">' + a.livro + '</div>' : '')
               + '</div>';
           }).join('');
     }
