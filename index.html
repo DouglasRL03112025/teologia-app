@@ -210,18 +210,19 @@ select.inp{cursor:pointer}
 .bf.az{background:var(--azul)}.bf.vd{background:var(--vd)}.bf.do{background:var(--dou)}
 
 /* ── CALENDÁRIO ── */
-.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
-.cd{aspect-ratio:1;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;transition:all .2s ease;cursor:pointer;position:relative}
-.cd:not(.hd):not(.vz):hover{background:rgba(0,0,0,.05);transform:scale(1.08)}
-.cd.hd{background:none;color:var(--cin);font-size:10px;cursor:default;font-weight:700;letter-spacing:.3px}.cd.hd:hover{background:none;transform:none}
-.cd.vz{background:transparent;cursor:default}.cd.vz:hover{background:transparent;transform:none}
-.cd.cp{background:var(--vd);color:#fff;font-weight:700;box-shadow:0 3px 8px rgba(45,122,74,.25)}
-.cd.cf{background:var(--vm);color:#fff;font-weight:700;box-shadow:0 3px 8px rgba(184,50,50,.2)}
-.cd-hoje{background:var(--azul)!important;color:#fff!important;font-weight:700!important;box-shadow:0 4px 12px rgba(26,58,92,.3)!important;border:none!important}
-.cd-aula{background:rgba(26,58,92,.1)!important;border:1.5px solid var(--azul)!important;font-weight:700!important;box-shadow:0 0 0 2px rgba(26,58,92,.08)!important;color:var(--azul)!important}
-.cd-aula::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--azul);opacity:.7}
-.cd-hoje-aula{background:var(--azul)!important;color:#fff!important;font-weight:700!important;box-shadow:0 0 0 3px rgba(26,58,92,.25),0 4px 14px rgba(26,58,92,.3)!important;border:none!important}
-.cd-hoje-aula::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.8)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:12px}
+.cd{aspect-ratio:1;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer;position:relative;background:#fff}
+.cd.hd{background:none;color:var(--cin);font-size:10px;cursor:default;font-weight:700;letter-spacing:.4px;opacity:.7}
+.cd.hd:hover{background:none;transform:none;box-shadow:none}
+.cd.vz{background:transparent;cursor:default}
+.cd.vz:hover{background:transparent;transform:none;box-shadow:none}
+.cd.cp{background:var(--vd)!important;color:#fff!important;font-weight:700!important;box-shadow:0 4px 10px rgba(45,122,74,.3)!important}
+.cd.cf{background:var(--vm)!important;color:#fff!important;font-weight:700!important;box-shadow:0 4px 10px rgba(184,50,50,.25)!important}
+.cd-aula{background:rgba(26,58,92,.08)!important;border:1px solid rgba(26,58,92,.25)!important;color:var(--azul)!important;font-weight:700!important}
+.cd-aula::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--azul);opacity:.75}
+.cd-hoje{background:var(--azul)!important;color:#fff!important;font-weight:700!important;box-shadow:0 6px 18px rgba(26,58,92,.4)!important;border:none!important}
+.cd-hoje-aula{background:var(--azul)!important;color:#fff!important;font-weight:700!important;box-shadow:0 0 0 2px #fff,0 8px 22px rgba(26,58,92,.5)!important;border:none!important}
+.cd-hoje-aula::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.9)}
 
 /* ── AGENDA ── */
 .aula-item{background:#fff;border-radius:var(--r);padding:14px;margin-bottom:9px;border:1px solid var(--brd);border-left:4px solid var(--azul);box-shadow:var(--s)}
@@ -722,8 +723,12 @@ select.inp{cursor:pointer}
       <div class="tit">Agenda de Aulas</div>
       <p class="sub">Histórico e próximas aulas</p>
       <div id="al-agenda-dashboard" style="margin-bottom:16px"></div>
-      <div class="card" id="al-agenda-cal-card" style="margin-bottom:24px;border-radius:18px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08);border:1px solid var(--brd)">
-        <div class="dn" style="margin-bottom:10px;background:none;border:none;padding:0">
+      <div class="card" id="al-agenda-cal-card" style="margin-bottom:28px;border-radius:20px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.08);background:#fff;border:1px solid var(--brd)">
+        <div style="margin-bottom:14px">
+          <div style="font-family:'Lora',serif;font-size:20px;font-weight:700;color:var(--azul);line-height:1.2">Seu calendário de aulas</div>
+          <div style="font-size:12px;color:var(--cin);opacity:.65;margin-top:3px">Toque em um dia para ver os detalhes</div>
+        </div>
+        <div class="dn" style="margin-bottom:12px;background:none;border:none;padding:0">
           <button class="dnb" onclick="agendaMudarMes(-1)">‹</button>
           <span class="dnt" id="al-agenda-cal-mes"></span>
           <button class="dnb" onclick="agendaMudarMes(1)">›</button>
@@ -4319,7 +4324,14 @@ async function renderAlunoAgenda(){
       else if (isHoje && temAula) { cls += ' cd-hoje-aula'; }
       else if (isHoje)       { cls += ' cd-hoje'; }
       else if (temAula)      { cls += ' cd-aula'; }
-      cal += `<div class="${cls}" style="${inlineStyle}" onclick="agendaMostrarDia('${k}')">${d}</div>`;
+      const isEspecial = cls.includes('cp') || cls.includes('cf') || cls.includes('cd-hoje') || cls.includes('cd-aula');
+      const hoverScale = isEspecial ? 'scale(1.1)' : 'scale(1.1)';
+      cal += `<div class="${cls}" style="${inlineStyle}"`
+        + ` onmouseover="if(!this.classList.contains('hd')&&!this.classList.contains('vz')){this.style.transform='scale(1.1)';this.style.boxShadow='0 4px 12px rgba(0,0,0,.15)'}"`
+        + ` onmouseout="this.style.transform='';this.style.boxShadow=''"`
+        + ` onmousedown="this.style.transform='scale(0.95)'"`
+        + ` onmouseup="this.style.transform='scale(1.1)'"`
+        + ` onclick="agendaMostrarDia('${k}')">${d}</div>`;
     }
     elCal.innerHTML = cal;
   }
