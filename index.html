@@ -4396,18 +4396,33 @@ function agendaMostrarDia(k) {
   const v = pMap[k];
   const aula = aMap[k];
   const d = new Date(k + 'T12:00:00');
-  let html = `<div style="background:var(--azul-c);border-radius:var(--r);padding:12px 14px;font-size:14px">`;
-  html += `<div style="font-weight:600;color:var(--azul);margin-bottom:6px">📅 ${DS[d.getDay()]}, ${fmtD(d)}</div>`;
-  if (v === true)  html += `<div style="color:var(--vd);font-weight:600">✅ Presença confirmada</div><div style="color:var(--vd);font-size:13px;margin-top:2px">Status: Presente</div>`;
-  else if (v === false) html += `<div style="color:var(--vm);font-weight:600">❌ Falta registrada</div><div style="color:var(--vm);font-size:13px;margin-top:2px">Status: Faltou</div>`;
-  if (aula && v === undefined) html += `<div style="color:var(--am);font-size:13px;margin-top:2px;font-weight:500">Status: Aula programada</div>`;
+  // Badge de status (Alteração 6)
+  let badgeHtml = '';
+  if (v === true)        badgeHtml = `<span style="background:#e8f7ee;color:#1f7a4c;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;display:inline-block;margin-top:8px">✅ Presente</span>`;
+  else if (v === false)  badgeHtml = `<span style="background:#fdeaea;color:#a83232;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;display:inline-block;margin-top:8px">❌ Falta registrada</span>`;
+  else if (aula)         badgeHtml = `<span style="background:#fff8e6;color:#a06c00;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;display:inline-block;margin-top:8px">📅 Aula programada</span>`;
+  else                   badgeHtml = `<span style="background:#f2f2f2;color:#666;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;display:inline-block;margin-top:8px">Sem registro</span>`;
+
+  // Conteúdo da aula (Alterações 4 e 5)
+  let aulaHtml = '';
   if (aula) {
-    html += `<div style="margin-top:6px;color:var(--azul)"><strong>📖 ${aula.livro || 'Livro'}</strong></div>`;
-    if (aula.descricao) html += `<div style="color:var(--cin);margin-top:2px">${aula.descricao}</div>`;
-    if (aula.hora)      html += `<div style="color:var(--cin);margin-top:2px">🕐 ${aula.hora}</div>`;
+    aulaHtml += `<div style="font-size:16px;font-weight:800;color:#111;margin-bottom:4px">📖 ${aula.livro || 'Livro'}</div>`;
+    if (aula.descricao) aulaHtml += `<div style="font-size:12px;opacity:.6">${aula.descricao}</div>`;
+    if (aula.hora)      aulaHtml += `<div style="font-size:12px;opacity:.6">🕐 ${aula.hora}</div>`;
   }
-  if (v === undefined && !aula) html += `<div style="color:var(--cin)">Sem registro neste dia.</div>`;
-  html += '</div>';
+
+  // Montagem do innerHTML com animação (Alterações 1–7)
+  let html = `<style>@keyframes _fadeSlideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}</style>`;
+  html += `<div style="animation:_fadeSlideIn .25s cubic-bezier(.4,0,.2,1) forwards">`;
+  html += `<div style="background:#fff;border-radius:18px;padding:18px 20px;box-shadow:0 6px 18px rgba(0,0,0,.08);margin-top:10px;transition:box-shadow .2s,transform .15s;cursor:default"
+    onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 10px 28px rgba(0,0,0,.14)'"
+    onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 6px 18px rgba(0,0,0,.08)'"
+    onmousedown="this.style.transform='scale(0.97)'"
+    onmouseup="this.style.transform='translateY(-2px)'">`;
+  html += `<div style="font-size:14px;font-weight:700;color:var(--azul);margin-bottom:6px">📅 ${DS[d.getDay()]}, ${fmtD(d)}</div>`;
+  html += aulaHtml;
+  html += badgeHtml;
+  html += `</div></div>`;
   elDetalhe.innerHTML = html;
 }
 
