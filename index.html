@@ -41,6 +41,8 @@ main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
 .tela.on{display:block}
 @keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 @keyframes _fadeUpAgenda{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes _slideLeftIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes _slideRightIn{from{transform:translateX(-40px);opacity:0}to{transform:translateX(0);opacity:1}}
 
 /* ── LOGIN ── */
 #pg-login{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px 20px;background:#f4f6f8 !important}
@@ -4330,7 +4332,29 @@ async function renderAlunoAgenda(){
         + ` onmouseup="this.style.transform='scale(1.1)'"`
         + ` onclick="window._diaSelecionado='${k}';agendaMostrarDia('${k}')">${d}</div>`;
     }
-    elCal.innerHTML = cal;
+
+    const mesAtualKey = mes + '-' + ano;
+    if (!window._mesAnteriorKey) window._mesAnteriorKey = mesAtualKey;
+    let anim = '_slideLeftIn';
+    if (window._mesAnteriorKey) {
+      const [mAnt, aAnt] = window._mesAnteriorKey.split('-').map(Number);
+      if (ano < aAnt || (ano === aAnt && mes < mAnt)) {
+        anim = '_slideRightIn';
+      }
+    }
+    window._mesAnteriorKey = mesAtualKey;
+
+    elCal.innerHTML =
+      '<div id="_cal_wrap" style="position:relative;overflow:hidden">'
+        + '<div id="_cal_inner" style="will-change:transform">'
+          + cal
+        + '</div>'
+      + '</div>';
+
+    const elInner = document.getElementById('_cal_inner');
+    if (elInner) {
+      elInner.style.animation = anim + ' .25s cubic-bezier(.4,0,.2,1)';
+    }
   }
 
   // ── AULAS FUTURAS DO MÊS ──
