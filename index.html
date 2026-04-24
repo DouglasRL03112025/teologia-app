@@ -4344,17 +4344,10 @@ async function renderAlunoAgenda(){
     }
     window._mesAnteriorKey = mesAtualKey;
 
-    elCal.innerHTML =
-      '<div id="_cal_wrap" style="position:relative;overflow:hidden">'
-        + '<div id="_cal_inner" style="will-change:transform">'
-          + cal
-        + '</div>'
-      + '</div>';
-
-    const elInner = document.getElementById('_cal_inner');
-    if (elInner) {
-      elInner.style.animation = anim + ' .25s cubic-bezier(.4,0,.2,1)';
-    }
+    elCal.innerHTML = cal;
+    elCal.style.animation = 'none';
+    void elCal.offsetWidth;
+    elCal.style.animation = anim + ' .25s cubic-bezier(.4,0,.2,1)';
   }
 
   // ── AULAS FUTURAS DO MÊS ──
