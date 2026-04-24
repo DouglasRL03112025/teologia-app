@@ -40,6 +40,7 @@ main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
 .tela{display:none;animation:fi .2s ease}
 .tela.on{display:block}
 @keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes _fadeUpAgenda{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── LOGIN ── */
 #pg-login{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px 20px;background:#f4f6f8 !important}
@@ -4276,18 +4277,21 @@ async function renderAlunoAgenda(){
   if (elFuturas) {
     const futuras = aulasDoMes.filter(a => a.data >= hojeStr);
     if (futuras.length === 0) {
-      elFuturas.innerHTML = '<p style="color:var(--cin);font-size:14px;text-align:center;padding:12px 0">Nenhuma aula programada para este mês.</p>';
+      elFuturas.innerHTML = '<div style="text-align:center;font-size:14px;color:var(--cin);font-style:italic;opacity:.6;padding:18px 0">Você não possui aulas agendadas</div>';
     } else {
-      elFuturas.innerHTML = '<div class="card-t" style="margin-bottom:8px">📆 Próximas aulas do mês</div>'
-        + futuras.map(a => {
+      elFuturas.innerHTML = '<div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--azul);margin-bottom:14px;padding-bottom:7px;border-bottom:2px solid var(--azul-c)">📅 Agenda de Aulas</div>'
+        + futuras.map(function(a, i) {
             const d = new Date(a.data + 'T12:00:00');
-            return '<div class="aula-item" style="border-left-color:var(--dou)">'
-              + '<div class="aula-mod">' + (a.livro || 'Livro') + '</div>'
-              + '<div class="aula-nome">' + (a.descricao || 'Aula programada') + '</div>'
-              + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">'
-              + '<span class="aula-data">' + DS[d.getDay()] + ', ' + fmtD(d) + (a.hora ? ' — ' + a.hora : '') + '</span>'
-              + '<span class="bdg ba">📌 Agendada</span>'
-              + '</div></div>';
+            const delay = i * 60;
+            return '<div style="background:#fff;border:1px solid var(--brd);border-radius:16px;padding:16px 18px;margin-bottom:12px;box-shadow:0 3px 10px rgba(0,0,0,.06);transition:transform .18s,box-shadow .18s;animation:_fadeUpAgenda .35s ease both;animation-delay:' + delay + 'ms"'
+              + ' onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,.13)\'"'
+              + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.06)\'"'
+              + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
+              + ' onmouseup="this.style.transform=\'translateY(-2px)\'">'
+              + '<div style="font-size:13px;font-weight:700;color:var(--azul);margin-bottom:5px">' + DS[d.getDay()] + ', ' + fmtD(d) + (a.hora ? ' — ' + a.hora : '') + '</div>'
+              + '<div style="font-size:14px;font-weight:600;color:var(--txt)">' + (a.descricao || 'Aula programada') + '</div>'
+              + (a.livro ? '<div style="font-size:12px;color:var(--cin);opacity:.7;margin-top:3px">' + a.livro + '</div>' : '')
+              + '</div>';
           }).join('');
     }
   }
