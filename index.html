@@ -4225,22 +4225,56 @@ async function renderAlunoAgenda(){
   // ── DASHBOARD ──
   const dashEl = document.getElementById('al-agenda-dashboard');
   if (dashEl) dashEl.innerHTML =
-    '<div class="dash-grid">'
-    + '<div style="background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:14px 12px;box-shadow:var(--s);text-align:center">'
-    + '<div style="font-size:20px;margin-bottom:4px">📚</div>'
-    + '<div id="dash-livros" style="font-size:22px;font-weight:700;color:var(--azul);font-family:Lora,serif">' + livrosRec + '<span style="font-size:13px;font-weight:400;color:var(--cin)">/' + totalLivros + '</span></div>'
-    + '<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Livros</div>'
+    /* ── keyframes autossuficientes — não dependem de CSS externo ── */
+    '<style>'
+    + '@keyframes _fadeUpSafe {'
+    + '  from { opacity:0; transform:translateY(10px); }'
+    + '  to   { opacity:1; transform:translateY(0); }'
+    + '}'
+    + '</style>'
+
+    /* ── Título ── delay 0s ── */
+    + '<div style="margin-bottom:20px;opacity:0;animation:_fadeUpSafe .4s ease forwards;animation-delay:0s">'
+      + '<div style="font-family:\'Lora\',serif;font-size:22px;font-weight:700;color:var(--azul);letter-spacing:-.3px;line-height:1.2">Agenda de Aulas</div>'
+      + '<div style="font-size:13px;color:var(--cin);margin-top:4px;opacity:.6;letter-spacing:.2px">Histórico e próximas aulas</div>'
     + '</div>'
-    + '<div style="background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:14px 12px;box-shadow:var(--s);text-align:center">'
-    + '<div style="font-size:20px;margin-bottom:4px">📊</div>'
-    + '<div style="font-size:22px;font-weight:700;font-family:Lora,serif;color:' + corPres + '">' + percPres + '<span style="font-size:13px;font-weight:400;color:var(--cin)">%</span></div>'
-    + '<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Presença</div>'
-    + '</div>'
-    + '<div style="background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:14px 12px;box-shadow:var(--s);text-align:center">'
-    + '<div style="font-size:20px;margin-bottom:4px">📝</div>'
-    + '<div id="dash-provas" style="font-size:22px;font-weight:700;color:var(--azul);font-family:Lora,serif">' + provasFeitas + '<span style="font-size:13px;font-weight:400;color:var(--cin)">/' + totalProvas + '</span></div>'
-    + '<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Provas</div>'
-    + '</div>'
+
+    /* ── Grid 3 cards ── */
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:4px">'
+
+      /* Card Livros — delay .05s */
+      + '<div style="background:#fff;border-radius:16px;padding:18px 10px;box-shadow:0 4px 14px rgba(0,0,0,.08);text-align:center;cursor:pointer;transition:transform .18s,box-shadow .18s;opacity:0;animation:_fadeUpSafe .4s ease forwards;animation-delay:.05s"'
+        + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 10px 24px rgba(0,0,0,.14)\'"'
+        + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 4px 14px rgba(0,0,0,.08)\'"'
+        + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
+        + ' onmouseup="this.style.transform=\'translateY(-3px)\'">'
+        + '<div style="font-size:26px;margin-bottom:8px;line-height:1">📚</div>'
+        + '<div id="dash-livros" style="font-size:18px;font-weight:800;color:var(--azul);font-family:\'Lora\',serif;line-height:1.1">' + livrosRec + '<span style="font-size:12px;font-weight:400;color:var(--cin)">/' + totalLivros + '</span></div>'
+        + '<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:5px;opacity:.6">Livros</div>'
+      + '</div>'
+
+      /* Card Presença — delay .1s */
+      + '<div style="background:#fff;border-radius:16px;padding:18px 10px;box-shadow:0 4px 14px rgba(0,0,0,.08);text-align:center;cursor:pointer;transition:transform .18s,box-shadow .18s;opacity:0;animation:_fadeUpSafe .4s ease forwards;animation-delay:.1s"'
+        + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 10px 24px rgba(0,0,0,.14)\'"'
+        + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 4px 14px rgba(0,0,0,.08)\'"'
+        + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
+        + ' onmouseup="this.style.transform=\'translateY(-3px)\'">'
+        + '<div style="font-size:26px;margin-bottom:8px;line-height:1">📊</div>'
+        + '<div style="font-size:18px;font-weight:800;font-family:\'Lora\',serif;color:' + corPres + ';line-height:1.1">' + percPres + '<span style="font-size:12px;font-weight:400;color:var(--cin)">%</span></div>'
+        + '<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:5px;opacity:.6">Presença</div>'
+      + '</div>'
+
+      /* Card Provas — delay .15s */
+      + '<div style="background:#fff;border-radius:16px;padding:18px 10px;box-shadow:0 4px 14px rgba(0,0,0,.08);text-align:center;cursor:pointer;transition:transform .18s,box-shadow .18s;opacity:0;animation:_fadeUpSafe .4s ease forwards;animation-delay:.15s"'
+        + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 10px 24px rgba(0,0,0,.14)\'"'
+        + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 4px 14px rgba(0,0,0,.08)\'"'
+        + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
+        + ' onmouseup="this.style.transform=\'translateY(-3px)\'">'
+        + '<div style="font-size:26px;margin-bottom:8px;line-height:1">📝</div>'
+        + '<div id="dash-provas" style="font-size:18px;font-weight:800;color:var(--azul);font-family:\'Lora\',serif;line-height:1.1">' + provasFeitas + '<span style="font-size:12px;font-weight:400;color:var(--cin)">/' + totalProvas + '</span></div>'
+        + '<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:5px;opacity:.6">Provas</div>'
+      + '</div>'
+
     + '</div>';
 
   // ── CALENDÁRIO INTERATIVO ──
