@@ -3949,19 +3949,10 @@ async function renderAlunoInicio() {
     /* ── keyframes inline (todos os efeitos visuais) ── */
     '<style>'
       + '@keyframes _fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}'
-      + '@keyframes _fadeScreen{to{opacity:1;transform:translateY(0)}}'
-      + '@keyframes _pulse{0%{opacity:.55}50%{opacity:1}100%{opacity:.55}}'
     + '</style>'
 
-    /* ══ SKELETON — separado, some ao final via script inline ══ */
-    + '<div id="_skel_dash" style="display:block;flex-direction:column;gap:12px;animation:_pulse 1.2s infinite ease-in-out;margin-bottom:20px">'
-      + '<div style="height:80px;border-radius:16px;background:#e8e8e8;margin-bottom:12px"></div>'
-      + '<div style="height:80px;border-radius:16px;background:#e8e8e8;margin-bottom:12px"></div>'
-      + '<div style="height:80px;border-radius:16px;background:#e8e8e8"></div>'
-    + '</div>'
-
-    /* ══ CONTEÚDO REAL — oculto inicialmente, revelado pelo script inline ══ */
-    + '<div id="_real_dash" style="display:none;animation:_fadeScreen .35s ease forwards;">'
+    /* ══ CONTEÚDO REAL — exibido imediatamente, animado via CSS ══ */
+    + '<div>'
 
       /* ── Cabeçalho ── delay 0s ── */
       + '<div style="margin-bottom:24px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:0s;transition:all .2s cubic-bezier(.4,0,.2,1)">'
@@ -4039,10 +4030,7 @@ async function renderAlunoInicio() {
       + '</div>'
 
     /* ══ FIM CONTEÚDO REAL ══ */
-    + '</div>'
-
-    /* ── Script inline: oculta skeleton e exibe conteúdo real sem setTimeout ── */
-    + '<script>(function(){var s=document.getElementById("_skel_dash");var r=document.getElementById("_real_dash");if(s)s.style.display="none";if(r)r.style.display="block";}());<\/script>';
+    + '</div>';
 }
 /* ════ FIM DASHBOARD DO ALUNO ════ */
 
