@@ -4304,7 +4304,7 @@ async function renderAlunoAgenda(){
   if (elCal) {
     const dim = new Date(ano, mes, 0).getDate();
     const p1  = new Date(ano, mes - 1, 1).getDay();
-    const hojeK = hojeStr;
+    const hojeK = hoje.toISOString().slice(0, 10);
     let cal = DS.map(d => `<div class="cd hd">${d}</div>`).join('');
     for (let i = 0; i < p1; i++) cal += '<div class="cd vz"></div>';
     for (let d = 1; d <= dim; d++) {
