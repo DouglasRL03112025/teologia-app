@@ -223,6 +223,7 @@ select.inp{cursor:pointer}
 .cd-hoje{background:var(--azul)!important;color:#fff!important;font-weight:700!important;box-shadow:0 6px 18px rgba(26,58,92,.4)!important;border:none!important}
 .cd-hoje-aula{background:var(--azul)!important;color:#fff!important;font-weight:700!important;box-shadow:0 0 0 2px #fff,0 8px 22px rgba(26,58,92,.5)!important;border:none!important}
 .cd-hoje-aula::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.9)}
+.cd-selected{border:2px solid var(--azul)!important;background:rgba(26,58,92,.12)!important;box-shadow:0 0 0 2px rgba(26,58,92,.15)!important;transform:scale(1.08)!important;color:var(--azul)!important;font-weight:700!important}
 
 /* ── AGENDA ── */
 .aula-item{background:#fff;border-radius:var(--r);padding:14px;margin-bottom:9px;border:1px solid var(--brd);border-left:4px solid var(--azul);box-shadow:var(--s)}
@@ -4190,6 +4191,7 @@ window._agendaMes = null;
 function agendaMudarMes(delta) {
   if (!window._agendaMes) window._agendaMes = new Date(hj().getFullYear(), hj().getMonth(), 1);
   window._agendaMes = new Date(window._agendaMes.getFullYear(), window._agendaMes.getMonth() + delta, 1);
+  window._diaSelecionado = null;
   renderAlunoAgenda();
 }
 
@@ -4324,14 +4326,15 @@ async function renderAlunoAgenda(){
       else if (isHoje && temAula) { cls += ' cd-hoje-aula'; }
       else if (isHoje)       { cls += ' cd-hoje'; }
       else if (temAula)      { cls += ' cd-aula'; }
+      if (window._diaSelecionado === k) { cls += ' cd-selected'; }
       const isEspecial = cls.includes('cp') || cls.includes('cf') || cls.includes('cd-hoje') || cls.includes('cd-aula');
       const hoverScale = isEspecial ? 'scale(1.1)' : 'scale(1.1)';
       cal += `<div class="${cls}" style="${inlineStyle}"`
         + ` onmouseover="if(!this.classList.contains('hd')&&!this.classList.contains('vz')){this.style.transform='scale(1.1)';this.style.boxShadow='0 4px 12px rgba(0,0,0,.15)'}"`
-        + ` onmouseout="this.style.transform='';this.style.boxShadow=''"`
+        + ` onmouseout="if(!this.classList.contains('cd-selected')){this.style.transform='';this.style.boxShadow=''}"`
         + ` onmousedown="this.style.transform='scale(0.95)'"`
         + ` onmouseup="this.style.transform='scale(1.1)'"`
-        + ` onclick="agendaMostrarDia('${k}')">${d}</div>`;
+        + ` onclick="window._diaSelecionado='${k}';agendaMostrarDia('${k}');renderAlunoAgenda()">${d}</div>`;
     }
     elCal.innerHTML = cal;
   }
