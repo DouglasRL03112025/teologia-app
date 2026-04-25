@@ -1382,6 +1382,7 @@ function setFiltroLivros(tipo) {
 /* ════ PAGAMENTOS VIA LIVROS (adicionado) ════ */
 
 async function renderPagamentosAlunoViaLivros() {
+  console.log('🔥 RENDER PAGAMENTOS EXECUTOU');
   const container = document.getElementById('aluno-pagamentos');
   if (!container) return;
   container.innerHTML = 'Carregando pagamentos...';
@@ -1464,7 +1465,9 @@ async function renderPagamentosAlunoViaLivros() {
   const qtdPendentes = classificados.filter(l => l.tipo === 'pendente' || l.tipo === 'atrasado').length;
 
   // ── 6) Renderizar ──
-  container.innerHTML = `
+  console.log('🔥 CONTAINER:', container);
+  container.innerHTML = '<div style="padding:40px;font-size:20px;color:red">TESTE PAGAMENTOS</div>';
+  /* TEMPORÁRIO — conteúdo real comentado durante diagnóstico
     <div style="
       background:linear-gradient(180deg,#fff,#f7faff);
       border-radius:20px;
@@ -1563,7 +1566,7 @@ async function renderPagamentosAlunoViaLivros() {
         </div>
       `;
     }).join('')}
-  `;
+  */
 }
 
 /* ════ FIM PAGAMENTOS VIA LIVROS ════ */
