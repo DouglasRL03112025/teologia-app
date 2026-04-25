@@ -363,6 +363,29 @@ select.inp{cursor:pointer}
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ── RIPPLE EFFECT ── */
+.ripple-target {
+  position: relative;
+  overflow: hidden;
+}
+.ripple-target:active {
+  transform: scale(0.97);
+}
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(0,0,0,.12);
+  transform: scale(0);
+  animation: rippleAnim .5s ease-out;
+  pointer-events: none;
+}
+@keyframes rippleAnim {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
 </style>
 </head>
 <body>
@@ -388,7 +411,7 @@ select.inp{cursor:pointer}
         <label style="font-size:15px;font-weight:500">Senha</label>
         <input class="inp" id="senha" type="password" placeholder="Digite sua senha">
       </div>
-      <button class="btn bp" onclick="loginAluno()" style="font-size:17px;padding:18px;font-weight:600;margin-bottom:12px">Entrar</button>
+      <button class="btn bp ripple-target" onclick="loginAluno()" style="font-size:17px;padding:18px;font-weight:600;margin-bottom:12px">Entrar</button>
       <!-- ════ FIM LOGIN ════ -->
       <div class="login-divider">ou</div>
       <button onclick="abrirLoginAdmin()" style="background:none;border:1.5px solid var(--brd);border-radius:var(--r);width:100%;padding:12px;font-size:14px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;color:var(--cin);transition:all .2s" onmouseover="this.style.borderColor='var(--azul)';this.style.color='var(--azul)'" onmouseout="this.style.borderColor='var(--brd)';this.style.color='var(--cin)'">
@@ -414,10 +437,10 @@ select.inp{cursor:pointer}
         <label>Senha</label>
         <input class="inp" id="admin-senha" type="password" placeholder="Digite a senha">
       </div>
-      <button class="btn bp" onclick="loginAdmin()">
+      <button class="btn bp ripple-target" onclick="loginAdmin()">
         Entrar como Admin
       </button>
-      <button class="btn bs" onclick="voltarParaLoginAluno()">
+      <button class="btn bs ripple-target" onclick="voltarParaLoginAluno()">
         ← Voltar
       </button>
     </div>
@@ -445,17 +468,17 @@ select.inp{cursor:pointer}
       <div class="g4" id="a-metricas"></div>
       <div class="sl">Ações rápidas</div>
       <div class="ga">
-        <button class="ac dest" onclick="irAdmin('presenca')"><span class="ac-ic">📋</span>Lançar Presença</button>
-        <button class="ac" onclick="irAdmin('pagamentos')"><span class="ac-ic">💰</span>Pagamentos</button>
-        <button class="ac" onclick="irAdmin('alunos')"><span class="ac-ic">👥</span>Ver Alunos</button>
-        <button class="ac" onclick="irAdmin('relatorios')"><span class="ac-ic">📊</span>Relatórios</button>
-        <button class="ac" onclick="irAdmin('relatorio')"><span class="ac-ic">👤</span>Rel. por Aluno</button>
-        <button class="ac" onclick="irAdmin('aulas')"><span class="ac-ic">📚</span>Gerir Aulas</button>
+        <button class="ac dest ripple-target" onclick="irAdmin('presenca')"><span class="ac-ic">📋</span>Lançar Presença</button>
+        <button class="ac ripple-target" onclick="irAdmin('pagamentos')"><span class="ac-ic">💰</span>Pagamentos</button>
+        <button class="ac ripple-target" onclick="irAdmin('alunos')"><span class="ac-ic">👥</span>Ver Alunos</button>
+        <button class="ac ripple-target" onclick="irAdmin('relatorios')"><span class="ac-ic">📊</span>Relatórios</button>
+        <button class="ac ripple-target" onclick="irAdmin('relatorio')"><span class="ac-ic">👤</span>Rel. por Aluno</button>
+        <button class="ac ripple-target" onclick="irAdmin('aulas')"><span class="ac-ic">📚</span>Gerir Aulas</button>
         <!-- TEMPORÁRIO: remover após vinculação -->
-        <button class="ac oculto-auth" id="btn-vincular-auth" onclick="vincularAuthAlunos()"><span class="ac-ic">🔗</span>Vincular Auth</button>
-        <button class="ac oculto-auth" id="btn-criar-usuarios-auth" onclick="criarUsuariosAuth()"><span class="ac-ic">🔑</span>Criar Usuários Auth</button>
+        <button class="ac oculto-auth ripple-target" id="btn-vincular-auth" onclick="vincularAuthAlunos()"><span class="ac-ic">🔗</span>Vincular Auth</button>
+        <button class="ac oculto-auth ripple-target" id="btn-criar-usuarios-auth" onclick="criarUsuariosAuth()"><span class="ac-ic">🔑</span>Criar Usuários Auth</button>
         <!-- FIM TEMPORÁRIO -->
-        <button class="ac" onclick="definirLivroAtual()"><span class="ac-ic">📖</span>Definir livro atual</button>
+        <button class="ac ripple-target" onclick="definirLivroAtual()"><span class="ac-ic">📖</span>Definir livro atual</button>
       </div>
       <div class="sl">Alertas</div>
       <div id="a-alertas"></div>
@@ -463,7 +486,7 @@ select.inp{cursor:pointer}
 
     <!-- ALUNOS ADMIN -->
     <div class="tela" id="a-alunos">
-      <div class="sh"><div class="tit">Alunos</div><button class="badd" onclick="abrirModAluno()">+ Novo</button></div>
+      <div class="sh"><div class="tit">Alunos</div><button class="badd ripple-target" onclick="abrirModAluno()">+ Novo</button></div>
       <div class="bw">
         <span class="bi"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
         <input class="busca" id="busca-admin" type="search" placeholder="Buscar por nome..." oninput="renderAlunosAdmin()" autocomplete="off">
@@ -472,10 +495,10 @@ select.inp{cursor:pointer}
         <option value="">🎓 Todas as turmas</option>
       </select>
       <div class="filtros-admin">
-        <button class="ac" onclick="admAplicarFiltro('todos')">Todos</button>
-        <button class="ac" onclick="admAplicarFiltro('pagos')">✅ Em dia</button>
-        <button class="ac" onclick="admAplicarFiltro('aguardando')">🟡 Aguardando Entrega</button>
-        <button class="ac" onclick="admAplicarFiltro('pendentes')">🔴 Pendentes</button>
+        <button class="ac ripple-target" onclick="admAplicarFiltro('todos')">Todos</button>
+        <button class="ac ripple-target" onclick="admAplicarFiltro('pagos')">✅ Em dia</button>
+        <button class="ac ripple-target" onclick="admAplicarFiltro('aguardando')">🟡 Aguardando Entrega</button>
+        <button class="ac ripple-target" onclick="admAplicarFiltro('pendentes')">🔴 Pendentes</button>
       </div>
       <!-- CHECKBOX MASTER -->
       <div id="adm-master-row" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border-radius:var(--r);margin-bottom:10px;border:1px solid var(--brd);box-shadow:var(--s)">
@@ -487,11 +510,11 @@ select.inp{cursor:pointer}
       <div id="adm-barra-lote">
         <div id="adm-barra-lote-info">0 alunos selecionados</div>
         <div id="adm-barra-lote-acoes">
-          <button class="btn-lote" onclick="admSelecionarTodos(Array.from(document.querySelectorAll('#lista-alunos-admin .ar[data-aluno-id]')).map(c=>c.getAttribute('data-aluno-id')))">☑ Selecionar todos</button>
-          <button class="btn-lote" onclick="admDesmarcarTodos()">☐ Desmarcar todos</button>
-          <button class="btn-lote" onclick="abrirModalPagamentoLote()">✅ Marcar como pago</button>
-          <button class="btn-lote" onclick="admDesmarcarPagamentoLote()">❌ Desmarcar pagamento</button>
-          <button class="btn-lote cancel" onclick="admLimparSelecaoLote()">✕ Limpar seleção</button>
+          <button class="btn-lote ripple-target" onclick="admSelecionarTodos(Array.from(document.querySelectorAll('#lista-alunos-admin .ar[data-aluno-id]')).map(c=>c.getAttribute('data-aluno-id')))">☑ Selecionar todos</button>
+          <button class="btn-lote ripple-target" onclick="admDesmarcarTodos()">☐ Desmarcar todos</button>
+          <button class="btn-lote ripple-target" onclick="abrirModalPagamentoLote()">✅ Marcar como pago</button>
+          <button class="btn-lote ripple-target" onclick="admDesmarcarPagamentoLote()">❌ Desmarcar pagamento</button>
+          <button class="btn-lote cancel ripple-target" onclick="admLimparSelecaoLote()">✕ Limpar seleção</button>
         </div>
       </div>
       <div id="lista-alunos-admin"></div>
@@ -549,7 +572,7 @@ select.inp{cursor:pointer}
       </div>
 
       <!-- Botão salvar -->
-      <button class="btn bp" id="adm-pres-btn-salvar" style="display:none" onclick="admPresSalvar()">
+      <button class="btn bp ripple-target" id="adm-pres-btn-salvar" style="display:none" onclick="admPresSalvar()">
         💾 Salvar Presença
       </button>
 
@@ -598,11 +621,11 @@ select.inp{cursor:pointer}
       </div>
 
       <div class="tabs">
-        <button class="tab on" onclick="abaRel('geral',this)">Geral</button>
-        <button class="tab" onclick="abaRel('presenca',this)">Presenças</button>
-        <button class="tab" onclick="abaRel('por-aula',this)">Por Aula</button>
-        <button class="tab" onclick="abaRel('financeiro',this)">Financeiro</button>
-        <button class="tab" onclick="abaRel('avaliacao',this)">Avaliações</button>
+        <button class="tab on ripple-target" onclick="abaRel('geral',this)">Geral</button>
+        <button class="tab ripple-target" onclick="abaRel('presenca',this)">Presenças</button>
+        <button class="tab ripple-target" onclick="abaRel('por-aula',this)">Por Aula</button>
+        <button class="tab ripple-target" onclick="abaRel('financeiro',this)">Financeiro</button>
+        <button class="tab ripple-target" onclick="abaRel('avaliacao',this)">Avaliações</button>
       </div>
       <div id="rel-geral"></div>
       <div id="rel-presenca" style="display:none"></div>
@@ -611,8 +634,8 @@ select.inp{cursor:pointer}
       <div id="rel-avaliacao" style="display:none"></div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
-        <button class="btn bs" onclick="exportarPDF()">📄 Exportar PDF</button>
-        <button class="btn bs" onclick="exportarCSV()">📊 Exportar CSV</button>
+        <button class="btn bs ripple-target" onclick="exportarPDF()">📄 Exportar PDF</button>
+        <button class="btn bs ripple-target" onclick="exportarCSV()">📊 Exportar CSV</button>
       </div>
     </div>
 
@@ -640,8 +663,8 @@ select.inp{cursor:pointer}
           <label>Descrição</label>
           <textarea class="inp" id="adm-aula-descricao" rows="3" placeholder="Descreva o conteúdo da aula..." style="resize:vertical"></textarea>
         </div>
-        <button class="btn bp" onclick="salvarAula()">💾 Salvar Aula</button>
-        <button class="btn bs" id="adm-aula-cancelar" style="display:none" onclick="cancelarEdicaoAula()">✕ Cancelar edição</button>
+        <button class="btn bp ripple-target" onclick="salvarAula()">💾 Salvar Aula</button>
+        <button class="btn bs ripple-target" id="adm-aula-cancelar" style="display:none" onclick="cancelarEdicaoAula()">✕ Cancelar edição</button>
       </div>
 
       <div class="card">
@@ -697,28 +720,28 @@ select.inp{cursor:pointer}
       <div class="card" style="border-color:var(--vm-c)">
         <div class="card-t" style="color:var(--vm)">⚠ Zona de perigo</div>
         <p style="font-size:14px;color:var(--cin);margin-bottom:12px">Apagar todos os dados registrados. Irreversível.</p>
-        <button class="btn bd bsm" onclick="apagarTudo()">Apagar todos os dados</button>
+        <button class="btn bd bsm ripple-target" onclick="apagarTudo()">Apagar todos os dados</button>
       </div>
     </div>
 
   </main>
   <nav id="nav-admin">
-    <button class="nb on" id="nb-inicio" onclick="irAdmin('inicio')">
+    <button class="nb on ripple-target" id="nb-inicio" onclick="irAdmin('inicio')">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Início
     </button>
-    <button class="nb" id="nb-alunos" onclick="irAdmin('alunos')">
+    <button class="nb ripple-target" id="nb-alunos" onclick="irAdmin('alunos')">
       <svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75M21 21v-2a4 4 0 00-3-3.85"/></svg>Alunos
     </button>
-    <button class="nb" id="nb-presenca" onclick="irAdmin('presenca')">
+    <button class="nb ripple-target" id="nb-presenca" onclick="irAdmin('presenca')">
       <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Presença
     </button>
-    <button class="nb" id="nb-material" onclick="irAdmin('material')">
+    <button class="nb ripple-target" id="nb-material" onclick="irAdmin('material')">
       <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>Material
     </button>
-    <button class="nb" id="nb-relatorios" onclick="irAdmin('relatorios')">
+    <button class="nb ripple-target" id="nb-relatorios" onclick="irAdmin('relatorios')">
       <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Relat.
     </button>
-    <button class="nb" id="nb-provas" onclick="irAdmin('provas')">
+    <button class="nb ripple-target" id="nb-provas" onclick="irAdmin('provas')">
       <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Provas
     </button>
   </nav>
@@ -749,7 +772,7 @@ select.inp{cursor:pointer}
         <div class="card-t">📌 Meus dados</div>
         <div id="al-dados"></div>
       </div>
-      <button class="btn bs" onclick="abrirModEditarAluno()" style="transition:transform .1s ease" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">✏️ Editar dados pessoais</button>
+      <button class="btn bs ripple-target" onclick="abrirModEditarAluno()" style="transition:transform .1s ease" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">✏️ Editar dados pessoais</button>
     </div>
 
     <!-- AGENDA DE AULAS -->
@@ -818,22 +841,22 @@ select.inp{cursor:pointer}
 
   </main>
   <nav id="nav-aluno">
-    <button class="nb on" id="aln-cadastro" onclick="irAluno('cadastro')">
+    <button class="nb on ripple-target" id="aln-cadastro" onclick="irAluno('cadastro')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Cadastro
     </button>
-    <button class="nb" id="aln-agenda" onclick="irAluno('agenda')">
+    <button class="nb ripple-target" id="aln-agenda" onclick="irAluno('agenda')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agenda
     </button>
-    <button class="nb" id="aln-presenca" onclick="irAluno('presenca')">
+    <button class="nb ripple-target" id="aln-presenca" onclick="irAluno('presenca')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Presença
     </button>
-    <button class="nb" id="aln-pagamentos" onclick="irAluno('pagamentos')">
+    <button class="nb ripple-target" id="aln-pagamentos" onclick="irAluno('pagamentos')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Pagamentos
     </button>
-    <button class="nb" id="aln-livros" onclick="irAluno('livros')">
+    <button class="nb ripple-target" id="aln-livros" onclick="irAluno('livros')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>Livros
     </button>
-    <button class="nb" id="aln-notas" onclick="irAluno('notas')">
+    <button class="nb ripple-target" id="aln-notas" onclick="irAluno('notas')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Notas
     </button>
   </nav>
@@ -854,8 +877,8 @@ select.inp{cursor:pointer}
     </div>
     <div class="campo"><label>Mensalidade (R$)</label><input class="inp" id="a-valor" type="number" min="0"></div>
     <div class="campo"><label>Senha <span style="font-size:12px;color:var(--cin)">(padrão: últimos 4 dígitos do tel.)</span></label><input class="inp" id="a-senha" type="text" maxlength="6" placeholder="1234"></div>
-    <button class="btn bp" onclick="salvarAluno()">Salvar</button>
-    <button class="btn bd" id="btn-del" onclick="delAluno()" style="display:none">Excluir aluno</button>
+    <button class="btn bp ripple-target" onclick="salvarAluno()">Salvar</button>
+    <button class="btn bd ripple-target" id="btn-del" onclick="delAluno()" style="display:none">Excluir aluno</button>
   </div>
 </div>
 
@@ -867,7 +890,7 @@ select.inp{cursor:pointer}
     <div class="campo"><label>Telefone</label><input class="inp" id="ea-tel" type="tel"></div>
     <div class="campo"><label>E-mail</label><input class="inp" id="ea-email" type="email"></div>
     <div class="campo"><label>Nova senha <span style="font-size:12px;color:var(--cin)">(deixe em branco para manter)</span></label><input class="inp" id="ea-senha" type="text" maxlength="6" placeholder="••••"></div>
-    <button class="btn bp" onclick="salvarEdicaoAluno()">Salvar alterações</button>
+    <button class="btn bp ripple-target" onclick="salvarEdicaoAluno()">Salvar alterações</button>
   </div>
 </div>
 
@@ -2240,7 +2263,7 @@ function irAdmin(t){
 /* ════ NAV ALUNO ════ */
 const TELAS_ALUNO=['cadastro','agenda','presenca','pagamentos','livros','notas'];
 async function irAluno(t){
-  // ── LOADING: iniciar timer elegante (só aparece se demorar > 120ms) ──
+  // ── LOADING: timer elegante — só aparece se demorar > 120ms ──
   const loading = document.getElementById('al-loading');
   let loadingTimer = null;
   loadingTimer = setTimeout(function(){
@@ -2734,8 +2757,8 @@ async function verPerfilAdmin(id){
     </div>
     <div class="card"><div class="card-t">📝 Provas do Aluno</div><div id="admin-provas-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
     <div class="card"><div class="card-t">📚 Livros do Aluno (Supabase)</div><div id="admin-livros-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
-    <button class="btn bs" onclick="abrirModAluno('${id}')">✏️ Editar dados</button>
-    <button class="btn bd" style="margin-top:8px;width:100%;display:block" onclick="desmarcarPagamentoAluno('${id}')">↩️ Desmarcar pagamento do livro atual</button>`;
+    <button class="btn bs ripple-target" onclick="abrirModAluno('${id}')">✏️ Editar dados</button>
+    <button class="btn bd ripple-target" style="margin-top:8px;width:100%;display:block" onclick="desmarcarPagamentoAluno('${id}')">↩️ Desmarcar pagamento do livro atual</button>`;
   carregarExibirProvasAdminPerfil(id);
   carregarExibirLivrosAdminPerfil(id);
 }
@@ -5853,8 +5876,8 @@ async function provasMarcarDevolvida(id) {
       <option value="dinheiro">Dinheiro</option>
     </select>
     <div style="display:flex;gap:10px">
-      <button onclick="confirmarPagamentoModal()" class="btn bp" style="flex:1;padding:12px">Confirmar</button>
-      <button onclick="fecharModalPagamento()" class="btn bs" style="flex:1;padding:12px;margin-top:0">Cancelar</button>
+      <button onclick="confirmarPagamentoModal()" class="btn bp ripple-target" style="flex:1;padding:12px">Confirmar</button>
+      <button onclick="fecharModalPagamento()" class="btn bs ripple-target" style="flex:1;padding:12px;margin-top:0">Cancelar</button>
     </div>
   </div>
 </div>
@@ -5872,13 +5895,34 @@ async function provasMarcarDevolvida(id) {
       <option value="dinheiro">Dinheiro</option>
     </select>
     <div style="display:flex;gap:10px">
-      <button onclick="confirmarPagamentoModalLote()" class="btn bp" style="flex:1;padding:12px">Confirmar</button>
-      <button onclick="fecharModalPagamentoLote()" class="btn bs" style="flex:1;padding:12px;margin-top:0">Cancelar</button>
+      <button onclick="confirmarPagamentoModalLote()" class="btn bp ripple-target" style="flex:1;padding:12px">Confirmar</button>
+      <button onclick="fecharModalPagamentoLote()" class="btn bs ripple-target" style="flex:1;padding:12px;margin-top:0">Cancelar</button>
     </div>
   </div>
 </div>
+
+<!-- ── LOADING OVERLAY ── -->
 <div id="al-loading">
   <div class="loader"></div>
 </div>
+
+<!-- ── RIPPLE EFFECT GLOBAL ── -->
+<script>
+document.addEventListener('click', function(e){
+  var target = e.target.closest('.ripple-target');
+  if (!target) return;
+  var rect = target.getBoundingClientRect();
+  var ripple = document.createElement('span');
+  var size = Math.max(rect.width, rect.height);
+  var x = e.clientX - rect.left - size / 2;
+  var y = e.clientY - rect.top - size / 2;
+  ripple.className = 'ripple-effect';
+  ripple.style.width = ripple.style.height = size + 'px';
+  ripple.style.left = x + 'px';
+  ripple.style.top = y + 'px';
+  target.appendChild(ripple);
+  setTimeout(function(){ ripple.remove(); }, 500);
+});
+</script>
 </body>
 </html>
