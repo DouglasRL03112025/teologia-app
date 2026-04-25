@@ -349,29 +349,19 @@ select.inp{cursor:pointer}
   transition: opacity .2s cubic-bezier(.4,0,.2,1);
   z-index: 9999;
 }
-#al-loading.on {
-  opacity: 1;
-}
+#al-loading.on { opacity: 1; }
 #al-loading .loader {
-  width: 38px;
-  height: 38px;
+  width: 38px; height: 38px;
   border-radius: 50%;
   border: 3px solid rgba(0,0,0,.1);
   border-top: 3px solid var(--azul);
   animation: spin .8s linear infinite;
 }
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── RIPPLE EFFECT ── */
-.ripple-target {
-  position: relative;
-  overflow: hidden;
-}
-.ripple-target:active {
-  transform: scale(0.97);
-}
+.ripple-target { position: relative; overflow: hidden; }
+.ripple-target:active { transform: scale(0.97); }
 .ripple-effect {
   position: absolute;
   border-radius: 50%;
@@ -380,12 +370,8 @@ select.inp{cursor:pointer}
   animation: rippleAnim .5s ease-out;
   pointer-events: none;
 }
-@keyframes rippleAnim {
-  to {
-    transform: scale(4);
-    opacity: 0;
-  }
-}
+@keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
 </style>
 </head>
 <body>
@@ -1464,44 +1450,83 @@ async function renderPagamentosAlunoViaLivros() {
   const qtdPendentes = classificados.filter(l => l.tipo === 'pendente' || l.tipo === 'atrasado').length;
 
   // ── 6) Renderizar ──
+  if (classificados.length === 0) {
+    container.innerHTML = `<div style="text-align:center;font-size:14px;color:var(--cin);font-style:italic;opacity:.6;padding:20px 0;">Você não possui pagamentos pendentes</div>`;
+    return;
+  }
+
   container.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
-      <div style="background:#ECFDF5;border:1px solid #BBF7D0;border-radius:12px;padding:14px;text-align:center;">
-        <div style="font-size:26px;font-weight:700;color:#16A34A;font-family:'Lora',serif;line-height:1.1;">${qtdPagos}</div>
-        <div style="font-size:11px;color:#166534;margin-top:3px;font-weight:500;text-transform:uppercase;letter-spacing:.4px;">✅ Pagos</div>
+    <style>
+      @keyframes _fadeUpPay {
+        from { opacity:0; transform:translateY(10px); }
+        to   { opacity:1; transform:translateY(0);    }
+      }
+    </style>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+      <div style="background:#ECFDF5;border:1px solid #BBF7D0;border-radius:14px;padding:16px;text-align:center;box-shadow:0 2px 10px rgba(22,163,74,.08);">
+        <div style="font-size:28px;font-weight:700;color:#16A34A;font-family:'Lora',serif;line-height:1.1;">${qtdPagos}</div>
+        <div style="font-size:11px;color:#166534;margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">✅ Pagos</div>
       </div>
-      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:14px;text-align:center;">
-        <div style="font-size:26px;font-weight:700;color:#DC2626;font-family:'Lora',serif;line-height:1.1;">${qtdPendentes}</div>
-        <div style="font-size:11px;color:#991B1B;margin-top:3px;font-weight:500;text-transform:uppercase;letter-spacing:.4px;">❌ Pendentes</div>
+      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:14px;padding:16px;text-align:center;box-shadow:0 2px 10px rgba(220,38,38,.08);">
+        <div style="font-size:28px;font-weight:700;color:#DC2626;font-family:'Lora',serif;line-height:1.1;">${qtdPendentes}</div>
+        <div style="font-size:11px;color:#991B1B;margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">❌ Pendentes</div>
       </div>
     </div>
-    ${classificados.map(livro => {
-      let corFundo, corBorda, statusHtml;
+
+    ${classificados.map((livro, i) => {
+      // ── Badge de status ──
+      let badgeHtml;
       if (livro.tipo === 'pago') {
-        corFundo = '#ECFDF5'; corBorda = '#BBF7D0';
-        const db = livro.dadoBanco;
-        statusHtml = `<div style="font-size:14px;font-weight:700;color:#16A34A;margin-bottom:${db?.data_pagamento?'8px':'0'};">✅ PAGO</div>`
-          + (db?.data_pagamento ? `<div style="font-size:12px;color:#555;margin-top:2px;">Forma: ${db.forma_pagamento||'-'}</div><div style="font-size:12px;color:#555;margin-top:2px;">Data: ${new Date(db.data_pagamento).toLocaleDateString('pt-BR')}</div>` : '');
-      } else if (livro.tipo === 'pendente') {
-        corFundo = '#FEF2F2'; corBorda = '#FECACA';
-        statusHtml = `<div style="font-size:14px;font-weight:700;color:#DC2626;">❌ PENDENTE</div>`;
+        badgeHtml = \`<span style="background:#e8f7ee;color:#1f7a4c;border-radius:999px;padding:4px 12px;font-size:11px;font-weight:700;display:inline-block;">✅ Pago</span>\`;
       } else if (livro.tipo === 'aguardando') {
-        corFundo = '#FFFBEB'; corBorda = '#FCD34D';
-        statusHtml = `<div style="font-size:14px;font-weight:700;color:#B45309;">💰 AGUARDANDO ENTREGA</div>`;
+        badgeHtml = \`<span style="background:#fffbeb;color:#b45309;border-radius:999px;padding:4px 12px;font-size:11px;font-weight:700;display:inline-block;">💰 Aguard. Entrega</span>\`;
+      } else if (livro.tipo === 'pendente') {
+        badgeHtml = \`<span style="background:#fff8e6;color:#a06c00;border-radius:999px;padding:4px 12px;font-size:11px;font-weight:700;display:inline-block;">⏳ Pendente</span>\`;
       } else if (livro.tipo === 'atrasado') {
-        corFundo = '#FEF2F2'; corBorda = '#FECACA';
-        statusHtml = `<div style="font-size:14px;font-weight:700;color:#DC2626;">⚠️ ATRASADO</div>`;
+        badgeHtml = \`<span style="background:#fdeaea;color:#a83232;border-radius:999px;padding:4px 12px;font-size:11px;font-weight:700;display:inline-block;">❌ Atrasado</span>\`;
       } else {
-        // futuro
-        corFundo = '#F3F4F6'; corBorda = '#D1D5DB';
-        statusHtml = `<div style="font-size:13px;font-weight:500;color:#9CA3AF;">⏳ Disponível em breve</div>`;
+        badgeHtml = \`<span style="background:#f3f4f6;color:#9ca3af;border-radius:999px;padding:4px 12px;font-size:11px;font-weight:700;display:inline-block;">⏳ Em breve</span>\`;
       }
-      return `
-        <div style="background:${corFundo};border:1px solid ${corBorda};border-radius:12px;padding:16px;margin-bottom:12px;">
-          <div style="font-size:14px;font-weight:600;color:#1a3a5c;margin-bottom:8px;">💳 ${livro.indice}. ${livro.nome}</div>
-          ${statusHtml}
+
+      // ── Info extra (data/forma de pagamento se pago) ──
+      const db = livro.dadoBanco;
+      const extraHtml = (livro.tipo === 'pago' && db?.data_pagamento)
+        ? \`<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,.06);display:flex;gap:14px;flex-wrap:wrap;">
+            <span style="font-size:12px;color:var(--cin);">📅 \${new Date(db.data_pagamento).toLocaleDateString('pt-BR')}</span>
+            <span style="font-size:12px;color:var(--cin);">💳 \${db.forma_pagamento || '-'}</span>
+           </div>\`
+        : '';
+
+      const isFuturo = livro.tipo === 'futuro';
+      return \`
+        <div style="
+          background:#fff;
+          border-radius:18px;
+          padding:18px 20px;
+          margin-bottom:12px;
+          box-shadow:0 6px 18px rgba(0,0,0,.08);
+          transition:all .2s cubic-bezier(.4,0,.2,1);
+          cursor:\${isFuturo ? 'default' : 'pointer'};
+          opacity:0;
+          animation:_fadeUpPay .4s ease forwards;
+          animation-delay:\${i * 0.05}s;
+          filter:\${isFuturo ? 'opacity(0.45)' : 'none'};
+        "
+          onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 28px rgba(0,0,0,.12)'"
+          onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 6px 18px rgba(0,0,0,.08)'"
+          onmousedown="this.style.transform='scale(0.97)'"
+          onmouseup="this.style.transform='translateY(-3px)'"
+        >
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div style="font-size:14px;font-weight:700;color:#111;flex:1;padding-right:10px;">
+              📖 \${livro.indice}. \${livro.nome}
+            </div>
+            \${badgeHtml}
+          </div>
+          \${extraHtml}
         </div>
-      `;
+      \`;
     }).join('')}
   `;
 }
@@ -2330,8 +2355,6 @@ async function irAluno(t){
         await renderProvasAluno();
       } else {
         console.warn('SEM PROVAS NO BANCO');
-        clearTimeout(loadingTimer);
-        if (loading) loading.classList.remove('on');
         return;
       }
     } catch (e) {
@@ -5902,11 +5925,9 @@ async function provasMarcarDevolvida(id) {
 </div>
 
 <!-- ── LOADING OVERLAY ── -->
-<div id="al-loading">
-  <div class="loader"></div>
-</div>
+<div id="al-loading"><div class="loader"></div></div>
 
-<!-- ── RIPPLE EFFECT GLOBAL ── -->
+<!-- ── RIPPLE GLOBAL ── -->
 <script>
 document.addEventListener('click', function(e){
   var target = e.target.closest('.ripple-target');
@@ -5914,15 +5935,14 @@ document.addEventListener('click', function(e){
   var rect = target.getBoundingClientRect();
   var ripple = document.createElement('span');
   var size = Math.max(rect.width, rect.height);
-  var x = e.clientX - rect.left - size / 2;
-  var y = e.clientY - rect.top - size / 2;
   ripple.className = 'ripple-effect';
   ripple.style.width = ripple.style.height = size + 'px';
-  ripple.style.left = x + 'px';
-  ripple.style.top = y + 'px';
+  ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
+  ripple.style.top  = (e.clientY - rect.top  - size/2) + 'px';
   target.appendChild(ripple);
   setTimeout(function(){ ripple.remove(); }, 500);
 });
 </script>
+
 </body>
 </html>
