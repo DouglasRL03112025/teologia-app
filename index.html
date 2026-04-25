@@ -39,6 +39,8 @@ nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid 
 main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
 .tela{display:none;animation:fi .2s ease}
 .tela.on{display:block}
+.al-tela{opacity:0;transform:translateY(10px);transition:opacity .25s cubic-bezier(.4,0,.2,1),transform .25s cubic-bezier(.4,0,.2,1);pointer-events:none}
+.al-tela.on{opacity:1;transform:translateY(0);pointer-events:auto}
 @keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 @keyframes _fadeUpAgenda{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes _slideLeftIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
@@ -707,7 +709,7 @@ select.inp{cursor:pointer}
   <main>
 
     <!-- MEU CADASTRO -->
-    <div class="tela on" id="al-cadastro">
+    <div class="tela al-tela on" id="al-cadastro">
       <div id="al-perfil-banner"></div>
 
       <!-- ══ DASHBOARD DO ALUNO — gerado por renderAlunoInicio() ══ -->
@@ -722,7 +724,7 @@ select.inp{cursor:pointer}
     </div>
 
     <!-- AGENDA DE AULAS -->
-    <div class="tela" id="al-agenda">
+    <div class="tela al-tela" id="al-agenda">
       <div class="tit">Agenda de Aulas</div>
       <p class="sub">Histórico e próximas aulas</p>
       <div id="al-agenda-dashboard" style="margin-bottom:16px"></div>
@@ -749,7 +751,7 @@ select.inp{cursor:pointer}
     </div>
 
     <!-- MINHA PRESENÇA -->
-    <div class="tela" id="al-presenca">
+    <div class="tela al-tela" id="al-presenca">
       <div class="tit">Minha Presença</div>
       <div id="al-pres-resumo" style="margin-bottom:12px"></div>
       <div id="al-pres-stats" style="margin-bottom:14px"></div>
@@ -760,7 +762,7 @@ select.inp{cursor:pointer}
     </div>
 
     <!-- MEUS PAGAMENTOS -->
-    <div class="tela" id="al-pagamentos">
+    <div class="tela al-tela" id="al-pagamentos">
       <div class="tit">💰 Meus Pagamentos</div>
       <p class="sub">Situação mensal</p>
       <div id="al-pag-lista"></div>
@@ -769,7 +771,7 @@ select.inp{cursor:pointer}
     </div>
 
     <!-- LIVROS RECEBIDOS -->
-    <div class="tela" id="al-livros">
+    <div class="tela al-tela" id="al-livros">
       <div class="tit">📚 Meus Livros</div>
       <p id="livro-atual-aluno" style="font-size:13px; opacity:0.7; margin-top:-8px">📖 Livro atual: <strong>carregando...</strong></p>
       <p class="sub">Controle de material</p>
@@ -779,7 +781,7 @@ select.inp{cursor:pointer}
     </div>
 
     <!-- MINHAS NOTAS -->
-    <div class="tela" id="al-notas">
+    <div class="tela al-tela" id="al-notas">
       <div class="tit">Minhas Notas</div>
       <p class="sub">Avaliações realizadas</p>
       <div id="al-notas-lista"></div>
@@ -2209,10 +2211,26 @@ function irAdmin(t){
 /* ════ NAV ALUNO ════ */
 const TELAS_ALUNO=['cadastro','agenda','presenca','pagamentos','livros','notas'];
 async function irAluno(t){
-  TELAS_ALUNO.forEach(id=>{ const el=document.getElementById('al-'+id); if(el) el.classList.remove('on'); });
-  document.querySelectorAll('#nav-aluno .nb').forEach(b=>b.classList.remove('on'));
-  const el=document.getElementById('al-'+t); if(el) el.classList.add('on');
-  const nb=document.getElementById('aln-'+t); if(nb) nb.classList.add('on');
+  const telas = document.querySelectorAll('.al-tela');
+  telas.forEach(function(el){
+    if (el.classList.contains('on')) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(10px)';
+    }
+  });
+  setTimeout(function(){
+    TELAS_ALUNO.forEach(id=>{ const el=document.getElementById('al-'+id); if(el) el.classList.remove('on'); });
+    document.querySelectorAll('#nav-aluno .nb').forEach(b=>b.classList.remove('on'));
+    const el=document.getElementById('al-'+t); if(el) el.classList.add('on');
+    const nb=document.getElementById('aln-'+t); if(nb) nb.classList.add('on');
+  }, 120);
+  setTimeout(function(){
+    const ativa = document.querySelector('.al-tela.on');
+    if (ativa) {
+      ativa.style.opacity = '';
+      ativa.style.transform = '';
+    }
+  }, 180);
   window.scrollTo(0,0);
   if(t==='cadastro') renderAlunoCadastro();
   if(t==='agenda') {
