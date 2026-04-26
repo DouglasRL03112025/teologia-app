@@ -1395,7 +1395,7 @@ function renderPagamentosAlunoViaLivros() {
   });
 
   const totalPagos   = dadosAluno.filter(function(l) { return l.pagou === true; }).length;
-  const totalPendentes = 0;
+  const totalPendentes = 24 - totalPagos;
   const progresso    = Math.round((totalPagos / 24) * 100);
 
   const totalLivros = 24;
@@ -1404,7 +1404,7 @@ function renderPagamentosAlunoViaLivros() {
     const livroAluno = window.livrosAluno.find(l => 
       Number(l.indice || l.livro || l.codigo || l.id_livro) === numero
     );
-    const nomeLivro = livroAluno?.livro || 'Livro ' + numero;
+    const nomeLivro = LIVROS_CURSO[index] || 'Livro ' + numero;
     const pagou = livroAluno?.pagou === true || livroAluno?.pago === true;
     const entregue = livroAluno?.entregue === true;
     let status = '';
