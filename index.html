@@ -1381,129 +1381,92 @@ function setFiltroLivros(tipo) {
 
 /* ════ PAGAMENTOS VIA LIVROS (adicionado) ════ */
 
-async function renderPagamentosAlunoViaLivros() {
-  const container = document.getElementById('aluno-pagamentos');
-  if (!container) return;
-  container.innerHTML = 'Carregando pagamentos...';
+function renderPagamentosAlunoViaLivros() {
+  console.log('🔥 EXECUTANDO VIA LIVROS');
+  const container = document.getElementById('al-pagamentos');
+  if (!container) { console.warn('🔥 CONTAINER al-pagamentos não encontrado'); return; }
 
-  // ── 0) Garantir que livroAtualSistema esteja disponível (fonte: admin via config_sistema) ──
-  if (!window.livroAtualSistema) {
-    try {
-      await carregarLivroAtualSistema();
-    } catch(e) {
-      console.log("Erro ao obter livro atual (pagamentos):", e);
-    }
-  }
+  const livrosLiberados = window.livroAtualSistema || 7;
+  const dadosAluno = Array.isArray(window.livrosAluno) ? window.livrosAluno : [];
 
-  // ── 1) Lista fixa dos 24 livros do curso (ordem obrigatória) ──
-  const LIVROS_CURSO = [
-    { codigo: 'p1',  nome: 'Pentateuco' },
-    { codigo: 'p2',  nome: 'Históricos e Poéticos' },
-    { codigo: 'p3',  nome: 'História de Israel' },
-    { codigo: 'p4',  nome: 'Profetas Maiores e Menores' },
-    { codigo: 'p5',  nome: 'Os Evangelhos' },
-    { codigo: 'p6',  nome: 'Atos dos Apóstolos' },
-    { codigo: 'p7',  nome: 'Epístolas Paulinas' },
-    { codigo: 'p8',  nome: 'Epístolas Gerais' },
-    { codigo: 'p9',  nome: 'Apocalipse' },
-    { codigo: 'p10', nome: 'Bibliologia' },
-    { codigo: 'p11', nome: 'História Eclesiástica' },
-    { codigo: 'p12', nome: 'Hamartiologia e Soteriologia' },
-    { codigo: 'p13', nome: 'Antropologia' },
-    { codigo: 'p14', nome: 'Educação Cristã' },
-    { codigo: 'p15', nome: 'Seitas Modernas' },
-    { codigo: 'p16', nome: 'Geografia Bíblica' },
-    { codigo: 'p17', nome: 'Escatologia' },
-    { codigo: 'p18', nome: 'Evangelismo' },
-    { codigo: 'p19', nome: 'Liderança Cristã' },
-    { codigo: 'p20', nome: 'Hermenêutica' },
-    { codigo: 'p21', nome: 'Teontologia' },
-    { codigo: 'p22', nome: 'Cristologia' },
-    { codigo: 'p23', nome: 'Eclesiologia' },
-    { codigo: 'p24', nome: 'Homilética' }
-  ];
-  const TOTAL_CURSO = 24;
-
-  // ── 2) Livros liberados = livro atual definido pelo admin (config_sistema.livro_atual_override) ──
-  // NÃO calcula por data — o admin é a única fonte de verdade
-  const livroAtualSistema = window.livroAtualSistema || null;
-  const livrosLiberados = Math.min(livroAtualSistema || 7, TOTAL_CURSO);
-
-  // ── 3) Identificar livros pagos via window.livrosAluno ──
-  const dadosAluno = window.livrosAluno || [];
-  const codigosPagos = new Set(
-    dadosAluno
-      .filter(l => l.pagou === true)
-      .map(l => l.livro_codigo || l.livros?.codigo)
-      .filter(Boolean)
-  );
-
-  // ── 4) Classificar cada um dos 24 livros com base no livro atual do admin ──
-  const classificados = LIVROS_CURSO.map((livro, idx) => {
-    const indice = idx + 1; // 1-based
-    const pago   = codigosPagos.has(livro.codigo);
-    const dadoBanco = dadosAluno.find(l =>
-      (l.livro_codigo === livro.codigo) || (l.livros?.codigo === livro.codigo)
-    );
-    if (!livroAtualSistema) {
-      // sem config do admin: usa threshold padrão
-      return { ...livro, indice, tipo: indice <= livrosLiberados ? (pago ? 'pago' : 'pendente') : 'futuro', dadoBanco };
-    }
-    const numeroLivro = indice;
-    if (numeroLivro > livroAtualSistema) {
-      return { ...livro, indice, tipo: 'futuro', dadoBanco };
-    } else if (numeroLivro === livroAtualSistema) {
-      return { ...livro, indice, tipo: pago ? 'aguardando' : 'pendente', dadoBanco };
-    } else {
-      return { ...livro, indice, tipo: pago ? 'pago' : 'atrasado', dadoBanco };
-    }
+  const pagamentoMap = {};
+  dadosAluno.forEach(function(item) {
+    if (item && item.livro_codigo) pagamentoMap[item.livro_codigo] = item;
   });
 
-  // ── 5) Contadores — livros futuros NÃO entram ──
-  const qtdPagos     = classificados.filter(l => l.tipo === 'pago' || l.tipo === 'aguardando').length;
-  const qtdPendentes = classificados.filter(l => l.tipo === 'pendente' || l.tipo === 'atrasado').length;
+  const totalPagos   = dadosAluno.filter(function(l) { return l.pagou === true; }).length;
+  const totalPendentes = 24 - totalPagos;
+  const progresso    = Math.round((totalPagos / 24) * 100);
 
-  // ── 6) Renderizar ──
-  container.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
-      <div style="background:#ECFDF5;border:1px solid #BBF7D0;border-radius:12px;padding:14px;text-align:center;">
-        <div style="font-size:26px;font-weight:700;color:#16A34A;font-family:'Lora',serif;line-height:1.1;">${qtdPagos}</div>
-        <div style="font-size:11px;color:#166534;margin-top:3px;font-weight:500;text-transform:uppercase;letter-spacing:.4px;">✅ Pagos</div>
-      </div>
-      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:14px;text-align:center;">
-        <div style="font-size:26px;font-weight:700;color:#DC2626;font-family:'Lora',serif;line-height:1.1;">${qtdPendentes}</div>
-        <div style="font-size:11px;color:#991B1B;margin-top:3px;font-weight:500;text-transform:uppercase;letter-spacing:.4px;">❌ Pendentes</div>
-      </div>
-    </div>
-    ${classificados.map(livro => {
-      let corFundo, corBorda, statusHtml;
-      if (livro.tipo === 'pago') {
-        corFundo = '#ECFDF5'; corBorda = '#BBF7D0';
-        const db = livro.dadoBanco;
-        statusHtml = `<div style="font-size:14px;font-weight:700;color:#16A34A;margin-bottom:${db?.data_pagamento?'8px':'0'};">✅ PAGO</div>`
-          + (db?.data_pagamento ? `<div style="font-size:12px;color:#555;margin-top:2px;">Forma: ${db.forma_pagamento||'-'}</div><div style="font-size:12px;color:#555;margin-top:2px;">Data: ${new Date(db.data_pagamento).toLocaleDateString('pt-BR')}</div>` : '');
-      } else if (livro.tipo === 'pendente') {
-        corFundo = '#FEF2F2'; corBorda = '#FECACA';
-        statusHtml = `<div style="font-size:14px;font-weight:700;color:#DC2626;">❌ PENDENTE</div>`;
-      } else if (livro.tipo === 'aguardando') {
-        corFundo = '#FFFBEB'; corBorda = '#FCD34D';
-        statusHtml = `<div style="font-size:14px;font-weight:700;color:#B45309;">💰 AGUARDANDO ENTREGA</div>`;
-      } else if (livro.tipo === 'atrasado') {
-        corFundo = '#FEF2F2'; corBorda = '#FECACA';
-        statusHtml = `<div style="font-size:14px;font-weight:700;color:#DC2626;">⚠️ ATRASADO</div>`;
-      } else {
-        // futuro
-        corFundo = '#F3F4F6'; corBorda = '#D1D5DB';
-        statusHtml = `<div style="font-size:13px;font-weight:500;color:#9CA3AF;">⏳ Disponível em breve</div>`;
-      }
-      return `
-        <div style="background:${corFundo};border:1px solid ${corBorda};border-radius:12px;padding:16px;margin-bottom:12px;">
-          <div style="font-size:14px;font-weight:600;color:#1a3a5c;margin-bottom:8px;">💳 ${livro.indice}. ${livro.nome}</div>
-          ${statusHtml}
-        </div>
-      `;
-    }).join('')}
-  `;
+  const cards = LIVROS_CURSO.map(function(nome, index) {
+    var codigo   = 'p' + (index + 1);
+    var indice1  = index + 1;
+    var dado     = pagamentoMap[codigo] || null;
+    var pagou    = dado && dado.pagou === true;
+    var entregue = dado && dado.entregue === true;
+
+    var status;
+    if (indice1 > livrosLiberados) {
+      status = 'futuro';
+    } else if (entregue) {
+      status = 'entregue';
+    } else if (pagou) {
+      status = 'pago_nao_entregue';
+    } else {
+      status = 'pendente';
+    }
+
+    var numeroLivro = parseInt(codigo.replace('p', ''));
+    if (window.livroAtualSistema && numeroLivro === window.livroAtualSistema && status === 'futuro') {
+      status = 'pendente';
+    }
+
+    var pillHtml;
+    if (status === 'entregue') {
+      pillHtml = '<span style="background:#e8f7ee;color:#1f7a4c;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800">📦 Entregue</span>';
+    } else if (status === 'pago_nao_entregue') {
+      pillHtml = '<span style="background:#fff8e6;color:#a06c00;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800">💰 Aguardando</span>';
+    } else if (status === 'pendente') {
+      pillHtml = '<span style="background:#fdeaea;color:#a83232;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800">❌ Pendente</span>';
+    } else {
+      pillHtml = '<span style="background:#f2f2f2;color:#666;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800">⏳ Em breve</span>';
+    }
+
+    return '<div style="'
+      + 'background:#fff;'
+      + 'border-radius:18px;'
+      + 'padding:14px;'
+      + 'box-shadow:0 6px 18px rgba(0,0,0,.08);'
+      + 'display:flex;'
+      + 'flex-direction:column;'
+      + 'justify-content:space-between;'
+      + 'animation:_fadeUpPay .4s ease forwards;'
+      + 'animation-delay:' + (index * 0.04) + 's;'
+      + 'opacity:0;'
+      + '">'
+        + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">'
+          + '<div style="font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;text-transform:uppercase">' + codigo + '</div>'
+        + '</div>'
+        + '<div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">📖 ' + nome + '</div>'
+        + '<div style="margin-bottom:6px">' + pillHtml + '</div>'
+        + '<div style="font-size:11px;opacity:.6;margin-top:4px">Livro ' + indice1 + '/24</div>'
+      + '</div>';
+  }).join('');
+
+  container.innerHTML = ''
+    + '<style>@keyframes _fadeUpPay{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>'
+    + '<div style="background:linear-gradient(180deg,#fff,#f7faff);border-radius:20px;padding:18px;margin-bottom:18px;box-shadow:0 10px 30px rgba(0,0,0,.08)">'
+      + '<div style="font-size:13px;opacity:.6;margin-bottom:10px">Resumo financeiro</div>'
+      + '<div style="display:flex;justify-content:space-between">'
+        + '<div><div style="font-size:12px;opacity:.6">Pagos</div><div style="font-size:20px;font-weight:800;color:#1f7a4c">' + totalPagos + '</div></div>'
+        + '<div><div style="font-size:12px;opacity:.6">Pendentes</div><div style="font-size:20px;font-weight:800;color:#a06c00">' + totalPendentes + '</div></div>'
+        + '<div><div style="font-size:12px;opacity:.6">Progresso</div><div style="font-size:20px;font-weight:800;color:var(--azul)">' + progresso + '%</div></div>'
+      + '</div>'
+    + '</div>'
+    + '<div style="font-size:13px;opacity:.6;margin-bottom:10px">Histórico de pagamentos</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px">'
+      + cards
+    + '</div>';
 }
 
 /* ════ FIM PAGAMENTOS VIA LIVROS ════ */
@@ -2263,6 +2226,7 @@ function irAdmin(t){
 /* ════ NAV ALUNO ════ */
 const TELAS_ALUNO=['cadastro','agenda','presenca','pagamentos','livros','notas'];
 async function irAluno(t){
+  console.log('🚀 irAluno chamado com:', t);
   // ── LOADING: timer elegante — só aparece se demorar > 120ms ──
   const loading = document.getElementById('al-loading');
   let loadingTimer = null;
@@ -2303,11 +2267,12 @@ async function irAluno(t){
   }
   if(t==='presenca') await renderAlunoPresenca();
   if(t==='pagamentos') {
+    console.log('🔥 ENTROU NO BLOCO PAGAMENTOS');
     // Limpar container legado para evitar duplicação
     const legado = document.getElementById('al-pag-lista');
     if (legado) legado.innerHTML = '';
     await carregarLivrosAluno();
-    renderPagamentosAlunoViaLivros();
+    await renderPagamentosAlunoViaLivros();
   }
   if (t === 'livros') {
     // Limpar container legado (D.livros_ent) para evitar dados do localStorage na tela
@@ -4530,12 +4495,9 @@ function agendaMostrarDia(k) {
 
 /* ════ FIM AGENDA INTERATIVA ════ */
 
-function renderAlunoPagamentos(){
-  const a=usuAtual;
-  const keys=[...new Set([...Object.keys(D.pagamentos),chM(hj())])].sort().reverse().slice(0,12);
-  const linhas=keys.map(k=>{ const [ano,mes]=k.split('-'); const p=(D.pagamentos[k]||{})[a.id]===true;
-    return `<div class="pgr"><div class="pgi"><div class="pgn">${M[parseInt(mes)-1]} ${ano}</div>${a.valor?`<div class="pgd">Mensalidade: R$ ${a.valor}</div>`:''}</div><span class="bdg ${p?'bv':'br'}">${p?'✓ Pago':'✗ Pendente'}</span></div>`; }).join('');
-  document.getElementById('al-pag-lista').innerHTML=linhas||'<div class="empty"><div class="empty-ic">💳</div><div class="empty-tx">Sem registros.</div></div>';
+async function renderAlunoPagamentos(){
+  console.log('🔥 REDIRECIONADO PARA VIA LIVROS');
+  await renderPagamentosAlunoViaLivros();
 }
 
 /* ════ LEGADO: carregarPagamentosAluno — DESATIVADO, usa pagamentos_aluno ════ */
@@ -4550,9 +4512,10 @@ async function renderPagamentosAluno() {
   renderPagamentosAlunoViaLivros();
 }
 
-/* ════ LEGADO: renderAlunoPagamentos — DESATIVADO ════ */
-function renderAlunoPagamentos(){
-  console.warn('[LEGADO] renderAlunoPagamentos desativado');
+/* ════ LEGADO: renderAlunoPagamentos — REDIRECIONADO PARA VIA LIVROS ════ */
+async function renderAlunoPagamentos(){
+  console.log('🔥 REDIRECIONADO PARA VIA LIVROS');
+  await renderPagamentosAlunoViaLivros();
 }
 
 function renderAlunoLivros(){
