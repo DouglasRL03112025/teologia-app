@@ -2270,7 +2270,6 @@ async function irAluno(t){
     console.log('🔥 ENTROU NO BLOCO PAGAMENTOS');
     // Limpar container legado para evitar duplicação
     const legado = document.getElementById('al-pag-lista');
-    if (window._pagamentosRenderizado) return;
     if (legado) legado.innerHTML = '';
     await carregarLivrosAluno();
     await renderPagamentosAlunoViaLivros();
