@@ -2367,6 +2367,7 @@ async function irAluno(t){
   }
   if(t==='presenca') await renderAlunoPresenca();
   if(t==='pagamentos') {
+    console.log('🔥 ENTROU NO BLOCO PAGAMENTOS');
     // Limpar container legado para evitar duplicação
     const legado = document.getElementById('al-pag-lista');
     if (legado) legado.innerHTML = '';
