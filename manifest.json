@@ -4434,7 +4434,9 @@ function renderAlunoPagamentos(){
       }</div>
       <div style="font-size:11px;opacity:.6;margin-top:6px">Mês ${i+1}/${keys.length}</div>
     </div>`; }).join('');
-  document.getElementById('al-pag-lista').innerHTML='<style>@keyframes _fadeUpPay{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>'+(linhas?'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:10px">'+linhas+'</div>':'<div style="text-align:center;opacity:.6;padding:20px">Sem registros.</div>');
+  document.getElementById('al-pag-lista').innerHTML=linhas
+    ? '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:10px"><style>@keyframes _fadeUpPay{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>'+linhas+'</div>'
+    : '<div style="text-align:center;opacity:.6;padding:20px">Sem registros.</div>';
 }
 
 /* ════ LEGADO: carregarPagamentosAluno — DESATIVADO, usa pagamentos_aluno ════ */
