@@ -1398,59 +1398,45 @@ function renderPagamentosAlunoViaLivros() {
   const totalPendentes = 24 - totalPagos;
   const progresso    = Math.round((totalPagos / 24) * 100);
 
-  const cards = window.livrosAluno.map(function(nome, index) {
-    var codigo   = 'p' + (index + 1);
-    var indice1  = index + 1;
-    var dado     = pagamentoMap[codigo] || null;
-    var pagou    = dado && dado.pagou === true;
-    var entregue = dado && dado.entregue === true;
-
-    var status;
-    if (indice1 > livrosLiberados) {
-      status = 'futuro';
-    } else if (entregue) {
-      status = 'entregue';
-    } else if (pagou) {
-      status = 'pago_nao_entregue';
-    } else {
-      status = 'pendente';
+  const totalLivros = 24;
+  const cards = Array.from({ length: totalLivros }).map((_, index) => {
+    const numero = index + 1;
+    const livroAluno = window.livrosAluno.find(l => l.indice === numero);
+    const nomeLivro = livroAluno?.livro || 'Livro ' + numero;
+    const pagou = livroAluno?.pagou === true;
+    const entregue = livroAluno?.entregue === true;
+    let status = '';
+    let cor = '';
+    if (numero > window.livroAtualSistema) {
+      status = '⏳ Em breve';
+      cor = '#999';
     }
-
-    var numeroLivro = parseInt(codigo.replace('p', ''));
-    if (window.livroAtualSistema && numeroLivro === window.livroAtualSistema && status === 'futuro') {
-      status = 'pendente';
+    else if (pagou && entregue) {
+      status = '📦 Entregue';
+      cor = '#1f7a4c';
     }
-
-    var pillHtml;
-    if (status === 'entregue') {
-      pillHtml = '<span style="background:#e8f7ee;color:#1f7a4c;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800">📦 Entregue</span>';
-    } else if (status === 'pago_nao_entregue') {
-      pillHtml = '<span style="background:#fff8e6;color:#a06c00;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800">💰 Aguardando</span>';
-    } else if (status === 'pendente') {
-      pillHtml = '<span style="background:#fdeaea;color:#a83232;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800">❌ Pendente</span>';
-    } else {
-      pillHtml = '<span style="background:#f2f2f2;color:#666;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800">⏳ Em breve</span>';
+    else if (pagou && !entregue) {
+      status = '💰 Aguardando';
+      cor = '#a06c00';
     }
-
-    return '<div style="'
-      + 'background:#fff;'
-      + 'border-radius:18px;'
-      + 'padding:14px;'
-      + 'box-shadow:0 6px 18px rgba(0,0,0,.08);'
-      + 'display:flex;'
-      + 'flex-direction:column;'
-      + 'justify-content:space-between;'
-      + 'animation:_fadeUpPay .4s ease forwards;'
-      + 'animation-delay:' + (index * 0.04) + 's;'
-      + 'opacity:0;'
-      + '">'
-        + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">'
-          + '<div style="font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;text-transform:uppercase">' + codigo + '</div>'
-        + '</div>'
-        + '<div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">📖 ' + nome + '</div>'
-        + '<div style="margin-bottom:6px">' + pillHtml + '</div>'
-        + '<div style="font-size:11px;opacity:.6;margin-top:4px">Livro ' + indice1 + '/24</div>'
-      + '</div>';
+    else {
+      status = '❌ Pendente';
+      cor = '#a83232';
+    }
+    return `
+    <div style="background:#fff;border-radius:18px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08)">
+      
+      <div style="font-weight:700;font-size:14px;margin-bottom:6px">
+        📖 ${nomeLivro}
+      </div>
+      <div style="font-size:12px;color:${cor};font-weight:700;margin-bottom:6px">
+        ${status}
+      </div>
+      <div style="font-size:11px;opacity:.6">
+        Livro ${numero}/24
+      </div>
+    </div>
+  `;
   }).join('');
 
   container.innerHTML = ''
