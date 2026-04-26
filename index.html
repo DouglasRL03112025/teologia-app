@@ -1398,7 +1398,7 @@ function renderPagamentosAlunoViaLivros() {
   const totalPendentes = 24 - totalPagos;
   const progresso    = Math.round((totalPagos / 24) * 100);
 
-  const cards = LIVROS_CURSO.map(function(nome, index) {
+  const cards = window.livrosAluno.map(function(nome, index) {
     var codigo   = 'p' + (index + 1);
     var indice1  = index + 1;
     var dado     = pagamentoMap[codigo] || null;
