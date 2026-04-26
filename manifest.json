@@ -4496,6 +4496,7 @@ function agendaMostrarDia(k) {
 /* ════ FIM AGENDA INTERATIVA ════ */
 
 function renderAlunoPagamentos(){
+  console.log('💥 LEGADO RENDER EXECUTOU');
   console.log('🔥 RENDER REAL PAGAMENTOS');
   window._pagamentosRenderizado = true;
   const a=usuAtual;
@@ -4532,6 +4533,7 @@ async function renderPagamentosAluno() {
 
 /* ════ LEGADO: renderAlunoPagamentos — DESATIVADO ════ */
 function renderAlunoPagamentos(){
+  console.log('💥 LEGADO RENDER EXECUTOU');
   console.warn('[LEGADO] renderAlunoPagamentos desativado');
 }
 
