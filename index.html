@@ -1401,11 +1401,9 @@ function renderPagamentosAlunoViaLivros() {
   const totalLivros = 24;
   const cards = Array.from({ length: totalLivros }).map((_, index) => {
     const numero = index + 1;
-    let livroAluno = null;
-    window.livrosAluno.forEach(l => {
-      console.log('🔎 ANALISANDO LIVRO:', l);
-    });
-    console.log('🎯 NUMERO ATUAL DO MAP:', numero);
+    const livroAluno = window.livrosAluno.find(l => 
+      l.id_livro === 'p' + numero
+    ) || null;
     const nomeLivro = livroAluno?.livro || 'Livro ' + numero;
     const pagou = livroAluno?.pagou === true || livroAluno?.pago === true;
     const entregue = livroAluno?.entregue === true;
