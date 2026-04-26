@@ -4416,6 +4416,7 @@ function agendaMostrarDia(k) {
 /* ════ FIM AGENDA INTERATIVA ════ */
 
 function renderAlunoPagamentos(){
+  console.log('🔥 RENDER REAL PAGAMENTOS');
   const a=usuAtual;
   const keys=[...new Set([...Object.keys(D.pagamentos),chM(hj())])].sort().reverse().slice(0,12);
   const linhas=keys.map(k=>{ const [ano,mes]=k.split('-'); const p=(D.pagamentos[k]||{})[a.id]===true;
