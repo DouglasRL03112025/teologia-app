@@ -1382,7 +1382,7 @@ function setFiltroLivros(tipo) {
 /* ════ PAGAMENTOS VIA LIVROS (adicionado) ════ */
 
 function renderPagamentosAlunoViaLivros() {
-  console.log('🔥 FUNÇÃO VIA LIVROS EXECUTOU');
+  console.log('🔥 EXECUTANDO VIA LIVROS');
   const container = document.getElementById('al-pagamentos');
   if (!container) { console.warn('🔥 CONTAINER al-pagamentos não encontrado'); return; }
 
