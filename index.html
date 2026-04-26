@@ -1403,7 +1403,7 @@ function renderPagamentosAlunoViaLivros() {
     const numero = index + 1;
     const livroAluno = window.livrosAluno[index] || null;
     const nomeLivro = livroAluno?.livro || 'Livro ' + numero;
-    const pagou = livroAluno?.pagou === true || livroAluno?.pago === true;
+    const pagou = !!livroAluno;
     const entregue = livroAluno?.entregue === true;
     let status = '';
     let cor = '';
