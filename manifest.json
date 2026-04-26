@@ -1383,10 +1383,90 @@ function setFiltroLivros(tipo) {
 
 function renderPagamentosAlunoViaLivros() {
   console.log('🔥 FUNÇÃO VIA LIVROS EXECUTOU');
-  const el = document.getElementById('al-pagamentos');
-  if (el) {
-    el.innerHTML = '<div style="padding:40px;font-size:22px;color:red">RENDER VIA LIVROS</div>';
-  }
+  const container = document.getElementById('al-pagamentos');
+  if (!container) { console.warn('🔥 CONTAINER al-pagamentos não encontrado'); return; }
+
+  const livrosLiberados = window.livroAtualSistema || 7;
+  const dadosAluno = Array.isArray(window.livrosAluno) ? window.livrosAluno : [];
+
+  const pagamentoMap = {};
+  dadosAluno.forEach(function(item) {
+    if (item && item.livro_codigo) pagamentoMap[item.livro_codigo] = item;
+  });
+
+  const totalPagos   = dadosAluno.filter(function(l) { return l.pagou === true; }).length;
+  const totalPendentes = 24 - totalPagos;
+  const progresso    = Math.round((totalPagos / 24) * 100);
+
+  const cards = LIVROS_CURSO.map(function(nome, index) {
+    var codigo   = 'p' + (index + 1);
+    var indice1  = index + 1;
+    var dado     = pagamentoMap[codigo] || null;
+    var pagou    = dado && dado.pagou === true;
+    var entregue = dado && dado.entregue === true;
+
+    var status;
+    if (indice1 > livrosLiberados) {
+      status = 'futuro';
+    } else if (entregue) {
+      status = 'entregue';
+    } else if (pagou) {
+      status = 'pago_nao_entregue';
+    } else {
+      status = 'pendente';
+    }
+
+    var numeroLivro = parseInt(codigo.replace('p', ''));
+    if (window.livroAtualSistema && numeroLivro === window.livroAtualSistema && status === 'futuro') {
+      status = 'pendente';
+    }
+
+    var pillHtml;
+    if (status === 'entregue') {
+      pillHtml = '<span style="background:#e8f7ee;color:#1f7a4c;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800">📦 Entregue</span>';
+    } else if (status === 'pago_nao_entregue') {
+      pillHtml = '<span style="background:#fff8e6;color:#a06c00;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800">💰 Aguardando</span>';
+    } else if (status === 'pendente') {
+      pillHtml = '<span style="background:#fdeaea;color:#a83232;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800">❌ Pendente</span>';
+    } else {
+      pillHtml = '<span style="background:#f2f2f2;color:#666;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800">⏳ Em breve</span>';
+    }
+
+    return '<div style="'
+      + 'background:#fff;'
+      + 'border-radius:18px;'
+      + 'padding:14px;'
+      + 'box-shadow:0 6px 18px rgba(0,0,0,.08);'
+      + 'display:flex;'
+      + 'flex-direction:column;'
+      + 'justify-content:space-between;'
+      + 'animation:_fadeUpPay .4s ease forwards;'
+      + 'animation-delay:' + (index * 0.04) + 's;'
+      + 'opacity:0;'
+      + '">'
+        + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">'
+          + '<div style="font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;text-transform:uppercase">' + codigo + '</div>'
+        + '</div>'
+        + '<div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">📖 ' + nome + '</div>'
+        + '<div style="margin-bottom:6px">' + pillHtml + '</div>'
+        + '<div style="font-size:11px;opacity:.6;margin-top:4px">Livro ' + indice1 + '/24</div>'
+      + '</div>';
+  }).join('');
+
+  container.innerHTML = ''
+    + '<style>@keyframes _fadeUpPay{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>'
+    + '<div style="background:linear-gradient(180deg,#fff,#f7faff);border-radius:20px;padding:18px;margin-bottom:18px;box-shadow:0 10px 30px rgba(0,0,0,.08)">'
+      + '<div style="font-size:13px;opacity:.6;margin-bottom:10px">Resumo financeiro</div>'
+      + '<div style="display:flex;justify-content:space-between">'
+        + '<div><div style="font-size:12px;opacity:.6">Pagos</div><div style="font-size:20px;font-weight:800;color:#1f7a4c">' + totalPagos + '</div></div>'
+        + '<div><div style="font-size:12px;opacity:.6">Pendentes</div><div style="font-size:20px;font-weight:800;color:#a06c00">' + totalPendentes + '</div></div>'
+        + '<div><div style="font-size:12px;opacity:.6">Progresso</div><div style="font-size:20px;font-weight:800;color:var(--azul)">' + progresso + '%</div></div>'
+      + '</div>'
+    + '</div>'
+    + '<div style="font-size:13px;opacity:.6;margin-bottom:10px">Histórico de pagamentos</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px">'
+      + cards
+    + '</div>';
 }
 
 /* ════ FIM PAGAMENTOS VIA LIVROS ════ */
