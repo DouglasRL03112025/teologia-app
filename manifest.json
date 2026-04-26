@@ -4422,28 +4422,7 @@ function renderAlunoPagamentos(){
   const a=usuAtual;
   const keys=[...new Set([...Object.keys(D.pagamentos),chM(hj())])].sort().reverse().slice(0,12);
   const linhas=keys.map((k,i)=>{ const [ano,mes]=k.split('-'); const p=(D.pagamentos[k]||{})[a.id]===true;
-    return `<div style="
-        background:#fff;
-        border-radius:18px;
-        box-shadow:0 6px 18px rgba(0,0,0,.08);
-        padding:16px 18px;
-        margin-bottom:12px;
-        animation:_fadeUpPay .4s ease forwards;
-        animation-delay:${i*0.05}s;
-        opacity:0;
-      ">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <div style="font-size:14px;font-weight:700;color:#111">${M[parseInt(mes)-1]} ${ano}</div>
-        <div style="font-size:14px;font-weight:800;color:var(--azul)">${a.valor?`R$ ${a.valor}`:''}</div>
-      </div>
-      <div style="font-size:12px;color:#888;opacity:.7;margin-bottom:10px">${mes}/${ano}</div>
-      <div>
-        ${p
-          ? '<span style="background:#e8f7ee;color:#1f7a4c;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:800">✅ Pago</span>'
-          : '<span style="background:#fff8e6;color:#a06c00;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:800">⏳ Pendente</span>'
-        }
-      </div>
-    </div>`; }).join('');
+    return '<div style="padding:30px;background:red;color:#fff;font-size:20px">MAP NOVO</div>'; }).join('');
   document.getElementById('al-pag-lista').innerHTML='<style>@keyframes _fadeUpPay{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>'+(linhas||'<div style="text-align:center;opacity:.6;padding:20px">Sem registros.</div>');
 }
 
