@@ -2326,6 +2326,7 @@ function irAdmin(t){
 /* ════ NAV ALUNO ════ */
 const TELAS_ALUNO=['cadastro','agenda','presenca','pagamentos','livros','notas'];
 async function irAluno(t){
+  console.log('🚀 irAluno chamado com:', t);
   // ── LOADING: timer elegante — só aparece se demorar > 120ms ──
   const loading = document.getElementById('al-loading');
   let loadingTimer = null;
