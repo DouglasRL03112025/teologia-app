@@ -1398,11 +1398,37 @@ function renderPagamentosAlunoViaLivros() {
   const totalPendentes = Math.max(0, window.livroAtualSistema - totalPagos);
   const progresso    = Math.round((totalPagos / 24) * 100);
 
+  const LIVROS_CURSO = [
+    "PENTATEUCO",
+    "HISTÓRICOS E POÉTICOS",
+    "HISTÓRIA DE ISRAEL",
+    "PROFETAS MAIORES E MENORES",
+    "OS EVANGELHOS",
+    "ATOS DOS APÓSTOLOS",
+    "EPÍSTOLAS PAULINAS",
+    "EPÍSTOLAS GERAIS",
+    "APOCALIPSE",
+    "BIBLIOLOGIA",
+    "HISTÓRIA ECLESIÁSTICA",
+    "HAMARTIOLOGIA E SOTERIOLOGIA",
+    "ANTROPOLOGIA",
+    "EDUCAÇÃO CRISTÃ",
+    "SEITAS MODERNAS",
+    "GEOGRAFIA BÍBLICA",
+    "ESCATOLOGIA",
+    "EVANGELISMO",
+    "LIDERANÇA CRISTÃ",
+    "HERMENÊUTICA",
+    "TEONTOLOGIA",
+    "CRISTOLOGIA",
+    "ECLESIOLOGIA",
+    "HOMILÉTICA"
+  ];
   const totalLivros = 24;
   const cards = Array.from({ length: totalLivros }).map((_, index) => {
     const numero = index + 1;
     const livroAluno = window.livrosAluno.find(l => l.livro_codigo === 'p' + numero) || null;
-    const nomeLivro = window.livros?.[index]?.nome || livroAluno?.livro || 'Livro ' + numero;
+    const nomeLivro = LIVROS_CURSO[index];
     const pagou = !!livroAluno;
     const entregue = !!livroAluno?.entregue;
     let status = '';
