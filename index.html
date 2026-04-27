@@ -1395,7 +1395,7 @@ function renderPagamentosAlunoViaLivros() {
   });
 
   const totalPagos   = dadosAluno.filter(function(l) { return l.pagou === true; }).length;
-  const totalPendentes = 0;
+  const totalPendentes = 24 - totalPagos;
   const progresso    = Math.round((totalPagos / 24) * 100);
 
   const totalLivros = 24;
@@ -1409,17 +1409,17 @@ function renderPagamentosAlunoViaLivros() {
     const entregue = livroAluno?.entregue === true;
     let status = '';
     let cor = '';
-    if (numero > window.livroAtualSistema) {
-      status = '⏳ Em breve';
-      cor = '#999';
-    }
-    else if (pagou && entregue) {
+    if (entregue === true) {
       status = '📦 Entregue';
       cor = '#1f7a4c';
     }
-    else if (pagou && !entregue) {
+    else if (pagou === true) {
       status = '💰 Aguardando';
       cor = '#a06c00';
+    }
+    else if (numero > window.livroAtualSistema) {
+      status = '⏳ Em breve';
+      cor = '#999';
     }
     else {
       status = '❌ Pendente';
