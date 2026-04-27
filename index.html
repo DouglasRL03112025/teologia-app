@@ -175,10 +175,10 @@ select.inp{cursor:pointer}
 /* ── PAGAMENTOS ── */
 .pgr{display:flex;align-items:center;gap:12px;padding:14px;background:#fff;border-radius:var(--r);margin-bottom:11px;border:1px solid var(--brd);box-shadow:var(--s);transition:all 0.2s ease;cursor:pointer}
 .pgr:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,0,0,0.12)}
-.pgr.status-entregue{outline:4px solid #28a745;outline-offset:-1px}
-.pgr.status-aguardando{outline:4px solid #f59e0b;outline-offset:-1px}
-.pgr.status-pendente{outline:4px solid #dc3545;outline-offset:-1px}
-.pgr.status-embreve{outline:4px solid #6c757d;outline-offset:-1px}
+.pgr.status-entregue{border-left:4px solid #28a745}
+.pgr.status-aguardando{border-left:4px solid #f59e0b}
+.pgr.status-pendente{border-left:4px solid #dc3545}
+.pgr.status-embreve{border-left:4px solid #6c757d}
 .pgi{flex:1}.pgn{font-size:14px;font-weight:600}.pgd{font-size:11px;color:#888;margin-top:2px}
 .pgb{padding:8px 16px;border:none;border-radius:99px;font-size:12px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s;white-space:nowrap}
 .pgb.pg{background:var(--vd-c);color:var(--vd)}.pgb.pe{background:var(--vm-c);color:var(--vm)}
@@ -186,6 +186,8 @@ select.inp{cursor:pointer}
 .pgr.liv-pend{background:#fff0f0;border-color:#f5c6c6}
 @keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes _fadeUpPay{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes _fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes _fadeUpSafe{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── TOGGLE ── */
 .tr{display:flex;align-items:center;justify-content:space-between;padding:14px;background:#fff;border-radius:var(--r);margin-bottom:9px;border:1px solid var(--brd);box-shadow:var(--s)}
@@ -1575,6 +1577,7 @@ function renderPagamentosAlunoViaLivros() {
   }).join('');
 
   container.innerHTML = ''
+
 
     // ── Card principal — padrão "Livro atual" do dashboard
     + '<div style="background:#1e3a5f;color:#fff;border-radius:12px;padding:16px;margin-bottom:16px;">'
@@ -4148,13 +4151,8 @@ async function renderAlunoInicio() {
 
   el.innerHTML =
 
-    /* ── keyframes inline (todos os efeitos visuais) ── */
-    '<style>'
-      + '@keyframes _fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}'
-    + '</style>'
-
-    /* ══ CONTEÚDO REAL — exibido imediatamente, animado via CSS ══ */
-    + '<div>'
+    /* ── CONTEÚDO REAL — exibido imediatamente, animado via CSS ══ */
+    '<div>'
 
       /* ── Cabeçalho ── delay 0s ── */
       + '<div style="margin-bottom:24px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:0s;transition:all .2s cubic-bezier(.4,0,.2,1)">'
@@ -4436,16 +4434,9 @@ async function renderAlunoAgenda(){
   // ── DASHBOARD ──
   const dashEl = document.getElementById('al-agenda-dashboard');
   if (dashEl) dashEl.innerHTML =
-    /* ── keyframes autossuficientes — não dependem de CSS externo ── */
-    '<style>'
-    + '@keyframes _fadeUpSafe {'
-    + '  from { opacity:0; transform:translateY(10px); }'
-    + '  to   { opacity:1; transform:translateY(0); }'
-    + '}'
-    + '</style>'
 
     /* ── Grid 3 cards ── */
-    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:4px">'
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:4px">'
 
       /* Card Livros — delay .05s */
       + '<div style="background:linear-gradient(180deg,#ffffff,#f7faff);border-radius:18px;padding:18px 12px;box-shadow:0 6px 18px rgba(0,0,0,.08);text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform .18s,box-shadow .18s;opacity:0;animation:_fadeUpSafe .4s ease forwards;animation-delay:.05s"'
