@@ -173,12 +173,18 @@ select.inp{cursor:pointer}
 .pres-p{background:var(--vd-c);color:var(--vd)}.pres-f{background:var(--vm-c);color:var(--vm)}.pres-n{background:var(--brd);color:var(--cin)}
 
 /* ── PAGAMENTOS ── */
-.pgr{display:flex;align-items:center;gap:12px;padding:14px;background:#fff;border-radius:var(--r);margin-bottom:11px;border:1px solid var(--brd);box-shadow:var(--s)}
-.pgi{flex:1}.pgn{font-size:15px;font-weight:600}.pgd{font-size:12px;color:var(--cin);margin-top:2px}
-.pgb{padding:8px 16px;border:none;border-radius:99px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s;white-space:nowrap}
+.pgr{display:flex;align-items:center;gap:12px;padding:14px;background:#fff;border-radius:var(--r);margin-bottom:11px;border:1px solid var(--brd);box-shadow:var(--s);transition:all 0.2s ease;cursor:pointer}
+.pgr:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,0,0,0.12)}
+.pgr.status-entregue{border-left:4px solid #28a745}
+.pgr.status-aguardando{border-left:4px solid #f59e0b}
+.pgr.status-pendente{border-left:4px solid #dc3545}
+.pgr.status-embreve{border-left:4px solid #6c757d}
+.pgi{flex:1}.pgn{font-size:14px;font-weight:600}.pgd{font-size:11px;color:#888;margin-top:2px}
+.pgb{padding:8px 16px;border:none;border-radius:99px;font-size:12px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s;white-space:nowrap}
 .pgb.pg{background:var(--vd-c);color:var(--vd)}.pgb.pe{background:var(--vm-c);color:var(--vm)}
 .pgr.liv-rec{background:#f0faf4;border-color:#b2dfca}
 .pgr.liv-pend{background:#fff0f0;border-color:#f5c6c6}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── TOGGLE ── */
 .tr{display:flex;align-items:center;justify-content:space-between;padding:14px;background:#fff;border-radius:var(--r);margin-bottom:9px;border:1px solid var(--brd);box-shadow:var(--s)}
@@ -1465,32 +1471,41 @@ function renderPagamentosAlunoViaLivros() {
     // ── status text/color mapeado para padrão do sistema
     let statusTexto = '';
     let statusCor = '';
+    let borderLeft = '';
     if (numero > window.livroAtualSistema) {
-      statusTexto = '⏳ Em breve';
+      statusTexto = 'Disponível em breve';
       statusCor = '#6c757d';
+      borderLeft = '4px solid #6c757d';
     } else if (pagou && entregue) {
-      statusTexto = '📦 Entregue';
+      statusTexto = 'Entregue';
       statusCor = '#28a745';
+      borderLeft = '4px solid #28a745';
     } else if (pagou && !entregue) {
-      statusTexto = '💰 Aguardando';
+      statusTexto = 'Aguardando entrega';
       statusCor = '#f59e0b';
+      borderLeft = '4px solid #f59e0b';
     } else {
-      statusTexto = '❌ Pendente';
+      statusTexto = 'Pagamento pendente';
       statusCor = '#dc3545';
+      borderLeft = '4px solid #dc3545';
     }
 
+    const isLivroAtual = window.livroAtualSistema && numero === window.livroAtualSistema;
+    const borderExtra = isLivroAtual ? 'border:2px solid #1e3a5f;' : '';
+    const animDelay = (index * 0.04).toFixed(2);
+
     return `
-    <div style="background:#ffffff;border-radius:10px;padding:12px;box-shadow:0 2px 6px rgba(0,0,0,0.08);transition:box-shadow .2s;cursor:default"
-         onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.13)'" onmouseleave="this.style.boxShadow='0 2px 6px rgba(0,0,0,0.08)'">
-      <div style="font-size:13px;font-weight:700;color:#1e1e1e;line-height:1.3;margin-bottom:4px">${nomeLivro}</div>
-      <div style="font-size:11px;color:#6b6b6b;margin-bottom:6px">Livro ${numero}/24</div>
-      <div style="font-size:12px;font-weight:700;color:${statusCor}">${statusTexto}</div>
+    <div style="background:#ffffff;border-radius:10px;padding:12px;box-shadow:0 2px 6px rgba(0,0,0,0.08);transition:all 0.2s ease;cursor:pointer;border-left:${borderLeft};${borderExtra}animation:fadeInUp 0.3s ease both;animation-delay:${animDelay}s"
+         onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 14px rgba(0,0,0,0.12)'" onmouseleave="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 6px rgba(0,0,0,0.08)'">
+      <div style="font-size:14px;font-weight:600;color:#1e1e1e;line-height:1.3;margin-bottom:4px">${nomeLivro}</div>
+      <div style="font-size:11px;color:#888;margin-bottom:6px">Livro ${numero}/24</div>
+      <div style="font-size:12px;font-weight:600;color:${statusCor}">${statusTexto}</div>
     </div>
   `;
   }).join('');
 
   container.innerHTML = ''
-    + '<style>@keyframes _fadeUpPay{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>'
+    + '<style>@keyframes _fadeUpPay{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}} @keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}</style>'
 
     // ── Card principal — padrão "Livro atual" do dashboard
     + '<div style="background:#1e3a5f;color:#fff;border-radius:12px;padding:16px;margin-bottom:16px;">'
@@ -1498,15 +1513,15 @@ function renderPagamentosAlunoViaLivros() {
       + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:0">'
         + '<div style="background:#ffffff;border-radius:10px;padding:12px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.08)">'
           + '<div style="font-size:11px;color:#6b6b6b;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Pagos</div>'
-          + '<div style="font-size:24px;font-weight:700;color:#28a745;font-family:\'Lora\',serif">' + totalPagos + '</div>'
+          + '<div style="font-size:20px;font-weight:700;letter-spacing:0.5px;color:#28a745;font-family:\'Lora\',serif">' + totalPagos + '</div>'
         + '</div>'
         + '<div style="background:#ffffff;border-radius:10px;padding:12px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.08)">'
           + '<div style="font-size:11px;color:#6b6b6b;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Pendentes</div>'
-          + '<div style="font-size:24px;font-weight:700;color:#dc3545;font-family:\'Lora\',serif">' + totalPendentes + '</div>'
+          + '<div style="font-size:20px;font-weight:700;letter-spacing:0.5px;color:#dc3545;font-family:\'Lora\',serif">' + totalPendentes + '</div>'
         + '</div>'
         + '<div style="background:#ffffff;border-radius:10px;padding:12px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.08)">'
           + '<div style="font-size:11px;color:#6b6b6b;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Progresso</div>'
-          + '<div style="font-size:24px;font-weight:700;color:#c9a84c;font-family:\'Lora\',serif">' + progresso + '%</div>'
+          + '<div style="font-size:20px;font-weight:700;letter-spacing:0.5px;color:#c9a84c;font-family:\'Lora\',serif">' + progresso + '%</div>'
         + '</div>'
       + '</div>'
     + '</div>'
