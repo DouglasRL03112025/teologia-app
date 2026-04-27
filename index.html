@@ -1383,7 +1383,6 @@ function setFiltroLivros(tipo) {
 
 function renderPagamentosAlunoViaLivros() {
   console.log('🔥 EXECUTANDO VIA LIVROS');
-  console.log('🧠 PRIMEIRO LIVRO REAL:', window.livrosAluno[0]);
   const container = document.getElementById('al-pagamentos');
   if (!container) { console.warn('🔥 CONTAINER al-pagamentos não encontrado'); return; }
 
@@ -1402,9 +1401,7 @@ function renderPagamentosAlunoViaLivros() {
   const totalLivros = 24;
   const cards = Array.from({ length: totalLivros }).map((_, index) => {
     const numero = index + 1;
-    const livroAluno = window.livrosAluno.find(l => 
-      Number(l.indice || l.livro || l.codigo || l.id_livro) === numero
-    );
+    const livroAluno = window.livrosAluno.find(l => l.livro_codigo === 'p' + numero) || null;
     const nomeLivro = livroAluno?.livro || 'Livro ' + numero;
     const pagou = livroAluno?.pagou === true || livroAluno?.pago === true;
     const entregue = livroAluno?.entregue === true;
