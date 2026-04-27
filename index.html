@@ -175,10 +175,10 @@ select.inp{cursor:pointer}
 /* ── PAGAMENTOS ── */
 .pgr{display:flex;align-items:center;gap:12px;padding:14px;background:#fff;border-radius:var(--r);margin-bottom:11px;border:1px solid var(--brd);box-shadow:var(--s);transition:all 0.2s ease;cursor:pointer}
 .pgr:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,0,0,0.12)}
-.pgr.status-entregue{border-left:4px solid #28a745}
-.pgr.status-aguardando{border-left:4px solid #f59e0b}
-.pgr.status-pendente{border-left:4px solid #dc3545}
-.pgr.status-embreve{border-left:4px solid #6c757d}
+.pgr.status-entregue{outline:4px solid #28a745;outline-offset:-1px}
+.pgr.status-aguardando{outline:4px solid #f59e0b;outline-offset:-1px}
+.pgr.status-pendente{outline:4px solid #dc3545;outline-offset:-1px}
+.pgr.status-embreve{outline:4px solid #6c757d;outline-offset:-1px}
 .pgi{flex:1}.pgn{font-size:14px;font-weight:600}.pgd{font-size:11px;color:#888;margin-top:2px}
 .pgb{padding:8px 16px;border:none;border-radius:99px;font-size:12px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s;white-space:nowrap}
 .pgb.pg{background:var(--vd-c);color:var(--vd)}.pgb.pe{background:var(--vm-c);color:var(--vm)}
@@ -391,6 +391,75 @@ select.inp{cursor:pointer}
     transform: scale(4);
     opacity: 0;
   }
+}
+
+/* ══════════════════════════════════════════
+   UX PREMIUM — MICRO-INTERAÇÕES INVISÍVEIS
+══════════════════════════════════════════ */
+
+/* 1. SCROLL SUAVE GLOBAL */
+html { scroll-behavior: smooth; }
+
+/* 2. TOUCH FEEDBACK — todo card/botão clicável */
+.card, .ar, .pgr, .ac, .mc, .mc3, .tr, .nr, .pr, .aula-item,
+.pres-ro, .tab, .btn, .pgb, .nb, .ab {
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.card:active, .ar:active, .pgr:active, .ac:active, .mc:active,
+.mc3:active, .tr:active, .nr:active, .pr:active, .aula-item:active,
+.pres-ro:active, .tab:active, .pgb:active {
+  transform: scale(0.97) !important;
+}
+
+/* 3. SKELETON LOADING */
+.skeleton {
+  height: 60px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #eeeeee 25%, #f5f5f5 50%, #eeeeee 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.2s infinite linear;
+  margin-bottom: 10px;
+}
+.skeleton.sk-tall  { height: 80px; }
+.skeleton.sk-short { height: 40px; }
+.skeleton.sk-wide  { border-radius: var(--rl); }
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+/* 4. TRANSIÇÃO ENTRE TELAS */
+.fade-screen {
+  animation: fadeScreen 0.2s ease both;
+}
+@keyframes fadeScreen {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 5. FOCO INTELIGENTE (acessibilidade premium) */
+input:focus, select:focus, textarea:focus, button:focus-visible,
+.inp:focus, .busca:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(30,58,95,0.2) !important;
+}
+
+/* 6. FLASH DE SUCESSO */
+.flash-success {
+  animation: flashGreen 0.5s ease forwards;
+}
+@keyframes flashGreen {
+  0%   { background-color: #d1fae5; }
+  100% { background-color: transparent; }
+}
+
+/* 7. FLASH DE ERRO */
+.flash-error {
+  animation: flashRed 0.5s ease forwards;
+}
+@keyframes flashRed {
+  0%   { background-color: #fee2e2; }
+  100% { background-color: transparent; }
 }
 </style>
 </head>
@@ -1505,7 +1574,7 @@ function renderPagamentosAlunoViaLivros() {
   }).join('');
 
   container.innerHTML = ''
-    + '<style>@keyframes _fadeUpPay{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}} @keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}</style>'
+    + '<style>@keyframes _fadeUpPay{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>'
 
     // ── Card principal — padrão "Livro atual" do dashboard
     + '<div style="background:#1e3a5f;color:#fff;border-radius:12px;padding:16px;margin-bottom:16px;">'
@@ -5952,6 +6021,67 @@ document.addEventListener('click', function(e){
   target.appendChild(ripple);
   setTimeout(function(){ ripple.remove(); }, 500);
 });
+</script>
+
+<!-- ── UX PREMIUM: MICRO-INTERAÇÕES GLOBAIS ── -->
+<script>
+/* ── Helper: skeleton loader ──
+   Uso: mostrarSkeleton(container, quantidade, altura)
+   Chamável em qualquer render antes de popular o container */
+window.mostrarSkeleton = function(container, qtd, altura) {
+  if (!container) return;
+  qtd = qtd || 4;
+  var cls = altura === 'tall' ? 'skeleton sk-tall' : altura === 'short' ? 'skeleton sk-short' : 'skeleton';
+  container.innerHTML = Array(qtd).fill('<div class="' + cls + '"></div>').join('');
+};
+
+/* ── Helper: flash de feedback em elemento ──
+   Uso: flashElemento(el, 'success' | 'error') */
+window.flashElemento = function(el, tipo) {
+  if (!el) return;
+  var cls = tipo === 'error' ? 'flash-error' : 'flash-success';
+  el.classList.remove('flash-success', 'flash-error');
+  void el.offsetWidth; // reflow para reiniciar animação
+  el.classList.add(cls);
+  setTimeout(function(){ el.classList.remove(cls); }, 600);
+};
+
+/* ── Transição fade-screen nas telas admin ──
+   Observa quando .tela.on muda e aplica fade */
+(function(){
+  var observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(m) {
+      if (m.type === 'attributes' && m.attributeName === 'class') {
+        var el = m.target;
+        if (el.classList.contains('on') && el.classList.contains('tela')) {
+          el.classList.remove('fade-screen');
+          void el.offsetWidth;
+          el.classList.add('fade-screen');
+        }
+      }
+    });
+  });
+  document.querySelectorAll('.tela').forEach(function(el){
+    observer.observe(el, { attributes: true });
+  });
+  // Re-observar quando DOM muda (telas dinâmicas)
+  document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('.tela').forEach(function(el){
+      observer.observe(el, { attributes: true });
+    });
+  });
+})();
+
+/* ── Delay cascata em listas renderizadas dinamicamente ──
+   Aplica animation-delay escalonado em filhos de containers de lista */
+window.aplicarCascata = function(container, delay) {
+  if (!container) return;
+  delay = delay || 0.03;
+  Array.from(container.children).forEach(function(el, i) {
+    el.style.animationDelay = (i * delay).toFixed(2) + 's';
+    el.style.animationFillMode = 'both';
+  });
+};
 </script>
 </body>
 </html>
