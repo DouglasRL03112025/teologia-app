@@ -919,6 +919,16 @@ const DB_KEY = 'teologia_v4';
 let D, usuAtual = null;
 window.isAdmin = false; // Identificação global de admin (default: false)
 
+/* ── FONTE DE VERDADE ÚNICA: nomes dos 24 livros do curso ── */
+const LIVROS_CURSO = [
+  "PENTATEUCO","HISTÓRICOS E POÉTICOS","HISTÓRIA DE ISRAEL","PROFETAS MAIORES E MENORES",
+  "OS EVANGELHOS","ATOS DOS APÓSTOLOS","EPÍSTOLAS PAULINAS","EPÍSTOLAS GERAIS",
+  "APOCALIPSE","BIBLIOLOGIA","HISTÓRIA ECLESIÁSTICA","HAMARTIOLOGIA E SOTERIOLOGIA",
+  "ANTROPOLOGIA","EDUCAÇÃO CRISTÃ","SEITAS MODERNAS","GEOGRAFIA BÍBLICA",
+  "ESCATOLOGIA","EVANGELISMO","LIDERANÇA CRISTÃ","HERMENÊUTICA",
+  "TEONTOLOGIA","CRISTOLOGIA","ECLESIOLOGIA","HOMILÉTICA"
+];
+
 function ddp(){ return { alunos: [], presencas:{}, pagamentos:{}, livros_ent:{}, provas:{}, notas:{}, livros_curso:[{id:'l1',nome:'Livro 1 – Introdução Bíblica'},{id:'l2',nome:'Livro 2 – Pentateuco e Históricos'},{id:'l3',nome:'Livro 3 – Poéticos e Proféticos'},{id:'l4',nome:'Livro 4 – Novo Testamento'}], aulas_log:{} }; }
 function carregarDB(){
   try{
@@ -1258,33 +1268,6 @@ function renderLivrosAluno(_ignored) {
 
   console.log('RENDER DATA (renderLivrosAluno):', window.livrosAluno);
 
-  const LIVROS_CURSO = [
-    "PENTATEUCO",
-    "HISTÓRICOS E POÉTICOS",
-    "HISTÓRIA DE ISRAEL",
-    "PROFETAS MAIORES E MENORES",
-    "OS EVANGELHOS",
-    "ATOS DOS APÓSTOLOS",
-    "EPÍSTOLAS PAULINAS",
-    "EPÍSTOLAS GERAIS",
-    "APOCALIPSE",
-    "BIBLIOLOGIA",
-    "HISTÓRIA ECLESIÁSTICA",
-    "HAMARTIOLOGIA E SOTERIOLOGIA",
-    "ANTROPOLOGIA",
-    "EDUCAÇÃO CRISTÃ",
-    "SEITAS MODERNAS",
-    "GEOGRAFIA BÍBLICA",
-    "ESCATOLOGIA",
-    "EVANGELISMO",
-    "LIDERANÇA CRISTÃ",
-    "HERMENÊUTICA",
-    "TEONTOLOGIA",
-    "CRISTOLOGIA",
-    "ECLESIOLOGIA",
-    "HOMILÉTICA"
-  ];
-
   // Usa o livro atual definido pelo admin (config_sistema.livro_atual_override)
   // NÃO calcula por data — o admin é a única fonte de verdade
   const livrosLiberados = window.livroAtualSistema || 7;
@@ -1402,37 +1385,36 @@ function renderPagamentosAlunoViaLivros() {
   const cards = Array.from({ length: totalLivros }).map((_, index) => {
     const numero = index + 1;
     const livroAluno = window.livrosAluno.find(l => l.livro_codigo === 'p' + numero) || null;
-    const nomeLivro = window.livros?.[index]?.nome || livroAluno?.livro || 'Livro ' + numero;
+    const nomeLivro = LIVROS_CURSO[index];
     const pagou = !!livroAluno;
     const entregue = !!livroAluno?.entregue;
     let status = '';
     let cor = '';
     if (numero > window.livroAtualSistema) {
       status = '⏳ Em breve';
-      cor = '#999';
+      cor = '#6c757d';
     }
     else if (pagou && entregue) {
       status = '📦 Entregue';
-      cor = '#1f7a4c';
+      cor = '#28a745';
     }
     else if (pagou && !entregue) {
       status = '💰 Aguardando';
-      cor = '#a06c00';
+      cor = '#f59e0b';
     }
     else {
       status = '❌ Pendente';
-      cor = '#a83232';
+      cor = '#dc3545';
     }
     return `
-    <div style="background:#fff;border-radius:18px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08)">
-      
-      <div style="font-weight:700;font-size:15px;margin-bottom:3px">
+    <div style="background:#fff;border-radius:10px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,0.07);border:1px solid #e8edf3;transition:transform .2s,box-shadow .2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 10px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.07)'">
+      <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:4px;line-height:1.3">
         📖 ${nomeLivro}
       </div>
-      <div style="font-size:11px;opacity:.6;margin-bottom:6px">
+      <div style="font-size:11px;color:#9aa3af;margin-bottom:6px">
         📚 Livro ${numero}/24
       </div>
-      <div style="font-size:12px;color:${cor};font-weight:700">
+      <div style="font-size:11px;color:${cor};font-weight:700">
         ${status}
       </div>
     </div>
@@ -1440,17 +1422,16 @@ function renderPagamentosAlunoViaLivros() {
   }).join('');
 
   container.innerHTML = ''
-    + '<style>@keyframes _fadeUpPay{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>'
-    + '<div style="background:linear-gradient(180deg,#fff,#f7faff);border-radius:20px;padding:18px;margin-bottom:18px;box-shadow:0 10px 30px rgba(0,0,0,.08)">'
-      + '<div style="font-size:13px;opacity:.6;margin-bottom:10px">Resumo financeiro</div>'
-      + '<div style="display:flex;justify-content:space-between">'
-        + '<div><div style="font-size:12px;opacity:.6">Pagos</div><div style="font-size:20px;font-weight:800;color:#1f7a4c">' + totalPagos + '</div></div>'
-        + '<div><div style="font-size:12px;opacity:.6">Pendentes</div><div style="font-size:20px;font-weight:800;color:#a06c00">' + totalPendentes + '</div></div>'
-        + '<div><div style="font-size:12px;opacity:.6">Progresso</div><div style="font-size:20px;font-weight:800;color:var(--azul)">' + progresso + '%</div></div>'
+    + '<div style="background:#1e3a5f;border-radius:12px;padding:20px 18px;margin-bottom:18px;box-shadow:0 4px 16px rgba(0,0,0,0.15)">'
+      + '<div style="font-size:12px;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;font-weight:600">💼 Resumo Financeiro</div>'
+      + '<div style="display:flex;justify-content:space-between;gap:10px">'
+        + '<div style="background:#fff;border-radius:10px;padding:14px 10px;flex:1;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.08)"><div style="font-size:11px;color:#6c757d;margin-bottom:4px;font-weight:500">Pagos</div><div style="font-size:22px;font-weight:700;color:#28a745">' + totalPagos + '</div></div>'
+        + '<div style="background:#fff;border-radius:10px;padding:14px 10px;flex:1;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.08)"><div style="font-size:11px;color:#6c757d;margin-bottom:4px;font-weight:500">Pendentes</div><div style="font-size:22px;font-weight:700;color:#dc3545">' + totalPendentes + '</div></div>'
+        + '<div style="background:#fff;border-radius:10px;padding:14px 10px;flex:1;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.08)"><div style="font-size:11px;color:#6c757d;margin-bottom:4px;font-weight:500">Progresso</div><div style="font-size:22px;font-weight:700;color:#1e3a5f">' + progresso + '%</div></div>'
       + '</div>'
     + '</div>'
-    + '<div style="font-size:13px;opacity:.6;margin-bottom:10px">Histórico de pagamentos</div>'
-    + '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px">'
+    + '<div style="font-size:12px;color:#6c757d;text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:12px">📚 Histórico de Pagamentos</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">'
       + cards
     + '</div>';
 }
@@ -1541,33 +1522,6 @@ async function renderProvasAluno() {
   if (!container) return;
 
   container.innerHTML = '<div style="color:var(--cin);font-size:14px;padding:8px 0">Carregando provas...</div>';
-
-  const LIVROS_CURSO = [
-    "PENTATEUCO",
-    "HISTÓRICOS E POÉTICOS",
-    "HISTÓRIA DE ISRAEL",
-    "PROFETAS MAIORES E MENORES",
-    "OS EVANGELHOS",
-    "ATOS DOS APÓSTOLOS",
-    "EPÍSTOLAS PAULINAS",
-    "EPÍSTOLAS GERAIS",
-    "APOCALIPSE",
-    "BIBLIOLOGIA",
-    "HISTÓRIA ECLESIÁSTICA",
-    "HAMARTIOLOGIA E SOTERIOLOGIA",
-    "ANTROPOLOGIA",
-    "EDUCAÇÃO CRISTÃ",
-    "SEITAS MODERNAS",
-    "GEOGRAFIA BÍBLICA",
-    "ESCATOLOGIA",
-    "EVANGELISMO",
-    "LIDERANÇA CRISTÃ",
-    "HERMENÊUTICA",
-    "TEONTOLOGIA",
-    "CRISTOLOGIA",
-    "ECLESIOLOGIA",
-    "HOMILÉTICA"
-  ];
 
   let livrosLiberados = 7;
   if (new Date().getDate() >= 25) livrosLiberados = 8;
