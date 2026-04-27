@@ -1405,21 +1405,21 @@ function renderPagamentosAlunoViaLivros() {
       Number(l.indice || l.livro || l.codigo || l.id_livro) === numero
     );
     const nomeLivro = livroAluno?.livro || 'Livro ' + numero;
-    const pagou = livroAluno?.pagou === true || livroAluno?.pago === true;
+    const pagou = livroAluno?.pagou === true;
     const entregue = livroAluno?.entregue === true;
     let status = '';
     let cor = '';
-    if (entregue === true) {
+    if (numero > window.livroAtualSistema) {
+      status = '⏳ Em breve';
+      cor = '#999';
+    }
+    else if (pagou && entregue) {
       status = '📦 Entregue';
       cor = '#1f7a4c';
     }
-    else if (pagou === true) {
+    else if (pagou && !entregue) {
       status = '💰 Aguardando';
       cor = '#a06c00';
-    }
-    else if (numero > window.livroAtualSistema) {
-      status = '⏳ Em breve';
-      cor = '#999';
     }
     else {
       status = '❌ Pendente';
