@@ -1405,8 +1405,8 @@ function renderPagamentosAlunoViaLivros() {
       Number(l.indice || l.livro || l.codigo || l.id_livro) === numero
     );
     const nomeLivro = livroAluno?.livro || 'Livro ' + numero;
-    const pagou = livroAluno?.pagou === true;
-    const entregue = livroAluno?.entregue === true;
+    const pagou = !!livroAluno?.pagou;
+    const entregue = !!livroAluno?.entregue;
     let status = '';
     let cor = '';
     if (numero > window.livroAtualSistema) {
