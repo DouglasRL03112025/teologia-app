@@ -1395,7 +1395,7 @@ function renderPagamentosAlunoViaLivros() {
   });
 
   const totalPagos   = dadosAluno.filter(function(l) { return l.pagou === true; }).length;
-  const totalPendentes = 24 - totalPagos;
+  const totalPendentes = Math.max(0, window.livroAtualSistema - totalPagos);
   const progresso    = Math.round((totalPagos / 24) * 100);
 
   const totalLivros = 24;
