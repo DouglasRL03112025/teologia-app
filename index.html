@@ -1462,46 +1462,61 @@ function renderPagamentosAlunoViaLivros() {
       cardBg = 'rgba(239,68,68,0.15)';  cardBorder = '#ef4444';
     }
 
+    // ── status text/color mapeado para padrão do sistema
+    let statusTexto = '';
+    let statusCor = '';
+    if (numero > window.livroAtualSistema) {
+      statusTexto = '⏳ Em breve';
+      statusCor = '#6c757d';
+    } else if (pagou && entregue) {
+      statusTexto = '📦 Entregue';
+      statusCor = '#28a745';
+    } else if (pagou && !entregue) {
+      statusTexto = '💰 Aguardando';
+      statusCor = '#f59e0b';
+    } else {
+      statusTexto = '❌ Pendente';
+      statusCor = '#dc3545';
+    }
+
     return `
-    <div onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform='translateY(0)'"
-      style="background:${cardBg};border-left:4px solid ${cardBorder};border-radius:12px;padding:12px;
-             box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(6px);
-             transition:all .2s ease;cursor:default">
-      <div style="font-size:11px;opacity:.6;margin-bottom:4px;letter-spacing:.4px">Livro ${numero}/24</div>
-      <div style="font-size:15px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:8px">📖 ${nomeLivro}</div>
-      <div style="font-size:12px;font-weight:600;color:${cardBorder}">${status}</div>
+    <div style="background:#ffffff;border-radius:10px;padding:12px;box-shadow:0 2px 6px rgba(0,0,0,0.08);transition:box-shadow .2s;cursor:default"
+         onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.13)'" onmouseleave="this.style.boxShadow='0 2px 6px rgba(0,0,0,0.08)'">
+      <div style="font-size:13px;font-weight:700;color:#1e1e1e;line-height:1.3;margin-bottom:4px">${nomeLivro}</div>
+      <div style="font-size:11px;color:#6b6b6b;margin-bottom:6px">Livro ${numero}/24</div>
+      <div style="font-size:12px;font-weight:700;color:${statusCor}">${statusTexto}</div>
     </div>
   `;
   }).join('');
 
   container.innerHTML = ''
     + '<style>@keyframes _fadeUpPay{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>'
-    + '<div style="background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;border-radius:20px;padding:20px;margin-bottom:4px;box-shadow:0 10px 30px rgba(0,0,0,.25)">'
 
-      // ── Resumo financeiro — 3 cards internos
-      + '<div style="font-size:11px;font-weight:700;letter-spacing:.8px;opacity:.5;text-transform:uppercase;margin-bottom:12px">Resumo financeiro</div>'
-      + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">'
-        + '<div style="background:rgba(34,197,94,0.15);border-radius:10px;padding:10px;text-align:center">'
-          + '<div style="font-size:11px;opacity:.6;margin-bottom:4px">Pagos</div>'
-          + '<div style="font-size:24px;font-weight:800;color:#22c55e">' + totalPagos + '</div>'
+    // ── Card principal — padrão "Livro atual" do dashboard
+    + '<div style="background:#1e3a5f;color:#fff;border-radius:12px;padding:16px;margin-bottom:16px;">'
+      + '<div style="font-size:11px;font-weight:700;letter-spacing:.8px;opacity:.65;text-transform:uppercase;margin-bottom:10px">Resumo financeiro</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:0">'
+        + '<div style="background:#ffffff;border-radius:10px;padding:12px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.08)">'
+          + '<div style="font-size:11px;color:#6b6b6b;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Pagos</div>'
+          + '<div style="font-size:24px;font-weight:700;color:#28a745;font-family:\'Lora\',serif">' + totalPagos + '</div>'
         + '</div>'
-        + '<div style="background:rgba(239,68,68,0.15);border-radius:10px;padding:10px;text-align:center">'
-          + '<div style="font-size:11px;opacity:.6;margin-bottom:4px">Pendentes</div>'
-          + '<div style="font-size:24px;font-weight:800;color:#ef4444">' + totalPendentes + '</div>'
+        + '<div style="background:#ffffff;border-radius:10px;padding:12px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.08)">'
+          + '<div style="font-size:11px;color:#6b6b6b;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Pendentes</div>'
+          + '<div style="font-size:24px;font-weight:700;color:#dc3545;font-family:\'Lora\',serif">' + totalPendentes + '</div>'
         + '</div>'
-        + '<div style="background:rgba(96,165,250,0.15);border-radius:10px;padding:10px;text-align:center">'
-          + '<div style="font-size:11px;opacity:.6;margin-bottom:4px">Progresso</div>'
-          + '<div style="font-size:24px;font-weight:800;color:#60a5fa">' + progresso + '%</div>'
+        + '<div style="background:#ffffff;border-radius:10px;padding:12px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.08)">'
+          + '<div style="font-size:11px;color:#6b6b6b;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Progresso</div>'
+          + '<div style="font-size:24px;font-weight:700;color:#c9a84c;font-family:\'Lora\',serif">' + progresso + '%</div>'
         + '</div>'
       + '</div>'
+    + '</div>'
 
-      // ── Label seção livros
-      + '<div style="font-size:11px;font-weight:700;letter-spacing:.8px;opacity:.5;text-transform:uppercase;margin-bottom:12px">Histórico de pagamentos</div>'
+    // ── Label seção livros
+    + '<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6b6b6b;margin-bottom:12px">Histórico de pagamentos</div>'
 
-      // ── Grid de cards
-      + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">'
-        + cards
-      + '</div>'
+    // ── Grid de cards — padrão 2 colunas do sistema
+    + '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">'
+      + cards
     + '</div>';
 }
 
