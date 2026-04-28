@@ -45,6 +45,8 @@ main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
 @keyframes _fadeUpAgenda{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes _slideLeftIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes _slideRightIn{from{transform:translateX(-40px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes pulseAtual{0%{box-shadow:0 0 0 3px rgba(30,58,95,0.10),0 4px 12px rgba(0,0,0,0.06)}50%{box-shadow:0 0 0 6px rgba(30,58,95,0.15),0 6px 16px rgba(0,0,0,0.08)}100%{box-shadow:0 0 0 3px rgba(30,58,95,0.10),0 4px 12px rgba(0,0,0,0.06)}}
+@keyframes shineBar{0%{left:-40%}100%{left:100%}}
 
 /* ── LOGIN ── */
 #pg-login{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px 20px;background:#f4f6f8 !important}
@@ -1327,15 +1329,16 @@ function renderLivrosAluno(_ignored) {
       + 'display:flex;'
       + 'flex-direction:column;'
       + 'gap:5px;'
-      + 'box-shadow:0 4px 12px rgba(0,0,0,0.06);'
-      + 'transition:all 0.2s ease;'
+      + 'transition:all 0.18s ease;'
       + 'cursor:default;'
-      + (isAtual ? 'border:2px solid #1e3a5f;box-shadow:0 4px 12px rgba(0,0,0,0.06),0 0 0 3px rgba(30,58,95,0.10);' : 'border:1px solid rgba(0,0,0,0.07);')
-      + (isFuturo ? 'opacity:0.7;' : '');
+      + (isAtual
+          ? 'border:2px solid #1e3a5f;animation:pulseAtual 3.5s ease-in-out infinite;'
+          : 'border:1px solid rgba(0,0,0,0.07);box-shadow:0 4px 12px rgba(0,0,0,0.06);')
+      + (isFuturo ? 'opacity:0.65;' : '');
 
     return '<div style="' + cardBaseStyle + '"'
       + ' onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,0.11)\'"'
-      + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'' + (isAtual ? '0 4px 12px rgba(0,0,0,0.06),0 0 0 3px rgba(30,58,95,0.10)' : '0 4px 12px rgba(0,0,0,0.06)') + '\'"'
+      + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'' + (isAtual ? '' : '0 4px 12px rgba(0,0,0,0.06)') + '\'"'
       + ' onmousedown="this.style.transform=\'scale(0.98)\'"'
       + ' onmouseup="this.style.transform=\'translateY(-2px)\'"'
       + '>'
@@ -1358,7 +1361,9 @@ function renderLivrosAluno(_ignored) {
         + '<div style="font-size:14px;font-weight:600;color:#1a3a5c;">Progresso do curso</div>'
         + '<div style="font-size:13px;color:#2563EB;font-weight:500;margin-top:2px;">' + progresso + '% concluído — ' + totalPagos + ' de 24 livros pagos</div>'
         + '<div style="margin-top:8px;height:8px;border-radius:999px;background:#e5e7eb;overflow:hidden;">'
-          + '<div style="height:100%;border-radius:999px;background:linear-gradient(90deg,#1e3a5f,#3b82f6);width:' + progresso + '%;transition:width 0.6s ease;"></div>'
+          + '<div style="position:relative;height:100%;border-radius:999px;background:linear-gradient(90deg,#1e3a5f,#3b82f6);width:' + progresso + '%;transition:width 0.6s ease;overflow:hidden;">'
+            + '<div style="position:absolute;top:0;left:-40%;width:40%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,0.4),transparent);animation:shineBar 2.8s linear infinite;"></div>'
+          + '</div>'
         + '</div>'
       + '</div>'
     + '</div>'
