@@ -1411,6 +1411,8 @@ function renderPagamentosAlunoViaLivros() {
       cardBg = 'rgba(239,68,68,0.05)'; cardBorder = 'border-left:3px solid #ef4444;border-top:1px solid #fee2e2;border-right:1px solid #fee2e2;border-bottom:1px solid #fee2e2;';
       labelTexto = 'Pagamento pendente'; labelCor = '#991b1b'; labelBg = '#fee2e2'; labelBorder = '#fecaca';
     }
+    const dataPagamento = livroAluno?.data_pagamento || livroAluno?.created_at || null;
+    const formaPagamento = livroAluno?.forma_pagamento || livroAluno?.metodo || null;
     return `
     <div style="background:${cardBg};border-radius:12px;padding:12px;${cardBorder}box-shadow:0 1px 4px rgba(0,0,0,0.05);transition:all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 14px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='';this.style.boxShadow='0 1px 4px rgba(0,0,0,0.05)'">
       <div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:3px;line-height:1.35;letter-spacing:0.1px">
@@ -1422,6 +1424,8 @@ function renderPagamentosAlunoViaLivros() {
       <div style="display:inline-block;font-size:10px;font-weight:700;color:${labelCor};background:${labelBg};border:1px solid ${labelBorder};border-radius:6px;padding:2px 7px;letter-spacing:0.2px">
         ${labelTexto}
       </div>
+      ${dataPagamento ? `<div style="font-size:10px;color:#6b7280;margin-top:6px;font-weight:500">📅 ${formatarData(dataPagamento)}</div>` : ''}
+      ${formaPagamento ? `<div style="font-size:10px;color:#6b7280;margin-top:2px;font-weight:500">💳 ${formaPagamento}</div>` : ''}
     </div>
   `;
   }).join('');
@@ -1448,6 +1452,10 @@ function renderPagamentosAlunoViaLivros() {
     + '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">'
       + cards
     + '</div>';
+}
+
+function formatarData(data) {
+  try { return new Date(data).toLocaleDateString('pt-BR'); } catch { return ''; }
 }
 
 /* ════ FIM PAGAMENTOS VIA LIVROS ════ */
