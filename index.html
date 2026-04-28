@@ -1381,11 +1381,11 @@ function renderPagamentosAlunoViaLivros() {
   const totalPendentes = Math.max(0, window.livroAtualSistema - totalPagos);
   const progresso    = Math.round((totalPagos / 24) * 100);
 
-  const ultimoPagamentoData = dadosAluno
-    .map(l => l.data_pagamento || l.created_at || null)
+  const ultimoPagamentoData = window.livrosAluno
+    .filter(function(l) { return l.pagou === true; })
+    .map(function(l) { return l.data_pagamento || l.created_at; })
     .filter(Boolean)
-    .sort()
-    .pop() || null;
+    .sort(function(a, b) { return new Date(b) - new Date(a); })[0] || null;
 
   const totalLivros = 24;
   const cards = Array.from({ length: totalLivros }).map((_, index) => {
@@ -1410,7 +1410,7 @@ function renderPagamentosAlunoViaLivros() {
     else if (pagou && !entregue) {
       status = 'aguardando'; cor = '#f59e0b';
       cardBg = 'rgba(245,158,11,0.07)'; cardBorder = 'border-left:3px solid #f59e0b;border-top:1px solid #fef3c7;border-right:1px solid #fef3c7;border-bottom:1px solid #fef3c7;';
-      labelTexto = 'Aguardando confirmação'; labelCor = '#92400e'; labelBg = '#fef3c7'; labelBorder = '#fde68a';
+      labelTexto = 'Aguardando entrega'; labelCor = '#92400e'; labelBg = '#fef3c7'; labelBorder = '#fde68a';
     }
     else {
       status = 'pendente'; cor = '#dc3545';
