@@ -1390,47 +1390,61 @@ function renderPagamentosAlunoViaLivros() {
     const entregue = !!livroAluno?.entregue;
     let status = '';
     let cor = '';
+    let cardBg, cardBorder, labelTexto, labelCor, labelBg, labelBorder;
     if (numero > window.livroAtualSistema) {
-      status = '⏳ Em breve';
-      cor = '#6c757d';
+      status = 'em_breve'; cor = '#6c757d';
+      cardBg = '#f9fafb'; cardBorder = 'border:1px solid #e5e7eb;';
+      labelTexto = 'Disponível em breve'; labelCor = '#6b7280'; labelBg = '#f3f4f6'; labelBorder = '#e5e7eb';
     }
     else if (pagou && entregue) {
-      status = '📦 Entregue';
-      cor = '#28a745';
+      status = 'entregue'; cor = '#28a745';
+      cardBg = 'rgba(34,197,94,0.06)'; cardBorder = 'border-left:3px solid #22c55e;border-top:1px solid #dcfce7;border-right:1px solid #dcfce7;border-bottom:1px solid #dcfce7;';
+      labelTexto = 'Pago e confirmado'; labelCor = '#15803d'; labelBg = '#dcfce7'; labelBorder = '#bbf7d0';
     }
     else if (pagou && !entregue) {
-      status = '💰 Aguardando';
-      cor = '#f59e0b';
+      status = 'aguardando'; cor = '#f59e0b';
+      cardBg = 'rgba(245,158,11,0.07)'; cardBorder = 'border-left:3px solid #f59e0b;border-top:1px solid #fef3c7;border-right:1px solid #fef3c7;border-bottom:1px solid #fef3c7;';
+      labelTexto = 'Aguardando confirmação'; labelCor = '#92400e'; labelBg = '#fef3c7'; labelBorder = '#fde68a';
     }
     else {
-      status = '❌ Pendente';
-      cor = '#dc3545';
+      status = 'pendente'; cor = '#dc3545';
+      cardBg = 'rgba(239,68,68,0.05)'; cardBorder = 'border-left:3px solid #ef4444;border-top:1px solid #fee2e2;border-right:1px solid #fee2e2;border-bottom:1px solid #fee2e2;';
+      labelTexto = 'Pagamento pendente'; labelCor = '#991b1b'; labelBg = '#fee2e2'; labelBorder = '#fecaca';
     }
     return `
-    <div style="background:#fff;border-radius:10px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,0.07);border:1px solid #e8edf3;transition:transform .2s,box-shadow .2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 10px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.07)'">
-      <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:4px;line-height:1.3">
-        📖 ${nomeLivro}
+    <div style="background:${cardBg};border-radius:12px;padding:12px;${cardBorder}box-shadow:0 1px 4px rgba(0,0,0,0.05);transition:all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 14px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='';this.style.boxShadow='0 1px 4px rgba(0,0,0,0.05)'">
+      <div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:3px;line-height:1.35;letter-spacing:0.1px">
+        ${nomeLivro}
       </div>
-      <div style="font-size:11px;color:#9aa3af;margin-bottom:6px">
-        📚 Livro ${numero}/24
+      <div style="font-size:10px;color:#9ca3af;margin-bottom:8px;font-weight:500">
+        Livro ${numero}/24
       </div>
-      <div style="font-size:11px;color:${cor};font-weight:700">
-        ${status}
+      <div style="display:inline-block;font-size:10px;font-weight:700;color:${labelCor};background:${labelBg};border:1px solid ${labelBorder};border-radius:6px;padding:2px 7px;letter-spacing:0.2px">
+        ${labelTexto}
       </div>
     </div>
   `;
   }).join('');
 
   container.innerHTML = ''
-    + '<div style="background:#1e3a5f;border-radius:12px;padding:20px 18px;margin-bottom:18px;box-shadow:0 4px 16px rgba(0,0,0,0.15)">'
-      + '<div style="font-size:12px;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;font-weight:600">💼 Resumo Financeiro</div>'
+    + '<div style="background:#1e3a5f;border-radius:14px;padding:18px;margin-bottom:18px;box-shadow:0 6px 20px rgba(30,58,95,0.25)">'
+      + '<div style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:14px">Resumo Financeiro</div>'
       + '<div style="display:flex;justify-content:space-between;gap:10px">'
-        + '<div style="background:#fff;border-radius:10px;padding:14px 10px;flex:1;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.08)"><div style="font-size:11px;color:#6c757d;margin-bottom:4px;font-weight:500">Pagos</div><div style="font-size:22px;font-weight:700;color:#28a745">' + totalPagos + '</div></div>'
-        + '<div style="background:#fff;border-radius:10px;padding:14px 10px;flex:1;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.08)"><div style="font-size:11px;color:#6c757d;margin-bottom:4px;font-weight:500">Pendentes</div><div style="font-size:22px;font-weight:700;color:#dc3545">' + totalPendentes + '</div></div>'
-        + '<div style="background:#fff;border-radius:10px;padding:14px 10px;flex:1;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.08)"><div style="font-size:11px;color:#6c757d;margin-bottom:4px;font-weight:500">Progresso</div><div style="font-size:22px;font-weight:700;color:#1e3a5f">' + progresso + '%</div></div>'
+        + '<div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px 8px;flex:1;text-align:center">'
+          + '<div style="font-size:10px;color:rgba(255,255,255,0.55);margin-bottom:5px;font-weight:500;letter-spacing:0.4px;text-transform:uppercase">Pagos</div>'
+          + '<div style="font-size:24px;font-weight:800;color:#22c55e;letter-spacing:0.5px;line-height:1">' + totalPagos + '</div>'
+        + '</div>'
+        + '<div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px 8px;flex:1;text-align:center">'
+          + '<div style="font-size:10px;color:rgba(255,255,255,0.55);margin-bottom:5px;font-weight:500;letter-spacing:0.4px;text-transform:uppercase">Pendentes</div>'
+          + '<div style="font-size:24px;font-weight:800;color:#ef4444;letter-spacing:0.5px;line-height:1">' + totalPendentes + '</div>'
+        + '</div>'
+        + '<div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px 8px;flex:1;text-align:center">'
+          + '<div style="font-size:10px;color:rgba(255,255,255,0.55);margin-bottom:5px;font-weight:500;letter-spacing:0.4px;text-transform:uppercase">Progresso</div>'
+          + '<div style="font-size:24px;font-weight:800;color:#60a5fa;letter-spacing:0.5px;line-height:1">' + progresso + '%</div>'
+        + '</div>'
       + '</div>'
     + '</div>'
-    + '<div style="font-size:12px;color:#6c757d;text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:12px">📚 Histórico de Pagamentos</div>'
+    + '<div style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:10px">Histórico de Pagamentos</div>'
     + '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">'
       + cards
     + '</div>';
