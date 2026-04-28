@@ -1381,6 +1381,12 @@ function renderPagamentosAlunoViaLivros() {
   const totalPendentes = Math.max(0, window.livroAtualSistema - totalPagos);
   const progresso    = Math.round((totalPagos / 24) * 100);
 
+  const ultimoPagamentoData = dadosAluno
+    .map(l => l.data_pagamento || l.created_at || null)
+    .filter(Boolean)
+    .sort()
+    .pop() || null;
+
   const totalLivros = 24;
   const cards = Array.from({ length: totalLivros }).map((_, index) => {
     const numero = index + 1;
@@ -1413,15 +1419,18 @@ function renderPagamentosAlunoViaLivros() {
     }
     const dataPagamento = livroAluno?.data_pagamento || livroAluno?.created_at || null;
     const formaPagamento = livroAluno?.forma_pagamento || livroAluno?.metodo || null;
+    const isAtual = numero === window.livroAtualSistema;
+    const focoAtual = isAtual ? 'border:2px solid #1e3a5f;box-shadow:0 0 0 3px rgba(30,58,95,0.10),0 4px 12px rgba(0,0,0,0.08);' : 'box-shadow:0 4px 12px rgba(0,0,0,0.06);';
     return `
-    <div style="background:${cardBg};border-radius:12px;padding:12px;${cardBorder}box-shadow:0 4px 12px rgba(0,0,0,0.06);transition:all 0.2s ease;position:relative;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 18px rgba(0,0,0,0.10)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)'" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='translateY(-2px)'">
-      <div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:3px;line-height:1.35;letter-spacing:0.1px">
+    <div style="background:${cardBg};border-radius:12px;padding:12px;${isAtual ? '' : cardBorder}${focoAtual}transition:all 0.18s ease;position:relative;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 18px rgba(0,0,0,0.10)'" onmouseout="this.style.transform='';this.style.boxShadow='${isAtual ? '0 0 0 3px rgba(30,58,95,0.10),0 4px 12px rgba(0,0,0,0.08)' : '0 4px 12px rgba(0,0,0,0.06)'}'" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='translateY(-2px)'">
+      ${isAtual ? '<div style="position:absolute;top:8px;right:8px;font-size:9px;font-weight:700;color:#1e3a5f;background:rgba(30,58,95,0.08);border-radius:4px;padding:1px 5px;letter-spacing:0.3px">ATUAL</div>' : ''}
+      <div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:3px;line-height:1.35;letter-spacing:0.1px;padding-right:${isAtual ? '36px' : '0'}">
         ${nomeLivro}
       </div>
       <div style="font-size:10px;color:#9ca3af;margin-bottom:8px;font-weight:500">
         Livro ${numero}/24
       </div>
-      <div style="display:inline-block;font-size:10px;font-weight:700;color:${labelCor};background:${labelBg};border:1px solid ${labelBorder};border-radius:6px;padding:2px 7px;letter-spacing:0.2px;text-shadow:0 0 6px ${labelBg}">
+      <div style="display:inline-block;font-size:10px;font-weight:700;color:${labelCor};background:${labelBg};border:1px solid ${labelBorder};border-radius:6px;padding:2px 7px;letter-spacing:0.2px">
         ${labelTexto}
       </div>
       ${(dataPagamento || formaPagamento) ? `<div style="border-top:1px solid rgba(0,0,0,0.05);margin-top:8px;padding-top:6px;">
@@ -1432,23 +1441,24 @@ function renderPagamentosAlunoViaLivros() {
   `;
   }).join('');
 
+  container.style.scrollBehavior = 'smooth';
   container.innerHTML = ''
-    + '<div style="background:linear-gradient(135deg,#1e3a5f,#27496d);border-radius:14px;padding:18px;margin-bottom:18px;box-shadow:0 8px 20px rgba(0,0,0,0.12)">'
-      + '<div style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:14px">Resumo Financeiro</div>'
+    + '<div style="background:linear-gradient(135deg,#1e3a5f,#27496d);border-radius:14px;padding:20px 18px;margin-bottom:16px;box-shadow:0 8px 20px rgba(0,0,0,0.12)">'
+      + '<div style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:4px">Situação financeira</div>'
+      + '<div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:0.5px;line-height:1;margin-bottom:2px;text-shadow:0 2px 8px rgba(0,0,0,0.18)">' + progresso + '%</div>'
+      + '<div style="font-size:10px;color:rgba(255,255,255,0.45);margin-bottom:16px">do curso quitado</div>'
       + '<div style="display:flex;justify-content:space-between;gap:10px">'
-        + '<div style="background:#ffffff;border-radius:12px;padding:14px 8px;flex:1;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.06);transition:all 0.2s ease;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 18px rgba(0,0,0,0.10)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.06)\'">'
-          + '<div style="font-size:10px;color:#9ca3af;margin-bottom:5px;font-weight:500;letter-spacing:0.4px;text-transform:uppercase">Pagos</div>'
-          + '<div style="font-size:24px;font-weight:800;color:#22c55e;letter-spacing:0.5px;line-height:1;text-shadow:0 2px 4px rgba(0,0,0,0.10)">' + totalPagos + '</div>'
+        + '<div style="background:#ffffff;border-radius:12px;padding:12px 8px;flex:1;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.06);transition:all 0.18s ease;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 18px rgba(0,0,0,0.10)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.06)\'" onmousedown="this.style.transform=\'scale(0.98)\'" onmouseup="this.style.transform=\'\'">'
+          + '<div style="font-size:10px;color:#9ca3af;margin-bottom:4px;font-weight:500;letter-spacing:0.4px;text-transform:uppercase">Pagos</div>'
+          + '<div style="font-size:22px;font-weight:800;color:#22c55e;letter-spacing:0.5px;line-height:1;text-shadow:0 2px 4px rgba(0,0,0,0.08)">' + totalPagos + '</div>'
         + '</div>'
-        + '<div style="background:#ffffff;border-radius:12px;padding:14px 8px;flex:1;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.06);transition:all 0.2s ease;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 18px rgba(0,0,0,0.10)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.06)\'">'
-          + '<div style="font-size:10px;color:#9ca3af;margin-bottom:5px;font-weight:500;letter-spacing:0.4px;text-transform:uppercase">Pendentes</div>'
-          + '<div style="font-size:24px;font-weight:800;color:#ef4444;letter-spacing:0.5px;line-height:1;text-shadow:0 2px 4px rgba(0,0,0,0.10)">' + totalPendentes + '</div>'
-        + '</div>'
-        + '<div style="background:#ffffff;border-radius:12px;padding:14px 8px;flex:1;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.06);transition:all 0.2s ease;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 18px rgba(0,0,0,0.10)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.06)\'">'
-          + '<div style="font-size:10px;color:#9ca3af;margin-bottom:5px;font-weight:500;letter-spacing:0.4px;text-transform:uppercase">Progresso</div>'
-          + '<div style="font-size:24px;font-weight:800;color:#60a5fa;letter-spacing:0.5px;line-height:1;text-shadow:0 2px 4px rgba(0,0,0,0.10)">' + progresso + '%</div>'
+        + '<div style="background:#ffffff;border-radius:12px;padding:12px 8px;flex:1;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.06);transition:all 0.18s ease;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 18px rgba(0,0,0,0.10)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.06)\'" onmousedown="this.style.transform=\'scale(0.98)\'" onmouseup="this.style.transform=\'\'">'
+          + '<div style="font-size:10px;color:#9ca3af;margin-bottom:4px;font-weight:500;letter-spacing:0.4px;text-transform:uppercase">Pendentes</div>'
+          + '<div style="font-size:22px;font-weight:800;color:#ef4444;letter-spacing:0.5px;line-height:1;text-shadow:0 2px 4px rgba(0,0,0,0.08)">' + totalPendentes + '</div>'
         + '</div>'
       + '</div>'
+      + (totalPendentes > 0 ? '<div style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:8px 10px;border-radius:8px;font-size:12px;margin-top:10px;font-weight:600;border:1px solid rgba(239,68,68,0.2)">Você tem ' + totalPendentes + ' pagamento(s) pendente(s)</div>' : '')
+      + '<div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,0.45);font-weight:500">Último pagamento: ' + (ultimoPagamentoData ? formatarData(ultimoPagamentoData) : '—') + '</div>'
     + '</div>'
     + '<div style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:10px">Histórico de Pagamentos</div>'
     + '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">'
