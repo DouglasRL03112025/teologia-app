@@ -1730,18 +1730,39 @@ async function renderProvasAluno() {
       ? '<div style="font-size:11px;font-weight:600;color:#555;background:rgba(0,0,0,0.04);border-radius:5px;padding:3px 8px;display:inline-block;margin-top:4px;">📚 Livro: ' + textoLivro + '</div>'
       : '';
 
+    // ── Fundo sutil por estado (mantém cores originais de s.bg, apenas suaviza) ──
+    var fundoCard;
+    if (status === 'devolvida') {
+      fundoCard = '#f6fdf8';   // levemente esverdeado
+    } else if (status === 'feita') {
+      fundoCard = '#fffef5';   // leve destaque suave
+    } else if (status === 'corrigida') {
+      fundoCard = '#f5f9ff';   // neutro azulado suave
+    } else {
+      fundoCard = '#ffffff';   // branco
+    }
+    var bordaCard = status === 'devolvida' ? '1.5px solid #c6ead4' : '1px solid #e8e4dc';
+    var extraShadow = status === 'devolvida' ? ',0 0 0 2px rgba(40,167,69,0.07)' : '';
+
     return '<div style="'
-        + 'background:' + s.bg + ';'
-        + 'border:2px solid ' + s.border + ';'
+        + 'background:' + fundoCard + ';'
+        + 'border:' + bordaCard + ';'
         + 'border-radius:12px;'
         + 'padding:14px 15px;'
         + 'display:flex;'
         + 'flex-direction:column;'
         + 'gap:3px;'
-        + 'box-shadow:0 1px 5px rgba(0,0,0,0.07);'
-        + '">'
-          + '<div style="font-size:11px;color:#888;font-weight:700;letter-spacing:.6px;text-transform:uppercase;">' + codigo + '</div>'
-          + '<div style="font-size:13px;font-weight:700;color:#1e1e1e;line-height:1.3;">📖 ' + nome + '</div>'
+        + 'box-shadow:0 4px 12px rgba(0,0,0,0.06)' + extraShadow + ';'
+        + 'transition:all 0.18s ease;'
+        + 'cursor:default;'
+        + '"'
+        + ' onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,0.10)' + extraShadow + '\'"'
+        + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.06)' + extraShadow + '\'"'
+        + ' onmousedown="this.style.transform=\'scale(0.98)\'"'
+        + ' onmouseup="this.style.transform=\'translateY(-2px)\'"'
+        + '>'
+          + '<div style="font-size:11px;color:#6b7280;font-weight:700;letter-spacing:.6px;text-transform:uppercase;">' + codigo + '</div>'
+          + '<div style="font-size:14px;font-weight:600;color:#1f2937;line-height:1.3;">📖 ' + nome + '</div>'
           + linhaStatus
           + linhaLivro
         + '</div>';
@@ -1754,11 +1775,11 @@ async function renderProvasAluno() {
   var corMedia = '—' === media ? 'var(--cin)' : Number(media) >= 7 ? 'var(--vd)' : Number(media) >= 5 ? 'var(--am)' : 'var(--vm)';
 
   container.innerHTML = ''
-    + '<div style="margin-bottom:15px;padding:12px 14px;background:#EEF4FF;border:1px solid #D6E4FF;border-radius:12px;display:flex;align-items:center;gap:10px;">'
-      + '<div style="font-size:22px;line-height:1;">📊</div>'
+    + '<div style="margin-bottom:15px;padding:16px 18px;background:linear-gradient(135deg,#1e3a5f,#27496d);border-radius:12px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 16px rgba(30,58,95,0.18);">'
+      + '<div style="font-size:26px;line-height:1;">📊</div>'
       + '<div>'
-        + '<div style="font-size:14px;font-weight:600;color:#1a3a5c;">Média geral</div>'
-        + '<div style="font-size:20px;font-weight:700;color:' + corMedia + ';font-family:\'Lora\',serif;margin-top:2px;">' + media + '</div>'
+        + '<div style="font-size:12px;font-weight:500;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:.5px;">Média geral</div>'
+        + '<div style="font-size:24px;font-weight:800;color:#fff;font-family:\'Lora\',serif;margin-top:2px;text-shadow:0 1px 6px rgba(0,0,0,0.2);">' + media + '</div>'
       + '</div>'
     + '</div>'
     + '<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;font-size:12px;font-weight:600;">'
