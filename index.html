@@ -1414,37 +1414,39 @@ function renderPagamentosAlunoViaLivros() {
     const dataPagamento = livroAluno?.data_pagamento || livroAluno?.created_at || null;
     const formaPagamento = livroAluno?.forma_pagamento || livroAluno?.metodo || null;
     return `
-    <div style="background:${cardBg};border-radius:12px;padding:12px;${cardBorder}box-shadow:0 1px 4px rgba(0,0,0,0.05);transition:all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 14px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='';this.style.boxShadow='0 1px 4px rgba(0,0,0,0.05)'">
+    <div style="background:${cardBg};border-radius:12px;padding:12px;${cardBorder}box-shadow:0 4px 12px rgba(0,0,0,0.06);transition:all 0.2s ease;position:relative;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 18px rgba(0,0,0,0.10)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)'" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='translateY(-2px)'">
       <div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:3px;line-height:1.35;letter-spacing:0.1px">
         ${nomeLivro}
       </div>
       <div style="font-size:10px;color:#9ca3af;margin-bottom:8px;font-weight:500">
         Livro ${numero}/24
       </div>
-      <div style="display:inline-block;font-size:10px;font-weight:700;color:${labelCor};background:${labelBg};border:1px solid ${labelBorder};border-radius:6px;padding:2px 7px;letter-spacing:0.2px">
+      <div style="display:inline-block;font-size:10px;font-weight:700;color:${labelCor};background:${labelBg};border:1px solid ${labelBorder};border-radius:6px;padding:2px 7px;letter-spacing:0.2px;text-shadow:0 0 6px ${labelBg}">
         ${labelTexto}
       </div>
-      ${dataPagamento ? `<div style="font-size:10px;color:#6b7280;margin-top:6px;font-weight:500">📅 ${formatarData(dataPagamento)}</div>` : ''}
-      ${formaPagamento ? `<div style="font-size:10px;color:#6b7280;margin-top:2px;font-weight:500">💳 ${formaPagamento}</div>` : ''}
+      ${(dataPagamento || formaPagamento) ? `<div style="border-top:1px solid rgba(0,0,0,0.05);margin-top:8px;padding-top:6px;">
+        ${dataPagamento ? `<div style="font-size:10px;color:#6b7280;font-weight:500;margin-bottom:2px">📅 ${formatarData(dataPagamento)}</div>` : ''}
+        ${formaPagamento ? `<div style="font-size:10px;color:#6b7280;font-weight:500">💳 ${formaPagamento}</div>` : ''}
+      </div>` : ''}
     </div>
   `;
   }).join('');
 
   container.innerHTML = ''
-    + '<div style="background:#1e3a5f;border-radius:14px;padding:18px;margin-bottom:18px;box-shadow:0 6px 20px rgba(30,58,95,0.25)">'
+    + '<div style="background:linear-gradient(135deg,#1e3a5f,#27496d);border-radius:14px;padding:18px;margin-bottom:18px;box-shadow:0 8px 20px rgba(0,0,0,0.12)">'
       + '<div style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:14px">Resumo Financeiro</div>'
       + '<div style="display:flex;justify-content:space-between;gap:10px">'
-        + '<div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px 8px;flex:1;text-align:center">'
-          + '<div style="font-size:10px;color:rgba(255,255,255,0.55);margin-bottom:5px;font-weight:500;letter-spacing:0.4px;text-transform:uppercase">Pagos</div>'
-          + '<div style="font-size:24px;font-weight:800;color:#22c55e;letter-spacing:0.5px;line-height:1">' + totalPagos + '</div>'
+        + '<div style="background:#ffffff;border-radius:12px;padding:14px 8px;flex:1;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.06);transition:all 0.2s ease;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 18px rgba(0,0,0,0.10)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.06)\'">'
+          + '<div style="font-size:10px;color:#9ca3af;margin-bottom:5px;font-weight:500;letter-spacing:0.4px;text-transform:uppercase">Pagos</div>'
+          + '<div style="font-size:24px;font-weight:800;color:#22c55e;letter-spacing:0.5px;line-height:1;text-shadow:0 2px 4px rgba(0,0,0,0.10)">' + totalPagos + '</div>'
         + '</div>'
-        + '<div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px 8px;flex:1;text-align:center">'
-          + '<div style="font-size:10px;color:rgba(255,255,255,0.55);margin-bottom:5px;font-weight:500;letter-spacing:0.4px;text-transform:uppercase">Pendentes</div>'
-          + '<div style="font-size:24px;font-weight:800;color:#ef4444;letter-spacing:0.5px;line-height:1">' + totalPendentes + '</div>'
+        + '<div style="background:#ffffff;border-radius:12px;padding:14px 8px;flex:1;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.06);transition:all 0.2s ease;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 18px rgba(0,0,0,0.10)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.06)\'">'
+          + '<div style="font-size:10px;color:#9ca3af;margin-bottom:5px;font-weight:500;letter-spacing:0.4px;text-transform:uppercase">Pendentes</div>'
+          + '<div style="font-size:24px;font-weight:800;color:#ef4444;letter-spacing:0.5px;line-height:1;text-shadow:0 2px 4px rgba(0,0,0,0.10)">' + totalPendentes + '</div>'
         + '</div>'
-        + '<div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px 8px;flex:1;text-align:center">'
-          + '<div style="font-size:10px;color:rgba(255,255,255,0.55);margin-bottom:5px;font-weight:500;letter-spacing:0.4px;text-transform:uppercase">Progresso</div>'
-          + '<div style="font-size:24px;font-weight:800;color:#60a5fa;letter-spacing:0.5px;line-height:1">' + progresso + '%</div>'
+        + '<div style="background:#ffffff;border-radius:12px;padding:14px 8px;flex:1;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.06);transition:all 0.2s ease;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 18px rgba(0,0,0,0.10)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.06)\'">'
+          + '<div style="font-size:10px;color:#9ca3af;margin-bottom:5px;font-weight:500;letter-spacing:0.4px;text-transform:uppercase">Progresso</div>'
+          + '<div style="font-size:24px;font-weight:800;color:#60a5fa;letter-spacing:0.5px;line-height:1;text-shadow:0 2px 4px rgba(0,0,0,0.10)">' + progresso + '%</div>'
         + '</div>'
       + '</div>'
     + '</div>'
