@@ -2435,11 +2435,17 @@ async function renderDashAdmin(){
   const elLivro = document.getElementById('a-livro-atual');
   if (elLivro) elLivro.innerHTML = '📖 Livro atual: <strong>' + (livroAtual ? 'Livro ' + livroAtual : 'não definido') + '</strong>';
 
+  // ── MÉTRICAS DO DASHBOARD ADMIN ──
+  const totalAlunos = tot;
+  const pagamentosPendentes = alunoLivros.filter(r => r.pagou === false).length;
+  const pagamentosPagos = alunoLivros.filter(r => r.pagou === true).length;
+  const livrosPendentes = alunoLivros.filter(r => r.entregue !== true).length;
+
   document.getElementById('a-metricas').innerHTML=`
-    <div class="mc"><div class="mn">${tot}</div><div class="ml">Alunos ativos</div></div>
-    <div class="mc vd"><div class="mn">${pp}%</div><div class="ml">Frequência (mês atual)</div></div>
-    <div class="mc do"><div class="mn">${pagos}</div><div class="ml">Pagamentos OK (no mês)</div></div>
-    <div class="mc vm"><div class="mn">${pend}</div><div class="ml">Pendentes (mês)</div></div>`;
+    <div class="mc"><div class="mn">${totalAlunos}</div><div class="ml">Alunos</div></div>
+    <div class="mc vm"><div class="mn">${pagamentosPendentes}</div><div class="ml">Pagamentos Pendentes</div></div>
+    <div class="mc vd"><div class="mn">${pagamentosPagos}</div><div class="ml">Pagamentos Pagos</div></div>
+    <div class="mc do"><div class="mn">${livrosPendentes}</div><div class="ml">Livros Pendentes</div></div>`;
 
   let alerts=[];
   // Alertas de faltas no mês
