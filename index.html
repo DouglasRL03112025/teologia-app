@@ -3935,7 +3935,7 @@ async function renderAlunoInicio() {
   var pagou    = registroAtual && registroAtual.pagou    === true;
   var entregue = registroAtual && registroAtual.entregue === true;
 
-  var statusPag = pagou ? 'Pagamento confirmado' : 'Pagamento pendente';
+  var statusPag = pagou ? 'Pago e entregue' : 'Pagamento pendente';
   var statusEnt = entregue
     ? 'Entregue'
     : pagou
