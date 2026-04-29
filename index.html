@@ -2436,10 +2436,14 @@ async function renderDashAdmin(){
   if (elLivro) elLivro.innerHTML = '📖 Livro atual: <strong>' + (livroAtual ? 'Livro ' + livroAtual : 'não definido') + '</strong>';
 
   // ── MÉTRICAS DO DASHBOARD ADMIN ──
+  const codigoLivroAtual = 'p' + livroAtual;
+  const dadosLivroAtual = livroAtual
+    ? alunoLivros.filter(r => r.livro_codigo === codigoLivroAtual)
+    : [];
   const totalAlunos = tot;
-  const pagamentosPendentes = alunoLivros.filter(r => r.pagou === false).length;
-  const pagamentosPagos = alunoLivros.filter(r => r.pagou === true).length;
-  const livrosPendentes = alunoLivros.filter(r => r.entregue !== true).length;
+  const pagamentosPendentes = dadosLivroAtual.filter(r => r.pagou === false).length;
+  const pagamentosPagos     = dadosLivroAtual.filter(r => r.pagou === true).length;
+  const livrosPendentes     = dadosLivroAtual.filter(r => r.entregue !== true).length;
 
   document.getElementById('a-metricas').innerHTML=`
     <div class="mc"><div class="mn">${totalAlunos}</div><div class="ml">Alunos</div></div>
