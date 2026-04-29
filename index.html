@@ -2455,10 +2455,6 @@ async function renderDashAdmin(){
   const livrosPendentes     = dadosLivroAtual.filter(r => r.entregue !== true).length;
 
   document.getElementById('a-metricas').innerHTML=`
-    <div class="dash-header" style="grid-column:1/-1">
-      <div class="dash-header-titulo">Painel Administrativo</div>
-      <div class="dash-header-sub">Visão geral do sistema</div>
-    </div>
     <div class="mc"><div class="mn">${totalAlunos}</div><div class="ml">Alunos</div></div>
     <div class="mc vm"><div class="mn">${pagamentosPendentes}</div><div class="ml">Pagamentos Pendentes</div></div>
     <div class="mc vd"><div class="mn">${pagamentosPagos}</div><div class="ml">Pagamentos Pagos</div></div>
