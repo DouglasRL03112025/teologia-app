@@ -2309,7 +2309,7 @@ async function irAluno(t){
     }
   }, 180);
   window.scrollTo(0,0);
-  if(t==='cadastro') renderAlunoCadastro();
+  if(t==='cadastro') await renderAlunoCadastro();
   if(t==='agenda') {
     window._agendaMes = null;
     await carregarLivrosAluno();
@@ -4155,7 +4155,7 @@ async function renderAlunoInicio() {
 }
 /* ════ FIM DASHBOARD DO ALUNO ════ */
 
-function renderAlunoCadastro(){
+async function renderAlunoCadastro(){
   const a=usuAtual;
   document.getElementById('al-perfil-banner').innerHTML=`
     <div class="meu-perfil-banner">
@@ -4169,8 +4169,12 @@ function renderAlunoCadastro(){
   const livrosParticipantes = livrosCarregados.filter(l => l.participou !== false);
   const todosEmDia = livrosParticipantes.length > 0 && livrosParticipantes.every(l => l.pagou === true);
   const pagA = todosEmDia;
-  const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
-  let tp=0,tf=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') tp++; if(D.presencas[k][a.id]==='F') tf++; });
+  // Presenças do mês: usa getPresencaAluno — mesma fonte e critério da tela de presença
+  // (presente === true para presença, presente === false para falta)
+  const listaPresenca = await getPresencaAluno(a.id);
+  const listaMes = listaPresenca.filter(r => r.data && r.data.startsWith(cm));
+  let tp = listaMes.filter(r => r.presente === true).length;
+  let tf = listaMes.filter(r => r.presente === false).length;
   // Cálculo dinâmico de livros liberados
   const _hoje = new Date();
   const _livroBase = 7;
@@ -4641,7 +4645,7 @@ function salvarEdicaoAluno(){
   D.alunos[idx].email=email||D.alunos[idx].email;
   if(senha) D.alunos[idx].senha=senha;
   usuAtual={...usuAtual,...D.alunos[idx]};
-  salvar(); fecharMod('mod-editar-aluno'); renderAlunoCadastro(); toast('✓ Dados atualizados!');
+  salvar(); fecharMod('mod-editar-aluno'); renderAlunoCadastro().then(()=>toast('✓ Dados atualizados!'));
 }
 
 /* ════ FECHAR OVERLAYS ════ */
