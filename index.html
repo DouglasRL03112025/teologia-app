@@ -79,6 +79,15 @@ main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
 .mn{font-size:34px;font-weight:700;color:var(--azul);font-family:'Lora',serif;line-height:1.1}
 .mc.vd .mn{color:var(--vd)}.mc.vm .mn{color:var(--vm)}.mc.do .mn{color:var(--am)}
 .ml{font-size:11px;color:var(--cin);margin-top:4px;font-weight:500;text-transform:uppercase;letter-spacing:.4px}
+/* ── DASHBOARD ADMIN: visual aprimorado ── */
+.mc{border-radius:12px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,0.06);transition:all 0.18s ease}
+.mc:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.10)}
+.mc:active{transform:scale(0.98)}
+.mn{font-size:22px;font-weight:800}
+.ml{font-size:11px;text-transform:uppercase;color:#6b7280}
+.dash-header{padding:20px;margin-bottom:10px}
+.dash-header-titulo{font-size:18px;font-weight:700;color:var(--azul)}
+.dash-header-sub{font-size:12px;color:var(--cin);margin-top:2px}
 
 /* ── MÉTRICAS ALUNO ── */
 .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
@@ -2446,6 +2455,10 @@ async function renderDashAdmin(){
   const livrosPendentes     = dadosLivroAtual.filter(r => r.entregue !== true).length;
 
   document.getElementById('a-metricas').innerHTML=`
+    <div class="dash-header" style="grid-column:1/-1">
+      <div class="dash-header-titulo">Painel Administrativo</div>
+      <div class="dash-header-sub">Visão geral do sistema</div>
+    </div>
     <div class="mc"><div class="mn">${totalAlunos}</div><div class="ml">Alunos</div></div>
     <div class="mc vm"><div class="mn">${pagamentosPendentes}</div><div class="ml">Pagamentos Pendentes</div></div>
     <div class="mc vd"><div class="mn">${pagamentosPagos}</div><div class="ml">Pagamentos Pagos</div></div>
