@@ -390,6 +390,9 @@ select.inp{cursor:pointer}
     opacity: 0;
   }
 }
+@keyframes glowPulse{0%{opacity:0}50%{opacity:0.6}100%{opacity:0}}
+.card-dashboard{position:relative;overflow:hidden}
+.card-dashboard::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(circle at center,rgba(255,255,255,0.25),transparent 70%);opacity:0;animation:glowPulse 4s ease-in-out infinite}
 </style>
 </head>
 <body>
@@ -4100,7 +4103,7 @@ async function renderAlunoInicio() {
       + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.1s">'
 
         /* Pagamento */
-        + '<div style="background:' + bgPag(pagou) + ';border:1.5px solid ' + brdPag(pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer;animation:glowSoft 4s ease-in-out infinite;animation-delay:0s"'
+        + '<div class="card-dashboard" style="background:' + bgPag(pagou) + ';border:1.5px solid ' + brdPag(pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer;animation:glowSoft 4s ease-in-out infinite;animation-delay:0s"'
           + ' onmouseover="this.style.transform=\'scale(1.02)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,.15)\'"'
           + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.08)\'"'
           + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
@@ -4111,7 +4114,7 @@ async function renderAlunoInicio() {
         + '</div>'
 
         /* Entrega */
-        + '<div style="background:' + bgEnt(entregue, pagou) + ';border:1.5px solid ' + brdEnt(entregue, pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer;animation:glowSoft 4s ease-in-out infinite;animation-delay:1.3s"'
+        + '<div class="card-dashboard" style="background:' + bgEnt(entregue, pagou) + ';border:1.5px solid ' + brdEnt(entregue, pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer;animation:glowSoft 4s ease-in-out infinite;animation-delay:1.3s"'
           + ' onmouseover="this.style.transform=\'scale(1.02)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,.15)\'"'
           + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.08)\'"'
           + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
@@ -4122,7 +4125,7 @@ async function renderAlunoInicio() {
         + '</div>'
 
         /* Prova */
-        + '<div style="background:' + bgProva(regProva) + ';border:1.5px solid ' + brdProva(regProva) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer;animation:glowSoft 4s ease-in-out infinite;animation-delay:2.6s"'
+        + '<div class="card-dashboard" style="background:' + bgProva(regProva) + ';border:1.5px solid ' + brdProva(regProva) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer;animation:glowSoft 4s ease-in-out infinite;animation-delay:2.6s"'
           + ' onmouseover="this.style.transform=\'scale(1.02)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,.15)\'"'
           + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.08)\'"'
           + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
