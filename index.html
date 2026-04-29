@@ -47,7 +47,8 @@ main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
 @keyframes _slideRightIn{from{transform:translateX(-40px);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes pulseAtual{0%{box-shadow:0 0 0 3px rgba(30,58,95,0.10),0 4px 12px rgba(0,0,0,0.06)}50%{box-shadow:0 0 0 6px rgba(30,58,95,0.15),0 6px 16px rgba(0,0,0,0.08)}100%{box-shadow:0 0 0 3px rgba(30,58,95,0.10),0 4px 12px rgba(0,0,0,0.06)}}
 @keyframes shineBar{0%{left:-40%}100%{left:100%}}
-@keyframes glowSoft{0%{box-shadow:0 3px 10px rgba(0,0,0,.08)}50%{box-shadow:0 3px 10px rgba(0,0,0,.08),0 0 12px rgba(255,255,255,0.25)}100%{box-shadow:0 3px 10px rgba(0,0,0,.08)}}
+@keyframes glowSoft{0%,100%{box-shadow:0 3px 10px rgba(0,0,0,0.08)}50%{box-shadow:0 6px 20px rgba(0,0,0,0.12),0 0 12px rgba(255,255,255,0.35)}}
+@keyframes glowNumber{0%{text-shadow:0 0 0 rgba(255,255,255,0)}50%{text-shadow:0 0 8px rgba(255,255,255,0.35)}100%{text-shadow:0 0 0 rgba(255,255,255,0)}}
 
 /* ── LOGIN ── */
 #pg-login{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px 20px;background:#f4f6f8 !important}
@@ -1780,7 +1781,7 @@ async function renderProvasAluno() {
       + '<div style="font-size:26px;line-height:1;">📊</div>'
       + '<div>'
         + '<div style="font-size:12px;font-weight:500;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:.5px;">Média geral</div>'
-        + '<div style="font-size:24px;font-weight:800;color:#fff;font-family:\'Lora\',serif;margin-top:2px;text-shadow:0 1px 6px rgba(0,0,0,0.2);">' + media + '</div>'
+        + '<div style="font-size:24px;font-weight:800;color:#fff;font-family:\'Lora\',serif;margin-top:2px;text-shadow:0 1px 6px rgba(0,0,0,0.2);animation:glowNumber 3s ease-in-out infinite">' + media + '</div>'
       + '</div>'
     + '</div>'
     + '<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;font-size:12px;font-weight:600;">'
@@ -4627,7 +4628,7 @@ function renderAlunoNotas(){
     return `<div class="pgr"><div class="pgi"><div class="pgn">Prova ${num}</div><div class="pgd">${n>=7?'✓ Aprovado':n>=5?'Em recuperação':'✗ Reprovado'}</div></div><span class="bdg ${n>=7?'bv':n>=5?'ba':'br'}" style="font-size:18px;padding:6px 14px">${(n!==null&&n!==undefined)?Number(n).toFixed(1):''}</span></div>`; }).join('');
   const ns=todasProvasNotas.map(p=>(D.notas[p]||{})[a.id]).filter(n=>n!==null&&n!==undefined);
   const media=ns.length>0?(ns.reduce((a,b)=>a+b,0)/ns.length).toFixed(1):'—';
-  document.getElementById('al-notas-lista').innerHTML=notas+`<div class="card" style="margin-top:6px"><div class="sl2"><span class="slb" style="font-weight:600">Média geral</span><span style="font-size:22px;font-weight:700;color:var(--azul);font-family:'Lora',serif">${media}</span></div></div>`;
+  document.getElementById('al-notas-lista').innerHTML=notas+`<div class="card" style="margin-top:6px"><div class="sl2"><span class="slb" style="font-weight:600">Média geral</span><span style="font-size:22px;font-weight:700;color:var(--azul);font-family:'Lora',serif;animation:glowNumber 3s ease-in-out infinite">${media}</span></div></div>`;
 }
 
 /* ════ EDITAR PRÓPRIOS DADOS ════ */
