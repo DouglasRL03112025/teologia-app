@@ -3976,42 +3976,30 @@ async function renderAlunoInicio() {
   }
 
   /* ── 4. PRÓXIMA AULA ────────────────────────────── */
-  /* Usa D.aulas_log já carregado no sistema (sem nenhuma query nova).
-     Fallback: window._agendaAulasPorData se agenda já foi aberta. */
+  /* Busca diretamente na tabela aulas todas as aulas futuras,
+     sem filtro de mês, garantindo consistência com a agenda. */
   var proximaAula = '';
   try {
-    var hojeStr = new Date().toISOString().slice(0, 10);
+    var hoje = new Date();
+    var hojeStr = hoje.toISOString().slice(0, 10);
 
-    /* Fonte 1: D.aulas_log — { "YYYY-MM-DD": { modulo, aula } } */
-    var logAulas = (D && D.aulas_log) ? D.aulas_log : {};
+    var resAulas = await supabaseClient
+      .from('aulas')
+      .select('data, descricao, livro, hora')
+      .gte('data', hojeStr)
+      .order('data', { ascending: true })
+      .limit(1);
 
-    /* Fonte 2: window._agendaAulasPorData — preenchido por renderAlunoAgenda() */
-    var agendaMap = window._agendaAulasPorData || {};
-
-    /* Mescla as duas fontes num único mapa por data */
-    var mapaUnificado = {};
-    Object.keys(logAulas).forEach(function(dt) {
-      mapaUnificado[dt] = { modulo: logAulas[dt].modulo || '', aula: logAulas[dt].aula || '' };
-    });
-    Object.keys(agendaMap).forEach(function(dt) {
-      if (!mapaUnificado[dt]) {
-        mapaUnificado[dt] = { modulo: agendaMap[dt].livro || '', aula: agendaMap[dt].descricao || '' };
-      }
-    });
-
-    /* Filtra datas >= hoje e pega a mais próxima */
-    var datasFuturas = Object.keys(mapaUnificado)
-      .filter(function(dt) { return dt >= hojeStr; })
-      .sort();
-
-    if (datasFuturas.length > 0) {
-      var proximaData = datasFuturas[0];
-      var entrada     = mapaUnificado[proximaData];
-      var d           = new Date(proximaData + 'T12:00:00');
-      if (!isNaN(d.getTime())) {
-      proximaAula = DS[d.getDay()] + ', ' + fmtD(d)
-        + (entrada.modulo ? ' • ' + entrada.modulo : '')
-        + (entrada.aula   ? ' — ' + entrada.aula   : '');
+    var aulas = (resAulas.data || []);
+    if (aulas.length > 0) {
+      var a = aulas[0];
+      if (a.data) {
+        var d = new Date(a.data + 'T12:00:00');
+        if (!isNaN(d.getTime())) {
+          proximaAula = DS[d.getDay()] + ', ' + fmtD(d)
+            + (a.livro    ? ' • ' + a.livro    : '')
+            + (a.descricao ? ' — ' + a.descricao : '');
+        }
       }
     }
   } catch(e) { /* silencioso */ }
