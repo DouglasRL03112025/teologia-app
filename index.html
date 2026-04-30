@@ -2567,6 +2567,7 @@ async function renderDashAdmin(){
 
     const blocoFinanceiro = document.createElement('div');
     blocoFinanceiro.className = 'card-financeiro';
+    blocoFinanceiro.style.display = 'none';
     blocoFinanceiro.innerHTML = `
       <div style="margin-top:12px;padding:14px 16px;border:1px solid var(--brd);border-radius:var(--r);background:#fff;box-shadow:var(--s)">
         <div style="font-size:13px;font-weight:700;color:var(--azul);margin-bottom:10px">💰 Financeiro — Livro ${livroAtual}</div>
