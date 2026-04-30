@@ -2797,7 +2797,9 @@ async function renderAlunosAdmin(){
     const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
     let pres=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') pres++; });
     const perc=pk.length>0?Math.round(pres/pk.length*100):null;
-    return `<div class="ar" data-aluno-id="${a.id}" onclick="verPerfilAdmin('${a.id}')">
+    const regLivro = alLivros.find(r => r.aluno_id === a.id && String(r.livro_codigo) === 'p' + String(livroAtual));
+    const jaEntregue = regLivro && regLivro.entregue === true ? 'true' : 'false';
+    return `<div class="ar" data-aluno-id="${a.id}" data-entregue="${jaEntregue}" onclick="verPerfilAdmin('${a.id}')">
       <div class="av">${ini(a.nome)}</div>
       <div class="ai">
         <div class="an aluno-nome">${fmtNome(a.nome) || 'Sem nome'}</div>
@@ -2951,10 +2953,9 @@ async function handleAcao(tipo, alunoId) {
       return;
     }
 
-    const texto = (card.innerText || '').toLowerCase();
+    const entregue = card.dataset.entregue === 'true';
 
-    // se já estiver entregue → desfazer
-    if (texto.includes('entregue')) {
+    if (entregue) {
       await desfazerEntregaLivro(alunoId, codigoLivro);
     } else {
       const btnFake = document.createElement('button');
