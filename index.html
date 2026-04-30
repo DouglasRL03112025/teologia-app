@@ -690,7 +690,7 @@ select.inp{cursor:pointer}
     </div>
 
     <!-- MATERIAL ADMIN -->
-    <div class="tela" id="a-material" style="display: none;">
+    <div class="tela" id="a-material">
       <div id="painel-mat-cabecalho"></div>
       <div id="painel-mat-lista"></div>
       <!-- containers legados mantidos para não quebrar chamadas existentes -->
@@ -830,7 +830,7 @@ select.inp{cursor:pointer}
     <button class="nb ripple-target" id="nb-presenca" onclick="irAdmin('presenca')">
       <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Presença
     </button>
-    <button class="nb ripple-target" id="nb-material" onclick="irAdmin('material')" style="display: none;">
+    <button class="nb ripple-target" id="nb-material" onclick="irAdmin('material')">
       <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>Material
     </button>
     <button class="nb ripple-target" id="nb-relatorios" onclick="irAdmin('relatorios')">
@@ -3066,11 +3066,15 @@ async function verPerfilAdmin(id){
     <div style="display:none;"><!-- LEGADO: Situação antiga (pag. mensal, livros 1–7, senha app) -->
       <div class="card"><div class="card-t">📋 Situação</div><div class="sl2"><span class="slb">Pag. ${M[h.getMonth()]}</span><span class="bdg ${pagA?'bv':'br'}">${pagA?'Em dia':'Pendente'}</span></div>${livH}${a.valor?`<div class="sl2"><span class="slb">Mensalidade</span><span class="slv">R$ ${a.valor}</span></div>`:''}${a.email?`<div class="sl2"><span class="slb">E-mail</span><span style="font-size:13px;color:var(--cin)">${a.email}</span></div>`:''}<div class="sl2"><span class="slb">Senha app</span><span style="font-family:monospace;font-size:14px;background:var(--azul-c);padding:2px 8px;border-radius:4px;color:var(--azul)">${a.senha||'—'}</span></div></div>
     </div>
+    <div style="display:none;"><!-- OCULTO: card Notas (lista completa — duplicata do painel de provas) -->
     <div class="card"><div class="card-t">🔢 Notas</div>${notasH}</div>
+    </div>
     <div style="display:none;"><!-- LEGADO: Calendário -->
       <div class="card"><div class="card-t">📅 Calendário — ${M[h.getMonth()]}</div><div style="display:flex;gap:10px;font-size:12px;margin-bottom:8px"><span><span style="display:inline-block;width:12px;height:12px;background:var(--vd);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Presente</span><span><span style="display:inline-block;width:12px;height:12px;background:var(--vm);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Falta</span></div><div class="cal">${cal}</div></div>
     </div>
+    <div style="display:none;"><!-- OCULTO: card Provas do Aluno (lista gigante — lançamento centralizado no painel de Provas) -->
     <div class="card"><div class="card-t">📝 Provas do Aluno</div><div id="admin-provas-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
+    </div>
     <div class="card"><div class="card-t">📚 Livros do Aluno (Supabase)</div><div id="admin-livros-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
     <button class="btn bs ripple-target" onclick="abrirModAluno('${id}')">✏️ Editar dados</button>
     <button class="btn bd ripple-target" style="margin-top:8px;width:100%;display:block" onclick="desmarcarPagamentoAluno('${id}')">↩️ Desmarcar pagamento do livro atual</button>`;
