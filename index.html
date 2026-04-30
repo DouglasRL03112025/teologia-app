@@ -2935,6 +2935,35 @@ async function handleAcao(tipo, alunoId) {
     return;
   }
 
+  if (tipo === 'entrega') {
+    const livroAtual = window.livroAtualSistema;
+    if (!livroAtual) {
+      alert('Livro atual não definido');
+      return;
+    }
+
+    const codigoLivro = 'p' + livroAtual;
+
+    // localizar o card do aluno
+    const card = document.querySelector(`.ar[data-aluno-id="${alunoId}"]`);
+    if (!card) {
+      alert('Card do aluno não encontrado');
+      return;
+    }
+
+    const texto = (card.innerText || '').toLowerCase();
+
+    // se já estiver entregue → desfazer
+    if (texto.includes('entregue')) {
+      await desfazerEntregaLivro(alunoId, codigoLivro);
+    } else {
+      const btnFake = document.createElement('button');
+      await confirmarEntregaLivro(alunoId, codigoLivro, btnFake);
+    }
+
+    return;
+  }
+
   alert('Ação: ' + tipo + '\nAluno: ' + alunoId + '\nLivro: ' + livroAtual);
 }
 
