@@ -2270,6 +2270,30 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
 }
 /* ════ FIM CONFIRMAR ENTREGA DE LIVRO (ADMIN) ════ */
 
+/* ════ DESFAZER ENTREGA DE LIVRO (ADMIN) ════ */
+async function desfazerEntregaLivro(alunoId, livroCodigo) {
+  if (!confirm('Deseja desfazer a entrega deste livro?')) return;
+
+  const { error } = await supabaseClient
+    .from('aluno_livros')
+    .update({ entregue: false })
+    .eq('aluno_id', alunoId)
+    .eq('livro_codigo', livroCodigo);
+
+  if (error) {
+    console.error('[DesfazerEntrega] Erro:', error);
+    alert('Erro ao desfazer entrega: ' + (error.message || JSON.stringify(error)));
+    return;
+  }
+
+  toast('Entrega desfeita');
+  await renderDashAdmin();
+  if (typeof carregarExibirLivrosAdminPerfil === 'function') {
+    await carregarExibirLivrosAdminPerfil(alunoId);
+  }
+}
+/* ════ FIM DESFAZER ENTREGA DE LIVRO (ADMIN) ════ */
+
 /* ════ FIM MARCAR LIVRO COMO PAGO (ADMIN) ════ */
 
 /* ════ FIM TAREFAS 1 e 2 ════ */
@@ -2908,26 +2932,6 @@ async function handleAcao(tipo, alunoId) {
     const idRegistro = data.id;
 
     abrirModalPagamento(idRegistro);
-    return;
-  }
-
-  if (tipo === 'entrega') {
-    const livroAtual = window.livroAtualSistema;
-    if (!livroAtual) {
-      alert('Livro atual não definido');
-      return;
-    }
-
-    const codigoLivro = 'p' + livroAtual;
-
-    const confirmar = confirm('Confirmar entrega deste livro?');
-    if (!confirmar) return;
-
-    // Criar elemento fake para simular botão (btnEl)
-    const btnFake = document.createElement('button');
-
-    await confirmarEntregaLivro(alunoId, codigoLivro, btnFake);
-
     return;
   }
 
