@@ -2893,12 +2893,7 @@ async function handleAcao(tipo, alunoId) {
 
     const idRegistro = data.id;
 
-    // Confirmação do usuário
-    const confirmar = confirm('Confirmar pagamento deste aluno?');
-    if (!confirmar) return;
-
-    // Chamar função existente
-    await marcarLivroComoPago(idRegistro);
+    abrirModalPagamento(idRegistro);
     return;
   }
 
