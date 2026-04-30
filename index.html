@@ -153,9 +153,15 @@ select.inp{cursor:pointer}
 .btn-lote.cancel{background:transparent;border-color:rgba(255,255,255,.25)}
 
 /* ── LISTA ALUNOS ── */
-.ar{display:flex;align-items:center;gap:13px;padding:14px 16px;background:#fff;border-radius:12px;margin-bottom:10px;border:1px solid #e8e4dc;box-shadow:0 4px 12px rgba(0,0,0,0.06);cursor:pointer;transition:all 0.18s ease}
+.ar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 13px;padding:12px 14px;background:#fff;border-radius:12px;margin-bottom:10px;border:1px solid #e8e4dc;box-shadow:0 4px 12px rgba(0,0,0,0.06);cursor:pointer;transition:all 0.18s ease;overflow:hidden}
+.ar *{max-width:100%}
 .ar:hover{border-color:#a8bdd4;box-shadow:0 8px 20px rgba(0,0,0,0.10);transform:translateY(-2px)}
 .ar:active{transform:scale(.98);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+
+/* ── NOME E INFOS DO ALUNO ── */
+.aluno-nome{font-size:14px;font-weight:700;color:#111827;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aluno-info{font-size:11px;color:#6b7280;display:flex;flex-wrap:wrap;gap:4px 6px;line-height:1.4}
+.aluno-info span{white-space:nowrap}
 
 /* ── GRUPOS LISTA ADMIN ── */
 #lista-alunos-admin .grupo-alunos-admin{margin-bottom:28px}
@@ -194,12 +200,14 @@ select.inp{cursor:pointer}
   flex: 1;
   border: none;
   border-radius: 6px;
-  padding: 6px;
+  padding: 6px 8px;
   cursor: pointer;
   background: #f3f4f6;
-  font-size: 15px;
+  font-size: 12px;
   transition: all 0.15s ease;
+  line-height: 1;
 }
+.btn-acao span { font-size: 14px; }
 .btn-acao:hover {
   background: #e5e7eb;
   transform: translateY(-1px);
@@ -2766,8 +2774,12 @@ async function renderAlunosAdmin(){
     return `<div class="ar" data-aluno-id="${a.id}" onclick="verPerfilAdmin('${a.id}')">
       <div class="av">${ini(a.nome)}</div>
       <div class="ai">
-        <div class="an">${fmtNome(a.nome)}</div>
-        <div class="as2">${a.turma||'Turma Única'}${a.tel?' · '+fmtTel(a.tel):''}${perc!==null?' · '+perc+'% freq.':''}</div>
+        <div class="an aluno-nome">${fmtNome(a.nome) || 'Sem nome'}</div>
+        <div class="as2 aluno-info">
+          <span>Turma ${a.turma || 'Única'}</span>
+          ${a.tel ? `<span>${fmtTel(a.tel)}</span>` : ''}
+          ${perc !== null ? `<span>${perc}% freq.</span>` : ''}
+        </div>
       </div>
       <span class="bdg ${bdgClass}">${bdgLabel}</span>
     </div>`;
