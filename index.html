@@ -172,7 +172,7 @@ select.inp{cursor:pointer}
 /* ── DESTAQUE VISUAL: ALUNOS CRÍTICOS ── */
 .ar.aluno-critico {
   border: 1px solid #ef4444 !important;
-  box-shadow: 0 8px 20px rgba(239,68,68,0.15) !important;
+  box-shadow: 0 10px 24px rgba(239,68,68,0.18) !important;
   background: #fef2f2 !important;
 }
 .ar.aluno-critico:hover {
@@ -181,12 +181,17 @@ select.inp{cursor:pointer}
 }
 .ar.aluno-atencao {
   border: 1px solid #f59e0b !important;
-  box-shadow: 0 6px 16px rgba(245,158,11,0.12) !important;
+  box-shadow: 0 8px 20px rgba(245,158,11,0.16) !important;
   background: #fffbeb !important;
 }
 .ar.aluno-atencao:hover {
   border-color: #d97706 !important;
   box-shadow: 0 8px 20px rgba(245,158,11,0.20) !important;
+}
+.ar.aluno-ok {
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
 /* ── AÇÕES RÁPIDAS NOS CARDS DE ALUNOS ── */
@@ -2829,11 +2834,13 @@ function aplicarDestaqueAlunos() {
   var cards = document.querySelectorAll('.grid-cards-alunos .ar');
   cards.forEach(function(card) {
     var texto = (card.innerText || '').toLowerCase();
-    card.classList.remove('aluno-critico', 'aluno-atencao');
+    card.classList.remove('aluno-critico', 'aluno-atencao', 'aluno-ok');
     if (texto.includes('pendente')) {
       card.classList.add('aluno-critico');
     } else if (texto.includes('aguardando')) {
       card.classList.add('aluno-atencao');
+    } else {
+      card.classList.add('aluno-ok');
     }
   });
 }
