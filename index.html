@@ -2740,6 +2740,19 @@ async function renderAlunosAdmin(){
   if (!el.innerHTML.trim()) {
     el.innerHTML = '<div class="grid-cards-alunos">' + lista.map(_renderCard).join('') + '</div>';
   }
+
+  // Ordenação por prioridade dentro de cada grupo .grid-cards-alunos
+  document.querySelectorAll('#lista-alunos-admin .grid-cards-alunos').forEach(function(container) {
+    function getPrioridade(card) {
+      var texto = (card.innerText || '').toLowerCase();
+      if (texto.includes('pendente'))   return 3;
+      if (texto.includes('aguardando')) return 2;
+      return 1;
+    }
+    var cards = Array.from(container.querySelectorAll('.ar'));
+    cards.sort(function(a, b) { return getPrioridade(b) - getPrioridade(a); });
+    cards.forEach(function(card) { container.appendChild(card); });
+  });
   // ── FIM AGRUPAMENTO VISUAL ──
 }
 /* ════ FONTE DE VERDADE: STATUS DO ALUNO ════ */
