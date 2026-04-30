@@ -690,7 +690,7 @@ select.inp{cursor:pointer}
     </div>
 
     <!-- MATERIAL ADMIN -->
-    <div class="tela" id="a-material">
+    <div class="tela" id="a-material" style="display: none;">
       <div id="painel-mat-cabecalho"></div>
       <div id="painel-mat-lista"></div>
       <!-- containers legados mantidos para não quebrar chamadas existentes -->
@@ -830,7 +830,7 @@ select.inp{cursor:pointer}
     <button class="nb ripple-target" id="nb-presenca" onclick="irAdmin('presenca')">
       <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Presença
     </button>
-    <button class="nb ripple-target" id="nb-material" onclick="irAdmin('material')">
+    <button class="nb ripple-target" id="nb-material" onclick="irAdmin('material')" style="display: none;">
       <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>Material
     </button>
     <button class="nb ripple-target" id="nb-relatorios" onclick="irAdmin('relatorios')">
