@@ -162,6 +162,26 @@ select.inp{cursor:pointer}
 .grid-cards-alunos{display:block}
 .grid-cards-alunos .ar{margin-bottom:8px}
 .grid-cards-alunos .ar:last-child{margin-bottom:0}
+
+/* ── DESTAQUE VISUAL: ALUNOS CRÍTICOS ── */
+.ar.aluno-critico {
+  border: 1px solid #ef4444 !important;
+  box-shadow: 0 8px 20px rgba(239,68,68,0.15) !important;
+  background: #fef2f2 !important;
+}
+.ar.aluno-critico:hover {
+  border-color: #dc2626 !important;
+  box-shadow: 0 10px 24px rgba(239,68,68,0.22) !important;
+}
+.ar.aluno-atencao {
+  border: 1px solid #f59e0b !important;
+  box-shadow: 0 6px 16px rgba(245,158,11,0.12) !important;
+  background: #fffbeb !important;
+}
+.ar.aluno-atencao:hover {
+  border-color: #d97706 !important;
+  box-shadow: 0 8px 20px rgba(245,158,11,0.20) !important;
+}
 .av{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--azul-c) 0%,#d0e4f5 100%);color:var(--azul);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0;font-family:'Lora',serif;box-shadow:0 1px 4px rgba(26,58,92,.12)}
 .ai{flex:1;min-width:0}
 .an{font-size:15px;font-weight:600;color:var(--azul-e);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em}
@@ -2754,6 +2774,22 @@ async function renderAlunosAdmin(){
     cards.forEach(function(card) { container.appendChild(card); });
   });
   // ── FIM AGRUPAMENTO VISUAL ──
+
+  // ── DESTAQUE VISUAL: ALUNOS CRÍTICOS ──
+  aplicarDestaqueAlunos();
+}
+
+function aplicarDestaqueAlunos() {
+  var cards = document.querySelectorAll('.grid-cards-alunos .ar');
+  cards.forEach(function(card) {
+    var texto = (card.innerText || '').toLowerCase();
+    card.classList.remove('aluno-critico', 'aluno-atencao');
+    if (texto.includes('pendente')) {
+      card.classList.add('aluno-critico');
+    } else if (texto.includes('aguardando')) {
+      card.classList.add('aluno-atencao');
+    }
+  });
 }
 /* ════ FONTE DE VERDADE: STATUS DO ALUNO ════ */
 function calcularStatusAluno(alunoId, alLivros, livroAtual) {
