@@ -2830,45 +2830,15 @@ function aplicarAcoesRapidas() {
     // Evita duplicação ao re-renderizar
     if (card.querySelector('.acoes-rapidas')) return;
 
-    // ── Captura o alunoId diretamente do card ──
-    var alunoId = card.getAttribute('data-aluno-id');
-
     var acoes = document.createElement('div');
     acoes.className = 'acoes-rapidas';
-    acoes.setAttribute('data-aluno-id', alunoId);
     acoes.innerHTML =
       '<button class="btn-acao btn-pagar"    title="Registrar pagamento">💰</button>' +
       '<button class="btn-acao btn-entregar" title="Marcar entrega do livro">📚</button>' +
       '<button class="btn-acao btn-presenca" title="Lançar presença">📝</button>';
 
-    // ── Eventos seguros: apenas captura e loga, SEM alterar dados ──
-    acoes.querySelector('.btn-pagar').onclick = function(e) {
-      e.stopPropagation();
-      handleAcao('pagamento', acoes.dataset.alunoId);
-    };
-    acoes.querySelector('.btn-entregar').onclick = function(e) {
-      e.stopPropagation();
-      handleAcao('entrega', acoes.dataset.alunoId);
-    };
-    acoes.querySelector('.btn-presenca').onclick = function(e) {
-      e.stopPropagation();
-      handleAcao('presenca', acoes.dataset.alunoId);
-    };
-
     card.appendChild(acoes);
   });
-}
-
-// ── Função segura: apenas captura contexto, NÃO executa nenhuma operação ──
-function handleAcao(tipo, alunoId) {
-  var livroAtual = window.livroAtualSistema || null;
-
-  console.log('══ AÇÃO RÁPIDA ══');
-  console.log('AÇÃO :', tipo);
-  console.log('ALUNO:', alunoId);
-  console.log('LIVRO:', livroAtual);
-
-  alert('Ação: ' + tipo + '\nAluno: ' + alunoId + '\nLivro: ' + livroAtual);
 }
 
 /* ════ FONTE DE VERDADE: STATUS DO ALUNO ════ */
