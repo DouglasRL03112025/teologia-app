@@ -2859,14 +2859,48 @@ function aplicarAcoesRapidas() {
   });
 }
 
-// ── Função segura: apenas captura contexto, NÃO executa nenhuma operação ──
-function handleAcao(tipo, alunoId) {
+// ── Função segura: captura contexto e executa ação correspondente ──
+async function handleAcao(tipo, alunoId) {
   var livroAtual = window.livroAtualSistema || null;
 
   console.log('══ AÇÃO RÁPIDA ══');
   console.log('AÇÃO :', tipo);
   console.log('ALUNO:', alunoId);
   console.log('LIVRO:', livroAtual);
+
+  if (tipo === 'pagamento') {
+    const livroAtual = window.livroAtualSistema;
+    if (!livroAtual) {
+      alert('Livro atual não definido');
+      return;
+    }
+
+    const codigoLivro = 'p' + livroAtual;
+
+    // Buscar o registro correto
+    const { data, error } = await supabaseClient
+      .from('aluno_livros')
+      .select('id')
+      .eq('aluno_id', alunoId)
+      .eq('livro_codigo', codigoLivro)
+      .single();
+
+    if (error || !data) {
+      console.error(error);
+      alert('Registro do livro não encontrado');
+      return;
+    }
+
+    const idRegistro = data.id;
+
+    // Confirmação do usuário
+    const confirmar = confirm('Confirmar pagamento deste aluno?');
+    if (!confirmar) return;
+
+    // Chamar função existente
+    await marcarLivroComoPago(idRegistro);
+    return;
+  }
 
   alert('Ação: ' + tipo + '\nAluno: ' + alunoId + '\nLivro: ' + livroAtual);
 }
