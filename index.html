@@ -2531,6 +2531,17 @@ async function renderDashAdmin(){
     });
   }
 
+  function extrairFaltas(html) {
+    const match = html.match(/(\d+)\s*faltas?/i);
+    return match ? parseInt(match[1]) : -1;
+  }
+  alerts.sort((a, b) => {
+    const faltasA = extrairFaltas(a);
+    const faltasB = extrairFaltas(b);
+    if (faltasA === -1 && faltasB !== -1) return 1;
+    if (faltasA !== -1 && faltasB === -1) return -1;
+    return faltasB - faltasA;
+  });
   if(!alerts.length) alerts.push('<div class="al vd"><span>✅</span><span>Tudo em dia! Nenhum alerta no momento.</span></div>');
   document.getElementById('a-alertas').innerHTML=`<div class="alertas-box"><div class="alertas-header">⚠️ Atenção no mês</div><div class="alertas-lista">${alerts.join('')}</div></div>`;
 
