@@ -364,6 +364,9 @@ select.inp{cursor:pointer}
 .alertas-lista>.al.vm{border-left-color:var(--vm)}
 .alertas-lista>.al.am{border-left-color:#f97316}
 .alertas-lista>.al:last-child{margin-bottom:0}
+.al.critico{border-left:4px solid #ef4444 !important;background:#fef2f2 !important}
+.al.atencao{border-left:4px solid #f59e0b !important;background:#fffbeb !important}
+.al.leve{border-left:4px solid #22c55e !important;background:#f0fdf4 !important}
 
 /* ── LOADING OVERLAY ── */
 #al-loading {
@@ -2544,6 +2547,15 @@ async function renderDashAdmin(){
   });
   if(!alerts.length) alerts.push('<div class="al vd"><span>✅</span><span>Tudo em dia! Nenhum alerta no momento.</span></div>');
   document.getElementById('a-alertas').innerHTML=`<div class="alertas-box"><div class="alertas-header">⚠️ Atenção no mês</div><div class="alertas-lista">${alerts.join('')}</div></div>`;
+  document.querySelectorAll('#a-alertas .al').forEach(function(el) {
+    var match = (el.innerText||'').match(/(\d+)\s*faltas?/i);
+    if (!match) return;
+    var faltas = parseInt(match[1]);
+    el.classList.remove('critico','atencao','leve');
+    if (faltas >= 4) el.classList.add('critico');
+    else if (faltas >= 2) el.classList.add('atencao');
+    else if (faltas === 1) el.classList.add('leve');
+  });
 
   // ── RESUMO FINANCEIRO (somente leitura, isolado) ──
   const containerDashboard = document.getElementById('a-inicio');
