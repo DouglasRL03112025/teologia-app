@@ -99,13 +99,18 @@ main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
 .sl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);margin-bottom:10px}
 .sl-sec{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--azul);margin:24px 0 12px;padding-bottom:7px;border-bottom:2px solid var(--azul-c);display:flex;align-items:center;gap:6px}
 .ga{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
-.ac{background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:14px 12px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;font-family:'Inter',sans-serif;color:var(--txt);transition:all .2s;box-shadow:var(--s)}
-.ac:hover{box-shadow:var(--sh);transform:translateY(-1px);border-color:var(--azul);color:var(--azul)}
+
+/* Botões secundários — neutros e discretos */
+.ac{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:var(--r);padding:14px 12px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;font-family:'Inter',sans-serif;color:#374151;transition:all .2s;box-shadow:none}
+.ac:hover{background:#e5e7eb;border-color:#d1d5db;transform:translateY(-1px);color:#111827;box-shadow:0 3px 10px rgba(0,0,0,.08)}
 .ac:active{transform:scale(.97)}
-.ac-ic{width:38px;height:38px;border-radius:10px;background:var(--azul-c);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px}
-.ac.dest{background:var(--azul);color:#fff;border-color:var(--azul)}
-.ac.dest .ac-ic{background:rgba(255,255,255,.15)}
-.ac.dest:hover{background:var(--azul-e)}
+.ac-ic{width:38px;height:38px;border-radius:10px;background:rgba(0,0,0,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px}
+
+/* Botão principal — "Lançar Presença" — destaque dominante */
+.ac.dest{background:linear-gradient(135deg,#1e3a5f,#2c5282);color:#fff;border-color:transparent;box-shadow:0 6px 18px rgba(30,58,95,.3);font-size:15px;font-weight:700}
+.ac.dest .ac-ic{background:rgba(255,255,255,.18);font-size:19px}
+.ac.dest:hover{filter:brightness(1.07);transform:translateY(-1px);box-shadow:0 10px 24px rgba(30,58,95,.35)}
+.ac.dest:active{transform:scale(.97);filter:brightness(.98)}
 .oculto-auth{display:none !important;}
 
 /* ── ALERTAS ── */
