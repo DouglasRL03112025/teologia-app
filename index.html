@@ -53,6 +53,94 @@ main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
 @keyframes glowNumber{0%{text-shadow:0 0 0 rgba(255,255,255,0)}50%{text-shadow:0 0 8px rgba(255,255,255,0.35)}100%{text-shadow:0 0 0 rgba(255,255,255,0)}}
 @keyframes glowMedia{0%{text-shadow:0 0 0px rgba(59,130,246,0)}50%{text-shadow:0 0 12px rgba(59,130,246,0.55)}100%{text-shadow:0 0 0px rgba(59,130,246,0)}}
 
+
+/* ── PROVAS PREMIUM UI ── */
+.prova-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  will-change: transform;
+}
+.prova-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.10) !important;
+}
+.prova-card:active { transform: scale(0.97); }
+
+@keyframes flashCard {
+  0%   { background: #ecfeff; }
+  60%  { background: #cffafe; }
+  100% { background: inherit; }
+}
+.prova-atualizada { animation: flashCard 0.55s ease forwards; }
+
+.prova-nota-clicavel {
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s;
+  padding: 4px 6px;
+  margin: 0 -6px;
+}
+.prova-nota-clicavel:hover { background: rgba(0,0,0,0.04); }
+
+.prova-btn {
+  flex: 1;
+  padding: 5px 4px;
+  font-size: 11px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  transition: filter 0.15s, transform 0.1s;
+  border: 1px solid transparent;
+}
+.prova-btn:hover  { filter: brightness(0.92); transform: translateY(-1px); }
+.prova-btn:active { transform: scale(0.95); filter: brightness(0.88); }
+.prova-btn-fez    { background:#fef9c3; border-color:#fbbf24; color:#92400e; }
+.prova-btn-unfez  { background:#f3f4f6; border-color:#d1d5db; color:#6b7280; }
+.prova-btn-nota   { background:#dbeafe; border-color:#3b82f6; color:#1e40af; }
+.prova-badge-dev  {
+  display:inline-flex; align-items:center; gap:3px;
+  background:#dbeafe; color:#1e40af;
+  border-radius:20px; padding:2px 8px;
+  font-size:9px; font-weight:700; letter-spacing:.3px;
+  border:1px solid #bfdbfe;
+}
+
+/* resumo dashboard premium */
+.provas-dash {
+  display: grid;
+  grid-template-columns: repeat(5,1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.provas-dash-card {
+  border-radius: 12px;
+  padding: 12px 8px 10px;
+  text-align: center;
+  border: 1px solid transparent;
+  transition: transform 0.15s;
+}
+.provas-dash-card:hover { transform: translateY(-1px); }
+.provas-dash-num  { font-size: 22px; font-weight: 800; font-family: 'Lora', serif; line-height: 1.1; }
+.provas-dash-lbl  { font-size: 10px; font-weight: 600; margin-top: 3px; text-transform: uppercase; letter-spacing: .4px; }
+.provas-media-bar {
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #374151;
+  font-weight: 500;
+}
+.provas-media-val {
+  font-size: 20px;
+  font-weight: 800;
+  font-family: 'Lora', serif;
+  margin-left: auto;
+}
+
 /* ── LOGIN ── */
 #pg-login{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px 20px;background:#f4f6f8 !important}
 .login-box{width:100%;max-width:400px}
@@ -6455,36 +6543,67 @@ async function renderPainelProvas() {
     else if (r.devolvida)                  tots.devolvida++;
   });
 
+  /* ── Dashboard premium da prova ── */
+  var fizeram = tots.feita + tots.corrigida + tots.devolvida;
+  var notasArr = [];
+  alunos.forEach(function(a){
+    var r = mapa[a.id];
+    if (r && r.nota != null) notasArr.push(Number(r.nota));
+  });
+  var mediaStr = notasArr.length
+    ? (notasArr.reduce(function(s,n){return s+n;},0)/notasArr.length).toFixed(1)
+    : '—';
+  var mediaCor = notasArr.length && parseFloat(mediaStr) >= 7 ? '#15803d'
+               : notasArr.length && parseFloat(mediaStr) >= 5 ? '#92400e' : '#b83232';
+
   var coresRes = [
-    {label:'Total',    val:tots.total,      bg:'#e8f0f8', cor:'#1a3a5c'},
-    {label:'Não fez',  val:tots.nao_fez,    bg:'#f3f4f6', cor:'#6b7280'},
-    {label:'Feita',    val:tots.feita,      bg:'#fef9c3', cor:'#92400e'},
-    {label:'Corrigida',val:tots.corrigida,  bg:'#dbeafe', cor:'#1e40af'},
-    {label:'Devolvida',val:tots.devolvida,  bg:'#d4edda', cor:'#155724'}
+    {label:'Total',     val:tots.total,     bg:'#e8f0f8', brd:'#bfdbfe', cor:'#1a3a5c'},
+    {label:'Não fez',   val:tots.nao_fez,   bg:'#f1f5f9', brd:'#e2e8f0', cor:'#64748b'},
+    {label:'Realizada', val:tots.feita,     bg:'#fef3c7', brd:'#fcd34d', cor:'#92400e'},
+    {label:'Corrigida', val:tots.corrigida, bg:'#dbeafe', brd:'#93c5fd', cor:'#1e40af'},
+    {label:'Devolvida', val:tots.devolvida, bg:'#dcfce7', brd:'#86efac', cor:'#15803d'}
   ];
+  resumoEl.className = 'provas-dash';
   resumoEl.style.display = 'grid';
   resumoEl.style.gridTemplateColumns = 'repeat(5,1fr)';
   resumoEl.style.gap = '8px';
-  resumoEl.style.marginBottom = '14px';
+  resumoEl.style.marginBottom = notasArr.length ? '8px' : '14px';
   resumoEl.innerHTML = coresRes.map(function(c){
-    return '<div style="background:'+c.bg+';border-radius:var(--r);padding:10px 8px;text-align:center">'
-      +'<div style="font-size:20px;font-weight:700;color:'+c.cor+'">'+c.val+'</div>'
-      +'<div style="font-size:10px;color:'+c.cor+';font-weight:600;margin-top:2px">'+c.label+'</div></div>';
+    return '<div class="provas-dash-card" style="background:'+c.bg+';border-color:'+c.brd+'">'
+      +'<div class="provas-dash-num" style="color:'+c.cor+'">'+c.val+'</div>'
+      +'<div class="provas-dash-lbl" style="color:'+c.cor+'">'+c.label+'</div></div>';
   }).join('');
 
+  if (notasArr.length) {
+    var barraMedia = document.getElementById('provas-media-bar');
+    if (!barraMedia) {
+      barraMedia = document.createElement('div');
+      barraMedia.id = 'provas-media-bar';
+      resumoEl.parentNode.insertBefore(barraMedia, resumoEl.nextSibling);
+    }
+    barraMedia.className = 'provas-media-bar';
+    barraMedia.innerHTML = '<span>📊 Média da turma</span>'
+      +'<span style="font-size:11px;color:#6b7280;">('+notasArr.length+' nota'+(notasArr.length>1?'s':'')+' lançada'+(notasArr.length>1?'s':'')+')</span>'
+      +'<span class="provas-media-val" style="color:'+mediaCor+'">'+mediaStr+'</span>';
+    barraMedia.style.marginBottom = '14px';
+  } else {
+    var old = document.getElementById('provas-media-bar');
+    if (old) old.remove();
+  }
+
+  /* ── mapa de estados visual ── */
   var estilos = {
-    nao_fez:   {bg:'#f3f4f6',brd:'#d1d5db',cor:'#6b7280',label:'Não realizada'},
-    feita:     {bg:'#fef9c3',brd:'#fbbf24',cor:'#92400e',label:'Aguard. correção'},
-    corrigida: {bg:'#dbeafe',brd:'#3b82f6',cor:'#1e40af',label:'Corrigida'},
-    devolvida: {bg:'#d4edda',brd:'#28a745',cor:'#155724',label:'Devolvida'}
+    nao_fez:   {bg:'#f1f5f9',brd:'#e2e8f0',cor:'#64748b',label:'Não realizada'},
+    feita:     {bg:'#fef3c7',brd:'#fcd34d',cor:'#92400e',label:'Aguard. correção'},
+    corrigida: {bg:'#dcfce7',brd:'#86efac',cor:'#15803d',label:'Corrigida'},
+    devolvida: {bg:'#dbeafe',brd:'#93c5fd',cor:'#1e40af',label:'Devolvida'}
   };
 
-  /* ── estilos visuais premium por nota/estado ── */
   var cardEstilos = {
-    ok:       { border:'#22c55e', badge:'#dcfce7', badgeTxt:'#15803d', icon:'✅' },
-    atencao:  { border:'#f59e0b', badge:'#fef9c3', badgeTxt:'#92400e', icon:'⏳' },
-    pendente: { border:'#e5e7eb', badge:'#f3f4f6', badgeTxt:'#6b7280', icon:'📋' },
-    devolvida:{ border:'#3b82f6', badge:'#dbeafe', badgeTxt:'#1e40af', icon:'📦' }
+    ok:        { border:'#22c55e', bg:'#f0fdf4', icon:'✅' },
+    atencao:   { border:'#f59e0b', bg:'#fffbeb', icon:'⏳' },
+    pendente:  { border:'#e2e8f0', bg:'#f8fafc', icon:'📋' },
+    devolvida: { border:'#93c5fd', bg:'#eff6ff', icon:'📦' }
   };
 
   listaEl.style.display = 'grid';
@@ -6506,61 +6625,70 @@ async function renderPainelProvas() {
     }
     var st = estilos[status];
 
-    /* ── classe visual do card ── */
     var cardKey;
-    if (r && r.devolvida)          cardKey = 'devolvida';
+    if (r && r.devolvida)                      cardKey = 'devolvida';
     else if (r && r.nota != null && r.nota >= 7) cardKey = 'ok';
-    else if (r && r.fez_prova)     cardKey = 'atencao';
-    else                           cardKey = 'pendente';
+    else if (r && r.fez_prova)                 cardKey = 'atencao';
+    else                                        cardKey = 'pendente';
     var ce = cardEstilos[cardKey];
 
-    /* ── nota display ── */
+    /* ── nota display — clicável se tiver rid ── */
     var notaValor = r && r.nota != null ? r.nota : null;
+    var rid = r ? r.id : null;
+    var notaCor = notaValor != null
+      ? (notaValor >= 7 ? '#15803d' : notaValor >= 5 ? '#92400e' : '#b83232')
+      : '#d1d5db';
+    var notaOnclick = rid ? ' onclick="provasLancarNota(''+rid+'')" title="Clique para editar nota"' : '';
     var notaDisplay = notaValor != null
-      ? '<div style="font-size:26px;font-weight:800;font-family:\'Lora\',serif;color:'+(notaValor>=7?'#15803d':notaValor>=5?'#92400e':'#b83232')+';line-height:1">'+notaValor+'</div>'
-        +'<div style="font-size:10px;color:#9ca3af;margin-top:1px">nota</div>'
-      : '<div style="font-size:22px;color:#d1d5db;line-height:1">—</div>'
+      ? '<div class="prova-nota-clicavel"'+notaOnclick+'>'
+          +'<div style="font-size:26px;font-weight:800;font-family:'Lora',serif;color:'+notaCor+';line-height:1">'+notaValor+'</div>'
+          +'<div style="font-size:10px;color:#9ca3af;margin-top:1px">'+(rid ? '✏ toque p/ editar' : 'nota')+'</div>'
+        +'</div>'
+      : '<div style="font-size:22px;color:#d1d5db;line-height:1;padding:4px 0">—</div>'
         +'<div style="font-size:10px;color:#d1d5db;margin-top:1px">sem nota</div>';
 
     /* ── nome abreviado ── */
     var partes = a.nome.trim().split(' ');
     var nomeExib = partes.length > 1 ? partes[0]+' '+partes[partes.length-1] : partes[0];
 
-    var rid = r ? r.id : null;
+    /* ── badge devolvida (substitui botão de ação) ── */
+    var badgeDev = (rid && r && r.devolvida)
+      ? '<span class="prova-badge-dev">📦 Devolvida</span>'
+      : '';
 
-    /* ── botões compactos ── */
+    /* ── botões de ação ── */
     var btns = '';
     if (status === 'nao_fez')
-      btns += '<button onclick="provasMarcarFez(\''+a.id+'\',\''+codigo+'\', true)" title="Marcar que fez a prova" style="flex:1;padding:5px 4px;font-size:11px;background:#fef9c3;border:1px solid #fbbf24;border-radius:8px;cursor:pointer;font-weight:700;color:#92400e;transition:filter .15s" onmouseover="this.style.filter=\'brightness(.93)\'" onmouseout="this.style.filter=\'none\'">✔ Fez</button>';
+      btns += '<button class="prova-btn prova-btn-fez" onclick="provasMarcarFez(''+a.id+'',''+codigo+'', true)" title="Marcar que fez a prova">✔ Fez</button>';
     else
-      btns += '<button onclick="provasMarcarFez(\''+a.id+'\',\''+codigo+'\', false)" title="Desmarcar presença na prova" style="flex:1;padding:5px 4px;font-size:11px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:8px;cursor:pointer;font-weight:700;color:#6b7280;transition:filter .15s" onmouseover="this.style.filter=\'brightness(.93)\'" onmouseout="this.style.filter=\'none\'">✖</button>';
+      btns += '<button class="prova-btn prova-btn-unfez" onclick="provasMarcarFez(''+a.id+'',''+codigo+'', false)" title="Desmarcar presença">✖</button>';
     if (rid)
-      btns += '<button onclick="provasLancarNota(\''+rid+'\')" title="Lançar ou editar nota" style="flex:1;padding:5px 4px;font-size:11px;background:#dbeafe;border:1px solid #3b82f6;border-radius:8px;cursor:pointer;font-weight:700;color:#1e40af;transition:filter .15s" onmouseover="this.style.filter=\'brightness(.93)\'" onmouseout="this.style.filter=\'none\'">✏</button>';
+      btns += '<button class="prova-btn prova-btn-nota" onclick="provasLancarNota(''+rid+'')" title="Lançar ou editar nota">✏</button>';
     if (rid && !r.devolvida)
-      btns += '<button onclick="provasMarcarDevolvida(\''+rid+'\')" title="Marcar como devolvida" style="flex:1;padding:5px 4px;font-size:11px;background:#d4edda;border:1px solid #28a745;border-radius:8px;cursor:pointer;font-weight:700;color:#155724;transition:filter .15s" onmouseover="this.style.filter=\'brightness(.93)\'" onmouseout="this.style.filter=\'none\'">📦</button>';
+      btns += '<button class="prova-btn" onclick="provasMarcarDevolvida(''+rid+'')" title="Marcar como devolvida" style="background:#f0fdf4;border-color:#86efac;color:#15803d">📦</button>';
 
-    return '<div style="'
-      +'background:#fff;'
+    return '<div class="prova-card" id="card-prova-'+a.id+'" style="'
+      +'background:'+ce.bg+';'
       +'border:2px solid '+ce.border+';'
       +'border-radius:12px;'
       +'padding:12px 10px 10px;'
-      +'box-shadow:0 2px 8px rgba(0,0,0,.07);'
-      +'display:flex;flex-direction:column;gap:8px;'
-      +'transition:box-shadow .18s,transform .18s;'
-      +'cursor:default'
-      +'" onmouseover="this.style.boxShadow=\'0 6px 18px rgba(0,0,0,.13)\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.boxShadow=\'0 2px 8px rgba(0,0,0,.07)\';this.style.transform=\'none\'">'
+      +'box-shadow:0 2px 8px rgba(0,0,0,.06);'
+      +'display:flex;flex-direction:column;gap:8px;">'
 
-      /* badge estado */
+      /* topo: ícone + badge estado */
       +'<div style="display:flex;align-items:center;justify-content:space-between;gap:4px">'
       +'<span style="font-size:14px">'+ce.icon+'</span>'
-      +'<span style="background:'+ce.badge+';color:'+ce.badgeTxt+';border-radius:20px;padding:2px 7px;font-size:9px;font-weight:700;letter-spacing:.3px;white-space:nowrap">'+st.label+'</span>'
+      +'<span style="background:'+st.bg+';color:'+st.cor+';border:1px solid '+st.brd+';border-radius:20px;padding:2px 7px;font-size:9px;font-weight:700;letter-spacing:.3px;white-space:nowrap">'+st.label+'</span>'
       +'</div>'
 
       /* nome */
       +'<div style="font-size:13px;font-weight:600;color:#1e1e1e;line-height:1.3;min-height:32px;display:flex;align-items:center">'+nomeExib+'</div>'
 
-      /* nota */
-      +'<div style="text-align:center;padding:6px 0 4px;border-top:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0">'+notaDisplay+'</div>'
+      /* nota — centralizada, clicável */
+      +'<div style="text-align:center;padding:6px 0 4px;border-top:1px solid rgba(0,0,0,.06);border-bottom:1px solid rgba(0,0,0,.06)">'+notaDisplay+'</div>'
+
+      /* badge devolvida (se aplicável) */
+      +(badgeDev ? '<div style="text-align:center">'+badgeDev+'</div>' : '')
 
       /* botões */
       +(btns ? '<div style="display:flex;gap:5px;flex-wrap:wrap">'+btns+'</div>' : '')
