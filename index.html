@@ -6381,7 +6381,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
       const presQuery = supabaseClient.from('presenca').select('*').eq('data', admPresAulaAtual.data);
       const [resAlunos, resPres] = await Promise.all([
         supabaseClient.from('alunos').select('*').order('nome'),
-        admPresAulaAtual.livro ? presQuery.eq('livro', admPresAulaAtual.livro) : presQuery
+        presQuery
       ]);
 
       if (resAlunos.error) { console.error('[PRES ADMIN] Erro alunos:', resAlunos.error); return; }
