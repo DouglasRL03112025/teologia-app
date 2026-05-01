@@ -6528,6 +6528,11 @@ async function provasLancarNota(id) {
   if (notaStr === null) return;
   var nota = parseFloat(notaStr.replace(',','.'));
   if (isNaN(nota)) { toast('Nota inválida.', 'erro'); return; }
+  var valor = Number(nota);
+  if (isNaN(valor) || valor < 0 || valor > 10) {
+    toast('Nota inválida. Digite um valor entre 0 e 10.', 'erro');
+    return;
+  }
   var { error } = await supabaseClient.from('provas_aluno')
     .update({ nota:nota, fez_prova:true, corrigida:true }).eq('id', id);
   if (error) { toast('Erro: '+error.message); return; }
