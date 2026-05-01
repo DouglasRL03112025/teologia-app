@@ -1135,19 +1135,19 @@ select.inp{cursor:pointer}
       <div id="adm-pres-resumo" style="display:none;background:#fff;border-radius:var(--r);padding:14px 16px;margin-bottom:14px;border:1px solid var(--brd);box-shadow:var(--s)">
         <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--azul);margin-bottom:10px">📋 Resumo da aula</div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center">
-          <div style="background:var(--azul-c);border-radius:var(--r);padding:10px 6px">
+          <div id="adm-pres-wrap-total" onclick="admPresFiltrarPor('todos')" style="background:var(--azul-c);border-radius:var(--r);padding:10px 6px;cursor:pointer;transition:box-shadow .15s,outline .15s">
             <div id="adm-pres-r-total" style="font-size:22px;font-weight:700;font-family:Lora,serif;color:var(--azul)">0</div>
             <div style="font-size:10px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-top:2px">Total</div>
           </div>
-          <div style="background:var(--vd-c);border-radius:var(--r);padding:10px 6px">
+          <div id="adm-pres-wrap-pres" onclick="admPresFiltrarPor('pres')" style="background:var(--vd-c);border-radius:var(--r);padding:10px 6px;cursor:pointer;transition:box-shadow .15s,outline .15s">
             <div id="adm-pres-r-pres" style="font-size:22px;font-weight:700;font-family:Lora,serif;color:var(--vd)">0</div>
             <div style="font-size:10px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-top:2px">Presentes</div>
           </div>
-          <div style="background:var(--vm-c);border-radius:var(--r);padding:10px 6px">
+          <div id="adm-pres-wrap-falt" onclick="admPresFiltrarPor('falt')" style="background:var(--vm-c);border-radius:var(--r);padding:10px 6px;cursor:pointer;transition:box-shadow .15s,outline .15s">
             <div id="adm-pres-r-falt" style="font-size:22px;font-weight:700;font-family:Lora,serif;color:var(--vm)">0</div>
             <div style="font-size:10px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-top:2px">Faltas</div>
           </div>
-          <div style="background:var(--fnd);border-radius:var(--r);padding:10px 6px;border:1px solid var(--brd)">
+          <div id="adm-pres-wrap-nao" onclick="admPresFiltrarPor('nao')" style="background:var(--fnd);border-radius:var(--r);padding:10px 6px;border:1px solid var(--brd);cursor:pointer;transition:box-shadow .15s,outline .15s">
             <div id="adm-pres-r-nao" style="font-size:22px;font-weight:700;font-family:Lora,serif;color:var(--cin)">0</div>
             <div style="font-size:10px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-top:2px">N/marcado</div>
           </div>
@@ -6311,6 +6311,35 @@ if(!D.aulas_log) { D.aulas_log={}; }
   let admPresAlunos    = [];
   let admPresEstado    = {};   // { alunoId: true | false | null }
   let admPresRegistros = {};   // { alunoId: { id, presente } }
+  let filtroPresencaAtual = 'todos';
+
+  function admPresFiltrarPor(filtro) {
+    filtroPresencaAtual = (filtroPresencaAtual === filtro && filtro !== 'todos') ? 'todos' : filtro;
+    admPresAplicarFiltro();
+  }
+
+  function admPresAplicarFiltro() {
+    admPresAlunos.forEach(function(aluno) {
+      const card = document.getElementById('adm-pres-card-' + aluno.id);
+      if (!card) return;
+      const v = admPresEstado[aluno.id];
+      var visivel = false;
+      if (filtroPresencaAtual === 'todos')     visivel = true;
+      else if (filtroPresencaAtual === 'pres') visivel = (v === true);
+      else if (filtroPresencaAtual === 'falt') visivel = (v === false);
+      else if (filtroPresencaAtual === 'nao')  visivel = (v === null || v === undefined);
+      card.style.display = visivel ? '' : 'none';
+    });
+    ['todos','pres','falt','nao'].forEach(function(f) {
+      var wid  = f === 'todos' ? 'adm-pres-wrap-total' : 'adm-pres-wrap-' + f;
+      var wrap = document.getElementById(wid);
+      if (!wrap) return;
+      var ativo = filtroPresencaAtual === f;
+      wrap.style.outline   = ativo ? '2.5px solid currentColor' : '';
+      wrap.style.boxShadow = ativo ? '0 2px 10px rgba(0,0,0,.15)' : '';
+      wrap.style.opacity   = (filtroPresencaAtual === 'todos' || ativo) ? '1' : '.55';
+    });
+  }
 
   /* ── Carrega select de aulas ── */
   async function admPresCarregarAulas() {
@@ -6349,7 +6378,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
 
   /* ── Reseta UI para estado inicial ── */
   function admPresResetUI() {
-    admPresAulaAtual = null; admPresEstado = {}; admPresRegistros = {};
+    admPresAulaAtual = null; admPresEstado = {}; admPresRegistros = {}; filtroPresencaAtual = 'todos';
     const show = (id, v) => { const el = document.getElementById(id); if (el) el.style.display = v; };
     show('adm-pres-card-alunos', 'none');
     show('adm-pres-btn-salvar',  'none');
@@ -6532,6 +6561,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
     set('adm-pres-r-pres',  pres);
     set('adm-pres-r-falt',  falt);
     set('adm-pres-r-nao',   nao);
+    admPresAplicarFiltro();
   }
 
   /* ── Utilitário: iniciais ── */
