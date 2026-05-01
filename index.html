@@ -4699,8 +4699,8 @@ async function renderRelAdmin(aba){
     const linhas = aulasOrdenadas.map(aula => {
       const livro = aula.livro || 'Sem livro';
       const d = new Date(aula.data + 'T12:00:00');
-      // presencas da data + livro (mesmo critério do módulo de presença)
-      const presD = todasPresencas.filter(p => p.data === aula.data && (p.livro || 'Sem livro') === livro);
+      // presencas da data apenas — registros no banco não possuem campo livro
+      const presD = todasPresencas.filter(p => p.data === aula.data);
       let presentes = 0, faltas = 0;
       al.forEach(a => {
         const reg = presD.find(p => p.aluno_id === a.id);
