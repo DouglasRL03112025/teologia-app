@@ -1109,9 +1109,9 @@ select.inp{cursor:pointer}
       <p class="sub">Gerencie o status das provas por disciplina</p>
 
       <!-- Seletor de prova -->
-      <div style="background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;box-shadow:var(--s)">
-        <label style="font-size:12px;font-weight:600;color:var(--cin);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Selecionar Prova</label>
-        <select id="provas-select-prova" class="inp" onchange="renderPainelProvas()" style="margin:0;font-size:14px">
+      <div style="background:linear-gradient(135deg,#1e3a5f,#2c5282);border-radius:14px;padding:16px 16px 14px;margin-bottom:14px;box-shadow:0 6px 20px rgba(30,58,95,.25)">
+        <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:8px">📋 Selecionar Prova</label>
+        <select id="provas-select-prova" class="inp" onchange="renderPainelProvas()" style="margin:0;font-size:15px;font-weight:600;border-radius:10px;border:none;box-shadow:0 2px 8px rgba(0,0,0,.12)">
           <option value="">— escolha uma prova —</option>
         </select>
       </div>
@@ -1119,7 +1119,7 @@ select.inp{cursor:pointer}
       <!-- Resumo -->
       <div id="provas-resumo" style="display:none"></div>
 
-      <!-- Lista de alunos -->
+      <!-- Grid de alunos -->
       <div id="provas-lista"></div>
     </div>
 
@@ -6474,6 +6474,19 @@ async function renderPainelProvas() {
     devolvida: {bg:'#d4edda',brd:'#28a745',cor:'#155724',label:'Devolvida'}
   };
 
+  /* ── estilos visuais premium por nota/estado ── */
+  var cardEstilos = {
+    ok:       { border:'#22c55e', badge:'#dcfce7', badgeTxt:'#15803d', icon:'✅' },
+    atencao:  { border:'#f59e0b', badge:'#fef9c3', badgeTxt:'#92400e', icon:'⏳' },
+    pendente: { border:'#e5e7eb', badge:'#f3f4f6', badgeTxt:'#6b7280', icon:'📋' },
+    devolvida:{ border:'#3b82f6', badge:'#dbeafe', badgeTxt:'#1e40af', icon:'📦' }
+  };
+
+  listaEl.style.display = 'grid';
+  listaEl.style.gridTemplateColumns = 'repeat(auto-fill, minmax(155px, 1fr))';
+  listaEl.style.gap = '10px';
+  listaEl.style.marginTop = '4px';
+
   listaEl.innerHTML = alunos.map(function(a){
     var r = mapa[a.id];
     var status;
@@ -6487,26 +6500,66 @@ async function renderPainelProvas() {
       status = 'devolvida';
     }
     var st = estilos[status];
-    var notaHtml = r && r.nota!=null
-      ? '<span style="font-size:14px;font-weight:700;color:var(--vd)">'+r.nota+'</span>'
-      : '<span style="font-size:12px;color:var(--cin)">—</span>';
+
+    /* ── classe visual do card ── */
+    var cardKey;
+    if (r && r.devolvida)          cardKey = 'devolvida';
+    else if (r && r.nota != null && r.nota >= 7) cardKey = 'ok';
+    else if (r && r.fez_prova)     cardKey = 'atencao';
+    else                           cardKey = 'pendente';
+    var ce = cardEstilos[cardKey];
+
+    /* ── nota display ── */
+    var notaValor = r && r.nota != null ? r.nota : null;
+    var notaDisplay = notaValor != null
+      ? '<div style="font-size:26px;font-weight:800;font-family:\'Lora\',serif;color:'+(notaValor>=7?'#15803d':notaValor>=5?'#92400e':'#b83232')+';line-height:1">'+notaValor+'</div>'
+        +'<div style="font-size:10px;color:#9ca3af;margin-top:1px">nota</div>'
+      : '<div style="font-size:22px;color:#d1d5db;line-height:1">—</div>'
+        +'<div style="font-size:10px;color:#d1d5db;margin-top:1px">sem nota</div>';
+
+    /* ── nome abreviado ── */
+    var partes = a.nome.trim().split(' ');
+    var nomeExib = partes.length > 1 ? partes[0]+' '+partes[partes.length-1] : partes[0];
+
     var rid = r ? r.id : null;
+
+    /* ── botões compactos ── */
     var btns = '';
     if (status === 'nao_fez')
-      btns += '<button onclick="provasMarcarFez(\'' + a.id + '\',\'' + codigo + '\', true)" style="flex:1;padding:7px;font-size:12px;background:#fef9c3;border:1px solid #fbbf24;border-radius:8px;cursor:pointer;font-weight:600;color:#92400e">✔ Marcar Fez</button>';
+      btns += '<button onclick="provasMarcarFez(\''+a.id+'\',\''+codigo+'\', true)" title="Marcar que fez a prova" style="flex:1;padding:5px 4px;font-size:11px;background:#fef9c3;border:1px solid #fbbf24;border-radius:8px;cursor:pointer;font-weight:700;color:#92400e;transition:filter .15s" onmouseover="this.style.filter=\'brightness(.93)\'" onmouseout="this.style.filter=\'none\'">✔ Fez</button>';
     else
-      btns += '<button onclick="provasMarcarFez(\'' + a.id + '\',\'' + codigo + '\', false)" style="flex:1;padding:7px;font-size:12px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:8px;cursor:pointer;font-weight:600;color:#6b7280">✖ Desmarcar</button>';
+      btns += '<button onclick="provasMarcarFez(\''+a.id+'\',\''+codigo+'\', false)" title="Desmarcar presença na prova" style="flex:1;padding:5px 4px;font-size:11px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:8px;cursor:pointer;font-weight:700;color:#6b7280;transition:filter .15s" onmouseover="this.style.filter=\'brightness(.93)\'" onmouseout="this.style.filter=\'none\'">✖</button>';
     if (rid)
-      btns += '<button onclick="provasLancarNota(\'' + rid + '\')" style="flex:1;padding:7px;font-size:12px;background:#dbeafe;border:1px solid #3b82f6;border-radius:8px;cursor:pointer;font-weight:600;color:#1e40af">✏ Lançar Nota</button>';
+      btns += '<button onclick="provasLancarNota(\''+rid+'\')" title="Lançar ou editar nota" style="flex:1;padding:5px 4px;font-size:11px;background:#dbeafe;border:1px solid #3b82f6;border-radius:8px;cursor:pointer;font-weight:700;color:#1e40af;transition:filter .15s" onmouseover="this.style.filter=\'brightness(.93)\'" onmouseout="this.style.filter=\'none\'">✏</button>';
     if (rid && !r.devolvida)
-      btns += '<button onclick="provasMarcarDevolvida(\'' + rid + '\')" style="flex:1;padding:7px;font-size:12px;background:#d4edda;border:1px solid #28a745;border-radius:8px;cursor:pointer;font-weight:600;color:#155724">📦 Devolvida</button>';
-    return '<div style="background:#fff;border:1px solid var(--brd);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;box-shadow:var(--s)">'
-      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
-      +'<span style="font-weight:600;font-size:14px;flex:1">'+a.nome+'</span>'
-      +notaHtml
-      +'<span style="background:'+st.bg+';border:1px solid '+st.brd+';color:'+st.cor+';border-radius:20px;padding:2px 9px;font-size:11px;font-weight:600">'+st.label+'</span>'
+      btns += '<button onclick="provasMarcarDevolvida(\''+rid+'\')" title="Marcar como devolvida" style="flex:1;padding:5px 4px;font-size:11px;background:#d4edda;border:1px solid #28a745;border-radius:8px;cursor:pointer;font-weight:700;color:#155724;transition:filter .15s" onmouseover="this.style.filter=\'brightness(.93)\'" onmouseout="this.style.filter=\'none\'">📦</button>';
+
+    return '<div style="'
+      +'background:#fff;'
+      +'border:2px solid '+ce.border+';'
+      +'border-radius:12px;'
+      +'padding:12px 10px 10px;'
+      +'box-shadow:0 2px 8px rgba(0,0,0,.07);'
+      +'display:flex;flex-direction:column;gap:8px;'
+      +'transition:box-shadow .18s,transform .18s;'
+      +'cursor:default'
+      +'" onmouseover="this.style.boxShadow=\'0 6px 18px rgba(0,0,0,.13)\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.boxShadow=\'0 2px 8px rgba(0,0,0,.07)\';this.style.transform=\'none\'">'
+
+      /* badge estado */
+      +'<div style="display:flex;align-items:center;justify-content:space-between;gap:4px">'
+      +'<span style="font-size:14px">'+ce.icon+'</span>'
+      +'<span style="background:'+ce.badge+';color:'+ce.badgeTxt+';border-radius:20px;padding:2px 7px;font-size:9px;font-weight:700;letter-spacing:.3px;white-space:nowrap">'+st.label+'</span>'
       +'</div>'
-      +(btns ? '<div style="display:flex;gap:8px;flex-wrap:wrap">'+btns+'</div>' : '')
+
+      /* nome */
+      +'<div style="font-size:13px;font-weight:600;color:#1e1e1e;line-height:1.3;min-height:32px;display:flex;align-items:center">'+nomeExib+'</div>'
+
+      /* nota */
+      +'<div style="text-align:center;padding:6px 0 4px;border-top:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0">'+notaDisplay+'</div>'
+
+      /* botões */
+      +(btns ? '<div style="display:flex;gap:5px;flex-wrap:wrap">'+btns+'</div>' : '')
+
       +'</div>';
   }).join('');
 }
