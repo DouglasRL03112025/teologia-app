@@ -6790,7 +6790,7 @@ async function renderPainelProvas() {
     var notaOnclick = rid ? ' onclick="provasLancarNota(''+rid+'')" title="Clique para editar nota"' : '';
     var notaDisplay = notaValor != null
       ? '<div class="prova-nota-clicavel"'+notaOnclick+'>'
-          +'<div style="font-size:26px;font-weight:800;font-family:'Lora',serif;color:'+notaCor+';line-height:1">'+notaValor+'</div>'
+          +'<div style="font-size:26px;font-weight:800;font-family:\'Lora\',serif;color:'+notaCor+';line-height:1">'+notaValor+'</div>'
           +'<div style="font-size:10px;color:#9ca3af;margin-top:1px">'+(rid ? '✏ toque p/ editar' : 'nota')+'</div>'
         +'</div>'
       : '<div style="font-size:22px;color:#d1d5db;line-height:1;padding:4px 0">—</div>'
