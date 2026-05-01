@@ -68,7 +68,7 @@ main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
 .sub{font-size:14px;color:var(--cin);margin-bottom:18px}
 
 /* ── CARD ── */
-.card{background:#fff;border-radius:var(--rl);padding:18px;margin-bottom:14px;box-shadow:var(--s);border:1px solid var(--brd);transition:box-shadow .2s}
+.card{background:#fff;border-radius:var(--rl);padding:18px;margin-bottom:14px;box-shadow:var(--s);border:1px solid var(--brd);transition:box-shadow .2s,transform .2s ease}.card:hover{transform:translateY(-2px);box-shadow:var(--sh)}
 .card-t{font-size:15px;font-weight:600;color:var(--azul);margin-bottom:14px;display:flex;align-items:center;gap:7px}
 
 /* ── MÉTRICAS ADMIN ── */
@@ -750,6 +750,70 @@ select.inp{cursor:pointer}
 
 /* ── SEÇÃO MATERIAL: permanentemente oculta (não funcional) ── */
 #a-material, #nb-material { display: none !important; }
+
+/* ── TOAST NOTIFICATIONS ── */
+#toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  pointer-events: none;
+}
+.toast {
+  background: #1e293b;
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  animation: toastFadeIn 0.2s ease;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 220px;
+  max-width: 320px;
+}
+.toast.ok  { background: #16a34a; }
+.toast.erro { background: #dc2626; }
+.toast.aviso { background: #d97706; }
+@keyframes toastFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── BTN LOADING ── */
+.btn-loading {
+  opacity: 0.65;
+  pointer-events: none;
+  position: relative;
+}
+.btn-loading::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.8);
+  border-top-color: transparent;
+  border-radius: 50%;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  animation: spinBtn 0.6s linear infinite;
+}
+@keyframes spinBtn {
+  to { transform: translateY(-50%) rotate(360deg); }
+}
+
+/* ── ESTADO VAZIO ── */
+.estado-vazio {
+  text-align: center;
+  padding: 32px 20px;
+  color: #64748b;
+  font-size: 13px;
+}
 </style>
 </head>
 <body>
@@ -1449,13 +1513,13 @@ async function loginAluno() {
   const email = document.getElementById('email').value.trim();
   const senha = document.getElementById('senha').value.trim();
 
-  if (!email) { alert('Digite o e-mail'); return; }
-  if (!senha) { alert('Digite a senha'); return; }
+  if (!email) { toast('Digite o e-mail'); return; }
+  if (!senha) { toast('Digite a senha'); return; }
 
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
 
   if (error) {
-    alert(error.message);
+    toast(error.message);
     return;
   }
 
@@ -1474,7 +1538,7 @@ async function carregarAlunoLogado(authId) {
 
   if (error) {
     console.error('[carregarAlunoLogado] Erro:', error);
-    alert('Aluno não encontrado');
+    toast('Aluno não encontrado');
     return;
   }
 
@@ -2266,6 +2330,7 @@ function fecharModalPagamento() {
 
 async function confirmarPagamentoModal() {
   const btnConfirmar = document.querySelector('#modal-pagamento .btn.bp');
+  if (btnConfirmar) btnConfirmar.classList.add('btn-loading');
   const textoOriginal = btnConfirmar ? btnConfirmar.textContent : 'Confirmar';
 
   if (btnConfirmar && btnConfirmar.disabled) return;
@@ -2274,7 +2339,7 @@ async function confirmarPagamentoModal() {
   try {
     const data = document.getElementById('mp-data').value;
     const forma = document.getElementById('mp-forma').value;
-    if (!_mpRegistroId || !data) { alert('Dados inválidos'); return; }
+    if (!_mpRegistroId || !data) { toast('Dados inválidos', 'erro'); return; }
     await marcarLivroComoPago(_mpRegistroId, data, forma);
     fecharModalPagamento();
   } catch(e) {
@@ -2286,8 +2351,8 @@ async function confirmarPagamentoModal() {
 /* ── FIM MODAL PAGAMENTO ── */
 
 async function marcarLivroComoPago(idRegistro, dataManual, formaManual) {
-  if (!window.isAdmin) { alert('Acesso restrito'); return; }
-  if (!idRegistro) { console.error('[PAGAMENTO] idRegistro inválido:', idRegistro); alert('Erro: registro não identificado'); return; }
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
+  if (!idRegistro) { console.error('[PAGAMENTO] idRegistro inválido:', idRegistro); toast('Erro: registro não identificado', 'erro'); return; }
 
   const data = dataManual || new Date().toISOString().slice(0,10);
   const forma = formaManual || 'pix';
@@ -2300,7 +2365,7 @@ async function marcarLivroComoPago(idRegistro, dataManual, formaManual) {
     .single();
 
   if (!erroEstado && registroAtual && registroAtual.pagou === true) {
-    alert('Pagamento já foi registrado');
+    toast('Pagamento já foi registrado', 'erro');
     return;
   }
   // ── FIM VALIDAÇÃO ──
@@ -2314,7 +2379,7 @@ async function marcarLivroComoPago(idRegistro, dataManual, formaManual) {
 
   if (erroVerif || !registroExistente) {
     console.error('[PAGAMENTO] Registro não encontrado para id:', idRegistro, erroVerif);
-    alert('Erro: registro de pagamento não encontrado no banco');
+    toast('Erro: registro de pagamento não encontrado no banco', 'erro');
     return;
   }
 
@@ -2330,11 +2395,11 @@ async function marcarLivroComoPago(idRegistro, dataManual, formaManual) {
 
   if (error) {
     console.error('[PAGAMENTO] Erro ao atualizar pagamento:', error);
-    alert('Erro ao marcar como pago');
+    toast('Erro ao marcar como pago', 'erro');
     return;
   }
 
-  alert('Livro marcado como pago');
+  toast('Livro marcado como pago', 'ok');
   // Recarrega os livros do aluno atual no perfil admin
   const container = document.getElementById('admin-livros-aluno');
   if (container && window._adminPerfilAlunoId) {
@@ -2448,7 +2513,7 @@ async function carregarExibirLivrosAdminPerfil(alunoId) {
 
 /* ════ CONFIRMAR ENTREGA DE LIVRO (ADMIN) ════ */
 async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
-  if (!window.isAdmin) { alert('Acesso restrito'); return; }
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
 
   const btn = btnEl || null;
   const textoOriginal = btn ? btn.textContent : 'Confirmar Entrega';
@@ -2464,11 +2529,11 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
 
   if (!erroValidacao && registroValidacao) {
     if (registroValidacao.pagou !== true) {
-      alert('Não é possível entregar antes do pagamento');
+      toast('Não é possível entregar antes do pagamento');
       return;
     }
     if (registroValidacao.entregue === true) {
-      alert('Entrega já confirmada');
+      toast('Entrega já confirmada', 'erro');
       return;
     }
   }
@@ -2500,7 +2565,7 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
 
     if (erroSelect) {
       console.error('[EntregaLivro] Erro ao verificar registro:', erroSelect);
-      alert('Erro ao verificar registro no banco. Veja o console.');
+      toast('Erro ao verificar registro no banco. Veja o console.', 'erro');
       return;
     }
 
@@ -2508,7 +2573,7 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
 
     if (!registros || registros.length === 0) {
       console.error('[EntregaLivro] Nenhum registro encontrado para alunoId=' + alunoId + ' e livro_codigo=' + codigoFinal);
-      alert('Registro não encontrado para este aluno e livro. Nenhuma alteração foi feita.');
+      toast('Registro não encontrado para este aluno e livro. Nenhuma alteração foi feita.');
       return;
     }
 
@@ -2521,12 +2586,12 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
 
     if (erroUpdate) {
       console.error('[EntregaLivro] Erro ao confirmar entrega:', erroUpdate);
-      alert('Erro ao confirmar entrega: ' + (erroUpdate.message || JSON.stringify(erroUpdate)));
+      toast('Erro ao confirmar entrega: ' + (erroUpdate.message || JSON.stringify(erroUpdate)));
       return;
     }
 
     console.log('[EntregaLivro] Entrega confirmada com sucesso!');
-    toast('📦 Entrega confirmada com sucesso!');
+    toast('📦 Entrega confirmada com sucesso!', 'ok');
 
     // Recarregar lista de livros do aluno e atualizar dashboard/alertas
     await carregarExibirLivrosAdminPerfil(alunoId);
@@ -2551,7 +2616,7 @@ async function desfazerEntregaLivro(alunoId, livroCodigo) {
 
   if (error) {
     console.error('[DesfazerEntrega] Erro:', error);
-    alert('Erro ao desfazer entrega: ' + (error.message || JSON.stringify(error)));
+    toast('Erro ao desfazer entrega: ' + (error.message || JSON.stringify(error)));
     return;
   }
 
@@ -2582,7 +2647,7 @@ async function loginAdmin() {
   const email = document.getElementById('admin-email')?.value;
   const senha = document.getElementById('admin-senha')?.value;
   if (!email || !senha) {
-    alert('Preencha todos os campos');
+    toast('Preencha todos os campos');
     return;
   }
   try {
@@ -2593,7 +2658,7 @@ async function loginAdmin() {
     });
     if (error) {
       console.error('Erro login:', error.message);
-      alert('E-mail ou senha inválidos');
+      toast('E-mail ou senha inválidos');
       return;
     }
     const user = data.user;
@@ -2604,7 +2669,7 @@ async function loginAdmin() {
       .eq('email', user.email)
       .single();
     if (adminError || !adminData) {
-      alert('Acesso negado: você não é administrador');
+      toast('Acesso negado: você não é administrador', 'erro');
       await supabaseClient.auth.signOut();
       return;
     }
@@ -2619,7 +2684,7 @@ async function loginAdmin() {
     irAdmin('inicio');
   } catch (err) {
     console.error('Erro inesperado:', err);
-    alert('Erro inesperado ao fazer login');
+    toast('Erro inesperado ao fazer login', 'erro');
   }
 }
 
@@ -2991,7 +3056,7 @@ function abrirModAluno(id){
   abrirMod('mod-aluno');
 }
 function salvarAluno(){
-  if (!window.isAdmin) { alert('Acesso restrito'); return; }
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   const nome=document.getElementById('a-nome').value.trim().toUpperCase(); if(!nome){ toast('⚠ Digite o nome'); return; }
   const eid=document.getElementById('aid').value;
   const a={id:eid||Date.now().toString(),nome,tel:document.getElementById('a-tel').value.replace(/\D/g,''),email:document.getElementById('a-email').value.trim(),turma:document.getElementById('a-turma').value,valor:document.getElementById('a-valor').value,senha:document.getElementById('a-senha').value||'1234',ativo:true};
@@ -3000,7 +3065,7 @@ function salvarAluno(){
   salvar(); fecharMod('mod-aluno'); renderAlunosAdmin(); toast('✓ Aluno '+(eid?'atualizado':'cadastrado')+'!');
 }
 function delAluno(){
-  if (!window.isAdmin) { alert('Acesso restrito'); return; }
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   const id=document.getElementById('aid').value; if(!id||!confirm('Excluir este aluno?')) return;
   D.alunos=D.alunos.filter(a=>a.id!==id); salvar(); fecharMod('mod-aluno'); renderAlunosAdmin(); toast('Aluno removido.');
 }
@@ -3180,7 +3245,7 @@ async function handleAcao(tipo, alunoId) {
   if (tipo === 'pagamento') {
     const livroAtual = window.livroAtualSistema;
     if (!livroAtual) {
-      alert('Livro atual não definido');
+      toast('Livro atual não definido');
       return;
     }
 
@@ -3196,7 +3261,7 @@ async function handleAcao(tipo, alunoId) {
 
     if (error || !data) {
       console.error(error);
-      alert('Registro do livro não encontrado');
+      toast('Registro do livro não encontrado');
       return;
     }
 
@@ -3209,7 +3274,7 @@ async function handleAcao(tipo, alunoId) {
   if (tipo === 'entrega') {
     const livroAtual = window.livroAtualSistema;
     if (!livroAtual) {
-      alert('Livro atual não definido');
+      toast('Livro atual não definido');
       return;
     }
 
@@ -3218,7 +3283,7 @@ async function handleAcao(tipo, alunoId) {
     // localizar o card do aluno
     const card = document.querySelector(`.ar[data-aluno-id="${alunoId}"]`);
     if (!card) {
-      alert('Card do aluno não encontrado');
+      toast('Card do aluno não encontrado');
       return;
     }
 
@@ -3234,7 +3299,7 @@ async function handleAcao(tipo, alunoId) {
     return;
   }
 
-  alert('Ação: ' + tipo + '\nAluno: ' + alunoId + '\nLivro: ' + livroAtual);
+  toast('Ação: ' + tipo + '\nAluno: ' + alunoId + '\nLivro: ' + livroAtual);
 }
 
 /* ════ FONTE DE VERDADE: STATUS DO ALUNO ════ */
@@ -3379,7 +3444,7 @@ function tgPres(id){
   document.getElementById('pc-'+id).textContent=n==='P'?'Presente':n==='F'?'Falta':'Tocar';
 }
 function salvarPres(){
-  if (!window.isAdmin) { alert('Acesso restrito'); return; }
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   // Salvar log da aula
   const mod=document.getElementById('sel-mod').value; const ai=document.getElementById('sel-aula').value;
   if(mod && ai!==''){
@@ -3609,8 +3674,8 @@ function definirFiltroPagamento(tipo) {
 
 /* Marcar/desmarcar pagamento de um livro individual em aluno_livros */
 async function tgPagLivro(idRegistro, estaPago, alunoId, nomeAluno) {
-  if (!window.isAdmin) { alert('Acesso restrito'); return; }
-  if (!idRegistro) { console.error('[PAG ADMIN] idRegistro inválido:', idRegistro); toast('Erro: registro não identificado'); return; }
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
+  if (!idRegistro) { console.error('[PAG ADMIN] idRegistro inválido:', idRegistro); toast('Erro: registro não identificado', 'erro'); return; }
 
   try {
     // Verificar que o registro existe antes de atualizar
@@ -3622,7 +3687,7 @@ async function tgPagLivro(idRegistro, estaPago, alunoId, nomeAluno) {
 
     if (erroVerif || !registroExistente) {
       console.error('[PAG ADMIN] Registro nao encontrado para id:', idRegistro, erroVerif);
-      toast('Erro: registro nao encontrado no banco');
+      toast('Erro: registro nao encontrado no banco', 'erro');
       return;
     }
 
@@ -3642,7 +3707,7 @@ async function tgPagLivro(idRegistro, estaPago, alunoId, nomeAluno) {
     await renderPagAdmin();
   } catch(e) {
     console.error('[PAG ADMIN] Erro ao salvar:', e);
-    toast('Erro ao salvar. Tente novamente.');
+    toast('Erro ao salvar. Tente novamente.', 'erro');
   }
 }
 
@@ -3656,7 +3721,7 @@ function abaMat(aba,btn){
 }
 
 function tgLivro(lid,aid,v){
-  if (!window.isAdmin) { alert('Acesso restrito'); return; }
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   _painelTravado = true;
   if (!D.livros_ent[lid]) D.livros_ent[lid] = {};
   D.livros_ent[lid][aid] = v;
@@ -3668,7 +3733,7 @@ function tgLivro(lid,aid,v){
 }
 
 function tgProva(pid,aid,v){
-  if (!window.isAdmin) { alert('Acesso restrito'); return; }
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   _painelTravado = true;
   if (!D.provas[pid]) D.provas[pid] = {};
   D.provas[pid][aid] = v;
@@ -4032,7 +4097,7 @@ function renderPainelMaterial() {
 
 // Salva nota de um único aluno sem recarregar tudo
 async function _salvarNotaAluno(aid, pid) {
-  if (!window.isAdmin) { alert('Acesso restrito'); return; }
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   _painelTravado = true;
   const el = document.getElementById('nt-' + aid);
   if (!el) return;
@@ -4060,7 +4125,7 @@ function renderNotasAdmin(){  renderPainelMaterial(); }
 /* ════ FIM PAINEL UNIFICADO ════ */
 function updChip(id,v){ const c=document.getElementById('chip-'+id); if(!c) return; const n=parseFloat(v); if(isNaN(n)||v===''||v===null){ c.textContent=''; c.className='nc'; return; } c.textContent=(n!==null&&n!==undefined)?Number(n).toFixed(1):''; c.className='nc '+(n>=7?'bv':n>=5?'ba':'br'); }
 async function salvarNotas(){
-  if (!window.isAdmin) { alert('Acesso restrito'); return; }
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   const pid=document.getElementById('sel-prova').value; if(!pid) return;
   if(!D.notas[pid]) D.notas[pid]={};
   const ops=[];
@@ -4435,6 +4500,8 @@ function exportarPDF(){
 <h2>Histórico de Aulas</h2>
 <table><thead><tr><th>Data</th><th>Módulo</th><th>Aula</th><th style="text-align:center">Presentes</th><th style="text-align:center">Faltas</th></tr></thead><tbody>${linhasAulas||'<tr><td colspan="5" style="padding:12px;color:#6b6b6b">Sem aulas registradas.</td></tr>'}</tbody></table>
 <div style="margin-top:30px;padding-top:12px;border-top:1px solid #e0ddd5;font-size:11px;color:#6b6b6b;text-align:center">Relatório gerado automaticamente pelo Sistema Teologia IBICAMP · ${fmtD(h)}</div>
+
+<div id="toast-container"></div>
 </body></html>`;
 
   const w=window.open('','_blank','width=900,height=700');
@@ -5414,7 +5481,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
 
   function abrirModalPagamentoLote() {
     const ids = Array.from(window._admSelecionados || []);
-    if (!ids.length) { toast('⚠️ Nenhum aluno selecionado'); return; }
+    if (!ids.length) { toast('⚠️ Nenhum aluno selecionado', 'erro'); return; }
     _mplSelecionados = [...ids];
     const info = document.getElementById('mpl-info');
     if (info) info.textContent = `${ids.length} aluno(s) selecionado(s)`;
@@ -5428,11 +5495,12 @@ if(!D.aulas_log) { D.aulas_log={}; }
   }
 
   async function confirmarPagamentoModalLote() {
+  var _bll = document.querySelector('#modal-pagamento-lote .btn.bp'); if (_bll) _bll.classList.add('btn-loading');
     const data = document.getElementById('mpl-data').value;
     const forma = document.getElementById('mpl-forma').value;
-    if (!_mplSelecionados.length || !data) { alert('Dados inválidos'); return; }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) { alert('Data inválida. Use formato YYYY-MM-DD'); return; }
-    if (!['pix', 'dinheiro'].includes(forma)) { alert('Forma de pagamento inválida'); return; }
+    if (!_mplSelecionados.length || !data) { toast('Dados inválidos', 'erro'); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) { toast('Data inválida. Use formato YYYY-MM-DD'); return; }
+    if (!['pix', 'dinheiro'].includes(forma)) { toast('Forma de pagamento inválida'); return; }
     await admMarcarLotePago(data, forma);
     fecharModalPagamentoLote();
   }
@@ -5440,7 +5508,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
 
   async function admMarcarLotePago(dataManual, formaManual) {
     const ids = Array.from(window._admSelecionados);
-    if (!ids.length) { toast('⚠️ Nenhum aluno selecionado'); return; }
+    if (!ids.length) { toast('⚠️ Nenhum aluno selecionado', 'erro'); return; }
 
     const livroAtual = window.livroAtualSistema;
     if (!livroAtual) { toast('⚠️ Livro atual do sistema não definido'); return; }
@@ -5448,8 +5516,8 @@ if(!D.aulas_log) { D.aulas_log={}; }
     const data  = dataManual  || new Date().toISOString().slice(0,10);
     const forma = formaManual || 'pix';
 
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) { alert('Data inválida. Use formato YYYY-MM-DD'); return; }
-    if (!['pix','dinheiro'].includes(forma)) { alert('Forma de pagamento inválida'); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) { toast('Data inválida. Use formato YYYY-MM-DD'); return; }
+    if (!['pix','dinheiro'].includes(forma)) { toast('Forma de pagamento inválida'); return; }
 
     let erros = 0;
     for (const alunoId of ids) {
@@ -5515,14 +5583,14 @@ if(!D.aulas_log) { D.aulas_log={}; }
 
   async function admDesmarcarPagamentoLote() {
     if (!window._admSelecionados || window._admSelecionados.size === 0) {
-      alert('Nenhum aluno selecionado');
+      toast('Nenhum aluno selecionado', 'erro');
       return;
     }
     if (!confirm('Desmarcar pagamento dos alunos selecionados?')) return;
     for (const alunoId of window._admSelecionados) {
       await desmarcarPagamentoAlunoSilent(alunoId);
     }
-    alert('Pagamentos desmarcados com sucesso');
+    toast('Pagamentos desmarcados com sucesso', 'ok');
     await renderAlunosAdmin();
     await renderDashAdmin();
     admDesmarcarTodos();
@@ -5534,7 +5602,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
   /* ════ DESMARCAR PAGAMENTO — LIVRO ATUAL ════ */
   async function desmarcarPagamentoAluno(alunoId) {
     const livroAtual = window.livroAtualSistema;
-    if (!livroAtual) { alert('Livro atual não definido'); return; }
+    if (!livroAtual) { toast('Livro atual não definido'); return; }
     if (!confirm('Desmarcar pagamento do Livro ' + livroAtual + '?')) return;
 
     // Busca o id exato do registro na tabela aluno_livros
@@ -5546,7 +5614,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
       .single();
 
     if (erroConsulta || !registros) {
-      alert('Registro não encontrado para este aluno e livro');
+      toast('Registro não encontrado para este aluno e livro');
       return;
     }
 
@@ -5559,11 +5627,11 @@ if(!D.aulas_log) { D.aulas_log={}; }
 
     if (error) {
       console.error('[DESMARCAR PAGAMENTO] Erro:', error);
-      alert('Erro ao desmarcar pagamento');
+      toast('Erro ao desmarcar pagamento', 'erro');
       return;
     }
 
-    alert('Pagamento desmarcado com sucesso');
+    toast('Pagamento desmarcado com sucesso', 'ok');
     if (typeof carregarExibirLivrosAdminPerfil === 'function') {
       await carregarExibirLivrosAdminPerfil(alunoId);
     }
@@ -5696,7 +5764,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
   }
 
   async function sincronizarPresencaSupabase(alunoId, data, presente) {
-    if (!window.isAdmin) { alert('Acesso restrito'); return; }
+    if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
     const { error } = await supabaseClient.from('presenca').upsert(
       { aluno_id: alunoId, data: data, presente: presente },
       { onConflict: 'aluno_id,data' }
@@ -5705,7 +5773,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
   }
 
   async function removerPresencaSupabase(alunoId, data) {
-    if (!window.isAdmin) { alert('Acesso restrito'); return; }
+    if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
     const { error } = await supabaseClient.from('presenca')
       .delete()
       .eq('aluno_id', alunoId)
@@ -5714,7 +5782,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
   }
 
   async function sincronizarNotaSupabase(alunoId, prova, nota) {
-    if (!window.isAdmin) { alert('Acesso restrito'); return; }
+    if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
     const { error } = await supabaseClient.from('notas').upsert(
       { aluno_id: alunoId, prova: prova, nota: nota },
       { onConflict: 'aluno_id,prova' }
@@ -5723,7 +5791,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
   }
 
   async function removerNotaSupabase(alunoId, prova) {
-    if (!window.isAdmin) { alert('Acesso restrito'); return; }
+    if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
     const { error } = await supabaseClient.from('notas')
       .delete()
       .eq('aluno_id', alunoId)
@@ -5863,7 +5931,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
 
     const resumo = `Criação concluída!\n✅ Criados: ${criados}\n⏭ Já existiam: ${jaExistem}\n❌ Erros: ${erros}`;
     console.log('[CriarAuth]', resumo);
-    alert(resumo);
+    toast(resumo);
   }
 
   /* ════ FIM TEMPORÁRIO: CRIAÇÃO ════ */
@@ -5885,14 +5953,14 @@ if(!D.aulas_log) { D.aulas_log={}; }
     try {
       adminClient = await getSupabaseAdmin();
     } catch (e) {
-      alert(e.message);
+      toast(e.message);
       return;
     }
 
     const { data, error: listError } = await adminClient.auth.admin.listUsers();
     if (listError) {
       console.error('Erro ao listar usuarios Auth:', listError);
-      alert('Erro ao listar usuarios. Veja o console.');
+      toast('Erro ao listar usuarios. Veja o console.', 'erro');
       return;
     }
 
@@ -5922,7 +5990,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
       }
     }
 
-    alert('Vinculacao concluida. Abra o console (F12) para ver os detalhes.');
+    toast('Vinculacao concluida. Abra o console (F12) para ver os detalhes.', 'ok');
   }
 
   /* ════ FIM TEMPORARIO ════ */
@@ -5989,7 +6057,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
     const livroInput = document.getElementById('adm-aula-livro').value.trim();
     const descricaoInput = document.getElementById('adm-aula-descricao').value.trim();
 
-    if (!dataInput) { alert('Informe a data da aula'); return; }
+    if (!dataInput) { toast('Informe a data da aula'); return; }
 
     const payload = {
       data: dataInput,
@@ -6008,7 +6076,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
       }
       if (error) {
         console.error('[AULAS ERRO COMPLETO]', error);
-        alert(error.message);
+        toast(error.message);
         return;
       }
       toast(id ? '✓ Aula atualizada!' : '✓ Aula criada!');
@@ -6016,14 +6084,14 @@ if(!D.aulas_log) { D.aulas_log={}; }
       await carregarAulas();
     } catch(e) {
       console.error('[Aulas] Exceção ao salvar:', e);
-      alert('Erro inesperado: ' + e.message);
+      toast('Erro inesperado: ' + e.message);
     }
   }
 
   async function editarAula(id) {
     try {
       const { data, error } = await supabaseClient.from('aulas').select('*').eq('id', id).single();
-      if (error) { console.error('[Aulas] Erro ao buscar aula:', error); toast('❌ Erro ao carregar aula'); return; }
+      if (error) { console.error('[Aulas] Erro ao buscar aula:', error); toast('❌ Erro ao carregar aula', 'erro'); return; }
       document.getElementById('adm-aula-id').value = data.id;
       document.getElementById('adm-aula-data').value = data.data || '';
       document.getElementById('adm-aula-hora').value = data.hora ? data.hora.slice(0,5) : '';
@@ -6040,7 +6108,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
     try {
       const { data: aula, error: erroAula } = await supabaseClient
         .from('aulas').select('*').eq('id', id).single();
-      if (erroAula) { console.error('[Aulas] Erro ao buscar aula:', erroAula); toast('❌ Erro ao excluir aula'); return; }
+      if (erroAula) { console.error('[Aulas] Erro ao buscar aula:', erroAula); toast('❌ Erro ao excluir aula', 'erro'); return; }
       if (aula.data) {
         console.log('🧨 DELETE PRESENÇA:', { aulaData: aula.data });
         const { data: antesDelete } = await supabaseClient.from('presenca').select('*').eq('data', aula.data);
@@ -6051,7 +6119,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
         console.log('DEPOIS DELETE:', depoisDelete);
       }
       const { error } = await supabaseClient.from('aulas').delete().eq('id', id);
-      if (error) { console.error('[Aulas] Erro ao excluir aula:', error); toast('❌ Erro ao excluir aula'); return; }
+      if (error) { console.error('[Aulas] Erro ao excluir aula:', error); toast('❌ Erro ao excluir aula', 'erro'); return; }
       toast('✓ Aula excluída');
       await carregarAulas();
     } catch(e) { console.error('[Aulas] Exceção ao excluir:', e); }
@@ -6326,12 +6394,12 @@ if(!D.aulas_log) { D.aulas_log={}; }
     const valor = prompt("Digite o número do livro atual (1 a 24):");
     if (!valor) return;
     const numero = parseInt(valor);
-    if (isNaN(numero) || numero < 1 || numero > 24) { alert("Número inválido"); return; }
+    if (isNaN(numero) || numero < 1 || numero > 24) { toast("Número inválido"); return; }
     const { error } = await supabaseClient
       .from('config_sistema')
       .upsert({ id: 1, livro_atual_override: numero });
-    if (error) { alert("Erro ao salvar"); return; }
-    alert("Livro atual definido com sucesso!");
+    if (error) { toast("Erro ao salvar", 'erro'); return; }
+    toast("Livro atual definido com sucesso!", 'ok');
     // Atualiza estado global
     window.livroAtualSistema = numero;
     // Re-render das telas (sem reload)
@@ -6444,30 +6512,33 @@ async function renderPainelProvas() {
 }
 
 async function provasMarcarFez(alunoId, codigo, novoValor) {
+  var _ae = document.activeElement; if (_ae && _ae.tagName === 'BUTTON') _ae.classList.add('btn-loading');
   var payload = novoValor === false
     ? { aluno_id:alunoId, livro_codigo:codigo, fez_prova:false, nota:null, devolvida:false }
     : { aluno_id:alunoId, livro_codigo:codigo, fez_prova:true, corrigida:true, devolvida:false };
   var { error } = await supabaseClient.from('provas_aluno')
     .upsert(payload, { onConflict:'aluno_id,livro_codigo' });
-  if (error) { alert('Erro: '+error.message); return; }
+  if (error) { toast('Erro: '+error.message); return; }
   renderPainelProvas();
 }
 
 async function provasLancarNota(id) {
+  var _aen = document.activeElement; if (_aen && _aen.tagName === 'BUTTON') _aen.classList.add('btn-loading');
   var notaStr = prompt('Digite a nota:');
   if (notaStr === null) return;
   var nota = parseFloat(notaStr.replace(',','.'));
-  if (isNaN(nota)) { alert('Nota inválida.'); return; }
+  if (isNaN(nota)) { toast('Nota inválida.', 'erro'); return; }
   var { error } = await supabaseClient.from('provas_aluno')
     .update({ nota:nota, fez_prova:true, corrigida:true }).eq('id', id);
-  if (error) { alert('Erro: '+error.message); return; }
+  if (error) { toast('Erro: '+error.message); return; }
   renderPainelProvas();
 }
 
 async function provasMarcarDevolvida(id) {
+  var _aed = document.activeElement; if (_aed && _aed.tagName === 'BUTTON') _aed.classList.add('btn-loading');
   var { error } = await supabaseClient.from('provas_aluno')
     .update({ devolvida:true, corrigida:true }).eq('id', id);
-  if (error) { alert('Erro: '+error.message); return; }
+  if (error) { toast('Erro: '+error.message); return; }
   renderPainelProvas();
 }
 /* ════ FIM PAINEL DE PROVAS ADMIN ════ */
@@ -6514,6 +6585,18 @@ async function provasMarcarDevolvida(id) {
   <div class="loader"></div>
 </div>
 
+
+/* ── TOAST FUNCTION ── */
+function toast(msg, tipo) {
+  var c = document.getElementById('toast-container');
+  if (!c) return;
+  var t = document.createElement('div');
+  t.className = 'toast' + (tipo ? ' ' + tipo : '');
+  t.innerText = msg;
+  c.appendChild(t);
+  setTimeout(function() { t.remove(); }, 3500);
+}
+
 <!-- ── RIPPLE EFFECT GLOBAL ── -->
 <script>
 document.addEventListener('click', function(e){
@@ -6532,5 +6615,7 @@ document.addEventListener('click', function(e){
   setTimeout(function(){ ripple.remove(); }, 500);
 });
 </script>
+
+<div id="toast-container"></div>
 </body>
 </html>
