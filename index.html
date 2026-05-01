@@ -3213,9 +3213,11 @@ function gerarAlertasAdmin(al, presencas, alunoLivros, provasAluno, livroAtual) 
     var id = aluno.id;
     var nome = fmtNome(aluno.nome);
 
-    // ── 1. Frequência < 75% ──
-    var minhas = presencas.filter(function(p){ return p.aluno_id === id; });
-    var totalAulas = datas.length;
+    // ── 1. Frequência < 75% (últimas 10 aulas do aluno) ──
+    var minhas = presencas.filter(function(p){ return p.aluno_id === id; })
+      .sort(function(a,b){ return new Date(b.data) - new Date(a.data); })
+      .slice(0, 10);
+    var totalAulas = minhas.length;
     var presentes = minhas.filter(function(p){ return p.presente === true; }).length;
     if (totalAulas > 0) {
       var freq = Math.round(presentes / totalAulas * 100);
@@ -4516,9 +4518,13 @@ async function renderRelAdmin(aba){
 
     // ── Calcular métricas por aluno ──
     var dadosPainel = al.map(function(a) {
-      // Frequência
-      var presA = todasPresencas.filter(function(p){ return p.aluno_id === a.id && p.presente === true; }).length;
-      var freq  = totalAulasP > 0 ? Math.round(presA / totalAulasP * 100) : 0;
+      // Frequência (últimas 10 aulas do aluno)
+      var ultimas10 = todasPresencas
+        .filter(function(p){ return p.aluno_id === a.id; })
+        .sort(function(x,y){ return new Date(y.data) - new Date(x.data); })
+        .slice(0, 10);
+      var presA = ultimas10.filter(function(p){ return p.presente === true; }).length;
+      var freq  = ultimas10.length > 0 ? Math.round(presA / ultimas10.length * 100) : 0;
       // Financeiro: tem algum livro não pago?
       var regsA = alunoLivrosP.filter(function(r){ return r.aluno_id === a.id; });
       var inadimplente = regsA.some(function(r){ return r.pagou === false; });
