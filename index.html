@@ -340,6 +340,79 @@ select.inp{cursor:pointer}
 .pres-ro-s{font-size:13px;font-weight:600;padding:4px 12px;border-radius:99px}
 .pres-p{background:var(--vd-c);color:var(--vd)}.pres-f{background:var(--vm-c);color:var(--vm)}.pres-n{background:var(--brd);color:var(--cin)}
 
+/* ══ PRESENÇA GRID PREMIUM ══ */
+.pres-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;padding:4px 0}
+.card-presenca{
+  background:#f1f5f9;
+  border:2px solid #e2e8f0;
+  border-radius:14px;
+  padding:14px 10px 10px;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  cursor:pointer;
+  transition:all 0.2s ease;
+  -webkit-tap-highlight-color:transparent;
+  position:relative;
+  user-select:none;
+}
+.card-presenca:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.12)}
+.card-presenca:active{transform:scale(0.96)}
+.card-presenca.estado-P{background:#dcfce7;border-color:#86efac}
+.card-presenca.estado-F{background:#fee2e2;border-color:#fca5a5}
+.card-presenca .cp-iniciais{
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(26,58,92,.12);color:var(--azul);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:15px;font-family:'Lora',serif;
+  flex-shrink:0;transition:background .2s;
+}
+.card-presenca.estado-P .cp-iniciais{background:#16a34a;color:#fff}
+.card-presenca.estado-F .cp-iniciais{background:#dc2626;color:#fff}
+.card-presenca .cp-nome{
+  font-size:12px;font-weight:600;color:#1e293b;
+  text-align:center;line-height:1.3;
+  word-break:break-word;max-width:100%;
+}
+.card-presenca.estado-P .cp-nome{color:#14532d}
+.card-presenca.estado-F .cp-nome{color:#7f1d1d}
+.card-presenca .cp-status{
+  font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+  padding:3px 8px;border-radius:99px;
+  background:rgba(0,0,0,.06);color:#64748b;
+  transition:all .2s;
+}
+.card-presenca.estado-P .cp-status{background:#bbf7d0;color:#15803d}
+.card-presenca.estado-F .cp-status{background:#fecaca;color:#b91c1c}
+.card-presenca .cp-btn-falta{
+  position:absolute;top:7px;right:7px;
+  background:rgba(220,38,38,.1);
+  border:1px solid rgba(220,38,38,.2);
+  border-radius:6px;width:22px;height:22px;
+  font-size:11px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;color:#dc2626;
+  font-family:inherit;
+}
+.card-presenca .cp-btn-falta:hover{background:#dc2626;color:#fff;border-color:#dc2626}
+.card-presenca.estado-F .cp-btn-falta{background:#dc2626;color:#fff;border-color:#dc2626}
+/* Ações em massa */
+.pres-acoes-massa{
+  display:flex;gap:8px;flex-wrap:wrap;
+  margin-bottom:14px;padding:12px;
+  background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;
+}
+.pres-btn-massa{
+  padding:8px 14px;border:1.5px solid;border-radius:99px;
+  font-size:12px;font-weight:700;font-family:'Inter',sans-serif;
+  cursor:pointer;transition:all .15s;flex-shrink:0;
+}
+.pres-btn-massa.todos-pres{background:#dcfce7;border-color:#86efac;color:#15803d}
+.pres-btn-massa.todos-pres:hover{background:#16a34a;border-color:#16a34a;color:#fff}
+.pres-btn-massa.todos-falt{background:#fee2e2;border-color:#fca5a5;color:#b91c1c}
+.pres-btn-massa.todos-falt:hover{background:#dc2626;border-color:#dc2626;color:#fff}
+.pres-btn-massa.limpar{background:#f1f5f9;border-color:#cbd5e1;color:#64748b}
+.pres-btn-massa.limpar:hover{background:#e2e8f0;border-color:#94a3b8;color:#334155}
+/* ══ FIM PRESENÇA GRID PREMIUM ══ */
+
 /* ── PAGAMENTOS ── */
 .pgr{display:flex;align-items:center;gap:12px;padding:14px;background:#fff;border-radius:var(--r);margin-bottom:11px;border:1px solid var(--brd);box-shadow:var(--s)}
 .pgi{flex:1}.pgn{font-size:15px;font-weight:600}.pgd{font-size:12px;color:var(--cin);margin-top:2px}
@@ -6331,7 +6404,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
     } catch(e) { console.error('[PRES ADMIN] Exceção carregar:', e); }
   }
 
-  /* ── Renderiza lista de alunos ── */
+  /* ── Renderiza lista de alunos — GRID PREMIUM ── */
   function admPresRenderizarLista() {
     const listaDiv = document.getElementById('adm-pres-lista-alunos');
     if (!listaDiv) return;
@@ -6339,22 +6412,51 @@ if(!D.aulas_log) { D.aulas_log={}; }
       listaDiv.innerHTML = '<div style="text-align:center;padding:20px;color:var(--cin)">Nenhum aluno cadastrado</div>';
       return;
     }
-    listaDiv.innerHTML = admPresAlunos.map(aluno => {
-      const v = admPresEstado[aluno.id];
-      // classes de estado visual
-      const rowCls = v === true ? 'pr P' : v === false ? 'pr F' : 'pr';
-      const btnCls = v === true ? 'prch pres-ok' : v === false ? 'prch pres-falta' : 'prch pres-null';
-      const btnTxt = v === true ? '✅ Presente' : v === false ? '❌ Falta' : '— Marcar';
-      const ini    = admPresFmtIniciais(aluno.nome);
-      return '<div class="' + rowCls + '" id="adm-pres-row-' + aluno.id + '" onclick="admPresToggle(\'' + aluno.id + '\')" style="-webkit-tap-highlight-color:transparent">'
-        + '<div class="av" style="width:40px;height:40px;font-size:14px;flex-shrink:0">' + ini + '</div>'
-        + '<div class="prnm">' + (aluno.nome || '—') + '</div>'
-        + '<div class="' + btnCls + '" id="adm-pres-btn-' + aluno.id + '">' + btnTxt + '</div>'
-        + '</div>';
-    }).join('');
+
+    // nome abreviado: primeiro + último sobrenome
+    function nomeAbrev(nome) {
+      const p = (nome || '').trim().split(' ').filter(Boolean);
+      if (!p.length) return '—';
+      if (p.length === 1) return p[0];
+      return p[0] + ' ' + p[p.length - 1];
+    }
+
+    // botões de ações em massa
+    const acoesHtml = '<div class="pres-acoes-massa">'
+      + '<button class="pres-btn-massa todos-pres" onclick="admPresMarcarTodos(true)">✅ Todos presentes</button>'
+      + '<button class="pres-btn-massa todos-falt" onclick="admPresMarcarTodos(false)">❌ Todos faltantes</button>'
+      + '<button class="pres-btn-massa limpar" onclick="admPresLimparTodos()">🔄 Limpar</button>'
+      + '</div>';
+
+    // Para cada aluno:
+    // - elemento oculto com id="adm-pres-row-X" e id="adm-pres-btn-X" que o toggle original manipula
+    // - card visual com id="adm-pres-card-X" que reflete o estado via _admPresAtualizarCardVisual
+    const cardsHtml = '<div class="pres-grid">'
+      + admPresAlunos.map(function(aluno) {
+          const v = admPresEstado[aluno.id];
+          const estadoCls = v === true ? 'estado-P' : v === false ? 'estado-F' : '';
+          const statusTxt = v === true ? '✅ Presente' : v === false ? '❌ Falta' : '— Marcar';
+          const ini  = admPresFmtIniciais(aluno.nome);
+          const nome = nomeAbrev(aluno.nome);
+          // Elemento oculto: o toggle original escreve className e textContent aqui
+          const hidden = '<div style="display:none" id="adm-pres-row-' + aluno.id + '">'
+            + '<span id="adm-pres-btn-' + aluno.id + '"></span>'
+            + '</div>';
+          // Card visual clicável
+          const card = '<div class="card-presenca ' + estadoCls + '" id="adm-pres-card-' + aluno.id + '" onclick="admPresToggle(\'' + aluno.id + '\')">'
+            + '<button class="cp-btn-falta" onclick="event.stopPropagation();admPresMarcarFalta(\'' + aluno.id + '\')" title="Marcar falta">✕</button>'
+            + '<div class="cp-iniciais">' + ini + '</div>'
+            + '<div class="cp-nome">' + nome + '</div>'
+            + '<div class="cp-status" id="adm-pres-status-' + aluno.id + '">' + statusTxt + '</div>'
+            + '</div>';
+          return hidden + card;
+        }).join('')
+      + '</div>';
+
+    listaDiv.innerHTML = acoesHtml + cardsHtml;
   }
 
-  /* ── Toggle estado do aluno (sem salvar) ── */
+  /* ── Toggle estado do aluno (sem salvar) — ORIGINAL INTACTO ── */
   function admPresToggle(alunoId) {
     const v = admPresEstado[alunoId];
     // null → true → false → null
@@ -6369,6 +6471,53 @@ if(!D.aulas_log) { D.aulas_log={}; }
       btn.textContent = nv === true ? '✅ Presente'  : nv === false ? '❌ Falta'         : '— Marcar';
     }
     admPresAtualizarResumo();
+    // atualização visual do card grid (não altera lógica)
+    _admPresAtualizarCardVisual(alunoId, nv);
+  }
+
+  /* ── Espelha estado no card visual — apenas classes CSS, sem tocar na lógica ── */
+  function _admPresAtualizarCardVisual(alunoId, estado) {
+    const card   = document.getElementById('adm-pres-card-' + alunoId);
+    const status = document.getElementById('adm-pres-status-' + alunoId);
+    if (!card) return;
+    card.classList.remove('estado-P', 'estado-F');
+    if (estado === true)  card.classList.add('estado-P');
+    if (estado === false) card.classList.add('estado-F');
+    if (status) {
+      status.textContent = estado === true ? '✅ Presente' : estado === false ? '❌ Falta' : '— Marcar';
+    }
+  }
+
+  /* ── Marcar falta diretamente (botão ✕) — usa toggle original até estado = false ── */
+  function admPresMarcarFalta(alunoId) {
+    let guard = 0;
+    while (admPresEstado[alunoId] !== false && guard < 4) {
+      admPresToggle(alunoId);
+      guard++;
+    }
+  }
+
+  /* ── Marcar todos presentes/faltantes — usa toggle original por aluno ── */
+  function admPresMarcarTodos(presente) {
+    const alvo = presente === true ? true : false;
+    admPresAlunos.forEach(function(aluno) {
+      let guard = 0;
+      while (admPresEstado[aluno.id] !== alvo && guard < 4) {
+        admPresToggle(aluno.id);
+        guard++;
+      }
+    });
+  }
+
+  /* ── Limpar todos — usa toggle original por aluno até null ── */
+  function admPresLimparTodos() {
+    admPresAlunos.forEach(function(aluno) {
+      let guard = 0;
+      while (admPresEstado[aluno.id] !== null && admPresEstado[aluno.id] !== undefined && guard < 4) {
+        admPresToggle(aluno.id);
+        guard++;
+      }
+    });
   }
 
   /* ── Atualiza bloco de resumo dinamicamente ── */
