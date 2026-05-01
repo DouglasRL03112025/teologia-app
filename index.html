@@ -6787,7 +6787,7 @@ async function renderPainelProvas() {
     var notaCor = notaValor != null
       ? (notaValor >= 7 ? '#15803d' : notaValor >= 5 ? '#92400e' : '#b83232')
       : '#d1d5db';
-    var notaOnclick = rid ? ' onclick="provasLancarNota(''+rid+'')" title="Clique para editar nota"' : '';
+    var notaOnclick = rid ? ' onclick="provasLancarNota(\'' + rid + '\')" title="Clique para editar nota"' : '';
     var notaDisplay = notaValor != null
       ? '<div class="prova-nota-clicavel"'+notaOnclick+'>'
           +'<div style="font-size:26px;font-weight:800;font-family:\'Lora\',serif;color:'+notaCor+';line-height:1">'+notaValor+'</div>'
@@ -6808,13 +6808,13 @@ async function renderPainelProvas() {
     /* ── botões de ação ── */
     var btns = '';
     if (status === 'nao_fez')
-      btns += '<button class="prova-btn prova-btn-fez" onclick="provasMarcarFez(''+a.id+'',''+codigo+'', true)" title="Marcar que fez a prova">✔ Fez</button>';
+      btns += '<button class="prova-btn prova-btn-fez" onclick="provasMarcarFez(\'' + a.id + '\',\'' + codigo + '\', true)" title="Marcar que fez a prova">✔ Fez</button>';
     else
-      btns += '<button class="prova-btn prova-btn-unfez" onclick="provasMarcarFez(''+a.id+'',''+codigo+'', false)" title="Desmarcar presença">✖</button>';
+      btns += '<button class="prova-btn prova-btn-unfez" onclick="provasMarcarFez(\'' + a.id + '\',\'' + codigo + '\', false)" title="Desmarcar presença">✖</button>';
     if (rid)
-      btns += '<button class="prova-btn prova-btn-nota" onclick="provasLancarNota(''+rid+'')" title="Lançar ou editar nota">✏</button>';
+      btns += '<button class="prova-btn prova-btn-nota" onclick="provasLancarNota(\'' + rid + '\')" title="Lançar ou editar nota">✏</button>';
     if (rid && !r.devolvida)
-      btns += '<button class="prova-btn" onclick="provasMarcarDevolvida(''+rid+'')" title="Marcar como devolvida" style="background:#f0fdf4;border-color:#86efac;color:#15803d">📦</button>';
+      btns += '<button class="prova-btn" onclick="provasMarcarDevolvida(\'' + rid + '\')" title="Marcar como devolvida" style="background:#f0fdf4;border-color:#86efac;color:#15803d">📦</button>';
 
     return '<div class="prova-card" id="card-prova-'+a.id+'" style="'
       +'background:'+ce.bg+';'
