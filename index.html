@@ -1211,13 +1211,15 @@ select.inp{cursor:pointer}
       </div>
 
       <div class="tabs">
-        <button class="tab on ripple-target" onclick="abaRel('geral',this)">Geral</button>
+        <button class="tab on ripple-target" onclick="abaRel('painel',this)">📊 Painel</button>
+        <button class="tab ripple-target" onclick="abaRel('geral',this)">Geral</button>
         <button class="tab ripple-target" onclick="abaRel('presenca',this)">Presenças</button>
         <button class="tab ripple-target" onclick="abaRel('por-aula',this)">Por Aula</button>
         <button class="tab ripple-target" onclick="abaRel('financeiro',this)">Financeiro</button>
         <button class="tab ripple-target" onclick="abaRel('avaliacao',this)">Avaliações</button>
       </div>
-      <div id="rel-geral"></div>
+      <div id="rel-painel"></div>
+      <div id="rel-geral" style="display:none"></div>
       <div id="rel-presenca" style="display:none"></div>
       <div id="rel-por-aula" style="display:none"></div>
       <div id="rel-financeiro" style="display:none"></div>
@@ -2893,7 +2895,7 @@ function irAdmin(t){
   if(t==='presenca') admPresCarregarAulas();
   if(t==='pagamentos') renderPagAdmin();
   if(t==='material') renderMatAdmin('livros');
-  if(t==='relatorios') renderRelAdmin('geral');
+  if(t==='relatorios') renderRelAdmin('painel');
   if(t==='relatorio') admRelCarregar();
   if(t==='config') initConfig();
   if(t==='aulas') carregarAulas();
@@ -4445,7 +4447,7 @@ async function renderRelAtual(){ await renderRelAdmin(_abaRelAtual); }
 async function abaRel(aba,btn){
   _abaRelAtual = aba;
   document.querySelectorAll('#a-relatorios .tab').forEach(t=>t.classList.remove('on')); btn.classList.add('on');
-  ['geral','presenca','por-aula','financeiro','avaliacao'].forEach(a=>document.getElementById('rel-'+a).style.display=a===aba?'block':'none');
+  ['painel','geral','presenca','por-aula','financeiro','avaliacao'].forEach(a=>document.getElementById('rel-'+a).style.display=a===aba?'block':'none');
   await renderRelAdmin(aba);
 }
 
@@ -4453,12 +4455,13 @@ async function abaRel(aba,btn){
 let _relCache = null; // { alunos, presencas, aulas } — recarregado a cada visita à tela
 
 async function _relCarregarDados() {
-  const [resAlunos, resPres, resAulas, resAlunoLivros, resLivros] = await Promise.all([
+  const [resAlunos, resPres, resAulas, resAlunoLivros, resLivros, resProvasRel] = await Promise.all([
     supabaseClient.from('alunos').select('*').order('nome', { ascending: true }),
     supabaseClient.from('presenca').select('*'),
     supabaseClient.from('aulas').select('data, livro, descricao'),
     supabaseClient.from('aluno_livros').select('*'),
-    supabaseClient.from('livros').select('*').order('ordem', { ascending: true })
+    supabaseClient.from('livros').select('*').order('ordem', { ascending: true }),
+    supabaseClient.from('provas_aluno').select('aluno_id,livro_codigo,fez_prova,nota,devolvida')
   ]);
   if (resAlunos.error)      { console.error('[REL] Erro alunos:', resAlunos.error); throw resAlunos.error; }
   if (resPres.error)        { console.error('[REL] Erro presenças:', resPres.error); }
@@ -4470,7 +4473,8 @@ async function _relCarregarDados() {
     presencas:   resPres.data       || [],
     aulas:       (resAulas.data     || []).map(a => ({ ...a, livro: a.livro || 'Sem livro' })),
     alunoLivros: resAlunoLivros.data || [],
-    livros:      resLivros.data      || []
+    livros:      resLivros.data      || [],
+    provasAluno: resProvasRel.data   || []
   };
 }
 
@@ -4504,6 +4508,107 @@ async function renderRelAdmin(aba){
     ? todoAlunos.filter(a => (a.turma || 'Turma Única') === turmaFiltro)
     : todoAlunos;
   const tot = al.length;
+
+  if(aba==='painel'){
+    const alunoLivrosP = _relCache.alunoLivros || [];
+    const provasP      = _relCache.provasAluno  || [];
+    const totalAulasP  = todasAulas.length;
+
+    // ── Calcular métricas por aluno ──
+    var dadosPainel = al.map(function(a) {
+      // Frequência
+      var presA = todasPresencas.filter(function(p){ return p.aluno_id === a.id && p.presente === true; }).length;
+      var freq  = totalAulasP > 0 ? Math.round(presA / totalAulasP * 100) : 0;
+      // Financeiro: tem algum livro não pago?
+      var regsA = alunoLivrosP.filter(function(r){ return r.aluno_id === a.id; });
+      var inadimplente = regsA.some(function(r){ return r.pagou === false; });
+      // Provas: tem prova sem nota ou não devolvida?
+      var provasA = provasP.filter(function(p){ return p.aluno_id === a.id; });
+      var provaPendente = provasA.some(function(p){
+        return (p.fez_prova === true && (p.nota === null || p.nota === undefined))
+            || (p.nota !== null && p.nota !== undefined && p.devolvida !== true);
+      });
+      return { aluno: a, freq: freq, inadimplente: inadimplente, provaPendente: provaPendente };
+    });
+
+    // ── Cards de resumo ──
+    var freqMedia = dadosPainel.length > 0 ? Math.round(dadosPainel.reduce(function(s,d){ return s+d.freq; },0) / dadosPainel.length) : 0;
+    var qtdInadim = dadosPainel.filter(function(d){ return d.inadimplente; }).length;
+    var qtdPPend  = dadosPainel.filter(function(d){ return d.provaPendente; }).length;
+    var qtdRisco  = dadosPainel.filter(function(d){ return d.freq < 75; }).length;
+
+    function cardResumo(cor, num, label) {
+      var bg  = cor==='vd'?'var(--vd-c)':cor==='vm'?'var(--vm-c)':cor==='am'?'#fff7ed':'var(--azul-c)';
+      var clr = cor==='vd'?'var(--vd)':cor==='vm'?'var(--vm)':cor==='am'?'#c2410c':'var(--azul)';
+      return '<div style="background:'+bg+';border-radius:var(--r);padding:12px 8px;text-align:center;cursor:pointer;transition:box-shadow .15s" onclick="relPainelFiltrar(\''+(label==='Total'?'todos':cor==='vm'?'inadimplentes':cor==='am'?'prova':'risco')+'\')"><div style="font-size:24px;font-weight:700;font-family:Lora,serif;color:'+clr+'">'+num+'</div><div style="font-size:10px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-top:2px">'+label+'</div></div>';
+    }
+
+    var cardsHtml = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px" id="rel-painel-cards">'
+      + cardResumo('azul', al.length, 'Total')
+      + cardResumo('vm',   qtdRisco,  'Em Risco')
+      + cardResumo('vm',   qtdInadim, 'Inadimplentes')
+      + cardResumo('am',   qtdPPend,  'Pend. Prova')
+      + '</div>';
+
+    // ── Lista de alunos ──
+    var listaHtml = dadosPainel.map(function(d) {
+      var a     = d.aluno;
+      var fCls  = d.freq >= 75 ? 'vd' : d.freq >= 50 ? 'am' : 'vm';
+      var fLabel= d.freq >= 75 ? '#15803d' : d.freq >= 50 ? '#92400e' : 'var(--vm)';
+      var finCls= d.inadimplente ? '#b91c1c' : '#15803d';
+      var finTx = d.inadimplente ? '✗ Pendente' : '✓ Em dia';
+      var prvCls= d.provaPendente ? '#92400e' : '#15803d';
+      var prvTx = d.provaPendente ? '⚠ Pendente' : '✓ Ok';
+
+      var riscoFlag = d.freq < 75 ? 'risco' : '';
+      var inadFlag  = d.inadimplente ? 'inadimplentes' : '';
+      var provaFlag = d.provaPendente ? 'prova' : '';
+      var flags     = [riscoFlag, inadFlag, provaFlag].filter(Boolean).join(' ');
+
+      return '<div class="rel-painel-item" data-filtro="todos '+flags+'" style="background:#fff;border-radius:var(--r);padding:12px 14px;margin-bottom:8px;border:1px solid var(--brd);box-shadow:var(--s)">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
+        + '<div style="font-size:14px;font-weight:600;flex:1">'+fmtNome(a.nome)+'</div>'
+        + '<span style="font-size:12px;font-weight:700;background:'+( d.freq>=75?'var(--vd-c)':d.freq>=50?'#fff7ed':'var(--vm-c)')+';color:'+fLabel+';border-radius:6px;padding:3px 8px">'+d.freq+'%</span>'
+        + '</div>'
+        + '<div style="display:flex;gap:8px;margin-top:7px;flex-wrap:wrap">'
+        + '<span style="font-size:11px;font-weight:600;color:'+finCls+'">💰 '+finTx+'</span>'
+        + '<span style="font-size:11px;font-weight:600;color:'+prvCls+'">📝 '+prvTx+'</span>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+
+    // ── Filtro state ──
+    window._relPainelFiltroAtual = 'todos';
+
+    document.getElementById('rel-painel').innerHTML =
+      '<div style="margin-bottom:4px">'
+      + cardsHtml
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="rel-painel-filtros">'
+      + ['todos','risco','inadimplentes','prova'].map(function(f) {
+          var label = f==='todos'?'Todos':f==='risco'?'Em Risco':f==='inadimplentes'?'Inadimplentes':'Pend. Prova';
+          var on = f==='todos'?' style="background:var(--azul);color:#fff;border-color:var(--azul)"':'';
+          return '<button id="rel-fil-'+f+'" class="btn bs ripple-target" onclick="relPainelFiltrar(\'' + f + '\')" style="font-size:12px;padding:5px 12px;border-radius:20px'+( f==='todos'?';background:var(--azul);color:#fff;border-color:var(--azul)':'')+'">' + label + '</button>';
+        }).join('')
+      + '</div>'
+      + '<div id="rel-painel-lista">' + listaHtml + '</div>'
+      + '</div>';
+
+    window.relPainelFiltrar = function(filtro) {
+      if (window._relPainelFiltroAtual === filtro) filtro = 'todos';
+      window._relPainelFiltroAtual = filtro;
+      document.querySelectorAll('#rel-painel-filtros button').forEach(function(btn) {
+        var isAtivo = btn.id === 'rel-fil-' + filtro;
+        btn.style.background   = isAtivo ? 'var(--azul)' : '';
+        btn.style.color        = isAtivo ? '#fff' : '';
+        btn.style.borderColor  = isAtivo ? 'var(--azul)' : '';
+      });
+      document.querySelectorAll('#rel-painel-lista .rel-painel-item').forEach(function(el) {
+        var flags = (el.dataset.filtro || '').split(' ');
+        el.style.display = flags.indexOf(filtro) >= 0 ? '' : 'none';
+      });
+    };
+    return;
+  }
 
   if(aba==='geral'){
     // Frequência: mesma fórmula do admRelCarregar
