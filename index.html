@@ -1071,6 +1071,7 @@ select.inp{cursor:pointer}
       </div>
       <div class="sl">Alertas</div>
       <div id="a-alertas"></div>
+      <div id="a-alertas-avancados"></div>
     </div>
 
     <!-- ALUNOS ADMIN -->
@@ -2995,13 +2996,15 @@ async function renderDashAdmin(){
   document.getElementById('a-data').textContent=DS[h.getDay()]+', '+h.getDate()+' de '+M[h.getMonth()]+' de '+h.getFullYear();
 
   // Buscar dados do Supabase
-  const [resAlunos, resPres, resAlunoLivros] = await Promise.all([
+  const [resAlunos, resPres, resAlunoLivros, resProvas] = await Promise.all([
     supabaseClient.from('alunos').select('*').order('nome', { ascending: true }),
     supabaseClient.from('presenca').select('*'),
-    supabaseClient.from('aluno_livros').select('*')
+    supabaseClient.from('aluno_livros').select('*'),
+    supabaseClient.from('provas_aluno').select('id,aluno_id,livro_codigo,fez_prova,nota,devolvida')
   ]);
 
   const al = (resAlunos.data || []).filter(a => a.ativo !== false);
+  const provasAluno = resProvas.data || [];
   const tot = al.length;
   const presencas = resPres.data || [];
   const alunoLivros = resAlunoLivros.data || [];
@@ -3184,6 +3187,106 @@ async function renderDashAdmin(){
     containerDashboard.appendChild(blocoFinanceiro);
   }
   // ── FIM RESUMO FINANCEIRO ──
+
+  // ── ALERTAS AVANÇADOS ──
+  gerarAlertasAdmin(al, presencas, alunoLivros, provasAluno, livroAtual);
+}
+
+/* ════ ALERTAS AUTOMÁTICOS ADMIN ════ */
+function gerarAlertasAdmin(al, presencas, alunoLivros, provasAluno, livroAtual) {
+  const el = document.getElementById('a-alertas-avancados');
+  if (!el) return;
+
+  // Datas ordenadas cronologicamente (para faltas consecutivas)
+  const datas = [...new Set(presencas.map(p => p.data))].sort();
+
+  var grupos = {
+    freq:      { label: '📉 Frequência', cor: 'vm',  itens: [] },
+    consec:    { label: '🚨 Faltas Consecutivas', cor: 'vm', itens: [] },
+    financeiro:{ label: '💰 Financeiro', cor: 'am',  itens: [] },
+    provas:    { label: '📝 Provas', cor: 'am',      itens: [] }
+  };
+
+  al.forEach(function(aluno) {
+    var id = aluno.id;
+    var nome = fmtNome(aluno.nome);
+
+    // ── 1. Frequência < 75% ──
+    var minhas = presencas.filter(function(p){ return p.aluno_id === id; });
+    var totalAulas = datas.length;
+    var presentes = minhas.filter(function(p){ return p.presente === true; }).length;
+    if (totalAulas > 0) {
+      var freq = Math.round(presentes / totalAulas * 100);
+      if (freq < 75) {
+        grupos.freq.itens.push('<strong>' + nome + '</strong> — ' + freq + '% de presença (' + presentes + '/' + totalAulas + ' aulas)');
+      }
+    }
+
+    // ── 2. Faltas consecutivas ≥ 3 ──
+    var mapa = {};
+    minhas.forEach(function(p){ mapa[p.data] = p.presente; });
+    var consec = 0, maxConsec = 0;
+    datas.forEach(function(d) {
+      if (mapa[d] === false) { consec++; if (consec > maxConsec) maxConsec = consec; }
+      else if (mapa[d] === true) { consec = 0; }
+      // sem registro = não conta
+    });
+    if (maxConsec >= 3) {
+      grupos.consec.itens.push('<strong>' + nome + '</strong> — ' + maxConsec + ' faltas seguidas');
+    }
+
+    // ── 3. Pagamento pendente (livro atual não pago) ──
+    if (livroAtual) {
+      var codAtual = 'p' + livroAtual;
+      var regAtual = alunoLivros.find(function(r){ return r.aluno_id === id && r.livro_codigo === codAtual; });
+      if (regAtual && regAtual.pagou === false) {
+        grupos.financeiro.itens.push('<strong>' + nome + '</strong> — Livro ' + livroAtual + ' não pago');
+      }
+      // ── 4. Entrega pendente (pago mas não entregue) ──
+      if (regAtual && regAtual.pagou === true && regAtual.entregue !== true) {
+        grupos.financeiro.itens.push('<strong>' + nome + '</strong> — Livro ' + livroAtual + ' pago, aguardando entrega');
+      }
+    }
+
+    // ── 5. Prova sem nota (fez mas nota é null) ──
+    var semNota = provasAluno.filter(function(p){
+      return p.aluno_id === id && p.fez_prova === true && (p.nota === null || p.nota === undefined);
+    });
+    semNota.forEach(function(p){
+      grupos.provas.itens.push('<strong>' + nome + '</strong> — ' + (p.livro_codigo || 'Prova') + ': fez mas sem nota');
+    });
+
+    // ── 6. Prova não devolvida (tem nota mas devolvida != true) ──
+    var naoDevolvida = provasAluno.filter(function(p){
+      return p.aluno_id === id && p.nota !== null && p.nota !== undefined && p.devolvida !== true;
+    });
+    naoDevolvida.forEach(function(p){
+      grupos.provas.itens.push('<strong>' + nome + '</strong> — ' + (p.livro_codigo || 'Prova') + ': corrigida, não devolvida');
+    });
+  });
+
+  var temAlerta = false;
+  var html = '<div style="margin-top:12px">';
+  html += '<div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--azul);margin-bottom:10px">🔎 Alertas Automáticos</div>';
+
+  ['freq','consec','financeiro','provas'].forEach(function(k) {
+    var g = grupos[k];
+    if (!g.itens.length) return;
+    temAlerta = true;
+    var corBorda = g.cor === 'vm' ? 'var(--vm)' : '#f97316';
+    html += '<div style="margin-bottom:12px">';
+    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:' + (g.cor === 'vm' ? 'var(--vm)' : '#c2410c') + ';margin-bottom:6px">' + g.label + ' <span style="background:' + corBorda + ';color:#fff;border-radius:10px;padding:1px 7px;font-size:10px">' + g.itens.length + '</span></div>';
+    g.itens.forEach(function(txt) {
+      html += '<div style="background:#fff;border-radius:8px;padding:9px 12px;margin-bottom:5px;border:1px solid var(--brd);border-left:4px solid ' + corBorda + ';font-size:13px;line-height:1.4">' + txt + '</div>';
+    });
+    html += '</div>';
+  });
+
+  if (!temAlerta) {
+    html += '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;font-size:13px;color:#15803d">✅ Nenhum alerta automático detectado.</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
 }
 
 /* ════ CARREGAR LIVRO ATUAL DO SISTEMA ════ */
