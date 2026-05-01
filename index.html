@@ -6591,7 +6591,8 @@ async function provasMarcarDevolvida(id) {
 </div>
 
 
-/* ── TOAST FUNCTION ── */
+<!-- ── TOAST + RIPPLE EFFECT GLOBAL ── -->
+<script>
 function toast(msg, tipo) {
   var c = document.getElementById('toast-container');
   if (!c) return;
@@ -6602,8 +6603,6 @@ function toast(msg, tipo) {
   setTimeout(function() { t.remove(); }, 3500);
 }
 
-<!-- ── RIPPLE EFFECT GLOBAL ── -->
-<script>
 document.addEventListener('click', function(e){
   var target = e.target.closest('.ripple-target');
   if (!target) return;
