@@ -2987,7 +2987,7 @@ function irAdmin(t){
   if(t==='inicio') renderDashAdmin().catch(e=>console.error('[Dashboard]',e));
   if(t==='alunos') renderAlunosAdmin().catch(e=>console.error('[Alunos]',e));
   if(t==='presenca') admPresCarregarAulas();
-  if(t==='pagamentos') renderPagAdmin();
+  if(t==='pagamentos') { livroVisualAtual = null; renderPagAdmin(); }
   if(t==='material') renderMatAdmin('livros');
   if(t==='relatorios') renderRelAdmin('painel');
   if(t==='relatorio') admRelCarregar();
