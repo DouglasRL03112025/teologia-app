@@ -3154,10 +3154,10 @@ async function renderDashAdmin(){
   const livrosPendentes     = dadosLivroAtual.filter(r => r.entregue !== true).length;
 
   document.getElementById('a-metricas').innerHTML=`
-    <div class="mc"><div class="mn">${totalAlunos}</div><div class="ml">Alunos</div></div>
-    <div class="mc vm"><div class="mn">${pagamentosPendentes}</div><div class="ml">Pagamentos Pendentes</div></div>
-    <div class="mc vd"><div class="mn">${pagamentosPagos}</div><div class="ml">Pagamentos Pagos</div></div>
-    <div class="mc do"><div class="mn">${livrosPendentes}</div><div class="ml">Livros Pendentes</div></div>`;
+    <div class="mc" onclick="irAdmin('alunos')" style="cursor:pointer"><div class="mn">${totalAlunos}</div><div class="ml">Alunos</div></div>
+    <div class="mc vm" onclick="irAdmin('pagamentos');definirFiltroPagamento('pendentes')" style="cursor:pointer"><div class="mn">${pagamentosPendentes}</div><div class="ml">Pagamentos Pendentes</div></div>
+    <div class="mc vd" onclick="irAdmin('pagamentos');definirFiltroPagamento('pagos')" style="cursor:pointer"><div class="mn">${pagamentosPagos}</div><div class="ml">Pagamentos Pagos</div></div>
+    <div class="mc do" onclick="irAdmin('pagamentos')" style="cursor:pointer"><div class="mn">${livrosPendentes}</div><div class="ml">Livros Pendentes</div></div>`;
 
   let alerts=[];
   // Alertas de faltas no mês
