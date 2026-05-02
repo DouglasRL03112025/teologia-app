@@ -7180,6 +7180,23 @@ if(!D.aulas_log) { D.aulas_log={}; }
       } catch(e) { console.error('[PRES ADMIN] exceção', aluno.id, e); erros++; }
     }
 
+    // LOG DE PRESENÇA — NÃO INTERFERE NO FLUXO
+    try {
+      for (const alunoId in admPresEstado) {
+        const estado = admPresEstado[alunoId];
+
+        await supabaseClient.from('logs_presenca').insert({
+          aluno_id: alunoId,
+          data_aula: admPresAulaAtual.data,
+          presente: estado === true,
+          acao: 'registro_presenca',
+          data_hora: new Date().toISOString()
+        });
+      }
+    } catch (e) {
+      console.error('Erro ao registrar log de presença:', e);
+    }
+
     if (btn) { btn.disabled = false; btn.textContent = '💾 Salvar Presença'; }
     toast(erros === 0 ? '✅ Presenças salvas com sucesso!' : '⚠️ Salvo com ' + erros + ' erro(s). Veja o console.');
   }
