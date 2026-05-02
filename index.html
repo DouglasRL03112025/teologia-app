@@ -1017,6 +1017,52 @@ select.inp{cursor:pointer}
   to { transform: translateY(-50%) rotate(360deg); }
 }
 
+/* ══════════════════════════════════════
+   UX PREMIUM — MICRO INTERAÇÕES
+   Apenas CSS, zero JS alterado
+   ══════════════════════════════════════ */
+
+/* 1. ANIMAÇÃO DE ENTRADA */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ar        { animation: fadeUp 0.25s ease both; }
+.pag-card  { animation: fadeUp 0.25s ease both; }
+.prova-card{ animation: fadeUp 0.25s ease both; }
+
+/* 2. FEEDBACK DE CLIQUE GLOBAL */
+button, .nb, .tab {
+  transition: transform 0.08s ease;
+}
+button:active, .nb:active, .tab:active {
+  transform: scale(0.96) !important;
+}
+
+/* 3. HOVER PREMIUM — reforço sem duplicar (regras existentes já têm translateY)  */
+.ar {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease !important;
+}
+
+/* 4. BTN-LOADING — reforço de opacidade e borda mais visível */
+.btn-loading {
+  opacity: 0.7 !important;
+}
+.btn-loading::after {
+  border-color: rgba(255,255,255,0.9) !important;
+  border-top-color: transparent !important;
+}
+
+/* 5. TRANSIÇÃO GLOBAL SUAVE (background, color, box-shadow — sem transform) */
+* {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* ══ FIM UX PREMIUM ══ */
+
 /* ── ESTADO VAZIO ── */
 .estado-vazio {
   text-align: center;
