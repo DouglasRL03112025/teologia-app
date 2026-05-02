@@ -422,6 +422,37 @@ select.inp{cursor:pointer}
 .pgr.liv-rec{background:#f0faf4;border-color:#b2dfca}
 .pgr.liv-pend{background:#fff0f0;border-color:#f5c6c6}
 
+/* ── PAGAMENTO PREMIUM CARDS ── */
+.pag-card{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fff;border-radius:14px;margin-bottom:10px;border:1.5px solid #e8e4dc;box-shadow:0 3px 10px rgba(0,0,0,0.06);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.pag-card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,0.11);border-color:#a8bdd4}
+.pag-card.pag-pago{background:#f6fdf9;border-color:#a8dbbe}
+.pag-card.pag-pago:hover{border-color:#6abf96}
+.pag-card.pag-pendente{background:#fff8f8;border-color:#f0c0c0}
+.pag-card.pag-pendente:hover{border-color:#e08080}
+.pag-card.pag-sem-reg{background:#f9f9f9;border-color:#e0ddd5}
+.pag-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-size:16px;font-weight:700;flex-shrink:0}
+.pag-avatar.av-pago{background:var(--vd-c);color:var(--vd)}
+.pag-avatar.av-pendente{background:var(--vm-c);color:var(--vm)}
+.pag-avatar.av-sem-reg{background:#f0f0f0;color:var(--cin)}
+.pag-info{flex:1;min-width:0}
+.pag-nome{font-size:15px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pag-meta{font-size:11px;color:var(--cin);margin-top:3px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pag-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;letter-spacing:.3px;flex-shrink:0}
+.pag-badge.bdg-pago{background:#dcf5e9;color:#1a6b3a;border:1px solid #9fdcbc}
+.pag-badge.bdg-pendente{background:#fde8e8;color:#9b2020;border:1px solid #f5b8b8}
+.pag-badge.bdg-sem-reg{background:#f0f0f0;color:var(--cin);border:1px solid #ddd}
+.pag-acoes{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.pag-btn-pagar{padding:8px 14px;border:none;border-radius:99px;font-size:12px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s;white-space:nowrap;letter-spacing:.2px}
+.pag-btn-pagar.btn-marcar-pago{background:var(--azul);color:#fff;box-shadow:0 2px 8px rgba(26,58,92,0.18)}
+.pag-btn-pagar.btn-marcar-pago:hover{background:var(--azul-e);transform:translateY(-1px);box-shadow:0 4px 14px rgba(26,58,92,0.28)}
+.pag-btn-pagar.btn-ja-pago{background:var(--vd-c);color:var(--vd);border:1px solid #9fdcbc}
+.pag-btn-pagar.btn-ja-pago:hover{background:#c6eedd}
+.pag-prog-wrap{margin-bottom:14px;padding:12px 16px;background:#fff;border-radius:12px;border:1px solid var(--brd);box-shadow:var(--s)}
+.pag-prog-label{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--cin);margin-bottom:7px}
+.pag-prog-bar{height:8px;background:#e8e4dc;border-radius:99px;overflow:hidden}
+.pag-prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--vd),#4ab872);transition:width .5s ease}
+/* ── FIM PAGAMENTO PREMIUM CARDS ── */
+
 /* ── TOGGLE ── */
 .tr{display:flex;align-items:center;justify-content:space-between;padding:14px;background:#fff;border-radius:var(--r);margin-bottom:9px;border:1px solid var(--brd);box-shadow:var(--s)}
 .tn{font-size:15px;font-weight:500}.ts2{font-size:12px;color:var(--cin);margin-top:2px}
@@ -3908,16 +3939,29 @@ async function renderPagAdmin(){
       }
 
       const nomeAluno = (aluno.nome||'').split(' ').map(p=>p.charAt(0)+p.slice(1).toLowerCase()).join(' ');
-      return `<div class="ar" style="justify-content:space-between">
-        <div class="pgi">
-          <div class="pgn">${nomeAluno}</div>
-          <div class="pgd">📚 Livro ${livroVisualAtual}</div>
+      const iniciaisAluno = nomeAluno.split(' ').filter(Boolean).map(p=>p[0]).slice(0,2).join('');
+      const cardClasse = !registro ? 'pag-sem-reg' : pago ? 'pag-pago' : 'pag-pendente';
+      const avClasse   = !registro ? 'av-sem-reg'  : pago ? 'av-pago'  : 'av-pendente';
+      const bdgClasse  = !registro ? 'bdg-sem-reg' : pago ? 'bdg-pago' : 'bdg-pendente';
+      const bdgIcon    = !registro ? '—' : pago ? '✅' : '⏳';
+      const bdgLabel   = !registro ? 'Sem registro' : pago ? 'Pago' : 'Pendente';
+      const metaExtra  = pago && registro.data_pagamento
+        ? `<span>📅 ${new Date(registro.data_pagamento).toLocaleDateString('pt-BR')}</span>${registro.forma_pagamento ? `<span>· ${registro.forma_pagamento === 'pix' ? '📱 PIX' : '💵 Dinheiro'}</span>` : ''}`
+        : '';
+      return `<div class="pag-card ${cardClasse}">
+        <div class="pag-avatar ${avClasse}">${iniciaisAluno}</div>
+        <div class="pag-info">
+          <div class="pag-nome">${nomeAluno}</div>
+          <div class="pag-meta">
+            <span>📚 Livro ${livroVisualAtual}</span>
+            ${metaExtra}
+          </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-          <span class="bdg ${statusClasse}">${statusTexto}</span>
-          ${registro && window.isAdmin ? `<button class="pgb ${botaoClasse}"
-            onclick="tgPagLivro('${registro.id}', ${pago}, '${aluno.id}', '${(aluno.nome||'').replace(/'/g,"\\'")}')">
-            ${pago ? '✓ Pago' : '✕ Pendente'}
+        <div class="pag-acoes">
+          <span class="pag-badge ${bdgClasse}">${bdgIcon} ${bdgLabel}</span>
+          ${registro && window.isAdmin ? `<button class="pag-btn-pagar ${pago ? 'btn-ja-pago' : 'btn-marcar-pago'} ripple-target"
+            onclick="tgPagLivro('${registro.id}', ${pago}, '${aluno.id}', '${(aluno.nome||'').replace(/'/g,"\'")}')">
+            ${pago ? '✓ Pago' : '💳 Marcar pago'}
           </button>` : ''}
         </div>
       </div>`;
