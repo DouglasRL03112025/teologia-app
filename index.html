@@ -2502,23 +2502,13 @@ function fecharModalPagamento() {
 
 async function confirmarPagamentoModal() {
   const btnConfirmar = document.querySelector('#modal-pagamento .btn.bp');
-  if (btnConfirmar) btnConfirmar.classList.add('btn-loading');
-  const textoOriginal = btnConfirmar ? btnConfirmar.textContent : 'Confirmar';
-
-  if (btnConfirmar && btnConfirmar.disabled) return;
-  if (btnConfirmar) { btnConfirmar.disabled = true; btnConfirmar.textContent = 'Processando...'; }
-
-  try {
+  return executarAcaoSegura(btnConfirmar, async () => {
     const data = document.getElementById('mp-data').value;
     const forma = document.getElementById('mp-forma').value;
     if (!_mpRegistroId || !data) { toast('Dados inválidos', 'erro'); return; }
     await marcarLivroComoPago(_mpRegistroId, data, forma);
     fecharModalPagamento();
-  } catch(e) {
-    console.error('[confirmarPagamentoModal] Erro:', e);
-  } finally {
-    if (btnConfirmar) { btnConfirmar.classList.remove('btn-loading'); btnConfirmar.disabled = false; btnConfirmar.textContent = textoOriginal; }
-  }
+  });
 }
 /* ── FIM MODAL PAGAMENTO ── */
 
@@ -6239,8 +6229,8 @@ if(!D.aulas_log) { D.aulas_log={}; }
   }
 
   async function confirmarPagamentoModalLote() {
-  var _bll = document.querySelector('#modal-pagamento-lote .btn.bp'); if (_bll) { _bll.classList.add('btn-loading'); _bll.disabled = true; }
-    try {
+    const _bll = document.querySelector('#modal-pagamento-lote .btn.bp');
+    return executarAcaoSegura(_bll, async () => {
       const data = document.getElementById('mpl-data').value;
       const forma = document.getElementById('mpl-forma').value;
       if (!_mplSelecionados.length || !data) { toast('Dados inválidos', 'erro'); return; }
@@ -6248,11 +6238,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
       if (!['pix', 'dinheiro'].includes(forma)) { toast('Forma de pagamento inválida'); return; }
       await admMarcarLotePago(data, forma);
       fecharModalPagamentoLote();
-    } catch(e) {
-      console.error('[confirmarPagamentoModalLote] Erro:', e);
-    } finally {
-      if (_bll) { _bll.classList.remove('btn-loading'); _bll.disabled = false; }
-    }
+    });
   }
   /* ── FIM MODAL PAGAMENTO EM LOTE ── */
 
