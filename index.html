@@ -7578,6 +7578,22 @@ function toast(msg, tipo) {
   setTimeout(function() { t.remove(); }, 3500);
 }
 
+/* ── HELPER GLOBAL: proteção contra duplo clique + loading padronizado ── */
+async function executarAcaoSegura(btn, fn) {
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  btn.classList.add('btn-loading');
+  try {
+    await fn();
+  } catch (e) {
+    console.error('Erro na ação:', e);
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('btn-loading');
+  }
+}
+/* ── FIM HELPER GLOBAL ── */
+
 document.addEventListener('click', function(e){
   var target = e.target.closest('.ripple-target');
   if (!target) return;
