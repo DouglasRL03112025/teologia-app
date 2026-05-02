@@ -2517,7 +2517,7 @@ async function confirmarPagamentoModal() {
   } catch(e) {
     console.error('[confirmarPagamentoModal] Erro:', e);
   } finally {
-    if (btnConfirmar) { btnConfirmar.disabled = false; btnConfirmar.textContent = textoOriginal; }
+    if (btnConfirmar) { btnConfirmar.classList.remove('btn-loading'); btnConfirmar.disabled = false; btnConfirmar.textContent = textoOriginal; }
   }
 }
 /* ── FIM MODAL PAGAMENTO ── */
@@ -6239,14 +6239,20 @@ if(!D.aulas_log) { D.aulas_log={}; }
   }
 
   async function confirmarPagamentoModalLote() {
-  var _bll = document.querySelector('#modal-pagamento-lote .btn.bp'); if (_bll) _bll.classList.add('btn-loading');
-    const data = document.getElementById('mpl-data').value;
-    const forma = document.getElementById('mpl-forma').value;
-    if (!_mplSelecionados.length || !data) { toast('Dados inválidos', 'erro'); return; }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) { toast('Data inválida. Use formato YYYY-MM-DD'); return; }
-    if (!['pix', 'dinheiro'].includes(forma)) { toast('Forma de pagamento inválida'); return; }
-    await admMarcarLotePago(data, forma);
-    fecharModalPagamentoLote();
+  var _bll = document.querySelector('#modal-pagamento-lote .btn.bp'); if (_bll) { _bll.classList.add('btn-loading'); _bll.disabled = true; }
+    try {
+      const data = document.getElementById('mpl-data').value;
+      const forma = document.getElementById('mpl-forma').value;
+      if (!_mplSelecionados.length || !data) { toast('Dados inválidos', 'erro'); return; }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) { toast('Data inválida. Use formato YYYY-MM-DD'); return; }
+      if (!['pix', 'dinheiro'].includes(forma)) { toast('Forma de pagamento inválida'); return; }
+      await admMarcarLotePago(data, forma);
+      fecharModalPagamentoLote();
+    } catch(e) {
+      console.error('[confirmarPagamentoModalLote] Erro:', e);
+    } finally {
+      if (_bll) { _bll.classList.remove('btn-loading'); _bll.disabled = false; }
+    }
   }
   /* ── FIM MODAL PAGAMENTO EM LOTE ── */
 
