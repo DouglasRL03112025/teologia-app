@@ -463,6 +463,11 @@ select.inp{cursor:pointer}
 .ar.risco-borda-ok{border-left:3.5px solid #4ab872 !important}
 /* ── FIM RISCO ALUNO ── */
 
+/* ── AÇÃO RECOMENDADA ── */
+.acao-recomendada{margin-top:6px;font-size:11px;font-weight:600;color:#0f172a;background:#f1f5f9;padding:5px 8px;border-radius:8px;line-height:1.4;max-width:100%}
+.acao-recomendada.acao-urgente{background:#fff7ed;color:#92400e}
+/* ── FIM AÇÃO RECOMENDADA ── */
+
 /* ── TOGGLE ── */
 .tr{display:flex;align-items:center;justify-content:space-between;padding:14px;background:#fff;border-radius:var(--r);margin-bottom:9px;border:1px solid var(--brd);box-shadow:var(--s)}
 .tn{font-size:15px;font-weight:500}.ts2{font-size:12px;color:var(--cin);margin-top:2px}
@@ -3484,6 +3489,12 @@ async function renderAlunosAdmin(){
                      : '<span class="risco-badge risco-ok">🟢 Ok</span>';
     const riscoBorda = risco === 'alto' ? 'risco-borda-alto' : risco === 'medio' ? 'risco-borda-medio' : 'risco-borda-ok';
     // ── FIM BADGE DE RISCO ──
+    // ── AÇÃO RECOMENDADA (adição isolada) ──
+    const acaoTexto = gerarAcaoAluno(a, _dadosRisco);
+    const acaoHTML  = acaoTexto
+      ? `<div class="acao-recomendada${risco === 'alto' ? ' acao-urgente' : ''}">⚡ ${acaoTexto}</div>`
+      : '';
+    // ── FIM AÇÃO RECOMENDADA ──
     return `<div class="ar ${riscoBorda}" data-aluno-id="${a.id}" data-entregue="${jaEntregue}" data-risco="${risco}" onclick="verPerfilAdmin('${a.id}')">
       <div class="av">${ini(a.nome)}</div>
       <div class="ai">
@@ -3493,6 +3504,7 @@ async function renderAlunosAdmin(){
           ${a.tel ? `<span>${fmtTel(a.tel)}</span>` : ''}
           ${perc !== null ? `<span>${perc}% freq.</span>` : ''}
         </div>
+        ${acaoHTML}
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
         <span class="bdg ${bdgClass}">${bdgLabel}</span>
@@ -3737,6 +3749,56 @@ function calcularRiscoAluno(aluno, dados) {
   return 'ok';
 }
 /* ════ FIM RISCO AUTOMÁTICO ════ */
+
+/* ════ AÇÃO RECOMENDADA POR ALUNO ════ */
+function gerarAcaoAluno(aluno, dados) {
+  var id           = aluno.id;
+  var alunoLivros  = dados.alunoLivros  || [];
+  var provasAluno  = dados.provasAluno  || [];
+  var livroAtual   = dados.livroAtual;
+  var presDoMes    = dados.presDoMes    || [];
+  var datasUnicas  = dados.datasUnicas  || [];
+
+  // ── Frequência ──
+  var totalAulas = datasUnicas.length;
+  var presentes  = presDoMes.filter(function(p){ return p.aluno_id === id && p.presente === true; }).length;
+  var freq       = totalAulas > 0 ? presentes / totalAulas : null;
+
+  // ── Pagamento livro atual ──
+  var codAtual = 'p' + livroAtual;
+  var regAtual = alunoLivros.find(function(r){ return r.aluno_id === id && r.livro_codigo === codAtual; });
+  var naoPagou = regAtual && regAtual.pagou !== true;
+
+  // ── Prova ──
+  var prova = provasAluno.find(function(p){ return p.aluno_id === id; });
+  var semProva    = !prova || prova.fez_prova === false;
+  var semNota     = prova && prova.fez_prova === true && (prova.nota === null || prova.nota === undefined);
+  var notaBaixa   = prova && prova.nota !== null && prova.nota !== undefined && Number(prova.nota) < 5;
+
+  // ── Frequência baixa ──
+  var freqCritica = freq !== null && freq < 0.60;
+  var freqAtencao = freq !== null && freq >= 0.60 && freq < 0.75;
+
+  // ── Montar ações por prioridade ──
+  var acoes = [];
+
+  if (naoPagou)    acoes.push('cobrar pagamento do livro atual');
+  if (semProva)    acoes.push('agendar prova');
+  if (semNota)     acoes.push('lançar nota da prova');
+  if (notaBaixa)   acoes.push('reforçar conteúdo');
+  if (freqCritica) acoes.push('contato urgente (risco de evasão)');
+  else if (freqAtencao) acoes.push('acompanhar frequência');
+
+  if (!acoes.length) return null; // aluno ok — sem ação necessária
+
+  // ── Compor mensagem ──
+  if (acoes.length === 1) {
+    return acoes[0].charAt(0).toUpperCase() + acoes[0].slice(1);
+  }
+  // Múltiplos problemas: capitalizar primeiro e juntar com " + "
+  return acoes.map(function(a, i){ return i === 0 ? a.charAt(0).toUpperCase() + a.slice(1) : a; }).join(' + ');
+}
+/* ════ FIM AÇÃO RECOMENDADA ════ */
 
 /* ════ RESUMO LIVROS DO ALUNO (Supabase) ════ */
 async function carregarResumoLivrosAluno(alunoId) {
