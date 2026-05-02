@@ -4013,8 +4013,13 @@ function mudarMes(d){ _mp.setMonth(_mp.getMonth()+d); renderPagAdmin(); }
 
 async function renderPagAdmin(){
   // ── INICIALIZAR LIVRO VISUAL (somente visualização, não altera o global) ──
+  const _livroSalvo = localStorage.getItem('pagamentos_livro');
+  const _filtroSalvo = localStorage.getItem('pagamentos_filtro');
   if (livroVisualAtual === null) {
-    livroVisualAtual = window.livroAtualSistema || 1;
+    livroVisualAtual = _livroSalvo ? parseInt(_livroSalvo) : (window.livroAtualSistema || 1);
+  }
+  if (_filtroSalvo && ['todos','pagos','pendentes'].includes(_filtroSalvo)) {
+    filtroStatusPagamento = _filtroSalvo;
   }
 
   // ── TÍTULO COM NAVEGAÇÃO ──
@@ -4204,6 +4209,7 @@ function navegarLivro(direcao) {
   const novo = livroVisualAtual + direcao;
   if (novo < 1 || novo > 24) return;
   livroVisualAtual = novo;
+  localStorage.setItem('pagamentos_livro', livroVisualAtual);
   if (typeof renderPagAdmin === 'function') {
     renderPagAdmin();
   }
@@ -4211,6 +4217,7 @@ function navegarLivro(direcao) {
 
 function definirFiltroPagamento(tipo) {
   filtroStatusPagamento = tipo;
+  localStorage.setItem('pagamentos_filtro', tipo);
   if (typeof renderPagAdmin === 'function') {
     renderPagAdmin();
   }
