@@ -7473,14 +7473,16 @@ async function renderPainelProvas() {
 }
 
 async function provasMarcarFez(alunoId, codigo, novoValor) {
-  var _ae = document.activeElement; if (_ae && _ae.tagName === 'BUTTON') _ae.classList.add('btn-loading');
-  var payload = novoValor === false
-    ? { aluno_id:alunoId, livro_codigo:codigo, fez_prova:false, nota:null, devolvida:false }
-    : { aluno_id:alunoId, livro_codigo:codigo, fez_prova:true, corrigida:true, devolvida:false };
-  var { error } = await supabaseClient.from('provas_aluno')
-    .upsert(payload, { onConflict:'aluno_id,livro_codigo' });
-  if (error) { toast('Erro: '+error.message); return; }
-  renderPainelProvas();
+  const btn = document.activeElement;
+  return executarAcaoSegura(btn, async () => {
+    var payload = novoValor === false
+      ? { aluno_id:alunoId, livro_codigo:codigo, fez_prova:false, nota:null, devolvida:false }
+      : { aluno_id:alunoId, livro_codigo:codigo, fez_prova:true, corrigida:true, devolvida:false };
+    var { error } = await supabaseClient.from('provas_aluno')
+      .upsert(payload, { onConflict:'aluno_id,livro_codigo' });
+    if (error) { toast('Erro: '+error.message); return; }
+    renderPainelProvas();
+  });
 }
 
 async function provasLancarNota(id) {
@@ -7503,11 +7505,13 @@ async function provasLancarNota(id) {
 }
 
 async function provasMarcarDevolvida(id) {
-  var _aed = document.activeElement; if (_aed && _aed.tagName === 'BUTTON') _aed.classList.add('btn-loading');
-  var { error } = await supabaseClient.from('provas_aluno')
-    .update({ devolvida:true, corrigida:true }).eq('id', id);
-  if (error) { toast('Erro: '+error.message); return; }
-  renderPainelProvas();
+  const btn = document.activeElement;
+  return executarAcaoSegura(btn, async () => {
+    var { error } = await supabaseClient.from('provas_aluno')
+      .update({ devolvida:true, corrigida:true }).eq('id', id);
+    if (error) { toast('Erro: '+error.message); return; }
+    renderPainelProvas();
+  });
 }
 /* ════ FIM PAINEL DE PROVAS ADMIN ════ */
 </script>
