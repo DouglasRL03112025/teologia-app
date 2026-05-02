@@ -453,6 +453,16 @@ select.inp{cursor:pointer}
 .pag-prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--vd),#4ab872);transition:width .5s ease}
 /* ── FIM PAGAMENTO PREMIUM CARDS ── */
 
+/* ── RISCO ALUNO — BADGES DE PRIORIDADE ── */
+.risco-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;letter-spacing:.3px;white-space:nowrap;flex-shrink:0}
+.risco-alto{background:#fde8e8;color:#9b2020;border:1px solid #f5b8b8}
+.risco-medio{background:#fff3d6;color:#7a4a00;border:1px solid #e8cc88}
+.risco-ok{background:#e6f5ee;color:#1d6b3a;border:1px solid #b2dfc7}
+.ar.risco-borda-alto{border-left:3.5px solid #e05252 !important}
+.ar.risco-borda-medio{border-left:3.5px solid #e8b84b !important}
+.ar.risco-borda-ok{border-left:3.5px solid #4ab872 !important}
+/* ── FIM RISCO ALUNO ── */
+
 /* ── TOGGLE ── */
 .tr{display:flex;align-items:center;justify-content:space-between;padding:14px;background:#fff;border-radius:var(--r);margin-bottom:9px;border:1px solid var(--brd);box-shadow:var(--s)}
 .tn{font-size:15px;font-weight:500}.ts2{font-size:12px;color:var(--cin);margin-top:2px}
@@ -3400,6 +3410,34 @@ async function renderAlunosAdmin(){
   const { data: alunoLivros } = await supabaseClient.from('aluno_livros').select('aluno_id, pagou, entregue, participou, livro_codigo').range(0, 9999);
   const alLivros = alunoLivros || [];
 
+  // ── CONTEXTO DE RISCO (dados já carregados, sem nova query) ──
+  var _dadosRisco = {
+    presencas:   D.presencas ? Object.values(D.presencas).reduce(function(acc,aula){
+      Object.keys(aula).forEach(function(aid){ acc.push({ aluno_id: aid, presente: aula[aid]==='P' }); }); return acc; }, []) : [],
+    alunoLivros: alLivros,
+    provasAluno: [], // sem query extra — preenchido progressivamente
+    livroAtual:  window.livroAtualSistema,
+    presDoMes:   (function(){
+      var pres = [];
+      var cmLocal = cm;
+      if (D && D.presencas) {
+        Object.keys(D.presencas).filter(function(k){ return k.startsWith(cmLocal); }).forEach(function(k){
+          var aula = D.presencas[k];
+          Object.keys(aula).forEach(function(aid){
+            pres.push({ aluno_id: aid, data: k, presente: aula[aid]==='P' });
+          });
+        });
+      }
+      return pres;
+    })(),
+    datasUnicas: (function(){
+      var cmLocal = cm;
+      if (!D || !D.presencas) return [];
+      return Object.keys(D.presencas).filter(function(k){ return k.startsWith(cmLocal); });
+    })()
+  };
+  // ── FIM CONTEXTO DE RISCO ──
+
   // ── FILTRO RÁPIDO POR STATUS DE PAGAMENTO ──
   const livroAtualFiltro = window.livroAtualSistema;
   if (window._filtroStatus === 'pagos') {
@@ -3439,7 +3477,14 @@ async function renderAlunosAdmin(){
     const perc=pk.length>0?Math.round(pres/pk.length*100):null;
     const regLivro = alLivros.find(r => r.aluno_id === a.id && String(r.livro_codigo) === 'p' + String(livroAtual));
     const jaEntregue = regLivro && regLivro.entregue === true ? 'true' : 'false';
-    return `<div class="ar" data-aluno-id="${a.id}" data-entregue="${jaEntregue}" onclick="verPerfilAdmin('${a.id}')">
+    // ── BADGE DE RISCO (adição isolada — não altera lógica existente) ──
+    const risco = calcularRiscoAluno(a, _dadosRisco);
+    const riscoBadge = risco === 'alto'  ? '<span class="risco-badge risco-alto">🔴 Em risco</span>'
+                     : risco === 'medio' ? '<span class="risco-badge risco-medio">🟡 Atenção</span>'
+                     : '<span class="risco-badge risco-ok">🟢 Ok</span>';
+    const riscoBorda = risco === 'alto' ? 'risco-borda-alto' : risco === 'medio' ? 'risco-borda-medio' : 'risco-borda-ok';
+    // ── FIM BADGE DE RISCO ──
+    return `<div class="ar ${riscoBorda}" data-aluno-id="${a.id}" data-entregue="${jaEntregue}" data-risco="${risco}" onclick="verPerfilAdmin('${a.id}')">
       <div class="av">${ini(a.nome)}</div>
       <div class="ai">
         <div class="an aluno-nome">${fmtNome(a.nome) || 'Sem nome'}</div>
@@ -3449,7 +3494,10 @@ async function renderAlunosAdmin(){
           ${perc !== null ? `<span>${perc}% freq.</span>` : ''}
         </div>
       </div>
-      <span class="bdg ${bdgClass}">${bdgLabel}</span>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+        <span class="bdg ${bdgClass}">${bdgLabel}</span>
+        ${riscoBadge}
+      </div>
     </div>`;
   }
 
@@ -3470,7 +3518,7 @@ async function renderAlunosAdmin(){
     el.innerHTML = '<div class="grid-cards-alunos">' + lista.map(_renderCard).join('') + '</div>';
   }
 
-  // Ordenação por prioridade dentro de cada grupo .grid-cards-alunos
+  // Ordenação por prioridade + risco dentro de cada grupo .grid-cards-alunos
   document.querySelectorAll('#lista-alunos-admin .grid-cards-alunos').forEach(function(container) {
     function getPrioridade(card) {
       var texto = (card.innerText || '').toLowerCase();
@@ -3478,8 +3526,18 @@ async function renderAlunosAdmin(){
       if (texto.includes('aguardando')) return 2;
       return 1;
     }
+    function getRiscoPeso(card) {
+      var r = card.getAttribute('data-risco') || 'ok';
+      if (r === 'alto')  return 3;
+      if (r === 'medio') return 2;
+      return 1;
+    }
     var cards = Array.from(container.querySelectorAll('.ar'));
-    cards.sort(function(a, b) { return getPrioridade(b) - getPrioridade(a); });
+    cards.sort(function(a, b) {
+      var diffPri = getPrioridade(b) - getPrioridade(a);
+      if (diffPri !== 0) return diffPri;
+      return getRiscoPeso(b) - getRiscoPeso(a); // desempate por risco
+    });
     cards.forEach(function(card) { container.appendChild(card); });
   });
   // ── FIM AGRUPAMENTO VISUAL ──
@@ -3620,6 +3678,65 @@ function calcularStatusAluno(alunoId, alLivros, livroAtual) {
   return 'Em dia';
 }
 /* ════ FIM FONTE DE VERDADE ════ */
+
+/* ════ RISCO AUTOMÁTICO DO ALUNO ════ */
+function calcularRiscoAluno(aluno, dados) {
+  // dados: { presencas, alunoLivros, provasAluno, livroAtual, presDoMes, datasUnicas }
+  var id = aluno.id;
+  var presencas    = dados.presencas    || [];
+  var alunoLivros  = dados.alunoLivros  || [];
+  var provasAluno  = dados.provasAluno  || [];
+  var livroAtual   = dados.livroAtual;
+  var presDoMes    = dados.presDoMes    || [];
+  var datasUnicas  = dados.datasUnicas  || [];
+
+  // ── Frequência do mês ──
+  var totalAulas = datasUnicas.length;
+  var presentes  = presDoMes.filter(function(p){ return p.aluno_id === id && p.presente === true; }).length;
+  var freq       = totalAulas > 0 ? presentes / totalAulas : null;
+
+  // ── Faltas consecutivas ──
+  var faltasConsec = 0, maxConsec = 0;
+  var datasOrd = datasUnicas.slice().sort();
+  datasOrd.forEach(function(data) {
+    var reg = presDoMes.find(function(p){ return p.aluno_id === id && p.data === data; });
+    if (!reg || reg.presente === false) { faltasConsec++; maxConsec = Math.max(maxConsec, faltasConsec); }
+    else { faltasConsec = 0; }
+  });
+
+  // ── Pagamento livro atual ──
+  var codAtual = 'p' + livroAtual;
+  var regAtual = alunoLivros.find(function(r){ return r.aluno_id === id && r.livro_codigo === codAtual; });
+  var naoPagou = regAtual && regAtual.pagou !== true;
+
+  // ── Prova sem nota ──
+  var provaSemNota = provasAluno.some(function(p){
+    return p.aluno_id === id && p.fez_prova === true && (p.nota === null || p.nota === undefined);
+  });
+
+  // ── Nota baixa ──
+  var notaBaixa = provasAluno.some(function(p){
+    return p.aluno_id === id && p.nota !== null && p.nota !== undefined && Number(p.nota) < 5;
+  });
+
+  // ── Classificar ──
+  // ALTO: qualquer condição crítica
+  if (
+    (freq !== null && freq < 0.60) ||
+    maxConsec >= 3 ||
+    naoPagou ||
+    provaSemNota
+  ) return 'alto';
+
+  // MÉDIO: atenção
+  if (
+    (freq !== null && freq >= 0.60 && freq < 0.75) ||
+    notaBaixa
+  ) return 'medio';
+
+  return 'ok';
+}
+/* ════ FIM RISCO AUTOMÁTICO ════ */
 
 /* ════ RESUMO LIVROS DO ALUNO (Supabase) ════ */
 async function carregarResumoLivrosAluno(alunoId) {
