@@ -3415,6 +3415,8 @@ async function renderAlunosAdmin(){
   const { data: alunoLivros } = await supabaseClient.from('aluno_livros').select('aluno_id, pagou, entregue, participou, livro_codigo').range(0, 9999);
   const alLivros = alunoLivros || [];
 
+  const cm=chM(hj());
+
   // ── CONTEXTO DE RISCO (dados já carregados, sem nova query) ──
   var _dadosRisco = {
     presencas:   D.presencas ? Object.values(D.presencas).reduce(function(acc,aula){
@@ -3455,8 +3457,6 @@ async function renderAlunosAdmin(){
     lista = lista.filter(a => calcularStatusAluno(a.id, alLivros, livroAtualFiltro) === 'Pendente');
   }
   // ── FIM FILTRO RÁPIDO ──
-
-  const cm=chM(hj());
 
   // ── AGRUPAMENTO VISUAL (apenas renderização — nenhuma lógica alterada) ──
   const listaPendentes   = [];
