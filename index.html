@@ -2536,10 +2536,8 @@ async function marcarLivroComoPago(idRegistro, dataManual, formaManual) {
     .eq('id', idRegistro)
     .single();
 
-  if (!erroEstado && registroAtual && registroAtual.pagou === true) {
-    toast('Pagamento já foi registrado', 'erro');
-    return;
-  }
+  if (erroEstado) { toast('Erro ao verificar pagamento.', 'erro'); return; }
+  if (registroAtual && registroAtual.pagou === true) { toast('Este livro já está marcado como pago.', 'erro'); return; }
   // ── FIM VALIDAÇÃO ──
 
   // 1. Verificar que o registro existe antes de atualizar
@@ -7458,9 +7456,6 @@ async function provasMarcarFez(alunoId, codigo, novoValor) {
 
 async function provasLancarNota(id) {
   var _aen = document.activeElement; if (_aen && _aen.tagName === 'BUTTON') _aen.classList.add('btn-loading');
-  var { data: r, error: erBusca } = await supabaseClient.from('provas_aluno').select('fez_prova').eq('id', id).single();
-  if (erBusca) { toast('Erro ao verificar status da prova.', 'erro'); return; }
-  if (!r || r.fez_prova !== true) { toast('Marque primeiro como "Prova feita" antes de lançar a nota.', 'erro'); return; }
   var notaStr = prompt('Digite a nota:');
   if (notaStr === null) return;
   var nota = parseFloat(notaStr.replace(',','.'));
