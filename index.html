@@ -2875,6 +2875,17 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
 async function desfazerEntregaLivro(alunoId, livroCodigo) {
   if (!confirm('Deseja desfazer a entrega deste livro?')) return;
 
+  // ── PROTEÇÃO DE ESTADO INVÁLIDO (apenas log) ──
+  try {
+    const { data: _regDef } = await supabaseClient
+      .from('aluno_livros').select('pagou, entregue')
+      .eq('aluno_id', alunoId).eq('livro_codigo', livroCodigo).single();
+    if (_regDef && _regDef.entregue === true && _regDef.pagou !== true) {
+      console.error('[ESTADO INVÁLIDO] entregue=true sem pagamento confirmado — alunoId:', alunoId, 'livro:', livroCodigo);
+    }
+  } catch(eChk) { /* verificação não crítica */ }
+  // ── FIM PROTEÇÃO ──
+
   const { error } = await supabaseClient
     .from('aluno_livros')
     .update({ entregue: false })
@@ -6648,6 +6659,19 @@ if(!D.aulas_log) { D.aulas_log={}; }
     }
 
     toast('Pagamento desmarcado com sucesso', 'ok');
+
+    // ── LOG DE REVERSÃO ──
+    try {
+      const codLog = 'p' + livroAtual;
+      await supabaseClient.from('logs_pagamentos').insert({
+        aluno_id: alunoId,
+        livro_codigo: codLog,
+        acao: 'pagamento_removido',
+        data_hora: new Date().toISOString()
+      });
+    } catch(eLog) { console.error('[LOG REVERSÃO] Erro ao registrar log:', eLog); }
+    // ── FIM LOG DE REVERSÃO ──
+
     if (typeof carregarExibirLivrosAdminPerfil === 'function') {
       await carregarExibirLivrosAdminPerfil(alunoId);
     }
