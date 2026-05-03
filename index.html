@@ -142,15 +142,387 @@ main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
   margin-left: auto;
 }
 
-/* ── LOGIN ── */
-#pg-login{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px 20px;background:#f4f6f8 !important}
-.login-box{width:100%;max-width:400px}
-.login-logo{text-align:center;margin-bottom:20px}
-.login-titulo{font-family:'Lora',serif;font-size:34px;font-weight:700;color:var(--dou);margin-bottom:6px;text-align:center;letter-spacing:1px;text-shadow:0 1px 4px rgba(0,0,0,.12)}
-.login-sub{font-size:13px;color:#8a8a8a;margin-top:6px;margin-bottom:32px;text-align:center}
-.login-card{background:#fff;border-radius:var(--rl);padding:28px 22px;box-shadow:var(--sh);border:1px solid var(--brd)}
-.login-divider{display:flex;align-items:center;gap:10px;margin:18px 0;color:var(--cin);font-size:13px}
-.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--brd)}
+/* ── LOGIN PREMIUM ── */
+
+/* Partículas de fundo decorativas */
+@keyframes floatParticle {
+  0%,100% { transform: translateY(0) rotate(0deg); opacity: 0.4; }
+  50% { transform: translateY(-30px) rotate(180deg); opacity: 0.8; }
+}
+@keyframes floatLogo {
+  0%,100% { transform: translateY(0) scale(1); filter: drop-shadow(0 8px 24px rgba(201,168,76,0.35)); }
+  50% { transform: translateY(-7px) scale(1.02); filter: drop-shadow(0 16px 32px rgba(201,168,76,0.55)); }
+}
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(18px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes shimmerBtn {
+  0%   { left:-100%; }
+  100% { left:100%; }
+}
+@keyframes glowPulse {
+  0%,100% { opacity:0.5; }
+  50%      { opacity:1; }
+}
+@keyframes rotateSlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+#pg-login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px 20px;
+  background: radial-gradient(ellipse at 15% 15%, #1e3a5c 0%, #0c1a2e 55%, #050d1a 100%) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Orbe de glow azul */
+#pg-login::before {
+  content: '';
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(59,130,246,0.18) 0%, transparent 70%);
+  top: -180px;
+  left: -150px;
+  filter: blur(40px);
+  animation: glowPulse 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Orbe dourado sutil */
+#pg-login::after {
+  content: '';
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
+  bottom: -100px;
+  right: -80px;
+  filter: blur(50px);
+  animation: glowPulse 7s ease-in-out infinite reverse;
+  pointer-events: none;
+}
+
+/* Linhas de grade sutil no fundo */
+#pg-login .login-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+/* Círculo decorativo superior direito */
+#pg-login .login-deco-ring {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: 50%;
+  top: -60px;
+  right: -80px;
+  pointer-events: none;
+}
+#pg-login .login-deco-ring::after {
+  content: '';
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border: 1px solid rgba(59,130,246,0.1);
+  border-radius: 50%;
+  top: 60px;
+  left: 60px;
+}
+
+.login-box {
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  z-index: 1;
+  animation: fadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both;
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.login-logo-img {
+  animation: floatLogo 4.5s ease-in-out infinite !important;
+  border-radius: 50% !important;
+  border: 2px solid rgba(201,168,76,0.4) !important;
+  box-shadow: 0 0 0 6px rgba(201,168,76,0.08), 0 12px 40px rgba(0,0,0,0.4) !important;
+}
+
+.login-titulo {
+  font-family: 'Lora', serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: #c9a84c;
+  margin-bottom: 4px;
+  text-align: center;
+  letter-spacing: 3px;
+  text-shadow: 0 0 40px rgba(201,168,76,0.5), 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.login-sub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.45);
+  margin-top: 4px;
+  margin-bottom: 28px;
+  text-align: center;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.login-card {
+  background: rgba(255,255,255,0.07);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 20px;
+  padding: 32px 26px;
+  box-shadow:
+    0 2px 0 rgba(255,255,255,0.08) inset,
+    0 24px 64px rgba(0,0,0,0.4),
+    0 0 0 1px rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.12);
+  animation: fadeUp 0.7s 0.1s cubic-bezier(0.22,1,0.36,1) both;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Brilho sutil no topo do card */
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), rgba(201,168,76,0.3), rgba(255,255,255,0.25), transparent);
+}
+
+/* Override: labels brancos no login */
+#pg-login .campo label {
+  color: rgba(255,255,255,0.75) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.3px;
+  margin-bottom: 7px !important;
+}
+
+/* Override: inputs premium dark no login */
+#pg-login .inp {
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  color: #fff !important;
+  border-radius: 12px !important;
+  padding: 14px 16px !important;
+  font-size: 15px !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease !important;
+}
+#pg-login .inp::placeholder {
+  color: rgba(255,255,255,0.3) !important;
+}
+#pg-login .inp:focus {
+  outline: none !important;
+  background: rgba(255,255,255,0.12) !important;
+  border-color: rgba(201,168,76,0.7) !important;
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.18), 0 0 20px rgba(201,168,76,0.1) !important;
+}
+
+/* Botão entrar premium */
+#pg-login .btn.bp {
+  background: linear-gradient(135deg, #c9a84c 0%, #e8c96e 50%, #c9a84c 100%) !important;
+  background-size: 200% 100% !important;
+  color: #0c1a2e !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  border-radius: 13px !important;
+  padding: 16px !important;
+  border: none !important;
+  box-shadow: 0 4px 20px rgba(201,168,76,0.35), 0 1px 0 rgba(255,255,255,0.2) inset !important;
+  letter-spacing: 0.4px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease !important;
+}
+#pg-login .btn.bp::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.4), transparent);
+  transition: 0.6s;
+}
+#pg-login .btn.bp:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 28px rgba(201,168,76,0.5), 0 1px 0 rgba(255,255,255,0.2) inset !important;
+  filter: brightness(1.06) !important;
+}
+#pg-login .btn.bp:hover::after {
+  left: 100%;
+  animation: shimmerBtn 0.6s ease;
+}
+#pg-login .btn.bp:active {
+  transform: scale(0.98) translateY(0) !important;
+  box-shadow: 0 3px 12px rgba(201,168,76,0.3) !important;
+}
+
+/* Botão Admin secundário */
+#pg-login button[onclick="abrirLoginAdmin()"] {
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  border-radius: 13px !important;
+  width: 100% !important;
+  padding: 13px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  font-family: 'Inter', sans-serif !important;
+  cursor: pointer !important;
+  color: rgba(255,255,255,0.55) !important;
+  transition: all 0.2s ease !important;
+  letter-spacing: 0.2px !important;
+}
+#pg-login button[onclick="abrirLoginAdmin()"]:hover {
+  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.28) !important;
+  color: rgba(255,255,255,0.85) !important;
+  transform: translateY(-1px) !important;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0;
+  color: rgba(255,255,255,0.25);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+.login-divider::before,.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+}
+
+/* ── LOGIN ADMIN — mesmas melhorias ── */
+#pg-login-admin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px 20px;
+  background: radial-gradient(ellipse at 85% 15%, #2d1a4a 0%, #0c0a1e 55%, #050310 100%) !important;
+  position: relative;
+  overflow: hidden;
+}
+#pg-login-admin::before {
+  content: '';
+  position: absolute;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%);
+  top: -100px; right: -100px;
+  filter: blur(50px);
+  animation: glowPulse 6s ease-in-out infinite;
+  pointer-events: none;
+}
+#pg-login-admin::after {
+  content: '';
+  position: absolute;
+  width: 350px; height: 350px;
+  background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%);
+  bottom: -80px; left: -60px;
+  filter: blur(40px);
+  pointer-events: none;
+}
+#pg-login-admin .login-box {
+  position: relative;
+  z-index: 1;
+  animation: fadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both;
+}
+#pg-login-admin .login-titulo {
+  color: #a78bfa;
+  text-shadow: 0 0 40px rgba(167,139,250,0.5);
+  letter-spacing: 2px;
+}
+#pg-login-admin .login-sub {
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+#pg-login-admin .login-card {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(167,139,250,0.18);
+  border-radius: 20px;
+  padding: 32px 26px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(167,139,250,0.1);
+  animation: fadeUp 0.7s 0.1s cubic-bezier(0.22,1,0.36,1) both;
+  position: relative;
+  overflow: hidden;
+}
+#pg-login-admin .login-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(167,139,250,0.4), transparent);
+}
+#pg-login-admin .campo label {
+  color: rgba(255,255,255,0.7) !important;
+  font-size: 13px !important;
+}
+#pg-login-admin .inp {
+  background: rgba(255,255,255,0.07) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  color: #fff !important;
+  border-radius: 12px !important;
+}
+#pg-login-admin .inp::placeholder { color: rgba(255,255,255,0.28) !important; }
+#pg-login-admin .inp:focus {
+  border-color: rgba(167,139,250,0.7) !important;
+  box-shadow: 0 0 0 3px rgba(167,139,250,0.2) !important;
+  outline: none !important;
+}
+#pg-login-admin .btn.bp {
+  background: linear-gradient(135deg, #6d28d9, #8b5cf6, #a78bfa) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  border-radius: 13px !important;
+  border: none !important;
+  box-shadow: 0 4px 20px rgba(109,40,217,0.4) !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+#pg-login-admin .btn.bp:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 28px rgba(139,92,246,0.5) !important;
+}
+#pg-login-admin .btn.bs {
+  background: rgba(255,255,255,0.07) !important;
+  color: rgba(255,255,255,0.6) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  border-radius: 13px !important;
+  transition: all 0.2s !important;
+}
+#pg-login-admin .btn.bs:hover {
+  background: rgba(255,255,255,0.12) !important;
+  color: rgba(255,255,255,0.85) !important;
+}
 
 /* ── TIPOGRAFIA ── */
 .tit{font-family:'Lora',serif;font-size:23px;font-weight:700;color:var(--azul);margin-bottom:4px}
@@ -1377,12 +1749,16 @@ nav {
      TELA DE LOGIN
 ══════════════════════════════════════════ -->
 <div id="pg-login">
+  <!-- Elementos decorativos de fundo -->
+  <div class="login-grid-bg"></div>
+  <div class="login-deco-ring"></div>
+
   <div class="login-box">
     <div class="login-logo">
-      <img src="./logo.png" alt="IBICAMP" class="login-logo-img" style="display:block;margin:0 auto;width:110px;height:110px;box-shadow:0 8px 24px rgba(0,0,0,0.12);background:transparent">
+      <img src="./logo.png" alt="IBICAMP" class="login-logo-img" style="display:block;margin:0 auto;width:110px;height:110px;background:transparent">
     </div>
     <div class="login-titulo">IBICAMP</div>
-    <div class="login-sub">Núcleo 741 - A. D. Serra Dourada 3</div>
+    <div class="login-sub">Núcleo 741 · A. D. Serra Dourada 3</div>
 
     <div class="login-card">
       <!-- ════ Login via Supabase Auth (e-mail + senha) ════ -->
