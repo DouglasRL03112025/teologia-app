@@ -143,6 +143,55 @@ main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
   margin-left: auto;
 }
 
+/* PASSO 4: badges de previsão de risco futuro */
+.prev-badge {
+  margin-top: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  display: inline-block;
+  letter-spacing: .3px;
+}
+.prev-critico { background: #fee2e2; color: #b91c1c; }
+.prev-atencao { background: #fef3c7; color: #92400e; }
+
+/* PASSO 4: botão resolver */
+.btn-resolver {
+  margin-top: 7px;
+  padding: 5px 11px;
+  border: none;
+  border-radius: 8px;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: filter .15s, transform .1s;
+  display: block;
+}
+.btn-resolver:hover  { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-resolver:active { transform: scale(.96); }
+
+/* PASSO 6: insight inteligente no topo */
+.insight-dashboard {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  border-left: 3px solid #3b82f6;
+  transition: background .3s;
+}
+.insight-dashboard.critico {
+  background: #fef2f2;
+  border-left-color: #ef4444;
+  color: #7f1d1d;
+}
+
 /* ══ ANIMAÇÕES PREMIUM DASHBOARD ══ */
 
 /* PASSO 2: stagger nos cards */
@@ -4150,7 +4199,7 @@ async function renderDashAdmin(){
       }
       window._valoresDashboard[i] = valorNovo; /* PASSO 3: memoriza valor atual */
     });
-    /* ══ PASSO 5: ENTRADA SUAVE DOS ALERTAS ══ */
+    /* ══ ENTRADA SUAVE DOS ALERTAS ══ */
     document.querySelectorAll('#a-alertas .al, #a-alertas-avancados [style*="border-left"]')
       .forEach(function(el, i) {
         el.classList.remove('alerta-item');
@@ -4159,6 +4208,43 @@ async function renderDashAdmin(){
         el.style.animationDelay = (i * 0.05) + 's';
       });
     /* ══ FIM ALERTAS ══ */
+
+    /* ══ PASSO 5: DESTAQUE AUTOMÁTICO DOS ALUNOS CRÍTICOS ══ */
+    document.querySelectorAll('.ar').forEach(function(card) {
+      if (card.querySelector('.prev-critico')) {
+        card.style.boxShadow = '0 0 0 2px rgba(239,68,68,0.3), 0 4px 12px rgba(239,68,68,0.1)';
+      }
+    });
+    /* ══ FIM DESTAQUE ══ */
+
+    /* ══ PASSO 6: INSIGHT INTELIGENTE NO TOPO DO DASHBOARD ══ */
+    (function() {
+      var el = document.getElementById('insight-dashboard');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'insight-dashboard';
+        el.className = 'insight-dashboard';
+        var ancora = document.getElementById('a-data');
+        if (ancora && ancora.parentNode) {
+          ancora.parentNode.insertBefore(el, ancora.nextSibling);
+        }
+      }
+      /* coleta dados de previsão dos cards já renderizados */
+      var criticos = document.querySelectorAll('.prev-critico').length;
+      var atencao  = document.querySelectorAll('.prev-atencao').length;
+      var txt, isCritico = false;
+      if (criticos > 0) {
+        txt = '⚠ ' + criticos + ' aluno' + (criticos > 1 ? 's precisam' : ' precisa') + ' de atenção imediata';
+        isCritico = true;
+      } else if (atencao > 0) {
+        txt = '⏳ ' + atencao + ' aluno' + (atencao > 1 ? 's merecem' : ' merece') + ' acompanhamento';
+      } else {
+        txt = '✅ Tudo sob controle hoje';
+      }
+      el.textContent = txt;
+      el.classList.toggle('critico', isCritico);
+    })();
+    /* ══ FIM INSIGHT ══ */
   }, 0);
   /* ══ FIM ANIMAÇÃO STAGGER ══ */
 }
@@ -4435,6 +4521,18 @@ async function renderAlunosAdmin(){
       ? `<div class="acao-recomendada${risco === 'alto' ? ' acao-urgente' : ''}">⚡ ${acaoTexto}</div>`
       : '';
     // ── FIM AÇÃO RECOMENDADA ──
+    // ── PASSO 2+3: PREVISÃO DE RISCO FUTURO + BOTÃO RESOLVER (camada extra) ──
+    var _dadosPrevisao = _extrairDadosScore(a, _dadosRisco);
+    var prev = preverRiscoFuturo(_dadosPrevisao);
+    var prevHTML = prev === 'critico'
+      ? '<div class="prev-badge prev-critico">⚠ Vai atrasar</div>'
+      : prev === 'atencao'
+      ? '<div class="prev-badge prev-atencao">⏳ Atenção</div>'
+      : '';
+    var acaoBtn = prev !== 'ok'
+      ? '<button class="btn-resolver" onclick="event.stopPropagation();verPerfilAdmin(\'' + a.id + '\')">Resolver</button>'
+      : '';
+    // ── FIM PREVISÃO ──
     return `<div class="ar ${riscoBorda}" data-aluno-id="${a.id}" data-entregue="${jaEntregue}" data-risco="${risco}" onclick="verPerfilAdmin('${a.id}')">
       <div class="av">${ini(a.nome)}</div>
       <div class="ai">
@@ -4445,6 +4543,8 @@ async function renderAlunosAdmin(){
           ${perc !== null ? `<span>${perc}% freq.</span>` : ''}
         </div>
         ${acaoHTML}
+        ${prevHTML}
+        ${acaoBtn}
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
         <span class="bdg ${bdgClass}">${bdgLabel}</span>
@@ -8943,6 +9043,38 @@ function animarNumero(el, novoValor) {
   requestAnimationFrame(frame);
 }
 /* FIM animarNumero */
+
+/* PASSO 1: PREVISÃO DE RISCO FUTURO — função nova, não substitui calcularRiscoAluno */
+function preverRiscoFuturo(d) {
+  if (!d) return 'ok';
+  var score = 0;
+  if (!d.pagou)                                           score += 2;
+  if (d.freq < 70)                                        score += 2;
+  if ((d.faltas || d.faltasConsecutivas || 0) >= 2)      score += 2;
+  if (!d.provaFeita && !d.fezProva)                       score += 1;
+  if (d.nota !== null && d.nota !== undefined && d.nota < 5) score += 2;
+  if (score >= 6) return 'critico';
+  if (score >= 3) return 'atencao';
+  return 'ok';
+}
+
+/* PASSO 6: INSIGHT INTELIGENTE — gera texto resumido baseado nos dados */
+function gerarInsightDashboard(alunos) {
+  if (!alunos || !alunos.length) return 'Tudo sob controle hoje';
+  var criticos = alunos.filter(function(a) {
+    return preverRiscoFuturo(a) === 'critico';
+  }).length;
+  if (criticos > 0) {
+    return '⚠ ' + criticos + ' aluno' + (criticos > 1 ? 's precisam' : ' precisa') + ' de atenção imediata';
+  }
+  var atencao = alunos.filter(function(a) {
+    return preverRiscoFuturo(a) === 'atencao';
+  }).length;
+  if (atencao > 0) {
+    return '⏳ ' + atencao + ' aluno' + (atencao > 1 ? 's merecem' : ' merece') + ' acompanhamento';
+  }
+  return '✅ Tudo sob controle hoje';
+}
 /* 1. PARTÍCULAS SUAVES — com proteção anti-duplicação e controle de animação */
 window.animandoParticulas = true; /* PASSO 2: flag global para parar o loop */
 
