@@ -1170,6 +1170,177 @@ button:active, .nb:active, .tab:active {
   color: #64748b;
   font-size: 13px;
 }
+
+/* ══════════════════════════════════════════════════════
+   ✨ NÍVEL SAAS PREMIUM — ADIÇÃO DESACOPLADA
+   Apenas CSS/microinterações. Zero impacto em lógica.
+══════════════════════════════════════════════════════ */
+
+/* 1. EFEITO DE LUZ DINÂMICA NOS CARDS */
+.pag-card, .ar, .prova-card, .acao-card {
+  position: relative;
+  overflow: hidden;
+}
+.pag-card::before,
+.ar::before,
+.prova-card::before,
+.acao-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.35),
+    transparent
+  );
+  transform: skewX(-20deg);
+  pointer-events: none;
+  z-index: 1;
+}
+.pag-card:hover::before,
+.ar:hover::before,
+.prova-card:hover::before,
+.acao-card:hover::before {
+  animation: brilhoPassando 1.2s ease;
+}
+@keyframes brilhoPassando {
+  0%   { left: -120%; }
+  100% { left: 140%; }
+}
+
+/* 2. PROFUNDIDADE E CAMADAS */
+.pag-card, .ar, .acao-card {
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.05),
+    0 8px 20px rgba(0,0,0,0.06);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.pag-card:hover, .ar:hover, .acao-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 10px 25px rgba(0,0,0,0.12);
+}
+
+/* 3. MICROINTERAÇÃO DE CLIQUE GLOBAL */
+button, .tab, .nb {
+  transition: transform 0.08s ease;
+}
+button:active, .tab:active, .nb:active {
+  transform: scale(0.95);
+}
+
+/* 4. BOTÕES COM VIDA (HOVER GRADIENTE) */
+button {
+  position: relative;
+  overflow: hidden;
+}
+button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.25),
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+button:hover::after {
+  opacity: 1;
+}
+
+/* 5. TRANSIÇÕES SUAVES DE TELA */
+.tela.on {
+  animation: fadeUp 0.35s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 6. LOADING MAIS PREMIUM */
+.btn-loading {
+  opacity: 0.7;
+  cursor: wait;
+}
+.btn-loading::after {
+  border-top-color: #fff !important;
+  opacity: 0.9;
+}
+
+/* 7. HOVER INTELIGENTE NOS CARDS CRÍTICOS */
+.risco-alto:hover,
+.ar.risco-borda-alto:hover {
+  box-shadow:
+    0 0 0 2px rgba(239,68,68,0.3),
+    0 10px 25px rgba(239,68,68,0.25) !important;
+}
+
+/* 8. SCROLL MAIS SUAVE */
+html {
+  scroll-behavior: smooth;
+}
+
+/* EXTRAS PREMIUM */
+/* Foco nos inputs com anel dourado suave */
+.inp:focus, .busca:focus {
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.18), 0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* Cards .card com hover mais expressivo */
+.card:hover {
+  box-shadow: 0 12px 28px rgba(0,0,0,0.11);
+}
+
+/* Métricas admin com micro elevação no hover */
+.mc:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.11);
+}
+
+/* Botão de ação principal com pulso sutil */
+.ac.dest {
+  animation: destPulse 4s ease-in-out infinite;
+}
+@keyframes destPulse {
+  0%, 100% { box-shadow: 0 6px 18px rgba(30,58,95,.30); }
+  50%       { box-shadow: 0 8px 24px rgba(30,58,95,.45); }
+}
+
+/* Badge de risco alto com micro-pulsação */
+.risco-badge.risco-alto {
+  animation: riscoPulse 2.5s ease-in-out infinite;
+}
+@keyframes riscoPulse {
+  0%, 100% { box-shadow: none; }
+  50%       { box-shadow: 0 0 0 3px rgba(239,68,68,0.18); }
+}
+
+/* Cards de ação prioritária com borda animada no hover */
+.acao-card:hover {
+  border-color: #fb923c;
+}
+
+/* Header sticky com micro-sombra ao rolar */
+header {
+  box-shadow: 0 2px 16px rgba(0,0,0,.18), 0 1px 0 rgba(201,168,76,.12);
+}
+
+/* Nav bottom com borda superior dourada suave */
+nav {
+  box-shadow: 0 -3px 16px rgba(0,0,0,.09), 0 -1px 0 rgba(201,168,76,.08);
+}
+
+/* ══ FIM NÍVEL SAAS PREMIUM ══ */
 </style>
 </head>
 <body>
