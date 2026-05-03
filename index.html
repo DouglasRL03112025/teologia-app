@@ -6711,7 +6711,7 @@ async function renderAlunoInicio() {
   } else if (regProva.fez_prova === true && (regProva.nota === null || regProva.nota === undefined)) {
     statusProva = 'Aguardando correção';
   } else if (regProva.nota !== null && regProva.nota !== undefined && regProva.devolvida !== true) {
-    statusProva = 'Corrigida — nota ' + Number(regProva.nota).toFixed(1);
+    statusProva = 'Aguardando devolução da prova — nota ' + Number(regProva.nota).toFixed(1);
   } else if (regProva.devolvida === true) {
     statusProva = 'Devolvida — nota ' + Number(regProva.nota).toFixed(1);
   } else {
@@ -6922,6 +6922,29 @@ async function renderAlunoInicio() {
     + '</div>';
 }
 /* ════ FIM DASHBOARD DO ALUNO ════ */
+
+/* ── POLLING AUTOMÁTICO — atualiza dashboard do aluno a cada 5s ──
+   Regras: só roda se aluno logado, sem duplicar interval          */
+(function() {
+  function _iniciarPollAluno() {
+    if (window._pollAlunoAtivo) return; /* anti-duplicação */
+    if (typeof renderAlunoInicio !== 'function') return;
+    window._pollAlunoAtivo = setInterval(function() {
+      /* só executa se há usuário logado e a tela do aluno está ativa */
+      if (!window.usuAtual || !window.usuAtual.id) return;
+      var telaAtiva = document.getElementById('al-inicio-dashboard');
+      if (!telaAtiva) return;
+      renderAlunoInicio();
+    }, 5000);
+  }
+  /* aguarda DOMContentLoaded para garantir que as funções existam */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _iniciarPollAluno);
+  } else {
+    _iniciarPollAluno();
+  }
+})();
+/* ── FIM POLLING ── */
 
 async function renderAlunoCadastro(){
   const a=usuAtual;
@@ -9026,6 +9049,7 @@ document.addEventListener('click', function(e){
 });
 </script>
 
+/* ══ EFEITOS CINEMATOGRÁFICOS ══ */
 <script>
 /* PASSO 1: COUNT-UP — anima número do valor atual até o novo valor */
 function animarNumero(el, novoValor) {
