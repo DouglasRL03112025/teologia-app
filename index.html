@@ -142,6 +142,71 @@ main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
   margin-left: auto;
 }
 
+/* ══ PARTÍCULAS ══ */
+#particles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ══ LUZ DO MOUSE ══ */
+.mouse-light {
+  position: fixed;
+  width: 300px;
+  height: 300px;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 60%);
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  transition: left 0.05s, top 0.05s;
+}
+
+/* ══ LOADING CINEMATOGRÁFICO ══ */
+#loading-screen {
+  position: fixed;
+  inset: 0;
+  background: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .4s ease;
+  z-index: 9999;
+}
+#loading-screen.on {
+  opacity: 1;
+  pointer-events: all;
+}
+.loader-cin {
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(255,255,255,0.2);
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin .9s linear infinite;
+}
+
+/* ══ FADE OUT PARA DASHBOARD ══ */
+@keyframes fadeOutApp {
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+.fade-out-app {
+  animation: fadeOutApp .4s ease forwards;
+}
+
+/* ══ LOGIN z-index acima do canvas ══ */
+#pg-login { z-index: 2; }
+#pg-login-admin { z-index: 2; }
+
 /* ── LOGIN PREMIUM ── */
 
 /* Partículas de fundo decorativas */
@@ -1748,6 +1813,16 @@ nav {
 <!-- ══════════════════════════════════════════
      TELA DE LOGIN
 ══════════════════════════════════════════ -->
+<!-- ══ PARTÍCULAS CINEMATOGRÁFICAS ══ -->
+<canvas id="particles"></canvas>
+<!-- ══ LUZ DO MOUSE ══ -->
+<div class="mouse-light"></div>
+<!-- ══ LOADING SCREEN ══ -->
+<div id="loading-screen">
+  <div class="loader-cin"></div>
+  <p style="color:rgba(255,255,255,0.7);font-family:'Inter',sans-serif;font-size:14px;margin-top:14px;letter-spacing:0.5px">Entrando...</p>
+</div>
+
 <div id="pg-login">
   <!-- Elementos decorativos de fundo -->
   <div class="login-grid-bg"></div>
@@ -8749,6 +8824,137 @@ document.addEventListener('click', function(e){
 });
 </script>
 
-<div id="toast-container"></div>
+<!-- ══ EFEITOS CINEMATOGRÁFICOS ══ -->
+<script>
+/* 1. PARTÍCULAS SUAVES */
+(function(){
+  var canvas = document.getElementById('particles');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var particles = [];
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  for (var i = 0; i < 40; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 2 + 1,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4
+    });
+  }
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(function(p) {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x > canvas.width) p.x = 0;
+      if (p.x < 0) p.x = canvas.width;
+      if (p.y > canvas.height) p.y = 0;
+      if (p.y < 0) p.y = canvas.height;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.08)';
+      ctx.fill();
+    });
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+/* 2. LUZ SEGUINDO O MOUSE */
+(function(){
+  var light = document.querySelector('.mouse-light');
+  if (!light) return;
+  window.addEventListener('mousemove', function(e) {
+    light.style.left = e.clientX + 'px';
+    light.style.top = e.clientY + 'px';
+  });
+})();
+
+/* 3. HELPERS: mostrarLoading + transição para dashboard */
+window._mostrarLoadingLogin = function() {
+  var ls = document.getElementById('loading-screen');
+  if (ls) ls.classList.add('on');
+};
+window._ocultarLoadingLogin = function() {
+  var ls = document.getElementById('loading-screen');
+  if (ls) ls.classList.remove('on');
+};
+
+/* Wrapper: intercepta loginAluno para mostrar loading + fade */
+(function(){
+  var _loginOriginal = window.loginAluno;
+  if (typeof _loginOriginal !== 'function') {
+    // Aguarda o script principal carregar
+    document.addEventListener('DOMContentLoaded', function() {
+      _patchLoginAluno();
+    });
+  } else {
+    _patchLoginAluno();
+  }
+  function _patchLoginAluno() {
+    if (typeof window.loginAluno !== 'function') return;
+    var orig = window.loginAluno;
+    window.loginAluno = async function() {
+      window._mostrarLoadingLogin();
+      try {
+        await orig.apply(this, arguments);
+      } catch(e) {
+        window._ocultarLoadingLogin();
+        throw e;
+      }
+      window._ocultarLoadingLogin();
+    };
+  }
+})();
+
+/* Wrapper: intercepta loginAdmin para mostrar loading + fade */
+(function(){
+  function _patchLoginAdmin() {
+    if (typeof window.loginAdmin !== 'function') return;
+    var orig = window.loginAdmin;
+    window.loginAdmin = async function() {
+      window._mostrarLoadingLogin();
+      try {
+        await orig.apply(this, arguments);
+      } catch(e) {
+        window._ocultarLoadingLogin();
+        throw e;
+      }
+      window._ocultarLoadingLogin();
+    };
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _patchLoginAdmin);
+  } else {
+    setTimeout(_patchLoginAdmin, 0);
+  }
+})();
+
+/* 4. FADE OUT DO LOGIN AO ENTRAR NO APP */
+(function(){
+  function _patchCarregarAluno() {
+    if (typeof window.carregarAlunoLogado !== 'function') return;
+    var orig = window.carregarAlunoLogado;
+    window.carregarAlunoLogado = async function() {
+      document.body.classList.add('fade-out-app');
+      await new Promise(function(r){ setTimeout(r, 400); });
+      document.body.classList.remove('fade-out-app');
+      await orig.apply(this, arguments);
+    };
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _patchCarregarAluno);
+  } else {
+    setTimeout(_patchCarregarAluno, 0);
+  }
+})();
+</script>
+
 </body>
 </html>
