@@ -2547,6 +2547,7 @@ async function carregarExibirProvasAdminPerfil(alunoId) {
 }
 
 async function toggleFezProva(id, valor) {
+  if (!id) { toast('Dados inválidos.', 'erro'); return; }
   const { error } = await supabaseClient
     .from('provas_aluno')
     .update({ fez_prova: valor, corrigida: valor })
@@ -2556,6 +2557,7 @@ async function toggleFezProva(id, valor) {
 }
 
 async function toggleDevolvida(id, valor) {
+  if (!id) { toast('Dados inválidos.', 'erro'); return; }
   const { error } = await supabaseClient
     .from('provas_aluno')
     .update({ devolvida: valor, corrigida: true })
@@ -2565,7 +2567,9 @@ async function toggleDevolvida(id, valor) {
 }
 
 async function atualizarNota(id, valor) {
+  if (!id) { toast('Dados inválidos.', 'erro'); return; }
   const nota = valor !== '' && valor !== null && valor !== undefined ? parseFloat(valor) : null;
+  if (nota !== null && (isNaN(nota) || nota < 0 || nota > 10)) { toast('Nota inválida. Use um valor entre 0 e 10.', 'erro'); return; }
   const { error } = await supabaseClient
     .from('provas_aluno')
     .update({ nota: nota, corrigida: true })
@@ -6765,6 +6769,8 @@ if(!D.aulas_log) { D.aulas_log={}; }
   }
 
   async function salvarPresencaSupabase(alunoId, data, presente) {
+    if (!alunoId || !data) { console.error('[PRESENÇA] alunoId ou data inválidos:', alunoId, data); return; }
+    if (presente === null || presente === undefined) { console.error('[PRESENÇA] valor presente inválido'); return; }
     const { error } = await supabaseClient.from('presenca').insert({
       aluno_id: alunoId,
       data: data,
