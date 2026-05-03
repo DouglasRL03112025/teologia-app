@@ -6792,45 +6792,130 @@ async function renderAlunoInicio() {
     return '#fcd34d';
   }
 
-  /* ── 7. HTML DO DASHBOARD ────────────────────────── */
+  /* ── 7. HTML DO DASHBOARD (premium) ─────────────────────────────
+     Apenas adiciona comportamento visual — nenhuma lógica alterada  */
+
+  /* ── 7a. Hero status inteligente ─────────────────────────────── */
+  var provaPendente = !regProva || regProva.fez_prova !== true;
+  var pagamentoOk   = pagou;
+
+  function gerarStatusAluno(d) {
+    if (d.provaPendente && !d.pagamentoOk) return { texto: 'Atenção: pagamento e prova pendentes', cor: '#dc2626', bg: '#fef2f2', ic: '⚠️' };
+    if (d.provaPendente)  return { texto: 'Você tem uma prova pendente',  cor: '#b45309', bg: '#fffbeb', ic: '📝' };
+    if (!d.pagamentoOk)   return { texto: 'Pagamento pendente',           cor: '#dc2626', bg: '#fef2f2', ic: '💰' };
+    return { texto: 'Você está indo muito bem!', cor: '#16a34a', bg: '#f0fdf4', ic: '🌟' };
+  }
+
+  function gerarAcaoAluno(d) {
+    if (d.provaPendente && !d.pagamentoOk) return { label: 'Regularizar situação', ic: '🔴' };
+    if (d.provaPendente)  return { label: 'Agendar prova',           ic: '📋' };
+    if (!d.pagamentoOk)   return { label: 'Regularizar pagamento',   ic: '💳' };
+    return { label: 'Continuar estudos', ic: '📚' };
+  }
+
+  var heroStatus = gerarStatusAluno({ provaPendente: provaPendente, pagamentoOk: pagamentoOk });
+  var acaoPrincipal = gerarAcaoAluno({ provaPendente: provaPendente, pagamentoOk: pagamentoOk });
+
+  /* ── 7b. Prova reativa — nota grande com badge ────────────────── */
+  var provaDestaque = regProva
+    && regProva.fez_prova === true
+    && regProva.nota !== null && regProva.nota !== undefined
+    && regProva.devolvida !== true;
+
+  var cardProvaHtml;
+  if (provaDestaque) {
+    cardProvaHtml =
+      '<div class="card-dashboard prova-destaque" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #3b82f6;border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 4px 16px rgba(59,130,246,.22);transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer;position:relative;overflow:hidden;animation:glowSoft 4s ease-in-out infinite;animation-delay:2.6s"'
+        + ' onmouseover="this.style.transform=\'scale(1.04)\';this.style.boxShadow=\'0 10px 28px rgba(59,130,246,.32)\'"'
+        + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'0 4px 16px rgba(59,130,246,.22)\'"'
+        + ' onmousedown="this.style.transform=\'scale(0.96)\'"'
+        + ' onmouseup="this.style.transform=\'scale(1)\'">'
+        + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#1e40af;opacity:.7;margin-bottom:4px">Avaliação</div>'
+        + '<div style="font-size:36px;font-weight:900;color:#1e40af;line-height:1;margin-bottom:6px;font-family:\'Lora\',serif">' + Number(regProva.nota).toFixed(1) + '</div>'
+        + '<div style="display:inline-block;background:#1e40af;color:#fff;border-radius:99px;padding:2px 10px;font-size:9px;font-weight:700;letter-spacing:.4px;line-height:1.6">Aguardando devolução</div>'
+        + '<div style="position:absolute;top:-10px;right:-10px;width:50px;height:50px;border-radius:50%;background:rgba(59,130,246,.08)"></div>'
+      + '</div>';
+  } else {
+    cardProvaHtml =
+      '<div class="card-dashboard" style="background:' + bgProva(regProva) + ';border:1.5px solid ' + brdProva(regProva) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer;animation:glowSoft 4s ease-in-out infinite;animation-delay:2.6s"'
+        + ' onmouseover="this.style.transform=\'scale(1.02)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,.15)\'"'
+        + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.08)\'"'
+        + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
+        + ' onmouseup="this.style.transform=\'scale(1)\'">'
+        + '<div style="font-size:28px;margin-bottom:8px;line-height:1;transition:transform .2s cubic-bezier(.4,0,.2,1)" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'">📝</div>'
+        + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--cin);opacity:.7;margin-bottom:5px">Avaliação</div>'
+        + '<div style="font-size:12px;font-weight:700;color:' + corProva(regProva) + ';line-height:1.3">' + statusProva + '</div>'
+      + '</div>';
+  }
+
+  /* ── 7c. Barra de progresso ───────────────────────────────────── */
+  var totalLivros  = 24;
+  var livroNum     = livroAtual ? Number(livroAtual) : 0;
+  var progresso    = livroNum ? Math.min(Math.round((livroNum / totalLivros) * 100), 100) : 0;
+  var progressoHtml =
+    '<div style="margin-bottom:24px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.08s">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+        + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7">Progresso no curso</div>'
+        + '<div style="font-size:11px;font-weight:700;color:var(--azul)">' + livroNum + ' / ' + totalLivros + ' livros</div>'
+      + '</div>'
+      + '<div style="height:8px;background:#e5e7eb;border-radius:99px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.08)">'
+        + '<div style="height:100%;width:' + progresso + '%;background:linear-gradient(90deg,#1a3a5c,#3b82f6);border-radius:99px;transition:width .8s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden">'
+          + '<div style="position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent);animation:shineAula 2.5s ease-in-out infinite"></div>'
+        + '</div>'
+      + '</div>'
+      + '<div style="font-size:10px;color:var(--cin);opacity:.55;margin-top:5px;text-align:right">' + progresso + '% concluído</div>'
+    + '</div>';
+
+  /* ── 7d. Alertas animados ─────────────────────────────────────── */
   var alertasHtml = alertas.length
-    ? alertas.map(function(a){
-        return '<div style="display:flex;align-items:center;gap:10px;background:#fff8e1;border:1.5px solid #f59e0b;border-radius:16px;padding:12px 16px;margin-bottom:10px;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 6px rgba(0,0,0,.06)"'
-          + ' onmouseover="this.style.background=\'#fef3c7\';this.style.borderColor=\'#d97706\';this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 6px 16px rgba(245,158,11,.18)\'"'
-          + ' onmouseout="this.style.background=\'#fff8e1\';this.style.borderColor=\'#f59e0b\';this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 2px 6px rgba(0,0,0,.06)\'">'
-          + '<span style="font-size:18px;flex-shrink:0;transition:transform .2s cubic-bezier(.4,0,.2,1)" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'">' + a.ic + '</span>'
+    ? alertas.map(function(a, i){
+        return '<div class="alerta-item" style="display:flex;align-items:center;gap:10px;background:#fff8e1;border:1.5px solid #f59e0b;border-radius:16px;padding:12px 16px;margin-bottom:10px;cursor:pointer;transition:all .22s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 6px rgba(0,0,0,.06);opacity:0;animation:_fadeUp .4s ease forwards;animation-delay:' + (0.25 + i * 0.07) + 's"'
+          + ' onmouseover="this.style.background=\'#fef3c7\';this.style.borderColor=\'#d97706\';this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 20px rgba(245,158,11,.22)\'"'
+          + ' onmouseout="this.style.background=\'#fff8e1\';this.style.borderColor=\'#f59e0b\';this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 2px 6px rgba(0,0,0,.06)\'"'
+          + ' onmousedown="this.style.transform=\'scale(0.96)\'"'
+          + ' onmouseup="this.style.transform=\'translateY(-3px)\'">'
+          + '<span style="font-size:18px;flex-shrink:0;transition:transform .2s cubic-bezier(.4,0,.2,1)" onmouseover="this.style.transform=\'scale(1.15)\'" onmouseout="this.style.transform=\'scale(1)\'">' + a.ic + '</span>'
           + '<span style="font-size:13px;font-weight:600;color:#78350f;line-height:1.4">' + a.msg + '</span>'
           + '</div>';
       }).join('')
-    : '<div style="display:flex;align-items:center;gap:10px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:16px;padding:12px 16px;transition:all .2s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 6px rgba(0,0,0,.06)"'
-        + ' onmouseover="this.style.background=\'#dcfce7\';this.style.borderColor=\'#4ade80\'"'
-        + ' onmouseout="this.style.background=\'#f0fdf4\';this.style.borderColor=\'#86efac\'">'
+    : '<div class="alerta-item" style="display:flex;align-items:center;gap:10px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:16px;padding:12px 16px;transition:all .22s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 6px rgba(0,0,0,.06);opacity:0;animation:_fadeUp .4s ease forwards;animation-delay:.25s"'
+        + ' onmouseover="this.style.background=\'#dcfce7\';this.style.borderColor=\'#4ade80\';this.style.transform=\'translateY(-2px)\'"'
+        + ' onmouseout="this.style.background=\'#f0fdf4\';this.style.borderColor=\'#86efac\';this.style.transform=\'translateY(0)\'">'
         + '<span style="font-size:18px">✅</span>'
         + '<span style="font-size:13px;font-weight:600;color:#166534">Tudo em ordem por aqui!</span>'
       + '</div>';
 
   el.innerHTML =
 
-    /* ── keyframes inline (todos os efeitos visuais) ── */
+    /* ── keyframes inline ── */
     '<style>'
       + '@keyframes _fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}'
+      + '@keyframes _acaoPulse{0%,100%{box-shadow:0 4px 14px rgba(26,58,92,.18)}50%{box-shadow:0 8px 28px rgba(26,58,92,.32)}}'
     + '</style>'
 
-    /* ══ CONTEÚDO REAL — exibido imediatamente, animado via CSS ══ */
     + '<div>'
 
-      /* ── Cabeçalho ── delay 0s ── */
-      + '<div style="margin-bottom:24px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:0s;transition:all .2s cubic-bezier(.4,0,.2,1)">'
+      /* ── Cabeçalho ── */
+      + '<div style="margin-bottom:20px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:0s">'
         + '<div style="font-family:\'Lora\',serif;font-size:21px;font-weight:700;color:var(--azul);letter-spacing:-.3px;line-height:1.2">Meu Painel</div>'
         + '<div style="font-size:13px;color:var(--cin);margin-top:4px;opacity:.6;letter-spacing:.3px">Acompanhe sua situação no curso</div>'
       + '</div>'
 
-      /* ── Hero: Livro atual ── delay .05s ── */
-      + '<div style="background:linear-gradient(135deg,#1a3a5c 0%,#0f2540 100%);border-radius:16px;padding:24px 22px 22px;margin-bottom:24px;box-shadow:0 6px 20px rgba(15,37,64,.28);position:relative;overflow:hidden;transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.05s"'
-        + ' onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 12px 32px rgba(15,37,64,.42)\';this.style.filter=\'brightness(1.06)\'"'
+      /* ── Hero status inteligente (NOVO) ── */
+      + '<div style="display:flex;align-items:center;gap:10px;background:' + heroStatus.bg + ';border-radius:14px;padding:12px 16px;margin-bottom:16px;opacity:0;transform:translateY(10px);animation:_fadeUp .35s ease forwards;animation-delay:.03s;transition:all .2s cubic-bezier(.4,0,.2,1)">'
+        + '<span style="font-size:20px;flex-shrink:0">' + heroStatus.ic + '</span>'
+        + '<div>'
+          + '<div style="font-size:13px;font-weight:700;color:' + heroStatus.cor + ';line-height:1.3">' + heroStatus.texto + '</div>'
+          + '<div style="font-size:11px;color:' + heroStatus.cor + ';opacity:.65;margin-top:2px">Situação geral do aluno</div>'
+        + '</div>'
+      + '</div>'
+
+      /* ── Hero: Livro atual ── */
+      + '<div style="background:linear-gradient(135deg,#1a3a5c 0%,#0f2540 100%);border-radius:16px;padding:24px 22px 22px;margin-bottom:16px;box-shadow:0 6px 20px rgba(15,37,64,.28);position:relative;overflow:hidden;transition:all .22s cubic-bezier(.4,0,.2,1);cursor:pointer;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.05s"'
+        + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 14px 36px rgba(15,37,64,.44)\';this.style.filter=\'brightness(1.07)\'"'
         + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 6px 20px rgba(15,37,64,.28)\';this.style.filter=\'brightness(1)\'"'
-        + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
-        + ' onmouseup="this.style.transform=\'translateY(-2px)\'">'
+        + ' onmousedown="this.style.transform=\'scale(0.96)\'"'
+        + ' onmouseup="this.style.transform=\'translateY(-3px)\'">'
         + '<div style="position:absolute;top:-18px;right:-18px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.04)"></div>'
         + '<div style="position:absolute;bottom:-28px;right:22px;width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.06)"></div>'
         + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.5);margin-bottom:10px">📖 Livro em estudo</div>'
@@ -6838,83 +6923,72 @@ async function renderAlunoInicio() {
         + '<div style="display:inline-block;background:#f4c542;border:none;border-radius:99px;padding:3px 12px;font-size:10px;font-weight:700;color:#5a3a00;letter-spacing:.4px">EM ANDAMENTO</div>'
       + '</div>'
 
-      /* ── Cards de status ── delay .1s ── */
-      + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.1s">'
+      /* ── Barra de progresso (NOVO) ── */
+      + progressoHtml
+
+      /* ── Card ação prioritária (NOVO) ── */
+      + '<div style="display:flex;align-items:center;gap:14px;background:var(--azul);border-radius:14px;padding:14px 18px;margin-bottom:20px;cursor:pointer;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards,_acaoPulse 3s ease-in-out 1s infinite;animation-delay:.11s,1s;transition:all .22s cubic-bezier(.4,0,.2,1)"'
+        + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.filter=\'brightness(1.1)\'"'
+        + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.filter=\'brightness(1)\'"'
+        + ' onmousedown="this.style.transform=\'scale(0.96)\'"'
+        + ' onmouseup="this.style.transform=\'translateY(-3px)\'">'
+        + '<span style="font-size:22px;flex-shrink:0">' + acaoPrincipal.ic + '</span>'
+        + '<div style="flex:1">'
+          + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.55);margin-bottom:3px">Próxima ação</div>'
+          + '<div style="font-size:15px;font-weight:700;color:#fff;line-height:1.3">' + acaoPrincipal.label + '</div>'
+        + '</div>'
+        + '<div style="color:rgba(255,255,255,.5);font-size:18px;flex-shrink:0">›</div>'
+      + '</div>'
+
+      /* ── Cards de status (3 colunas) ── */
+      + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.13s">'
 
         /* Pagamento */
-        + '<div class="card-dashboard" style="background:' + bgPag(pagou) + ';border:1.5px solid ' + brdPag(pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer;animation:glowSoft 4s ease-in-out infinite;animation-delay:0s"'
-          + ' onmouseover="this.style.transform=\'scale(1.02)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,.15)\'"'
+        + '<div class="card-dashboard" style="background:' + bgPag(pagou) + ';border:1.5px solid ' + brdPag(pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .22s cubic-bezier(.4,0,.2,1);cursor:pointer;animation:glowSoft 4s ease-in-out infinite;animation-delay:0s"'
+          + ' onmouseover="this.style.transform=\'translateY(-3px) scale(1.02)\';this.style.boxShadow=\'0 10px 24px rgba(0,0,0,.15)\'"'
           + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.08)\'"'
-          + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
+          + ' onmousedown="this.style.transform=\'scale(0.96)\'"'
           + ' onmouseup="this.style.transform=\'scale(1)\'">'
-          + '<div style="font-size:28px;margin-bottom:8px;line-height:1;transition:transform .2s cubic-bezier(.4,0,.2,1)" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'">💰</div>'
+          + '<div style="font-size:28px;margin-bottom:8px;line-height:1;transition:transform .2s cubic-bezier(.4,0,.2,1)" onmouseover="this.style.transform=\'scale(1.15)\'" onmouseout="this.style.transform=\'scale(1)\'">💰</div>'
           + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--cin);opacity:.7;margin-bottom:5px">Pagamento</div>'
           + '<div style="font-size:12px;font-weight:700;color:' + corPag(pagou) + ';line-height:1.3">' + statusPag + '</div>'
         + '</div>'
 
         /* Entrega */
-        + '<div class="card-dashboard" style="background:' + bgEnt(entregue, pagou) + ';border:1.5px solid ' + brdEnt(entregue, pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer;animation:glowSoft 4s ease-in-out infinite;animation-delay:1.3s"'
-          + ' onmouseover="this.style.transform=\'scale(1.02)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,.15)\'"'
+        + '<div class="card-dashboard" style="background:' + bgEnt(entregue, pagou) + ';border:1.5px solid ' + brdEnt(entregue, pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .22s cubic-bezier(.4,0,.2,1);cursor:pointer;animation:glowSoft 4s ease-in-out infinite;animation-delay:1.3s"'
+          + ' onmouseover="this.style.transform=\'translateY(-3px) scale(1.02)\';this.style.boxShadow=\'0 10px 24px rgba(0,0,0,.15)\'"'
           + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.08)\'"'
-          + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
+          + ' onmousedown="this.style.transform=\'scale(0.96)\'"'
           + ' onmouseup="this.style.transform=\'scale(1)\'">'
-          + '<div style="font-size:28px;margin-bottom:8px;line-height:1;transition:transform .2s cubic-bezier(.4,0,.2,1)" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'">📦</div>'
+          + '<div style="font-size:28px;margin-bottom:8px;line-height:1;transition:transform .2s cubic-bezier(.4,0,.2,1)" onmouseover="this.style.transform=\'scale(1.15)\'" onmouseout="this.style.transform=\'scale(1)\'">📦</div>'
           + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--cin);opacity:.7;margin-bottom:5px">Material</div>'
           + '<div style="font-size:12px;font-weight:700;color:' + corEnt(entregue, pagou) + ';line-height:1.3">' + statusEnt + '</div>'
         + '</div>'
 
-        /* Prova */
-        + '<div class="card-dashboard" style="background:' + bgProva(regProva) + ';border:1.5px solid ' + brdProva(regProva) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer;animation:glowSoft 4s ease-in-out infinite;animation-delay:2.6s"'
-          + ' onmouseover="this.style.transform=\'scale(1.02)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,.15)\'"'
-          + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.08)\'"'
-          + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
-          + ' onmouseup="this.style.transform=\'scale(1)\'">'
-          + '<div style="font-size:28px;margin-bottom:8px;line-height:1;transition:transform .2s cubic-bezier(.4,0,.2,1)" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'">📝</div>'
-          + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--cin);opacity:.7;margin-bottom:5px">Avaliação</div>'
-          + '<div style="font-size:12px;font-weight:700;color:' + corProva(regProva) + ';line-height:1.3">' + statusProva + '</div>'
-        + '</div>'
+        /* Prova — reativa */
+        + cardProvaHtml
+
       + '</div>'
 
-      /* ── Próxima aula ── delay .15s ── */
+      /* ── Próxima aula ── */
       + (proximaAula
-        ? '<div style="'
-            + 'background:linear-gradient(135deg,#2b5c8a,#3b82f6);'
-            + 'border-radius:14px;'
-            + 'padding:16px;'
-            + 'margin-bottom:24px;'
-            + 'color:#fff;'
-            + 'position:relative;'
-            + 'overflow:hidden;'
-            + 'cursor:pointer;'
-            + 'opacity:0;'
-            + 'transform:translateY(10px);'
-            + 'animation:_fadeUp .4s ease forwards,glowAula 4s ease-in-out 0.4s infinite;'
-          + '"'
-          + ' onmouseover="this.style.transform=\'translateY(-2px)\';"'
-          + ' onmouseout="this.style.transform=\'translateY(0)\';"'
-          + ' onmousedown="this.style.transform=\'scale(0.97)\';"'
-          + ' onmouseup="this.style.transform=\'translateY(-2px)\';">'
+        ? '<div style="background:linear-gradient(135deg,#2b5c8a,#3b82f6);border-radius:14px;padding:16px;margin-bottom:24px;color:#fff;position:relative;overflow:hidden;cursor:pointer;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards,glowAula 4s ease-in-out 0.4s infinite;animation-delay:.16s,0.4s;transition:all .22s cubic-bezier(.4,0,.2,1)"'
+          + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.filter=\'brightness(1.08)\';"'
+          + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.filter=\'brightness(1)\';"'
+          + ' onmousedown="this.style.transform=\'scale(0.96)\';"'
+          + ' onmouseup="this.style.transform=\'translateY(-3px)\';">'
           + '<div style="font-size:11px;letter-spacing:1px;opacity:0.7;margin-bottom:6px;font-weight:600;text-transform:uppercase">PRÓXIMA AULA</div>'
           + (function(){ var h=(proximaAula.match(/\d{2}:\d{2}/)||[])[0]||''; return h ? '<div style="font-size:13px;font-weight:600;opacity:0.85;margin-bottom:4px">⏰ '+h+'</div>' : ''; })()
           + '<div style="font-size:16px;font-weight:700;margin-bottom:2px;line-height:1.4">' + proximaAula + '</div>'
           + '<div style="font-size:12px;opacity:0.8">Fique atento ao horário</div>'
-          + '<div style="'
-              + 'position:absolute;'
-              + 'top:0;'
-              + 'left:-60%;'
-              + 'width:50%;'
-              + 'height:100%;'
-              + 'background:linear-gradient(120deg,transparent,rgba(255,255,255,0.25),transparent);'
-              + 'transform:skewX(-20deg);'
-              + 'animation:shineAula 6.5s ease-in-out infinite;'
-            + '"></div>'
+          + '<div style="position:absolute;top:0;left:-60%;width:50%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,0.25),transparent);transform:skewX(-20deg);animation:shineAula 6.5s ease-in-out infinite"></div>'
           + '</div>'
         : ''
       )
 
-      /* ── Alertas ── delay .2s ── */
-      + '<div style="margin-bottom:28px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.2s;transition:all .2s cubic-bezier(.4,0,.2,1)">'
-        + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:12px">Notificações</div>'
+      /* ── Alertas animados ── */
+      + '<div style="margin-bottom:28px;transition:all .2s cubic-bezier(.4,0,.2,1)">'
+        + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:12px;opacity:0;animation:_fadeUp .4s ease forwards;animation-delay:.2s">Notificações</div>'
         + alertasHtml
       + '</div>'
 
