@@ -39,7 +39,8 @@ nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid 
 /* ── MAIN ── */
 main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
 .tela{display:none;animation:fi .2s ease}
-.tela.on{display:block}
+.tela.on{display:block;animation:entrarTela .35s ease both}
+@keyframes entrarTela{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 .al-tela{opacity:0;transform:translateY(10px);transition:opacity .25s cubic-bezier(.4,0,.2,1),transform .25s cubic-bezier(.4,0,.2,1);pointer-events:none}
 .al-tela.on{opacity:1;transform:translateY(0);pointer-events:auto}
 @keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
@@ -140,6 +141,39 @@ main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
   font-weight: 800;
   font-family: 'Lora', serif;
   margin-left: auto;
+}
+
+/* ══ ANIMAÇÕES PREMIUM DASHBOARD ══ */
+
+/* PASSO 2: stagger nos cards */
+@keyframes entrarItem {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.anim-item {
+  opacity: 0;
+  animation: entrarItem .4s ease forwards;
+}
+
+/* PASSO 4: header entra suave */
+@keyframes entrarHeader {
+  to { opacity: 1; transform: translateY(0); }
+}
+header {
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: entrarHeader .4s ease forwards;
+}
+
+/* PASSO 5: nav com micro delay */
+@keyframes entrarNav {
+  to { opacity: 1; transform: translateY(0); }
+}
+nav {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: entrarNav .5s ease forwards;
+  animation-delay: .15s;
 }
 
 /* ══ PARTÍCULAS ══ */
@@ -4060,6 +4094,21 @@ async function renderDashAdmin(){
 
   // ── ALERTAS AVANÇADOS ──
   gerarAlertasAdmin(al, presencas, alunoLivros, provasAluno, livroAtual);
+
+  /* ══ PASSO 3+6: ANIMAÇÃO STAGGER DOS CARDS — sem alterar lógica existente ══ */
+  setTimeout(function() {
+    if (!window._dashboardAnimado) {          /* PASSO 6: anima só na 1ª vez */
+      window._dashboardAnimado = true;
+      var itens = document.querySelectorAll('.mc, .ar, .pag-card, .prova-card');
+      itens.forEach(function(el, i) {
+        el.classList.remove('anim-item');     /* reset caso já exista */
+        void el.offsetWidth;                  /* força reflow para reiniciar animação */
+        el.classList.add('anim-item');
+        el.style.animationDelay = (i * 0.04) + 's';
+      });
+    }
+  }, 0);
+  /* ══ FIM ANIMAÇÃO STAGGER ══ */
 }
 
 /* ════ ALERTAS AUTOMÁTICOS ADMIN ════ */
