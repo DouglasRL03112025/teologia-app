@@ -176,6 +176,26 @@ nav {
   animation-delay: .15s;
 }
 
+/* PASSO 4: pulso visual quando card de métrica muda de valor */
+@keyframes pulseUpdate {
+  0%   { transform: scale(1);    box-shadow: 0 0 0 transparent; }
+  50%  { transform: scale(1.03); box-shadow: 0 0 18px rgba(59,130,246,0.25); }
+  100% { transform: scale(1);    box-shadow: 0 0 0 transparent; }
+}
+.mc-atualizado {
+  animation: pulseUpdate .6s ease;
+}
+
+/* PASSO 5: alertas entram com fade suave */
+@keyframes entrarAlerta {
+  to { opacity: 1; transform: translateY(0); }
+}
+.alerta-item {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: entrarAlerta .4s ease forwards;
+}
+
 /* ══ PARTÍCULAS ══ */
 #particles {
   position: fixed;
@@ -4107,6 +4127,38 @@ async function renderDashAdmin(){
         el.style.animationDelay = (i * 0.04) + 's';
       });
     }
+
+    /* ══ PASSOS 2+3+6: COUNT-UP + PULSO NOS CARDS DE MÉTRICA ══ */
+    if (!window._valoresDashboard) {
+      window._valoresDashboard = {};           /* PASSO 3: memória leve de valores */
+    }
+    var cards = document.querySelectorAll('.mc');
+    cards.forEach(function(card, i) {
+      var num = card.querySelector('.mn');     /* .mn = elemento do número nas métricas */
+      if (!num) return;
+      var valorNovo = parseInt(num.textContent) || 0;
+      var valorAntigo = window._valoresDashboard[i];
+
+      if (valorAntigo !== undefined && valorAntigo !== valorNovo) {
+        /* PASSO 2: count-up apenas quando valor mudou */
+        animarNumero(num, valorNovo);
+        /* PASSO 4: pulso visual no card */
+        card.classList.remove('mc-atualizado');
+        void card.offsetWidth;
+        card.classList.add('mc-atualizado');
+        setTimeout(function() { card.classList.remove('mc-atualizado'); }, 600);
+      }
+      window._valoresDashboard[i] = valorNovo; /* PASSO 3: memoriza valor atual */
+    });
+    /* ══ PASSO 5: ENTRADA SUAVE DOS ALERTAS ══ */
+    document.querySelectorAll('#a-alertas .al, #a-alertas-avancados [style*="border-left"]')
+      .forEach(function(el, i) {
+        el.classList.remove('alerta-item');
+        void el.offsetWidth;
+        el.classList.add('alerta-item');
+        el.style.animationDelay = (i * 0.05) + 's';
+      });
+    /* ══ FIM ALERTAS ══ */
   }, 0);
   /* ══ FIM ANIMAÇÃO STAGGER ══ */
 }
@@ -8874,8 +8926,23 @@ document.addEventListener('click', function(e){
 });
 </script>
 
-<!-- ══ EFEITOS CINEMATOGRÁFICOS ══ -->
+/* ══ EFEITOS CINEMATOGRÁFICOS ══ */
 <script>
+/* PASSO 1: COUNT-UP — anima número do valor atual até o novo valor */
+function animarNumero(el, novoValor) {
+  var atual = parseInt(el.textContent) || 0;
+  var duracao = 400;
+  var inicio = performance.now();
+  function frame(t) {
+    var progresso = Math.min((t - inicio) / duracao, 1);
+    var valor = Math.floor(atual + (novoValor - atual) * progresso);
+    el.textContent = valor;
+    if (progresso < 1) requestAnimationFrame(frame);
+    else el.textContent = novoValor; /* garante valor exato no fim */
+  }
+  requestAnimationFrame(frame);
+}
+/* FIM animarNumero */
 /* 1. PARTÍCULAS SUAVES — com proteção anti-duplicação e controle de animação */
 window.animandoParticulas = true; /* PASSO 2: flag global para parar o loop */
 
