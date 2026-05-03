@@ -468,6 +468,106 @@ select.inp{cursor:pointer}
 .acao-recomendada.acao-urgente{background:#fff7ed;color:#92400e}
 /* ── FIM AÇÃO RECOMENDADA ── */
 
+/* ══ CENTRAL DE AÇÕES PRIORITÁRIAS ══ */
+#acoes-prioritarias {
+  margin-bottom: 18px;
+}
+.acoes-prioritarias-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.acoes-prioritarias-titulo {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .7px;
+  color: #92400e;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.acao-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 8px rgba(234,88,12,.07);
+  transition: all .18s ease;
+}
+.acao-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(234,88,12,.13);
+  border-color: #fb923c;
+}
+.acao-card-info { flex: 1; min-width: 0; }
+.acao-card-nome {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e1e1e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.acao-card-desc {
+  font-size: 11px;
+  color: #92400e;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+.acao-card-score {
+  font-size: 10px;
+  font-weight: 700;
+  background: #ef4444;
+  color: #fff;
+  border-radius: 99px;
+  padding: 2px 7px;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+.acao-card-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--azul);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  margin-left: 10px;
+  flex-shrink: 0;
+  transition: all .15s;
+}
+.acao-card-btn:hover { background: var(--azul-e); transform: translateY(-1px); }
+.acao-card-btn:active { transform: scale(.95); }
+/* Botão Modo Foco */
+#btn-modo-foco {
+  padding: 6px 13px;
+  border: 1.5px solid var(--azul);
+  border-radius: 99px;
+  background: transparent;
+  color: var(--azul);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all .18s;
+  white-space: nowrap;
+}
+#btn-modo-foco.ativo {
+  background: var(--azul);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(26,58,92,.25);
+}
+#btn-modo-foco:hover { filter: brightness(.9); }
+/* ══ FIM CENTRAL DE AÇÕES ══ */
+
 /* ── TOGGLE ── */
 .tr{display:flex;align-items:center;justify-content:space-between;padding:14px;background:#fff;border-radius:var(--r);margin-bottom:9px;border:1px solid var(--brd);box-shadow:var(--s)}
 .tn{font-size:15px;font-weight:500}.ts2{font-size:12px;color:var(--cin);margin-top:2px}
@@ -1171,7 +1271,15 @@ button:active, .nb:active, .tab:active {
 
     <!-- ALUNOS ADMIN -->
     <div class="tela" id="a-alunos">
-      <div class="sh"><div class="tit">Alunos</div><button class="badd ripple-target" onclick="abrirModAluno()">+ Novo</button></div>
+      <div class="sh">
+        <div class="tit">Alunos</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button id="btn-modo-foco" onclick="toggleModoFoco()">🎯 Modo Foco</button>
+          <button class="badd ripple-target" onclick="abrirModAluno()">+ Novo</button>
+        </div>
+      </div>
+      <!-- CENTRAL DE AÇÕES PRIORITÁRIAS -->
+      <div id="acoes-prioritarias"></div>
       <div class="bw">
         <span class="bi"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
         <input class="busca" id="busca-admin" type="search" placeholder="Buscar por nome..." oninput="renderAlunosAdmin()" autocomplete="off">
@@ -3519,7 +3627,26 @@ async function renderAlunosAdmin(){
   }
   // ── FIM FILTRO RÁPIDO ──
 
-  // ── AGRUPAMENTO VISUAL (apenas renderização — nenhuma lógica alterada) ──
+  // ══ AUTOMAÇÃO INTELIGENTE: Renderizar central de ações prioritárias ══
+  var _acoesPrioritarias = gerarAcoesPrioritarias(lista, _dadosRisco);
+  renderAcoesPrioritarias(_acoesPrioritarias);
+  // ══ FIM CENTRAL DE AÇÕES ══
+
+  // ══ MODO FOCO: filtrar apenas alunos críticos (score >= 3) ══
+  if (modoFoco) {
+    lista = lista.filter(function(a){ return calcularScoreAluno(_extrairDadosScore(a, _dadosRisco)) >= 3; });
+    if (!lista.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-ic">🎯</div><div class="empty-tx">Nenhum aluno crítico no momento. Modo Foco ativo.</div></div>';
+      return;
+    }
+  }
+  // ══ FIM MODO FOCO ══
+
+  // ══ ORDENAÇÃO GLOBAL POR SCORE DESC (critério superior ao agrupamento) ══
+  lista.sort(function(a, b){
+    return calcularScoreAluno(_extrairDadosScore(b, _dadosRisco)) - calcularScoreAluno(_extrairDadosScore(a, _dadosRisco));
+  });
+  // ══ FIM ORDENAÇÃO GLOBAL ══ (apenas renderização — nenhuma lógica alterada) ──
   const listaPendentes   = [];
   const listaAguardando  = [];
   const listaEmDia       = [];
@@ -3860,6 +3987,116 @@ function gerarAcaoAluno(aluno, dados) {
   return acoes.map(function(a, i){ return i === 0 ? a.charAt(0).toUpperCase() + a.slice(1) : a; }).join(' + ');
 }
 /* ════ FIM AÇÃO RECOMENDADA ════ */
+
+/* ══════════════════════════════════════════════════════════
+   AUTOMAÇÃO INTELIGENTE — PASSO 5 (ADIÇÃO DESACOPLADA)
+   Funções novas, não alteram lógica existente
+══════════════════════════════════════════════════════════ */
+
+/* ── Score global de prioridade (novo, complementar a calcularRiscoAluno) ── */
+function calcularScoreAluno(d) {
+  if (!d) return 0;
+  var score = 0;
+  if (!d.pagou)                    score += 3;
+  if (d.freq < 75)                 score += 2;
+  if (d.faltasConsecutivas >= 3)   score += 3;
+  if (!d.fezProva)                 score += 2;
+  if (d.nota !== null && d.nota !== undefined && d.nota < 5) score += 2;
+  return score;
+}
+
+/* ── Extrai dados de risco simplificados por aluno (para o score) ── */
+function _extrairDadosScore(aluno, dadosRisco) {
+  var id = aluno.id;
+  var presDoMes    = dadosRisco.presDoMes    || [];
+  var datasUnicas  = dadosRisco.datasUnicas  || [];
+  var alunoLivros  = dadosRisco.alunoLivros  || [];
+  var provasAluno  = dadosRisco.provasAluno  || [];
+  var livroAtual   = dadosRisco.livroAtual;
+
+  var totalAulas = datasUnicas.length;
+  var presentes  = presDoMes.filter(function(p){ return p.aluno_id === id && p.presente === true; }).length;
+  var freq       = totalAulas > 0 ? Math.round(presentes / totalAulas * 100) : 100;
+
+  // Faltas consecutivas
+  var faltasConsec = 0, maxConsec = 0;
+  datasUnicas.slice().sort().forEach(function(data) {
+    var reg = presDoMes.find(function(p){ return p.aluno_id === id && p.data === data; });
+    if (!reg || reg.presente === false) { faltasConsec++; maxConsec = Math.max(maxConsec, faltasConsec); }
+    else { faltasConsec = 0; }
+  });
+
+  var codAtual = 'p' + livroAtual;
+  var regAtual = alunoLivros.find(function(r){ return r.aluno_id === id && r.livro_codigo === codAtual; });
+  var pagou = !(regAtual && regAtual.pagou !== true);
+
+  var prova = provasAluno.find(function(p){ return p.aluno_id === id; });
+  var fezProva = prova && prova.fez_prova === true;
+  var nota     = prova ? prova.nota : null;
+
+  return {
+    pagou:              pagou,
+    freq:               freq,
+    faltasConsecutivas: maxConsec,
+    fezProva:           fezProva,
+    nota:               nota
+  };
+}
+
+/* ── Gera lista de até 5 ações prioritárias (score >= 3) ── */
+function gerarAcoesPrioritarias(alunos, dadosRisco) {
+  return alunos
+    .map(function(a) {
+      var d     = _extrairDadosScore(a, dadosRisco);
+      var score = calcularScoreAluno(d);
+      var acao  = gerarAcaoAluno(a, dadosRisco);
+      return { aluno: a, score: score, acao: acao };
+    })
+    .filter(function(x){ return x.score >= 3; })
+    .sort(function(a, b){ return b.score - a.score; })
+    .slice(0, 5);
+}
+
+/* ── Renderiza a central de ações prioritárias ── */
+function renderAcoesPrioritarias(acoes) {
+  var el = document.getElementById('acoes-prioritarias');
+  if (!el) return;
+  if (!acoes || !acoes.length) { el.innerHTML = ''; return; }
+
+  var html = '<div class="acoes-prioritarias-header">'
+    + '<div class="acoes-prioritarias-titulo">⚡ O que fazer agora</div>'
+    + '<span style="font-size:11px;color:var(--cin);">' + acoes.length + ' aluno' + (acoes.length !== 1 ? 's' : '') + ' crítico' + (acoes.length !== 1 ? 's' : '') + '</span>'
+    + '</div>';
+
+  acoes.forEach(function(item) {
+    var scoreCor = item.score >= 7 ? '#ef4444' : item.score >= 5 ? '#f97316' : '#f59e0b';
+    html += '<div class="acao-card">'
+      + '<div class="acao-card-info">'
+      + '<div style="display:flex;align-items:center;gap:6px">'
+      + '<div class="acao-card-nome">' + fmtNome(item.aluno.nome) + '</div>'
+      + '<span class="acao-card-score" style="background:' + scoreCor + '">' + item.score + '</span>'
+      + '</div>'
+      + '<div class="acao-card-desc">⚡ ' + (item.acao || 'Verificar situação') + '</div>'
+      + '</div>'
+      + '<button class="acao-card-btn" onclick="verPerfilAdmin(\'' + item.aluno.id + '\')">Resolver</button>'
+      + '</div>';
+  });
+
+  el.innerHTML = html;
+}
+
+/* ── Modo Foco ── */
+var modoFoco = false;
+function toggleModoFoco() {
+  modoFoco = !modoFoco;
+  var btn = document.getElementById('btn-modo-foco');
+  if (btn) {
+    btn.classList.toggle('ativo', modoFoco);
+    btn.textContent = modoFoco ? '✓ Modo Foco ON' : '🎯 Modo Foco';
+  }
+  renderAlunosAdmin();
+}
+/* ══════ FIM AUTOMAÇÃO INTELIGENTE ══════ */
 
 /* ════ RESUMO LIVROS DO ALUNO (Supabase) ════ */
 async function carregarResumoLivrosAluno(alunoId) {
