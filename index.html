@@ -363,6 +363,7 @@ main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
   border: 1px solid rgba(255,255,255,0.12);
   animation: fadeUp 0.7s 0.1s cubic-bezier(0.22,1,0.36,1) both;
   position: relative;
+  z-index: 2; /* PASSO 5: garante card acima de particles(0) e mouse-light(1) */
   overflow: hidden;
 }
 
@@ -8826,10 +8827,15 @@ document.addEventListener('click', function(e){
 
 <!-- ══ EFEITOS CINEMATOGRÁFICOS ══ -->
 <script>
-/* 1. PARTÍCULAS SUAVES */
+/* 1. PARTÍCULAS SUAVES — com proteção anti-duplicação e controle de animação */
+window.animandoParticulas = true; /* PASSO 2: flag global para parar o loop */
+
 (function(){
+  /* PASSO 1: evitar duplicação — só inicializa se canvas ainda não foi marcado */
   var canvas = document.getElementById('particles');
-  if (!canvas) return;
+  if (!canvas || canvas.dataset.iniciado) return;
+  canvas.dataset.iniciado = '1';
+
   var ctx = canvas.getContext('2d');
   var particles = [];
   function resize() {
@@ -8848,6 +8854,7 @@ document.addEventListener('click', function(e){
     });
   }
   function animate() {
+    if (!window.animandoParticulas) return; /* PASSO 2: para o loop quando solicitado */
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     particles.forEach(function(p) {
       p.x += p.vx;
@@ -8866,10 +8873,13 @@ document.addEventListener('click', function(e){
   animate();
 })();
 
-/* 2. LUZ SEGUINDO O MOUSE */
+/* 2. LUZ SEGUINDO O MOUSE — com proteção anti-duplicação de listener */
 (function(){
+  /* PASSO 1: evitar duplicar o listener se o script rodar mais de uma vez */
   var light = document.querySelector('.mouse-light');
-  if (!light) return;
+  if (!light || light.dataset.iniciado) return;
+  light.dataset.iniciado = '1';
+
   window.addEventListener('mousemove', function(e) {
     light.style.left = e.clientX + 'px';
     light.style.top = e.clientY + 'px';
@@ -8887,10 +8897,10 @@ window._ocultarLoadingLogin = function() {
 };
 
 /* Wrapper: intercepta loginAluno para mostrar loading + fade */
+/* PASSO 4: finally garante que o loading NUNCA trava em erro */
 (function(){
   var _loginOriginal = window.loginAluno;
   if (typeof _loginOriginal !== 'function') {
-    // Aguarda o script principal carregar
     document.addEventListener('DOMContentLoaded', function() {
       _patchLoginAluno();
     });
@@ -8904,16 +8914,16 @@ window._ocultarLoadingLogin = function() {
       window._mostrarLoadingLogin();
       try {
         await orig.apply(this, arguments);
-      } catch(e) {
+      } finally {
+        /* PASSO 4: finally = loading sempre some, mesmo em erro */
         window._ocultarLoadingLogin();
-        throw e;
       }
-      window._ocultarLoadingLogin();
     };
   }
 })();
 
 /* Wrapper: intercepta loginAdmin para mostrar loading + fade */
+/* PASSO 4: finally garante que o loading NUNCA trava em erro */
 (function(){
   function _patchLoginAdmin() {
     if (typeof window.loginAdmin !== 'function') return;
@@ -8922,11 +8932,10 @@ window._ocultarLoadingLogin = function() {
       window._mostrarLoadingLogin();
       try {
         await orig.apply(this, arguments);
-      } catch(e) {
+      } finally {
+        /* PASSO 4: finally = loading sempre some, mesmo em erro */
         window._ocultarLoadingLogin();
-        throw e;
       }
-      window._ocultarLoadingLogin();
     };
   }
   if (document.readyState === 'loading') {
@@ -8937,11 +8946,13 @@ window._ocultarLoadingLogin = function() {
 })();
 
 /* 4. FADE OUT DO LOGIN AO ENTRAR NO APP */
+/* PASSO 3: para as partículas antes da transição para o dashboard */
 (function(){
   function _patchCarregarAluno() {
     if (typeof window.carregarAlunoLogado !== 'function') return;
     var orig = window.carregarAlunoLogado;
     window.carregarAlunoLogado = async function() {
+      window.animandoParticulas = false; /* PASSO 3: para o loop de partículas */
       document.body.classList.add('fade-out-app');
       await new Promise(function(r){ setTimeout(r, 400); });
       document.body.classList.remove('fade-out-app');
