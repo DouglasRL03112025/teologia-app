@@ -7328,51 +7328,59 @@ async function renderAlunoAgenda(){
   const provasFeitas = provas.filter(p => p.nota !== null).length;
   const totalProvas  = provas.length;
 
-  // ── DASHBOARD ──
+  // ── DASHBOARD (premium) ──
   const dashEl = document.getElementById('al-agenda-dashboard');
   if (dashEl) dashEl.innerHTML =
-    /* ── keyframes autossuficientes — não dependem de CSS externo ── */
     '<style>'
-    + '@keyframes _fadeUpSafe {'
-    + '  from { opacity:0; transform:translateY(10px); }'
-    + '  to   { opacity:1; transform:translateY(0); }'
-    + '}'
+      + '@keyframes _fadeUpSafe{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}'
+      + '@keyframes _agendaShine{0%,100%{left:-100%}50%{left:100%}}'
+      + '.agenda-stat-card{background:#fff;border-radius:18px;padding:18px 12px;box-shadow:0 4px 16px rgba(0,0,0,.07);text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .2s;position:relative;overflow:hidden;border:1.5px solid transparent}'
     + '</style>'
 
-    /* ── Grid 3 cards ── */
-    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:4px">'
+    /* ── Hero topo ── */
+    + '<div class="agenda-hero" style="margin-bottom:18px;opacity:0;animation:_fadeUpSafe .4s ease forwards;animation-delay:0s">'
+      + '<div style="font-family:\'Lora\',serif;font-size:21px;font-weight:700;color:var(--azul);letter-spacing:-.3px;line-height:1.2">Agenda</div>'
+      + '<div style="font-size:13px;color:var(--cin);margin-top:3px;opacity:.6;letter-spacing:.2px">Presenças, aulas e progresso</div>'
+    + '</div>'
 
-      /* Card Livros — delay .05s */
-      + '<div style="background:linear-gradient(180deg,#ffffff,#f7faff);border-radius:18px;padding:18px 12px;box-shadow:0 6px 18px rgba(0,0,0,.08);text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform .18s,box-shadow .18s;opacity:0;animation:_fadeUpSafe .4s ease forwards;animation-delay:.05s"'
-        + ' onmouseover="this.style.transform=\'translateY(-4px)\';this.style.boxShadow=\'0 12px 28px rgba(0,0,0,.12)\'"'
-        + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 6px 18px rgba(0,0,0,.08)\'"'
-        + ' onmousedown="this.style.transform=\'scale(0.96)\'"'
-        + ' onmouseup="this.style.transform=\'translateY(-4px)\'">'
-        + '<div style="font-size:22px;opacity:.6;margin-bottom:6px;line-height:1">📚</div>'
-        + '<div id="dash-livros" style="font-size:24px;font-weight:800;color:var(--azul);font-family:\'Lora\',serif;line-height:1.1;margin-bottom:4px">' + livrosRec + '<span style="font-size:12px;font-weight:400;color:var(--cin)">/' + totalLivros + '</span></div>'
-        + '<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;opacity:.6">Livros</div>'
+    /* ── Grid 3 cards stats ── */
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:4px">'
+
+      /* Livros */
+      + '<div class="agenda-stat-card" style="background:linear-gradient(160deg,#f0f6ff,#e8f0fe);border-color:#c7d9f8;opacity:0;animation:_fadeUpSafe .4s ease forwards;animation-delay:.04s"'
+        + ' onmouseover="this.style.transform=\'translateY(-4px) scale(1.02)\';this.style.boxShadow=\'0 12px 28px rgba(26,58,92,.18)\'"'
+        + ' onmouseout="this.style.transform=\'translateY(0) scale(1)\';this.style.boxShadow=\'0 4px 16px rgba(0,0,0,.07)\'"'
+        + ' onmousedown="this.style.transform=\'scale(0.95)\'"'
+        + ' onmouseup="this.style.transform=\'translateY(-4px) scale(1.02)\'">'
+        + '<div style="font-size:20px;margin-bottom:5px;line-height:1;opacity:.75">📚</div>'
+        + '<div style="font-size:22px;font-weight:800;color:var(--azul);font-family:\'Lora\',serif;line-height:1.1;margin-bottom:3px">' + livrosRec + '<span style="font-size:11px;font-weight:500;color:var(--cin);opacity:.7">/' + totalLivros + '</span></div>'
+        + '<div style="font-size:10px;color:var(--cin);font-weight:700;text-transform:uppercase;letter-spacing:.6px;opacity:.6">Livros</div>'
       + '</div>'
 
-      /* Card Presença — delay .1s */
-      + '<div style="background:linear-gradient(180deg,#ffffff,#f7fff9);border-radius:18px;padding:18px 12px;box-shadow:0 6px 18px rgba(0,0,0,.08);text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform .18s,box-shadow .18s;opacity:0;animation:_fadeUpSafe .4s ease forwards;animation-delay:.1s"'
-        + ' onmouseover="this.style.transform=\'translateY(-4px)\';this.style.boxShadow=\'0 12px 28px rgba(0,0,0,.12)\'"'
-        + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 6px 18px rgba(0,0,0,.08)\'"'
-        + ' onmousedown="this.style.transform=\'scale(0.96)\'"'
-        + ' onmouseup="this.style.transform=\'translateY(-4px)\'">'
-        + '<div style="font-size:22px;opacity:.6;margin-bottom:6px;line-height:1">📊</div>'
-        + '<div style="font-size:24px;font-weight:800;font-family:\'Lora\',serif;color:' + corPres + ';line-height:1.1;margin-bottom:4px">' + percPres + '<span style="font-size:12px;font-weight:400;color:var(--cin)">%</span></div>'
-        + '<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;opacity:.6">Presença</div>'
+      /* Presença */
+      + '<div class="agenda-stat-card" style="background:linear-gradient(160deg,#f0fdf5,#dcfce7);border-color:#a7f3c0;opacity:0;animation:_fadeUpSafe .4s ease forwards;animation-delay:.08s"'
+        + ' onmouseover="this.style.transform=\'translateY(-4px) scale(1.02)\';this.style.boxShadow=\'0 12px 28px rgba(22,163,74,.18)\'"'
+        + ' onmouseout="this.style.transform=\'translateY(0) scale(1)\';this.style.boxShadow=\'0 4px 16px rgba(0,0,0,.07)\'"'
+        + ' onmousedown="this.style.transform=\'scale(0.95)\'"'
+        + ' onmouseup="this.style.transform=\'translateY(-4px) scale(1.02)\'">'
+        + '<div style="font-size:20px;margin-bottom:5px;line-height:1;opacity:.75">📊</div>'
+        + '<div style="font-size:22px;font-weight:800;font-family:\'Lora\',serif;color:' + corPres + ';line-height:1.1;margin-bottom:3px">' + percPres + '<span style="font-size:11px;font-weight:500;color:var(--cin);opacity:.7">%</span></div>'
+        + '<div style="font-size:10px;color:var(--cin);font-weight:700;text-transform:uppercase;letter-spacing:.6px;opacity:.6">Presença</div>'
+        + (percPres >= 75
+          ? '<div style="font-size:9px;background:#16a34a;color:#fff;border-radius:99px;padding:1px 8px;margin-top:4px;font-weight:700;letter-spacing:.3px">✓ Regular</div>'
+          : '<div style="font-size:9px;background:#dc2626;color:#fff;border-radius:99px;padding:1px 8px;margin-top:4px;font-weight:700;letter-spacing:.3px">⚠ Atenção</div>'
+        )
       + '</div>'
 
-      /* Card Provas — delay .15s */
-      + '<div style="background:linear-gradient(180deg,#ffffff,#fffaf7);border-radius:18px;padding:18px 12px;box-shadow:0 6px 18px rgba(0,0,0,.08);text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform .18s,box-shadow .18s;opacity:0;animation:_fadeUpSafe .4s ease forwards;animation-delay:.15s"'
-        + ' onmouseover="this.style.transform=\'translateY(-4px)\';this.style.boxShadow=\'0 12px 28px rgba(0,0,0,.12)\'"'
-        + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 6px 18px rgba(0,0,0,.08)\'"'
-        + ' onmousedown="this.style.transform=\'scale(0.96)\'"'
-        + ' onmouseup="this.style.transform=\'translateY(-4px)\'">'
-        + '<div style="font-size:22px;opacity:.6;margin-bottom:6px;line-height:1">📝</div>'
-        + '<div id="dash-provas" style="font-size:24px;font-weight:800;color:var(--azul);font-family:\'Lora\',serif;line-height:1.1;margin-bottom:4px">' + provasFeitas + '<span style="font-size:12px;font-weight:400;color:var(--cin)">/' + totalProvas + '</span></div>'
-        + '<div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px;opacity:.6">Provas</div>'
+      /* Provas */
+      + '<div class="agenda-stat-card" style="background:linear-gradient(160deg,#fff8f0,#fef3e2);border-color:#fed8a0;opacity:0;animation:_fadeUpSafe .4s ease forwards;animation-delay:.12s"'
+        + ' onmouseover="this.style.transform=\'translateY(-4px) scale(1.02)\';this.style.boxShadow=\'0 12px 28px rgba(180,83,9,.15)\'"'
+        + ' onmouseout="this.style.transform=\'translateY(0) scale(1)\';this.style.boxShadow=\'0 4px 16px rgba(0,0,0,.07)\'"'
+        + ' onmousedown="this.style.transform=\'scale(0.95)\'"'
+        + ' onmouseup="this.style.transform=\'translateY(-4px) scale(1.02)\'">'
+        + '<div style="font-size:20px;margin-bottom:5px;line-height:1;opacity:.75">🎓</div>'
+        + '<div style="font-size:22px;font-weight:800;color:var(--azul);font-family:\'Lora\',serif;line-height:1.1;margin-bottom:3px">' + provasFeitas + '<span style="font-size:11px;font-weight:500;color:var(--cin);opacity:.7">/' + totalProvas + '</span></div>'
+        + '<div style="font-size:10px;color:var(--cin);font-weight:700;text-transform:uppercase;letter-spacing:.6px;opacity:.6">Provas</div>'
       + '</div>'
 
     + '</div>';
@@ -7430,53 +7438,114 @@ async function renderAlunoAgenda(){
     elCal.style.animation = anim + ' .25s cubic-bezier(.4,0,.2,1)';
   }
 
-  // ── AULAS FUTURAS DO MÊS ──
+  // ── AULAS FUTURAS DO MÊS (premium) ──
   const hojeStr = hoje.toISOString().slice(0, 10);
   const elFuturas = document.getElementById('al-agenda-futuras');
   if (elFuturas) {
     const futuras = aulasDoMes.filter(a => a.data >= hojeStr);
+
+    /* ── helpers de data ── */
+    function _diffDias(dataStr) {
+      var d = new Date(dataStr + 'T12:00:00');
+      var h = new Date(); h.setHours(0,0,0,0);
+      return Math.round((d - h) / 86400000);
+    }
+    function _fmtDataBR(dataStr) {
+      var d = new Date(dataStr + 'T12:00:00');
+      return DS[d.getDay()] + ', ' + fmtD(d);
+    }
+
     if (futuras.length === 0) {
-      elFuturas.innerHTML = '<div style="text-align:center;font-size:14px;color:var(--cin);font-style:italic;opacity:.6;padding:24px 0">Você ainda não possui aulas agendadas</div>';
+      elFuturas.innerHTML =
+        '<div style="text-align:center;padding:32px 16px;opacity:0;animation:_fadeUpSafe .4s ease forwards">'
+          + '<div style="font-size:36px;margin-bottom:12px;opacity:.4">📅</div>'
+          + '<div style="font-size:14px;font-weight:600;color:var(--cin);opacity:.7">Nenhuma aula agendada</div>'
+          + '<div style="font-size:12px;color:var(--cin);opacity:.5;margin-top:4px">As próximas aulas aparecerão aqui</div>'
+        + '</div>';
     } else {
-      elFuturas.innerHTML = '<div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--azul);margin-bottom:14px;padding-bottom:7px;border-bottom:2px solid var(--azul-c)">📅 Agenda de Aulas</div>'
-        + futuras.map(function(a, i) {
-            const d = new Date(a.data + 'T12:00:00');
-            const delay = (i * 0.05).toFixed(2);
-            const isNext = i === 0;
-            const baseBox = isNext ? '0 10px 26px rgba(0,0,0,.12)' : '0 6px 18px rgba(0,0,0,.08)';
-            const hoverBox = '0 12px 28px rgba(0,0,0,.15)';
-            const badge = isNext
-              ? '<div style="font-size:10px;font-weight:700;background:var(--azul);color:#fff;padding:3px 10px;border-radius:999px;width:fit-content;margin-bottom:6px;letter-spacing:.5px">PRÓXIMA AULA</div>'
-              : '';
-            return '<div style="'
-              + 'background:#fff;'
-              + 'border-radius:18px;'
-              + 'padding:18px 20px;'
-              + 'box-shadow:' + baseBox + ';'
-              + 'margin-bottom:14px;'
-              + 'display:flex;'
-              + 'flex-direction:column;'
-              + 'gap:6px;'
-              + 'transition:all .2s cubic-bezier(.4,0,.2,1);'
-              + 'animation:_fadeUpAgenda .4s ease forwards;'
-              + 'animation-delay:' + delay + 's;'
-              + 'opacity:0;'
-              + (isNext ? 'border:2px solid var(--azul);' : 'border:1px solid rgba(0,0,0,.06);')
-              + '"'
-              + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'' + hoverBox + '\'"'
-              + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'' + baseBox + '\'"'
-              + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
-              + ' onmouseup="this.style.transform=\'translateY(-3px)\'">'
-              + badge
-              + '<div style="font-size:14px;font-weight:700;color:var(--azul)">' + DS[d.getDay()] + ', ' + fmtD(d) + (a.hora ? ' — ' + a.hora : '') + '</div>'
-              + '<div style="font-size:15px;font-weight:700;color:#111">' + (a.descricao || 'Aula programada') + '</div>'
-              + (a.livro ? '<div style="font-size:12px;color:var(--cin);opacity:.7">' + a.livro + '</div>' : '')
+      var proxima   = futuras[0];
+      var diffProx  = _diffDias(proxima.data);
+      var isHojeProx = diffProx === 0;
+      var badgeProx  = isHojeProx
+        ? '<div style="display:inline-block;background:#dc2626;color:#fff;font-size:9px;font-weight:800;padding:2px 10px;border-radius:99px;letter-spacing:.6px;margin-bottom:8px;animation:_acaoPulse 2s ease-in-out infinite">HOJE</div>'
+        : '<div style="display:inline-block;background:rgba(255,255,255,.25);color:#fff;font-size:9px;font-weight:700;padding:2px 10px;border-radius:99px;letter-spacing:.5px;margin-bottom:8px">Em ' + diffProx + ' dia' + (diffProx !== 1 ? 's' : '') + '</div>';
+
+      /* ── card principal — próxima aula ── */
+      var mainCard =
+        '<div class="agenda-main-card" style="'
+          + 'background:linear-gradient(135deg,#1a3a5c 0%,#0f2540 100%);'
+          + 'border-radius:20px;padding:24px 22px 22px;margin-bottom:20px;'
+          + 'box-shadow:0 8px 28px rgba(15,37,64,.32);'
+          + 'position:relative;overflow:hidden;cursor:pointer;color:#fff;'
+          + 'opacity:0;transform:translateY(10px);'
+          + 'animation:_fadeUpSafe .45s cubic-bezier(.4,0,.2,1) forwards;animation-delay:.02s;'
+          + 'transition:all .22s cubic-bezier(.4,0,.2,1)"'
+          + ' onmouseover="this.style.transform=\'translateY(-4px)\';this.style.boxShadow=\'0 18px 44px rgba(15,37,64,.44)\';this.style.filter=\'brightness(1.07)\'"'
+          + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 8px 28px rgba(15,37,64,.32)\';this.style.filter=\'brightness(1)\'"'
+          + ' onmousedown="this.style.transform=\'scale(0.96)\'"'
+          + ' onmouseup="this.style.transform=\'translateY(-4px)\'">'
+          /* decoração de fundo */
+          + '<div style="position:absolute;top:-22px;right:-22px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.05)"></div>'
+          + '<div style="position:absolute;bottom:-30px;right:28px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.07)"></div>'
+          + '<div style="position:absolute;top:0;left:-60%;width:50%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.12),transparent);transform:skewX(-20deg);animation:_agendaShine 7s ease-in-out infinite"></div>'
+          /* conteúdo */
+          + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.5);margin-bottom:10px">📅 Próxima aula</div>'
+          + badgeProx
+          + '<div style="font-size:20px;font-weight:800;font-family:\'Lora\',serif;line-height:1.25;margin-bottom:8px;letter-spacing:.2px">' + (proxima.descricao || 'Aula programada') + '</div>'
+          + '<div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.75);margin-bottom:4px">🗓 ' + _fmtDataBR(proxima.data) + (proxima.hora ? '  ⏰ ' + proxima.hora : '') + '</div>'
+          + (proxima.livro ? '<div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:4px">📖 ' + proxima.livro + '</div>' : '')
+        + '</div>';
+
+      /* ── timeline das demais aulas ── */
+      var restantes = futuras.slice(1);
+      var timelineHtml = '';
+      if (restantes.length > 0) {
+        timelineHtml =
+          '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.6;margin-bottom:14px;opacity:0;animation:_fadeUpSafe .4s ease forwards;animation-delay:.18s">Próximas aulas</div>'
+          + '<div class="timeline" style="position:relative;padding-left:28px">'
+          /* linha vertical da timeline */
+          + '<div style="position:absolute;left:9px;top:8px;bottom:8px;width:2px;background:linear-gradient(to bottom,var(--azul),rgba(26,58,92,.1));border-radius:99px"></div>'
+          + restantes.map(function(a, i) {
+              var diff    = _diffDias(a.data);
+              var isHoje  = diff === 0;
+              var isFut   = diff > 0;
+              var statusCls = isHoje ? 'hoje' : (isFut ? 'futura' : 'concluida');
+              var dotColor  = isHoje ? '#dc2626' : (isFut ? 'var(--azul)' : '#9ca3af');
+              var dotBorder = isHoje ? '2px solid #fca5a5' : (isFut ? '2px solid #93c5fd' : '2px solid #e5e7eb');
+              var cardBg    = isHoje ? '#fef2f2' : '#fff';
+              var cardBrd   = isHoje ? '#fca5a5' : (isFut ? '#e5e7eb' : '#f3f4f6');
+              var delay     = (0.2 + i * 0.06).toFixed(2);
+              return '<div class="timeline-item timeline-item-' + statusCls + '" style="position:relative;margin-bottom:12px;opacity:0;animation:_fadeUpSafe .4s ease forwards;animation-delay:' + delay + 's">'
+                /* bolinha */
+                + '<div class="timeline-dot" style="position:absolute;left:-24px;top:14px;width:12px;height:12px;border-radius:50%;background:' + dotColor + ';border:' + dotBorder + ';box-shadow:0 0 0 3px rgba(255,255,255,.9);transition:transform .2s cubic-bezier(.4,0,.2,1)"></div>'
+                /* card */
+                + '<div class="timeline-card" style="background:' + cardBg + ';border:1.5px solid ' + cardBrd + ';border-radius:14px;padding:13px 16px;box-shadow:0 2px 8px rgba(0,0,0,.06);transition:all .2s cubic-bezier(.4,0,.2,1);cursor:pointer"'
+                  + ' onmouseover="this.parentNode.querySelector(\'.timeline-dot\').style.transform=\'scale(1.35)\';this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,.12)\'"'
+                  + ' onmouseout="this.parentNode.querySelector(\'.timeline-dot\').style.transform=\'scale(1)\';this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 2px 8px rgba(0,0,0,.06)\'"'
+                  + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
+                  + ' onmouseup="this.style.transform=\'translateY(-2px)\'">'
+                  + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'
+                    + '<div>'
+                      + '<div style="font-size:11px;font-weight:700;color:var(--azul);margin-bottom:3px;opacity:.8">🗓 ' + _fmtDataBR(a.data) + (a.hora ? ' · ' + a.hora : '') + '</div>'
+                      + '<div style="font-size:13px;font-weight:700;color:#111;line-height:1.35">' + (a.descricao || 'Aula programada') + '</div>'
+                      + (a.livro ? '<div style="font-size:11px;color:var(--cin);opacity:.6;margin-top:3px">📖 ' + a.livro + '</div>' : '')
+                    + '</div>'
+                    + (isHoje
+                      ? '<div style="flex-shrink:0;background:#dc2626;color:#fff;font-size:8px;font-weight:800;padding:2px 7px;border-radius:99px;letter-spacing:.4px;white-space:nowrap;margin-top:2px">HOJE</div>'
+                      : '<div style="flex-shrink:0;font-size:10px;font-weight:600;color:var(--cin);opacity:.55;white-space:nowrap;margin-top:4px">Em ' + diff + 'd</div>'
+                    )
+                  + '</div>'
+                + '</div>'
               + '</div>';
-          }).join('');
+            }).join('')
+          + '</div>';
+      }
+
+      elFuturas.innerHTML = mainCard + timelineHtml;
     }
   }
 
-  // al-agenda-lista: vazio — histórico pertence à tela de Presença
+  // al-agenda-lista: vazio — histórico pertence à tela de Presença  // al-agenda-lista: vazio — histórico pertence à tela de Presença
   const listaEl = document.getElementById('al-agenda-lista');
   if (listaEl) listaEl.innerHTML = '';
 
