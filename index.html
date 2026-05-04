@@ -8148,24 +8148,7 @@ async function renderAlunoPresenca(){
 
       + '</div>'
 
-      /* ── BARRA DE PROGRESSO ── */
-      + '<div style="margin-bottom:14px;opacity:0;animation:_pFadeUp .4s ease forwards;animation-delay:.08s">'
-        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">'
-          + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7">Frequência geral</div>'
-          + '<div style="font-size:11px;font-weight:700;color:' + (isOk ? '#16a34a' : '#dc2626') + '">'
-            + (isOk ? '🔥 Você está consistente' : '⚠ Atenção à frequência')
-          + '</div>'
-        + '</div>'
-        + '<div style="height:10px;background:#e5e7eb;border-radius:99px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.08)">'
-          + '<div style="height:100%;width:' + perc + '%;background:' + (isOk ? 'linear-gradient(90deg,#16a34a,#4ade80)' : 'linear-gradient(90deg,#dc2626,#f87171)') + ';border-radius:99px;transition:width .8s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden">'
-            + '<div style="position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);animation:_pShine 2.5s ease-in-out infinite"></div>'
-          + '</div>'
-        + '</div>'
-        + '<div style="display:flex;justify-content:space-between;margin-top:5px">'
-          + '<div style="font-size:10px;color:var(--cin);opacity:.5">' + perc + '% — meta: 75%</div>'
-          + '<div style="font-size:10px;color:var(--cin);opacity:.5">' + presencas + '/' + total + ' aulas</div>'
-        + '</div>'
-      + '</div>';
+      + '';
   }
 
   /* ── BLOCO STATS: missão semanal + conquistas ─────────────────────── */
@@ -8179,79 +8162,7 @@ async function renderAlunoPresenca(){
       { ic: '💎', label: 'Frequência 75%', dias: 75, earned: perc >= 75    }
     ];
 
-    elStats.innerHTML =
-      /* ── MISSÃO SEMANAL ── */
-      '<div class="missao-box" style="margin-bottom:14px;opacity:0;animation:_pFadeUp .4s ease forwards;animation-delay:.1s">'
-        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
-          + '<div>'
-            + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:3px">🎯 Missão semanal</div>'
-            + '<div style="font-size:14px;font-weight:700;color:var(--azul)">Comparecer à aula desta semana</div>'
-          + '</div>'
-          + '<div style="font-size:20px;font-weight:800;color:' + (progSemana >= metaSemana ? '#16a34a' : 'var(--azul)') + ';font-family:\'Lora\',serif;flex-shrink:0;margin-left:8px">'
-            + progSemana + '/' + metaSemana
-          + '</div>'
-        + '</div>'
-        /* mini barra */
-        + '<div style="height:8px;background:#e5e7eb;border-radius:99px;overflow:hidden">'
-          + '<div style="height:100%;width:' + Math.round((progSemana/metaSemana)*100) + '%;background:' + (progSemana >= metaSemana ? 'linear-gradient(90deg,#16a34a,#4ade80)' : 'linear-gradient(90deg,var(--azul),#3b82f6)') + ';border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1)"></div>'
-        + '</div>'
-        + (progSemana >= metaSemana
-          ? '<div style="font-size:12px;font-weight:600;color:#16a34a;margin-top:8px">✅ Missão concluída esta semana!</div>'
-          : '<div style="font-size:12px;color:var(--cin);opacity:.65;margin-top:8px">Falta ' + (metaSemana - progSemana) + ' presença para completar</div>'
-        )
-      + '</div>'
-
-      /* ── CALENDÁRIO ÚLTIMOS 28 DIAS ── */
-      + (function() {
-          var hoje28 = new Date(); hoje28.setHours(0,0,0,0);
-          var presMap = {};
-          lista.forEach(function(r){ presMap[r.data] = r.presente; });
-          var dias28 = [];
-          for (var d28 = 27; d28 >= 0; d28--) {
-            var dt = new Date(hoje28); dt.setDate(dt.getDate() - d28);
-            var k  = dt.toISOString().slice(0,10);
-            var st = presMap.hasOwnProperty(k) ? presMap[k] : null;
-            dias28.push({ k: k, st: st, n: dt.getDate() });
-          }
-          return '<div style="margin-bottom:14px;opacity:0;animation:_pFadeUp .4s ease forwards;animation-delay:.13s">'
-            + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:10px">📅 Últimos 28 dias</div>'
-            + '<div class="calendario" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px">'
-            + ['D','S','T','Q','Q','S','S'].map(function(l){
-                return '<div style="text-align:center;font-size:9px;font-weight:700;color:var(--cin);opacity:.5;padding-bottom:3px">' + l + '</div>';
-              }).join('')
-            + dias28.map(function(d28i) {
-                var cls, title;
-                var hojeK = hoje28.toISOString().slice(0,10);
-                if (d28i.k === hojeK) { cls = 'dia dia-hoje'; title = 'Hoje'; }
-                else if (d28i.st === true)  { cls = 'dia dia-presente'; title = 'Presente'; }
-                else if (d28i.st === false) { cls = 'dia dia-falta';    title = 'Falta'; }
-                else { cls = 'dia dia-futuro'; title = '–'; }
-                return '<div class="' + cls + '" title="' + title + '">' + d28i.n + '</div>';
-              }).join('')
-            + '</div>'
-          + '</div>';
-        })()
-
-      /* ── CONQUISTAS ── */
-      + '<div style="opacity:0;animation:_pFadeUp .4s ease forwards;animation-delay:.17s">'
-        + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:10px">🏆 Conquistas</div>'
-        + '<div style="display:flex;flex-wrap:wrap;gap:8px">'
-        + badges.map(function(b, bi) {
-            return '<div class="badge-conquista ' + (b.earned ? 'earned' : 'locked') + '" style="opacity:0;animation:_pFadeUp .35s ease forwards;animation-delay:' + (0.19 + bi * 0.05) + 's"'
-              + (b.earned
-                ? ' onmouseover="this.style.transform=\'translateY(-4px) scale(1.08)\';this.style.boxShadow=\'0 8px 20px rgba(245,158,11,.3)\'"'
-                  + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'0 4px 12px rgba(245,158,11,.25)\'"'
-                  + ' onmousedown="this.style.transform=\'scale(0.95)\'"'
-                  + ' onmouseup="this.style.transform=\'translateY(-4px) scale(1.08)\'"'
-                : ' title="Continue para desbloquear"'
-              ) + '>'
-              + '<span style="font-size:16px">' + b.ic + '</span>'
-              + '<span>' + b.label + '</span>'
-              + (b.earned ? '' : '<span style="font-size:10px;opacity:.5;margin-left:2px">🔒</span>')
-            + '</div>';
-          }).join('')
-        + '</div>'
-      + '</div>';
+    elStats.innerHTML = '';
   }
 
   /* ── BLOCO HIST: timeline de registros ─────────────────────────────── */
