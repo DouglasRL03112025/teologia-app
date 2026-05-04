@@ -8256,14 +8256,12 @@ async function renderAlunoAgenda(){
 
   // ── LIVROS ──
   const totalLivros = 24;
-  const livrosRec = Object.keys(D.livros_ent).reduce(function(acc, lid){
-    return acc + (((D.livros_ent[lid] || {})[usuAtual.id] === true) ? 1 : 0);
-  }, 0);
+  const livrosRec = window.livroAtualSistema || 0;
 
   // ── PROVAS ──
   const provas = window.provasAluno || [];
-  const provasFeitas = provas.filter(p => p.nota !== null).length;
-  const totalProvas  = provas.length;
+  const provasFeitas = provas.filter(p => p.fez_prova === true).length;
+  const totalProvas  = 24;
 
   // ── DASHBOARD (premium) ──
   const dashEl = document.getElementById('al-agenda-dashboard');
@@ -8285,6 +8283,7 @@ async function renderAlunoAgenda(){
 
       /* Livros */
       + '<div class="agenda-stat-card" style="background:linear-gradient(160deg,#f0f6ff,#e8f0fe);border-color:#c7d9f8;opacity:0;animation:_fadeUpSafe .4s ease forwards;animation-delay:.04s"'
+        + ' onclick="irAluno(\'livros\')"'
         + ' onmouseover="this.style.transform=\'translateY(-4px) scale(1.02)\';this.style.boxShadow=\'0 12px 28px rgba(26,58,92,.18)\'"'
         + ' onmouseout="this.style.transform=\'translateY(0) scale(1)\';this.style.boxShadow=\'0 4px 16px rgba(0,0,0,.07)\'"'
         + ' onmousedown="this.style.transform=\'scale(0.95)\'"'
@@ -8296,6 +8295,7 @@ async function renderAlunoAgenda(){
 
       /* Presença */
       + '<div class="agenda-stat-card" style="background:linear-gradient(160deg,#f0fdf5,#dcfce7);border-color:#a7f3c0;opacity:0;animation:_fadeUpSafe .4s ease forwards;animation-delay:.08s"'
+        + ' onclick="irAluno(\'presenca\')"'
         + ' onmouseover="this.style.transform=\'translateY(-4px) scale(1.02)\';this.style.boxShadow=\'0 12px 28px rgba(22,163,74,.18)\'"'
         + ' onmouseout="this.style.transform=\'translateY(0) scale(1)\';this.style.boxShadow=\'0 4px 16px rgba(0,0,0,.07)\'"'
         + ' onmousedown="this.style.transform=\'scale(0.95)\'"'
@@ -8311,6 +8311,7 @@ async function renderAlunoAgenda(){
 
       /* Provas */
       + '<div class="agenda-stat-card" style="background:linear-gradient(160deg,#fff8f0,#fef3e2);border-color:#fed8a0;opacity:0;animation:_fadeUpSafe .4s ease forwards;animation-delay:.12s"'
+        + ' onclick="irAluno(\'notas\')"'
         + ' onmouseover="this.style.transform=\'translateY(-4px) scale(1.02)\';this.style.boxShadow=\'0 12px 28px rgba(180,83,9,.15)\'"'
         + ' onmouseout="this.style.transform=\'translateY(0) scale(1)\';this.style.boxShadow=\'0 4px 16px rgba(0,0,0,.07)\'"'
         + ' onmousedown="this.style.transform=\'scale(0.95)\'"'
