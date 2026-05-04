@@ -3911,15 +3911,20 @@ async function renderProvasAluno() {
     var textoLivro =
       statusLivro === 'pendente'   ? '❌ Pendente'
     : statusLivro === 'aguardando' ? '⏳ Aguardando entrega'
-    : statusLivro === 'entregue'   ? '✅ Entregue'
-    : '';
+    : '';  /* NÃO mostrar "Entregue" */
     var linhaLivro = textoLivro
       ? '<div style="font-size:11px;font-weight:600;color:#555;background:rgba(0,0,0,0.04);border-radius:5px;padding:3px 8px;display:inline-block;margin-top:4px;">📚 Livro: ' + textoLivro + '</div>'
       : '';
 
+    /* verifica se é atrasada: não feita em livro anterior ao livroAtual */
+    var _livroAtualCalc = window.livroAtualSistema || livrosLiberados;
+    var _eAtrasada = (status === 'nao_fez') && (indice1 < _livroAtualCalc);
+
     // ── Fundo sutil por estado (mantém cores originais de s.bg, apenas suaviza) ──
     var fundoCard;
-    if (status === 'devolvida' || status === 'corrigida') {
+    if (_eAtrasada) {
+      fundoCard = '#fff5f5';   // vermelho bem suave para atrasadas
+    } else if (status === 'devolvida' || status === 'corrigida') {
       fundoCard = '#f6fdf8';   // levemente esverdeado
     } else if (status === 'feita') {
       fundoCard = '#fffef5';   // leve destaque suave
@@ -3969,14 +3974,14 @@ async function renderProvasAluno() {
       var notaCor2  = notaNum2 >= 7 ? '#16a34a' : notaNum2 >= 5 ? '#b45309' : '#dc2626';
       var notaBg2   = notaNum2 >= 7 ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)' : notaNum2 >= 5 ? 'linear-gradient(135deg,#fffbeb,#fef3c7)' : 'linear-gradient(135deg,#fef2f2,#fee2e2)';
       notaHtml = '<div class="nota-grande" style="display:inline-flex;align-items:baseline;gap:3px;background:' + notaBg2 + ';border-radius:12px;padding:6px 14px;margin-top:6px;transition:all .2s cubic-bezier(.4,0,.2,1)">'
-        + '<span style="font-size:28px;font-weight:900;color:' + notaCor2 + ';font-family:\'Lora\',serif;line-height:1">' + notaNum2.toFixed(1) + '</span>'
+        + '<span style="font-size:32px;font-weight:900;color:' + notaCor2 + ';font-family:\'Lora\',serif;line-height:1">' + notaNum2.toFixed(1) + '</span>'
         + '<span style="font-size:11px;font-weight:600;color:' + notaCor2 + ';opacity:.7;margin-left:2px">' + (status === 'corrigida' ? '— aguardando devolução' : '— devolvida') + '</span>'
       + '</div>';
     }
 
     return '<div class="' + cardClasses[status] + '" style="'
-        + 'background:' + cardGrad[status] + ';'
-        + 'border:1.5px solid ' + cardBrd2[status] + ';'
+        + 'background:' + (_eAtrasada ? 'linear-gradient(160deg,#fff5f5,#fee2e2)' : cardGrad[status]) + ';'
+        + 'border:1.5px solid ' + (_eAtrasada ? '#fca5a5' : cardBrd2[status]) + ';'
         + 'border-radius:16px;padding:14px 15px;'
         + 'display:flex;flex-direction:column;gap:4px;'
         + 'box-shadow:0 3px 10px rgba(0,0,0,.07);'
@@ -4019,21 +4024,39 @@ async function renderProvasAluno() {
   /* hero dinâmico */
   var _temPendente  = _allStatus.some(function(s){ return s === 'nao_fez'; });
   var _temCorrigida = _allStatus.some(function(s){ return s === 'corrigida'; });
+
+  /* cálculo de atrasadas: provas não feitas em livros até o livroAtual */
+  var _livroAtualNum = window.livroAtualSistema || livrosLiberados;
+  var _atrasadasCount = 0;
+  var _feitasAteAtual = 0;
+  for (var _ai = 1; _ai <= _livroAtualNum; _ai++) {
+    var _ac = 'p' + _ai;
+    var _al = mapaLivros[_ac];
+    if (!_al || _al.entregue !== true) continue; /* só conta livros entregues */
+    var _ar = mapaProvas[_ac];
+    if (!_ar || _ar.fez_prova !== true) {
+      _atrasadasCount++;
+    } else {
+      _feitasAteAtual++;
+    }
+  }
+  var _totalAteAtual = _atrasadasCount + _feitasAteAtual;
+
   var heroTxt, heroBg, heroIc;
-  if (_temCorrigida) {
+  if (_atrasadasCount > 0) {
+    heroTxt = 'Você tem ' + _atrasadasCount + ' prova' + (_atrasadasCount > 1 ? 's atrasadas' : ' atrasada');
+    heroBg  = 'linear-gradient(135deg,#7f1d1d,#b91c1c)';
+    heroIc  = '⚠️';
+  } else if (_temCorrigida) {
     heroTxt = 'Sua prova foi corrigida — aguardando devolução';
     heroBg  = 'linear-gradient(135deg,#1e3a8a,#3b82f6)';
     heroIc  = '⏳';
-  } else if (totalDeVolv > 0 && !_temPendente) {
-    heroTxt = 'Parabéns pela sua nota!';
+  } else if (totalDeVolv > 0) {
+    heroTxt = 'Você está em dia com as provas';
     heroBg  = 'linear-gradient(135deg,#14532d,#16a34a)';
     heroIc  = '🏆';
-  } else if (_temPendente) {
-    heroTxt = 'Você tem uma prova pendente';
-    heroBg  = 'linear-gradient(135deg,#7c2d12,#ea580c)';
-    heroIc  = '🎯';
   } else {
-    heroTxt = 'Acompanhe seu progresso nas provas';
+    heroTxt = 'Você está em dia com as provas';
     heroBg  = 'linear-gradient(135deg,#1a3a5c,#0f2540)';
     heroIc  = '📊';
   }
@@ -4083,16 +4106,16 @@ async function renderProvasAluno() {
     + '</style>'
 
     /* ── HERO ── */
-    + '<div style="background:' + heroBg + ';border-radius:20px;padding:22px 22px 20px;margin-bottom:16px;position:relative;overflow:hidden;cursor:default;opacity:0;animation:_qFadeUp .4s ease forwards;animation-delay:0s">'
+    + '<div style="background:' + heroBg + ';border-radius:20px;padding:16px 18px 14px;margin-bottom:16px;position:relative;overflow:hidden;cursor:default;opacity:0;animation:_qFadeUp .4s ease forwards;animation-delay:0s">'
       + '<div style="position:absolute;top:-20px;right:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.05)"></div>'
       + '<div style="position:absolute;bottom:-25px;right:26px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.07)"></div>'
       + '<div style="position:absolute;top:0;left:-60%;width:50%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.1),transparent);transform:skewX(-20deg);animation:_qShine 6s ease-in-out infinite"></div>'
       + '<div style="display:flex;align-items:center;gap:14px">'
         + '<div style="font-size:34px;flex-shrink:0;animation:_qBounce 3s ease-in-out infinite">' + heroIc + '</div>'
         + '<div>'
-          + '<div style="font-size:15px;font-weight:800;color:#fff;line-height:1.3;letter-spacing:-.2px">' + heroTxt + '</div>'
+          + '<div style="font-size:18px;font-weight:800;color:#fff;line-height:1.3;letter-spacing:-.2px">' + heroTxt + '</div>'
           + '<div style="font-size:11px;color:rgba(255,255,255,.65);margin-top:4px;font-weight:500">'
-            + totalFeitas + ' de ' + totalDisp + ' provas concluídas'
+            + _feitasAteAtual + ' de ' + _totalAteAtual + ' provas concluídas até o livro atual'
             + (media !== '—' ? ' · Média: ' + media : '')
           + '</div>'
         + '</div>'
@@ -4117,14 +4140,11 @@ async function renderProvasAluno() {
     + (_focoItem
       ? (function() {
           var _fbg = _focoItem.status === 'nao_fez'
-            ? 'linear-gradient(135deg,#ea580c,#f97316)'
+            ? 'linear-gradient(135deg,#1e40af,#3b82f6)'
             : _focoItem.status === 'corrigida'
             ? 'linear-gradient(135deg,#1e40af,#3b82f6)'
             : 'linear-gradient(135deg,#15803d,#22c55e)';
-          var _fic = _focoItem.status === 'nao_fez' ? '🎯' : _focoItem.status === 'corrigida' ? '📬' : '🏆';
-          var _fbtn = _focoItem.status === 'nao_fez' ? 'Fazer prova'
-            : _focoItem.status === 'corrigida' ? 'Ver resultado'
-            : 'Ver nota';
+          var _fic = _focoItem.status === 'nao_fez' ? '📌' : _focoItem.status === 'corrigida' ? '📬' : '🏆';
           var _fnotaHtml = (_focoItem.status === 'corrigida' && _focoItem.reg && _focoItem.reg.nota != null)
             ? '<div class="nota-grande" style="font-size:42px;font-weight:900;color:#fff;font-family:\'Lora\',serif;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.2);margin:8px 0 4px;animation:_qFadeUp .5s ease">'
                 + Number(_focoItem.reg.nota).toFixed(1)
@@ -4140,33 +4160,12 @@ async function renderProvasAluno() {
                 + '<div style="font-size:9px;color:rgba(255,255,255,.55);font-weight:700;letter-spacing:.4px">' + _focoItem.codigo.toUpperCase() + '</div>'
                 + '<div style="font-size:15px;font-weight:800;color:#fff;line-height:1.3">' + _focoItem.nome + '</div>'
                 + _fnotaHtml
-                + '<div style="display:inline-block;margin-top:10px;background:rgba(255,255,255,.2);color:#fff;border-radius:99px;padding:5px 16px;font-size:12px;font-weight:700;border:1.5px solid rgba(255,255,255,.35);transition:all .2s cubic-bezier(.4,0,.2,1)"'
-                  + ' onmouseover="this.style.background=\'rgba(255,255,255,.35)\';this.style.transform=\'translateY(-2px)\'"'
-                  + ' onmouseout="this.style.background=\'rgba(255,255,255,.2)\';this.style.transform=\'translateY(0)\'"'
-                  + ' onmousedown="this.style.transform=\'scale(0.94)\'"'
-                  + ' onmouseup="this.style.transform=\'translateY(-2px)\'">'
-                  + _fbtn + ' →'
-                + '</div>'
               + '</div>'
             + '</div>'
           + '</div>';
         })()
       : ''
     )
-
-    /* ── CONQUISTAS ── */
-    + '<div style="margin-bottom:16px;opacity:0;animation:_qFadeUp .4s ease forwards;animation-delay:.10s">'
-      + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:10px">🏆 Conquistas</div>'
-      + '<div style="display:flex;flex-wrap:wrap;gap:7px">'
-      + _badges.map(function(b, bi) {
-          return '<div class="badge-prova ' + (b.earned ? 'earned' : 'locked') + '" style="opacity:0;animation:_qFadeUp .35s ease forwards;animation-delay:' + (0.12 + bi * 0.05) + 's">'
-            + '<span style="font-size:14px">' + b.ic + '</span>'
-            + '<span>' + b.label + '</span>'
-            + (b.earned ? '' : '<span style="font-size:10px;opacity:.4">🔒</span>')
-          + '</div>';
-        }).join('')
-      + '</div>'
-    + '</div>'
 
     /* ── LISTA GRID ── */
     + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:12px;opacity:0;animation:_qFadeUp .4s ease forwards;animation-delay:.14s">Todas as provas</div>'
