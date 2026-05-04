@@ -7909,11 +7909,7 @@ async function renderAlunoInicio() {
 
 
 
-      /* ── Alertas ── */
-      + '<div style="margin-bottom:28px;transition:all .2s cubic-bezier(.4,0,.2,1)">'
-        + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:0;margin-bottom:12px;animation:_fadeUp .4s ease forwards;animation-delay:.2s">Notificações</div>'
-        + alertasHtml
-      + '</div>'
+
 
     /* ══ FIM CONTEÚDO REAL ══ */
     + '</div>';
@@ -7968,7 +7964,7 @@ async function renderAlunoCadastro(){
   const _livroBase = 7;
   const _livrosLiberados = Math.min(_hoje.getDate() >= 25 ? _livroBase + 1 : _livroBase, 24);
   const _livrosPagos = (window.livrosAluno || []).filter(l => l.pagou === true).length;
-  const _statusPagamento = `${_livrosPagos}/${_livrosLiberados} livros pagos`;
+  const _statusPagamento = `${_livrosPagos} livros pagos`;
 
   // Cálculo dinâmico de email
   const _emailExibido = a.email
