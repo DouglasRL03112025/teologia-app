@@ -3301,52 +3301,248 @@ async function renderProvasAluno() {
     var bordaCard = temNotaVisivel ? '1.5px solid #c6ead4' : '1px solid #e8e4dc';
     var extraShadow = temNotaVisivel ? ',0 0 0 2px rgba(40,167,69,0.07)' : '';
 
-    return '<div style="'
-        + 'background:' + fundoCard + ';'
-        + 'border:' + bordaCard + ';'
-        + 'border-radius:12px;'
-        + 'padding:14px 15px;'
-        + 'display:flex;'
-        + 'flex-direction:column;'
-        + 'gap:3px;'
-        + 'box-shadow:0 4px 12px rgba(0,0,0,0.06)' + extraShadow + ';'
-        + 'transition:all 0.18s ease;'
-        + 'cursor:default;'
-        + '"'
-        + ' onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,0.10)' + extraShadow + '\'"'
-        + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.06)' + extraShadow + '\'"'
-        + ' onmousedown="this.style.transform=\'scale(0.98)\'"'
-        + ' onmouseup="this.style.transform=\'translateY(-2px)\'"'
-        + '>'
-          + '<div style="font-size:11px;color:#6b7280;font-weight:700;letter-spacing:.6px;text-transform:uppercase;">' + codigo + '</div>'
-          + '<div style="font-size:14px;font-weight:600;color:#1f2937;line-height:1.3;">📖 ' + nome + '</div>'
-          + linhaStatus
-          + linhaLivro
-        + '</div>';
+    /* ── card premium por status ───────────────────────────────────── */
+    var cardClasses = {
+      nao_fez:   'prova-card prova-nao-fez',
+      feita:     'prova-card prova-pendente',
+      corrigida: 'prova-card prova-corrigida',
+      devolvida: 'prova-card prova-devolvida',
+      futuro:    'prova-card prova-bloqueado',
+      bloqueado: 'prova-card prova-bloqueado'
+    };
+    var cardGrad = {
+      nao_fez:   'linear-gradient(160deg,#f9fafb,#f3f4f6)',
+      feita:     'linear-gradient(160deg,#fffbeb,#fef3c7)',
+      corrigida: 'linear-gradient(160deg,#eff6ff,#dbeafe)',
+      devolvida: 'linear-gradient(160deg,#f0fdf4,#dcfce7)',
+      futuro:    'linear-gradient(160deg,#f9fafb,#f3f4f6)',
+      bloqueado: 'linear-gradient(160deg,#f9fafb,#f3f4f6)'
+    };
+    var cardBrd2 = {
+      nao_fez:   '#e5e7eb', feita: '#fbbf24', corrigida: '#93c5fd',
+      devolvida: '#86efac', futuro: '#e5e7eb', bloqueado: '#e5e7eb'
+    };
+    var statusIcons = {
+      nao_fez:'📝', feita:'⏳', corrigida:'🔵', devolvida:'✅', futuro:'🔒', bloqueado:'🔒'
+    };
+    var statusLabels = {
+      nao_fez:'Não realizada', feita:'Aguardando correção',
+      corrigida:'Corrigida', devolvida:'Devolvida', futuro:'Em breve', bloqueado:'Bloqueado'
+    };
+    var statusLabelCors = {
+      nao_fez:'#6b7280', feita:'#92400e', corrigida:'#1e40af',
+      devolvida:'#166534', futuro:'#9ca3af', bloqueado:'#9ca3af'
+    };
+
+    var notaHtml = '';
+    if ((status === 'corrigida' || status === 'devolvida') && temNota) {
+      var notaNum2  = Number(nota);
+      var notaCor2  = notaNum2 >= 7 ? '#16a34a' : notaNum2 >= 5 ? '#b45309' : '#dc2626';
+      var notaBg2   = notaNum2 >= 7 ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)' : notaNum2 >= 5 ? 'linear-gradient(135deg,#fffbeb,#fef3c7)' : 'linear-gradient(135deg,#fef2f2,#fee2e2)';
+      notaHtml = '<div class="nota-grande" style="display:inline-flex;align-items:baseline;gap:3px;background:' + notaBg2 + ';border-radius:12px;padding:6px 14px;margin-top:6px;transition:all .2s cubic-bezier(.4,0,.2,1)">'
+        + '<span style="font-size:28px;font-weight:900;color:' + notaCor2 + ';font-family:\'Lora\',serif;line-height:1">' + notaNum2.toFixed(1) + '</span>'
+        + '<span style="font-size:11px;font-weight:600;color:' + notaCor2 + ';opacity:.7;margin-left:2px">' + (status === 'corrigida' ? '— aguardando devolução' : '— devolvida') + '</span>'
+      + '</div>';
+    }
+
+    return '<div class="' + cardClasses[status] + '" style="'
+        + 'background:' + cardGrad[status] + ';'
+        + 'border:1.5px solid ' + cardBrd2[status] + ';'
+        + 'border-radius:16px;padding:14px 15px;'
+        + 'display:flex;flex-direction:column;gap:4px;'
+        + 'box-shadow:0 3px 10px rgba(0,0,0,.07);'
+        + 'transition:all .2s cubic-bezier(.4,0,.2,1);cursor:default;'
+        + 'position:relative;overflow:hidden"'
+        + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 10px 24px rgba(0,0,0,.13)\'"'
+        + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.07)\'"'
+        + ' onmousedown="this.style.transform=\'scale(0.96)\'"'
+        + ' onmouseup="this.style.transform=\'translateY(-3px)\'">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center">'
+          + '<div style="font-size:10px;color:#6b7280;font-weight:700;letter-spacing:.6px;text-transform:uppercase">' + codigo + '</div>'
+          + '<div style="font-size:10px;font-weight:700;color:' + statusLabelCors[status] + ';background:rgba(0,0,0,.04);border-radius:99px;padding:2px 8px">' + statusIcons[status] + ' ' + statusLabels[status] + '</div>'
+        + '</div>'
+        + '<div style="font-size:13px;font-weight:700;color:#1f2937;line-height:1.35;margin-top:2px">' + nome + '</div>'
+        + notaHtml
+        + (linhaLivro ? '<div style="margin-top:4px">' + linhaLivro + '</div>' : '')
+      + '</div>';
   }).join('');
 
+  /* ══ cálculos globais para hero ══ */
   var media = comNota.length
-    ? (comNota.reduce(function(s, n) { return s + n; }, 0) / comNota.length).toFixed(1)
-    : '—';
+    ? (comNota.reduce(function(s, n) { return s + n; }, 0) / comNota.length).toFixed(1) : '—';
+  var corMedia = '—' === media ? 'var(--cin)' : Number(media) >= 7 ? '#16a34a' : Number(media) >= 5 ? '#b45309' : '#dc2626';
 
-  var corMedia = '—' === media ? 'var(--cin)' : Number(media) >= 7 ? 'var(--vd)' : Number(media) >= 5 ? 'var(--am)' : 'var(--vm)';
+  /* totais para progresso */
+  var _allStatus = LIVROS_CURSO.map(function(_, i) {
+    var c2 = 'p' + (i+1); var r2 = mapaProvas[c2]; var l2 = mapaLivros[c2];
+    if (!l2 || l2.entregue !== true) return 'skip';
+    if (!r2 || r2.fez_prova !== true) return 'nao_fez';
+    if (r2.fez_prova && r2.nota == null) return 'feita';
+    if (r2.nota != null && !r2.devolvida) return 'corrigida';
+    if (r2.devolvida) return 'devolvida';
+    return 'nao_fez';
+  });
+  var totalDisp    = _allStatus.filter(function(s){ return s !== 'skip'; }).length;
+  var totalFeitas  = _allStatus.filter(function(s){ return s === 'corrigida' || s === 'devolvida' || s === 'feita'; }).length;
+  var totalDeVolv  = _allStatus.filter(function(s){ return s === 'devolvida'; }).length;
+  var progPct      = totalDisp > 0 ? Math.round((totalFeitas / totalDisp) * 100) : 0;
 
-  container.innerHTML = ''
-    + '<div style="margin-bottom:15px;padding:16px 18px;background:linear-gradient(135deg,#1e3a5f,#27496d);border-radius:12px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 16px rgba(30,58,95,0.18);">'
-      + '<div style="font-size:26px;line-height:1;">📊</div>'
-      + '<div>'
-        + '<div style="font-size:12px;font-weight:500;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:.5px;">Média geral</div>'
-        + '<div style="font-size:24px;font-weight:800;color:#fff;font-family:\'Lora\',serif;margin-top:2px;text-shadow:0 1px 6px rgba(0,0,0,0.2);animation:glowNumber 3s ease-in-out infinite">' + media + '</div>'
+  /* hero dinâmico */
+  var _temPendente  = _allStatus.some(function(s){ return s === 'nao_fez'; });
+  var _temCorrigida = _allStatus.some(function(s){ return s === 'corrigida'; });
+  var heroTxt, heroBg, heroIc;
+  if (_temCorrigida) {
+    heroTxt = 'Sua prova foi corrigida — aguardando devolução';
+    heroBg  = 'linear-gradient(135deg,#1e3a8a,#3b82f6)';
+    heroIc  = '⏳';
+  } else if (totalDeVolv > 0 && !_temPendente) {
+    heroTxt = 'Parabéns pela sua nota!';
+    heroBg  = 'linear-gradient(135deg,#14532d,#16a34a)';
+    heroIc  = '🏆';
+  } else if (_temPendente) {
+    heroTxt = 'Você tem uma prova pendente';
+    heroBg  = 'linear-gradient(135deg,#7c2d12,#ea580c)';
+    heroIc  = '🎯';
+  } else {
+    heroTxt = 'Acompanhe seu progresso nas provas';
+    heroBg  = 'linear-gradient(135deg,#1a3a5c,#0f2540)';
+    heroIc  = '📊';
+  }
+
+  /* card de foco */
+  var _focoItem = null;
+  var _focoPrio = ['nao_fez', 'corrigida', 'devolvida'];
+  for (var _pi = 0; _pi < _focoPrio.length && !_focoItem; _pi++) {
+    var _pst = _focoPrio[_pi];
+    LIVROS_CURSO.forEach(function(nm, ix) {
+      if (_focoItem) return;
+      var _c = 'p' + (ix+1); var _r = mapaProvas[_c]; var _l = mapaLivros[_c];
+      if (!_l || _l.entregue !== true) return;
+      var _s;
+      if (!_r || !_r.fez_prova) _s = 'nao_fez';
+      else if (_r.fez_prova && _r.nota == null) _s = 'feita';
+      else if (_r.nota != null && !_r.devolvida) _s = 'corrigida';
+      else if (_r.devolvida) _s = 'devolvida';
+      else _s = 'nao_fez';
+      if (_s === _pst) _focoItem = { nome: nm, codigo: _c, status: _s, reg: _r };
+    });
+  }
+
+  /* conquistas */
+  var maxNota = comNota.length ? Math.max.apply(null, comNota) : 0;
+  var _badges = [
+    { ic:'🎓', label:'Primeira prova',  earned: totalFeitas >= 1             },
+    { ic:'⭐', label:'Nota ≥ 7.0',      earned: comNota.some(function(n){ return n >= 7; }) },
+    { ic:'💎', label:'Nota ≥ 9.0',      earned: comNota.some(function(n){ return n >= 9; }) },
+    { ic:'🏅', label:'3 provas feitas', earned: totalFeitas >= 3             },
+    { ic:'🏆', label:'Todas devolvidas',earned: totalDeVolv >= 1 && !_temPendente }
+  ];
+
+  /* ══ MONTAR HTML PREMIUM ══ */
+  container.innerHTML =
+    '<style>'
+      + '@keyframes _qFadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}'
+      + '@keyframes _qShine{0%,100%{left:-100%}50%{left:100%}}'
+      + '@keyframes _qPulse{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,.3)}50%{box-shadow:0 0 0 10px rgba(59,130,246,0)}}'
+      + '@keyframes _qBounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-4px)}60%{transform:translateY(-2px)}}'
+      + '.prova-card{transition:all .2s cubic-bezier(.4,0,.2,1)}'
+      + '.nota-grande:hover{transform:scale(1.04)}'
+      + '.badge-prova{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:5px 12px;font-size:11px;font-weight:700;border:2px solid transparent;transition:all .2s cubic-bezier(.4,0,.2,1);cursor:default}'
+      + '.badge-prova.earned{background:linear-gradient(135deg,#fef3c7,#fde68a);color:#78350f;border-color:#f59e0b;box-shadow:0 3px 10px rgba(245,158,11,.22)}'
+      + '.badge-prova.earned:hover{transform:translateY(-3px) scale(1.07)}'
+      + '.badge-prova.locked{background:#f9fafb;color:#9ca3af;border-color:#e5e7eb;opacity:.55}'
+    + '</style>'
+
+    /* ── HERO ── */
+    + '<div style="background:' + heroBg + ';border-radius:20px;padding:22px 22px 20px;margin-bottom:16px;position:relative;overflow:hidden;cursor:default;opacity:0;animation:_qFadeUp .4s ease forwards;animation-delay:0s">'
+      + '<div style="position:absolute;top:-20px;right:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.05)"></div>'
+      + '<div style="position:absolute;bottom:-25px;right:26px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.07)"></div>'
+      + '<div style="position:absolute;top:0;left:-60%;width:50%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.1),transparent);transform:skewX(-20deg);animation:_qShine 6s ease-in-out infinite"></div>'
+      + '<div style="display:flex;align-items:center;gap:14px">'
+        + '<div style="font-size:34px;flex-shrink:0;animation:_qBounce 3s ease-in-out infinite">' + heroIc + '</div>'
+        + '<div>'
+          + '<div style="font-size:15px;font-weight:800;color:#fff;line-height:1.3;letter-spacing:-.2px">' + heroTxt + '</div>'
+          + '<div style="font-size:11px;color:rgba(255,255,255,.65);margin-top:4px;font-weight:500">'
+            + totalFeitas + ' de ' + totalDisp + ' provas concluídas'
+            + (media !== '—' ? ' · Média: ' + media : '')
+          + '</div>'
+        + '</div>'
       + '</div>'
     + '</div>'
-    + '<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;font-size:12px;font-weight:600;">'
-      + '<span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:#d4edda;border:2px solid #28a745;border-radius:3px;display:inline-block;"></span>Devolvida</span>'
-      + '<span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:#dbeafe;border:2px solid #3b82f6;border-radius:3px;display:inline-block;"></span>Corrigida</span>'
-      + '<span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:#fef9c3;border:2px solid #fbbf24;border-radius:3px;display:inline-block;"></span>Aguardando</span>'
-      + '<span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:#f3f4f6;border:2px solid #d1d5db;border-radius:3px;display:inline-block;"></span>Não realizada</span>'
+
+    /* ── BARRA DE PROGRESSO ── */
+    + '<div style="margin-bottom:16px;opacity:0;animation:_qFadeUp .4s ease forwards;animation-delay:.04s">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">'
+        + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7">Progresso nas provas</div>'
+        + '<div style="font-size:11px;font-weight:700;color:var(--azul)">' + progPct + '%</div>'
+      + '</div>'
+      + '<div style="height:10px;background:#e5e7eb;border-radius:99px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.08)">'
+        + '<div style="height:100%;width:' + progPct + '%;background:linear-gradient(90deg,#1a3a5c,#3b82f6);border-radius:99px;transition:width .8s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden">'
+          + '<div style="position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);animation:_qShine 2.5s ease-in-out infinite"></div>'
+        + '</div>'
+      + '</div>'
+      + '<div style="font-size:10px;color:var(--cin);opacity:.5;margin-top:5px;text-align:right">' + totalFeitas + ' feitas · ' + totalDeVolv + ' devolvidas · ' + totalDisp + ' disponíveis</div>'
     + '</div>'
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
-      + cards
+
+    /* ── CARD DE FOCO ── */
+    + (_focoItem
+      ? (function() {
+          var _fbg = _focoItem.status === 'nao_fez'
+            ? 'linear-gradient(135deg,#ea580c,#f97316)'
+            : _focoItem.status === 'corrigida'
+            ? 'linear-gradient(135deg,#1e40af,#3b82f6)'
+            : 'linear-gradient(135deg,#15803d,#22c55e)';
+          var _fic = _focoItem.status === 'nao_fez' ? '🎯' : _focoItem.status === 'corrigida' ? '📬' : '🏆';
+          var _fbtn = _focoItem.status === 'nao_fez' ? 'Fazer prova'
+            : _focoItem.status === 'corrigida' ? 'Ver resultado'
+            : 'Ver nota';
+          var _fnotaHtml = (_focoItem.status === 'corrigida' && _focoItem.reg && _focoItem.reg.nota != null)
+            ? '<div class="nota-grande" style="font-size:42px;font-weight:900;color:#fff;font-family:\'Lora\',serif;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.2);margin:8px 0 4px;animation:_qFadeUp .5s ease">'
+                + Number(_focoItem.reg.nota).toFixed(1)
+              + '</div>'
+              + '<div style="font-size:11px;color:rgba(255,255,255,.7);font-weight:600;margin-bottom:8px">Aguardando devolução da prova</div>'
+            : '';
+          return '<div style="background:' + _fbg + ';border-radius:18px;padding:20px 20px 18px;margin-bottom:16px;position:relative;overflow:hidden;cursor:default;opacity:0;animation:_qFadeUp .4s ease forwards,_qPulse 3s ease-in-out 1s infinite;animation-delay:.07s,1s">'
+            + '<div style="position:absolute;top:0;left:-60%;width:50%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.12),transparent);transform:skewX(-20deg);animation:_qShine 5s ease-in-out infinite"></div>'
+            + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.6);margin-bottom:8px">📌 Foco agora</div>'
+            + '<div style="display:flex;align-items:flex-start;gap:12px">'
+              + '<div style="font-size:28px;flex-shrink:0;animation:_qBounce 2.5s ease-in-out infinite">' + _fic + '</div>'
+              + '<div style="flex:1">'
+                + '<div style="font-size:9px;color:rgba(255,255,255,.55);font-weight:700;letter-spacing:.4px">' + _focoItem.codigo.toUpperCase() + '</div>'
+                + '<div style="font-size:15px;font-weight:800;color:#fff;line-height:1.3">' + _focoItem.nome + '</div>'
+                + _fnotaHtml
+                + '<div style="display:inline-block;margin-top:10px;background:rgba(255,255,255,.2);color:#fff;border-radius:99px;padding:5px 16px;font-size:12px;font-weight:700;border:1.5px solid rgba(255,255,255,.35);transition:all .2s cubic-bezier(.4,0,.2,1)"'
+                  + ' onmouseover="this.style.background=\'rgba(255,255,255,.35)\';this.style.transform=\'translateY(-2px)\'"'
+                  + ' onmouseout="this.style.background=\'rgba(255,255,255,.2)\';this.style.transform=\'translateY(0)\'"'
+                  + ' onmousedown="this.style.transform=\'scale(0.94)\'"'
+                  + ' onmouseup="this.style.transform=\'translateY(-2px)\'">'
+                  + _fbtn + ' →'
+                + '</div>'
+              + '</div>'
+            + '</div>'
+          + '</div>';
+        })()
+      : ''
+    )
+
+    /* ── CONQUISTAS ── */
+    + '<div style="margin-bottom:16px;opacity:0;animation:_qFadeUp .4s ease forwards;animation-delay:.10s">'
+      + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:10px">🏆 Conquistas</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:7px">'
+      + _badges.map(function(b, bi) {
+          return '<div class="badge-prova ' + (b.earned ? 'earned' : 'locked') + '" style="opacity:0;animation:_qFadeUp .35s ease forwards;animation-delay:' + (0.12 + bi * 0.05) + 's">'
+            + '<span style="font-size:14px">' + b.ic + '</span>'
+            + '<span>' + b.label + '</span>'
+            + (b.earned ? '' : '<span style="font-size:10px;opacity:.4">🔒</span>')
+          + '</div>';
+        }).join('')
+      + '</div>'
+    + '</div>'
+
+    /* ── LISTA GRID ── */
+    + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:12px;opacity:0;animation:_qFadeUp .4s ease forwards;animation-delay:.14s">Todas as provas</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+      + cards.replace(/opacity:0;animation:_qFadeUp/g, 'opacity:0;animation:_qFadeUp')
     + '</div>';
 }
 
