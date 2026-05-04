@@ -4031,9 +4031,17 @@ async function renderProvasAluno() {
     return 'nao_fez';
   });
   var totalDisp    = _allStatus.filter(function(s){ return s !== 'skip'; }).length;
-  var totalFeitas  = _allStatus.filter(function(s){ return s === 'corrigida' || s === 'devolvida' || s === 'feita'; }).length;
   var totalDeVolv  = _allStatus.filter(function(s){ return s === 'devolvida'; }).length;
-  var progPct      = totalDisp > 0 ? Math.round((totalFeitas / totalDisp) * 100) : 0;
+  /* CORREÇÃO: base 24 provas fixas, conta fez_prova === true */
+  var totalProvasCurso = 24;
+  var livroAtualParaStatus = window.livroAtualSistema || 1;
+  var totalFeitas  = Object.values(mapaProvas).filter(function(p){ return p.fez_prova === true; }).length;
+  var progPct      = Math.round((totalFeitas / totalProvasCurso) * 100);
+  /* status: em dia ou atrasado */
+  var esperado     = Math.max(0, livroAtualParaStatus - 1);
+  var emDia        = totalFeitas >= esperado;
+  var barraCorFundo = emDia ? '#e5e7eb' : '#fecaca';
+  var barraCorBarra = emDia ? 'linear-gradient(90deg,#1a3a5c,#3b82f6)' : 'linear-gradient(90deg,#b91c1c,#ef4444)';
 
   /* hero dinâmico */
   var _temPendente  = _allStatus.some(function(s){ return s === 'nao_fez'; });
@@ -4140,12 +4148,12 @@ async function renderProvasAluno() {
         + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7">Progresso nas provas</div>'
         + '<div style="font-size:11px;font-weight:700;color:var(--azul)">' + progPct + '%</div>'
       + '</div>'
-      + '<div style="height:10px;background:#e5e7eb;border-radius:99px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.08)">'
-        + '<div style="height:100%;width:' + progPct + '%;background:linear-gradient(90deg,#1a3a5c,#3b82f6);border-radius:99px;transition:width .8s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden">'
+      + '<div style="height:10px;background:' + barraCorFundo + ';border-radius:99px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.08)">'
+        + '<div style="height:100%;width:' + progPct + '%;background:' + barraCorBarra + ';border-radius:99px;transition:width .8s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden">'
           + '<div style="position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);animation:_qShine 2.5s ease-in-out infinite"></div>'
         + '</div>'
       + '</div>'
-      + '<div style="font-size:10px;color:var(--cin);opacity:.5;margin-top:5px;text-align:right">' + totalFeitas + ' feitas · ' + totalDeVolv + ' devolvidas · ' + totalDisp + ' disponíveis</div>'
+      + '<div style="font-size:10px;color:var(--cin);opacity:.5;margin-top:5px;text-align:right">' + totalFeitas + ' de 24 provas concluídas</div>'
     + '</div>'
 
     /* ── CARD DE FOCO ── */
@@ -7715,6 +7723,7 @@ async function renderAlunoInicio() {
   if (provaDestaque) {
     cardProvaHtml =
       '<div class="card-dashboard prova-destaque" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #3b82f6;border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 4px 16px rgba(59,130,246,.22);transition:all .22s cubic-bezier(.4,0,.2,1);cursor:pointer;position:relative;overflow:hidden;animation:glowSoft 4s ease-in-out infinite;animation-delay:2.6s"'
+        + ' onclick="irAluno(\'notas\')"'
         + ' onmouseover="this.style.transform=\'scale(1.04)\';this.style.boxShadow=\'0 10px 28px rgba(59,130,246,.32)\'"'
         + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'0 4px 16px rgba(59,130,246,.22)\'"'
         + ' onmousedown="this.style.transform=\'scale(0.96)\'"'
@@ -7727,6 +7736,7 @@ async function renderAlunoInicio() {
   } else {
     cardProvaHtml =
       '<div class="card-dashboard" style="background:' + bgProva(regProva) + ';border:1.5px solid ' + brdProva(regProva) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .22s cubic-bezier(.4,0,.2,1);cursor:pointer;animation:glowSoft 4s ease-in-out infinite;animation-delay:2.6s"'
+        + ' onclick="irAluno(\'notas\')"'
         + ' onmouseover="this.style.transform=\'translateY(-3px) scale(1.02)\';this.style.boxShadow=\'0 10px 24px rgba(0,0,0,.15)\'"'
         + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.08)\'"'
         + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
@@ -7854,6 +7864,7 @@ async function renderAlunoInicio() {
       /* ── Cards de status (3 colunas) ── */
       + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards;animation-delay:.16s">'
         + '<div class="card-dashboard" style="background:' + bgPag(pagou) + ';border:1.5px solid ' + brdPag(pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .22s cubic-bezier(.4,0,.2,1);cursor:pointer;animation:glowSoft 4s ease-in-out infinite;animation-delay:0s"'
+          + ' onclick="irAluno(\'pagamentos\')"'
           + ' onmouseover="this.style.transform=\'translateY(-3px) scale(1.02)\';this.style.boxShadow=\'0 10px 24px rgba(0,0,0,.15)\'"'
           + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.08)\'"'
           + ' onmousedown="this.style.transform=\'scale(0.96)\'"'
@@ -7863,6 +7874,7 @@ async function renderAlunoInicio() {
           + '<div style="font-size:12px;font-weight:700;color:' + corPag(pagou) + ';line-height:1.3">' + statusPag + '</div>'
         + '</div>'
         + '<div class="card-dashboard" style="background:' + bgEnt(entregue, pagou) + ';border:1.5px solid ' + brdEnt(entregue, pagou) + ';border-radius:16px;padding:18px 8px 14px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.08);transition:all .22s cubic-bezier(.4,0,.2,1);cursor:pointer;animation:glowSoft 4s ease-in-out infinite;animation-delay:1.3s"'
+          + ' onclick="irAluno(\'livros\')"'
           + ' onmouseover="this.style.transform=\'translateY(-3px) scale(1.02)\';this.style.boxShadow=\'0 10px 24px rgba(0,0,0,.15)\'"'
           + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'0 3px 10px rgba(0,0,0,.08)\'"'
           + ' onmousedown="this.style.transform=\'scale(0.96)\'"'
@@ -7891,6 +7903,7 @@ async function renderAlunoInicio() {
       /* ── Próxima aula ── */
       + (proximaAula
         ? '<div style="background:linear-gradient(135deg,#2b5c8a,#3b82f6);border-radius:14px;padding:16px;margin-bottom:20px;color:#fff;position:relative;overflow:hidden;cursor:pointer;opacity:0;transform:translateY(10px);animation:_fadeUp .4s ease forwards,glowAula 4s ease-in-out 0.4s infinite;animation-delay:.19s,0.4s;transition:all .22s cubic-bezier(.4,0,.2,1)"'
+          + ' onclick="irAluno(\'agenda\')"'
           + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.filter=\'brightness(1.08)\';"'
           + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.filter=\'brightness(1)\';"'
           + ' onmousedown="this.style.transform=\'scale(0.96)\';"'
