@@ -4029,7 +4029,7 @@ async function renderProvasAluno() {
   var _livroAtualNum = window.livroAtualSistema || livrosLiberados;
   var _atrasadasCount = 0;
   var _feitasAteAtual = 0;
-  for (var _ai = 1; _ai <= _livroAtualNum; _ai++) {
+  for (var _ai = 1; _ai < _livroAtualNum; _ai++) { /* < livroAtual: apenas livros ANTERIORES */
     var _ac = 'p' + _ai;
     var _al = mapaLivros[_ac];
     if (!_al || _al.entregue !== true) continue; /* só conta livros entregues */
@@ -4061,23 +4061,21 @@ async function renderProvasAluno() {
     heroIc  = '📊';
   }
 
-  /* card de foco */
+  /* card de foco — sempre exibe a prova do LIVRO ATUAL */
   var _focoItem = null;
-  var _focoPrio = ['nao_fez', 'corrigida', 'devolvida'];
-  for (var _pi = 0; _pi < _focoPrio.length && !_focoItem; _pi++) {
-    var _pst = _focoPrio[_pi];
-    LIVROS_CURSO.forEach(function(nm, ix) {
-      if (_focoItem) return;
-      var _c = 'p' + (ix+1); var _r = mapaProvas[_c]; var _l = mapaLivros[_c];
-      if (!_l || _l.entregue !== true) return;
-      var _s;
-      if (!_r || !_r.fez_prova) _s = 'nao_fez';
-      else if (_r.fez_prova && _r.nota == null) _s = 'feita';
-      else if (_r.nota != null && !_r.devolvida) _s = 'corrigida';
-      else if (_r.devolvida) _s = 'devolvida';
-      else _s = 'nao_fez';
-      if (_s === _pst) _focoItem = { nome: nm, codigo: _c, status: _s, reg: _r };
-    });
+  var _focoLivroAtual = window.livroAtualSistema || livrosLiberados;
+  var _focoC = 'p' + _focoLivroAtual;
+  var _focoNm = LIVROS_CURSO[_focoLivroAtual - 1];
+  var _focoR = mapaProvas[_focoC];
+  var _focoL = mapaLivros[_focoC];
+  if (_focoNm) {
+    var _focoS;
+    if (!_focoR || !_focoR.fez_prova) _focoS = 'nao_fez';
+    else if (_focoR.fez_prova && _focoR.nota == null) _focoS = 'feita';
+    else if (_focoR.nota != null && !_focoR.devolvida) _focoS = 'corrigida';
+    else if (_focoR.devolvida) _focoS = 'devolvida';
+    else _focoS = 'nao_fez';
+    _focoItem = { nome: _focoNm, codigo: _focoC, status: _focoS, reg: _focoR };
   }
 
   /* conquistas */
