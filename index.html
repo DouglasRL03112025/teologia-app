@@ -3215,8 +3215,8 @@ function renderPagamentosAlunoViaLivros() {
     const numero = index + 1;
     const livroAluno = window.livrosAluno.find(l => l.livro_codigo === 'p' + numero) || null;
     const nomeLivro = LIVROS_CURSO[index];
-    const pagou = !!livroAluno;
-    const entregue = !!livroAluno?.entregue;
+    const pagou = !!(livroAluno && livroAluno.pagou === true);
+    const entregue = !!(livroAluno && livroAluno.entregue === true);
     let status = '';
     let cor = '';
     let cardBg, cardBorder, labelTexto, labelCor, labelBg, labelBorder;
@@ -3238,7 +3238,7 @@ function renderPagamentosAlunoViaLivros() {
     else {
       status = 'pendente'; cor = '#dc3545';
       cardBg = '#ffffff'; cardBorder = 'border:1px solid rgba(0,0,0,0.07);';
-      labelTexto = 'Pagamento pendente'; labelCor = '#991b1b'; labelBg = '#fee2e2'; labelBorder = '#fecaca';
+      labelTexto = 'Aguardando pagamento'; labelCor = '#991b1b'; labelBg = '#fee2e2'; labelBorder = '#fecaca';
     }
     const dataPagamento = livroAluno?.data_pagamento || livroAluno?.created_at || null;
     const formaPagamento = livroAluno?.forma_pagamento || livroAluno?.metodo || null;
@@ -3841,7 +3841,9 @@ async function renderProvasAluno() {
     feita:     { bg:'#fef9c3', border:'#fbbf24', cor:'#92400e' },
     corrigida: { bg:'#dbeafe', border:'#3b82f6', cor:'#1e40af' },
     devolvida: { bg:'#d4edda', border:'#28a745', cor:'#155724' },
-    bloqueado: { bg:'#f9fafb', border:'#e5e7eb', cor:'#9ca3af' }
+    bloqueado:          { bg:'#f9fafb', border:'#e5e7eb', cor:'#9ca3af' },
+    atrasado:           { bg:'#fef2f2', border:'#fca5a5', cor:'#ef4444' },
+    aguardando_entrega: { bg:'#fffbeb', border:'#fcd34d', cor:'#d97706' }
   };
 
   var comNota = [];
@@ -3852,11 +3854,11 @@ async function renderProvasAluno() {
     var livro = mapaLivros[codigo] || null;
     var statusLivro;
     if (!livro || livro.pagou !== true) {
-      statusLivro = 'pendente';
+      statusLivro = 'atrasado';          /* não pago */
     } else if (livro.pagou === true && livro.entregue !== true) {
-      statusLivro = 'aguardando';
+      statusLivro = 'aguardando_entrega'; /* pago mas não entregue */
     } else if (livro.entregue === true) {
-      statusLivro = 'entregue';
+      statusLivro = 'entregue';         /* entregue */
     }
     console.log('[Livro]', codigo, '| statusLivro:', statusLivro, '| dados:', livro);
     var nota     = registro ? registro.nota : undefined;
@@ -3865,12 +3867,14 @@ async function renderProvasAluno() {
     var devolvida = registro && registro.devolvida === true;
 
     var status;
-    if (statusLivro !== 'entregue') {
-      status = 'bloqueado';
+    if (indice1 > (window.livroAtualSistema || livrosLiberados)) {
+      /* Livro futuro: bloqueado, independente de pagamento */
+      status = 'futuro';
+    } else if (statusLivro !== 'entregue') {
+      /* Livro liberado mas não pago ou não entregue — usa statusLivro diretamente */
+      status = statusLivro; /* 'atrasado' ou 'aguardando_entrega' */
     } else {
-      if (!registro && indice1 > livrosLiberados) {
-        status = 'futuro';
-      } else if (!registro || registro.fez_prova !== true) {
+      if (!registro || registro.fez_prova !== true) {
         status = 'nao_fez';
       } else if (registro.fez_prova === true && registro.nota == null) {
         status = 'feita';
@@ -3888,8 +3892,10 @@ async function renderProvasAluno() {
     var s = estilos[status];
 
     var linhaStatus = '';
-    if (status === 'bloqueado') {
-      linhaStatus = '<div style="font-size:11.5px;font-weight:700;color:' + s.cor + ';background:rgba(0,0,0,0.05);border-radius:6px;padding:4px 9px;display:inline-block;margin-top:5px;">🔒 AGUARDANDO ENTREGA DO LIVRO</div>';
+    if (status === 'atrasado') {
+      linhaStatus = '<div style="font-size:11.5px;font-weight:700;color:#ef4444;background:#fee2e2;border-radius:6px;padding:4px 9px;display:inline-block;margin-top:5px;">⛔ AGUARDANDO PAGAMENTO</div>';
+    } else if (status === 'aguardando_entrega') {
+      linhaStatus = '<div style="font-size:11.5px;font-weight:700;color:#d97706;background:#fef3c7;border-radius:6px;padding:4px 9px;display:inline-block;margin-top:5px;">📦 AGUARDANDO ENTREGA DO LIVRO</div>';
     } else if (status === 'futuro') {
       linhaStatus = '<div style="font-size:11.5px;font-weight:700;color:' + s.cor + ';background:rgba(0,0,0,0.05);border-radius:6px;padding:4px 9px;display:inline-block;margin-top:5px;">⏳ EM BREVE</div>';
     } else if (status === 'nao_fez') {
@@ -3909,8 +3915,8 @@ async function renderProvasAluno() {
     }
 
     var textoLivro =
-      statusLivro === 'pendente'   ? '❌ Pendente'
-    : statusLivro === 'aguardando' ? '⏳ Aguardando entrega'
+      statusLivro === 'atrasado'          ? '<span style="color:#ef4444">❌ Aguardando pagamento</span>'
+    : statusLivro === 'aguardando_entrega' ? '<span style="color:#d97706">⏳ Aguardando entrega</span>'
     : '';  /* NÃO mostrar "Entregue" */
     var linhaLivro = textoLivro
       ? '<div style="font-size:11px;font-weight:600;color:#555;background:rgba(0,0,0,0.04);border-radius:5px;padding:3px 8px;display:inline-block;margin-top:4px;">📚 Livro: ' + textoLivro + '</div>'
@@ -3937,35 +3943,43 @@ async function renderProvasAluno() {
 
     /* ── card premium por status ───────────────────────────────────── */
     var cardClasses = {
-      nao_fez:   'prova-card prova-nao-fez',
-      feita:     'prova-card prova-pendente',
-      corrigida: 'prova-card prova-corrigida',
-      devolvida: 'prova-card prova-devolvida',
-      futuro:    'prova-card prova-bloqueado',
-      bloqueado: 'prova-card prova-bloqueado'
+      nao_fez:            'prova-card prova-nao-fez',
+      feita:              'prova-card prova-pendente',
+      corrigida:          'prova-card prova-corrigida',
+      devolvida:          'prova-card prova-devolvida',
+      futuro:             'prova-card prova-bloqueado',
+      bloqueado:          'prova-card prova-bloqueado',
+      atrasado:           'prova-card prova-bloqueado',
+      aguardando_entrega: 'prova-card prova-bloqueado'
     };
     var cardGrad = {
-      nao_fez:   'linear-gradient(160deg,#f9fafb,#f3f4f6)',
-      feita:     'linear-gradient(160deg,#fffbeb,#fef3c7)',
-      corrigida: 'linear-gradient(160deg,#eff6ff,#dbeafe)',
-      devolvida: 'linear-gradient(160deg,#f0fdf4,#dcfce7)',
-      futuro:    'linear-gradient(160deg,#f9fafb,#f3f4f6)',
-      bloqueado: 'linear-gradient(160deg,#f9fafb,#f3f4f6)'
+      nao_fez:            'linear-gradient(160deg,#f9fafb,#f3f4f6)',
+      feita:              'linear-gradient(160deg,#fffbeb,#fef3c7)',
+      corrigida:          'linear-gradient(160deg,#eff6ff,#dbeafe)',
+      devolvida:          'linear-gradient(160deg,#f0fdf4,#dcfce7)',
+      futuro:             'linear-gradient(160deg,#f9fafb,#f3f4f6)',
+      bloqueado:          'linear-gradient(160deg,#f9fafb,#f3f4f6)',
+      atrasado:           'linear-gradient(160deg,#fef2f2,#fee2e2)',
+      aguardando_entrega: 'linear-gradient(160deg,#fffbeb,#fef3c7)'
     };
     var cardBrd2 = {
-      nao_fez:   '#e5e7eb', feita: '#fbbf24', corrigida: '#93c5fd',
-      devolvida: '#86efac', futuro: '#e5e7eb', bloqueado: '#e5e7eb'
+      nao_fez:            '#e5e7eb', feita: '#fbbf24', corrigida: '#93c5fd',
+      devolvida:          '#86efac', futuro: '#e5e7eb', bloqueado: '#e5e7eb',
+      atrasado:           '#fca5a5', aguardando_entrega: '#fcd34d'
     };
     var statusIcons = {
-      nao_fez:'📝', feita:'⏳', corrigida:'🔵', devolvida:'✅', futuro:'🔒', bloqueado:'🔒'
+      nao_fez:'📝', feita:'⏳', corrigida:'🔵', devolvida:'✅', futuro:'🔒', bloqueado:'🔒',
+      atrasado:'⛔', aguardando_entrega:'📦'
     };
     var statusLabels = {
       nao_fez:'Não realizada', feita:'Aguardando correção',
-      corrigida:'Corrigida', devolvida:'Devolvida', futuro:'Em breve', bloqueado:'Bloqueado'
+      corrigida:'Corrigida', devolvida:'Devolvida', futuro:'Em breve', bloqueado:'Bloqueado',
+      atrasado:'Aguardando pagamento', aguardando_entrega:'Aguardando entrega'
     };
     var statusLabelCors = {
       nao_fez:'#6b7280', feita:'#92400e', corrigida:'#1e40af',
-      devolvida:'#166534', futuro:'#9ca3af', bloqueado:'#9ca3af'
+      devolvida:'#166534', futuro:'#9ca3af', bloqueado:'#9ca3af',
+      atrasado:'#ef4444', aguardando_entrega:'#d97706'
     };
 
     var notaHtml = '';
