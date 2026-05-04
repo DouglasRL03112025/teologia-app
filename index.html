@@ -2989,56 +2989,422 @@ function renderPagamentosAlunoViaLivros() {
     const formaPagamento = livroAluno?.forma_pagamento || livroAluno?.metodo || null;
     const isAtual = numero === window.livroAtualSistema;
     const isFuturo = (status === 'em_breve');
-    const focoAtual = isAtual ? 'border:2px solid #1e3a5f;box-shadow:0 0 0 3px rgba(30,58,95,0.10),0 4px 12px rgba(0,0,0,0.06);animation:pulseAtual 3.5s ease-in-out infinite;' : 'box-shadow:0 4px 12px rgba(0,0,0,0.06);';
-    return `
-    <div style="background:${cardBg};border-radius:12px;padding:12px;${isAtual ? '' : cardBorder}${focoAtual}transition:all 0.18s ease;position:relative;${isFuturo ? 'opacity:0.65;' : ''}" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(0,0,0,0.11)'" onmouseout="this.style.transform='';this.style.boxShadow='${isAtual ? '0 0 0 3px rgba(30,58,95,0.10),0 4px 12px rgba(0,0,0,0.06)' : '0 4px 12px rgba(0,0,0,0.06)'}'" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='translateY(-2px)'">
-      ${isAtual ? '<div style="position:absolute;top:8px;right:8px;font-size:9px;font-weight:700;color:#1e3a5f;background:rgba(30,58,95,0.08);border-radius:4px;padding:1px 5px;letter-spacing:0.3px">ATUAL</div>' : ''}
-      <div style="font-weight:600;font-size:14px;color:#1f2937;margin-bottom:2px;line-height:1.3;letter-spacing:0.1px;padding-right:${isAtual ? '36px' : '0'}">
-        ${nomeLivro}
+
+    /* ── EXTRATO BANCÁRIO: ícone SVG por status ── */
+    const iconSvg = {
+      entregue: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${labelCor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+      aguardando: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${labelCor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+      pendente: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${labelCor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+      em_breve: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${labelCor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`
+    }[status] || '';
+    const badgeClass = status === 'entregue' ? 'fin-badge-pago' : status === 'aguardando' ? 'fin-badge-aguard' : status === 'pendente' ? 'fin-badge-pend' : 'fin-badge-breve';
+    const numBg = `background:${labelBg};color:${labelCor};border:1px solid ${labelBorder};`;
+    const itemClass = `fin-extrato-item${isAtual ? ' fin-item-atual' : ''}${isFuturo ? ' fin-item-futuro' : ''}`;
+
+    return `<div class="${itemClass}">
+      <div class="fin-extrato-num" style="${numBg}">${numero}</div>
+      <div class="fin-extrato-info">
+        <div class="fin-extrato-nome">${nomeLivro}</div>
+        <div class="fin-extrato-meta">Livro ${numero}/24${formaPagamento ? ' · ' + formaPagamento : ''}</div>
       </div>
-      <div style="font-size:11px;color:#6b7280;margin-bottom:8px;font-weight:400">
-        Livro ${numero}/24
+      <div class="fin-extrato-right">
+        ${isAtual ? '<span class="fin-badge-atual">Atual</span>' : ''}
+        <span class="fin-badge ${badgeClass}">${iconSvg} ${labelTexto}</span>
+        ${dataPagamento ? `<span class="fin-data-meta">${formatarData(dataPagamento)}</span>` : ''}
       </div>
-      <div style="font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">Financeiro</div>
-      <div style="display:inline-block;font-size:12px;font-weight:600;color:${labelCor};background:${labelBg};border:1px solid ${labelBorder};border-radius:6px;padding:2px 7px;letter-spacing:0.1px">
-        ${labelTexto}
-      </div>
-      ${(dataPagamento || formaPagamento) ? `<div style="border-top:1px solid rgba(0,0,0,0.05);margin-top:8px;padding-top:6px;">
-        <div style="font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Logística</div>
-        ${dataPagamento ? `<div style="font-size:10px;color:#6b7280;font-weight:500;margin-bottom:2px">📅 ${formatarData(dataPagamento)}</div>` : ''}
-        ${formaPagamento ? `<div style="font-size:10px;color:#6b7280;font-weight:500">💳 ${formaPagamento}</div>` : ''}
-      </div>` : ''}
-    </div>
-  `;
+    </div>`;
   }).join('');
 
+  /* ── STATUS HERO: define cor e texto conforme situação financeira ── */
+  const statusHero = totalPendentes === 0
+    ? { label: 'Tudo em dia', cor: '#15803d', bg: 'linear-gradient(135deg,#166534 0%,#15803d 60%,#16a34a 100%)', badge: '#bbf7d0', badgeTxt: '#14532d', dot: '#4ade80' }
+    : totalPendentes === 1
+      ? { label: 'Pagamento pendente', cor: '#92400e', bg: 'linear-gradient(135deg,#78350f 0%,#b45309 60%,#d97706 100%)', badge: '#fde68a', badgeTxt: '#78350f', dot: '#fbbf24' }
+      : { label: 'Pagamentos atrasados', cor: '#991b1b', bg: 'linear-gradient(135deg,#7f1d1d 0%,#b91c1c 60%,#dc2626 100%)', badge: '#fecaca', badgeTxt: '#7f1d1d', dot: '#f87171' };
+
+  const proximoLivro = Array.from({ length: 24 }).findIndex((_, i) => {
+    const cod = 'p' + (i + 1);
+    const item = (window.livrosAluno || []).find(function(l){ return l.livro_codigo === cod; });
+    return !item || item.pagou === false;
+  });
+  const proximoNum = proximoLivro >= 0 ? proximoLivro + 1 : null;
+  const proximoNome = proximoNum ? (LIVROS_CURSO[proximoNum - 1] || ('Livro ' + proximoNum)) : null;
+
   container.style.scrollBehavior = 'smooth';
-  container.innerHTML = ''
-    + '<div style="background:linear-gradient(135deg,#2b5c8a,#3b82f6);border-radius:14px;padding:20px 18px;margin-bottom:16px;box-shadow:0 8px 20px rgba(0,0,0,0.12)">'
-      + '<div style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:4px">Situação financeira</div>'
-      + '<div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:0.5px;line-height:1;margin-bottom:2px;text-shadow:0 2px 8px rgba(0,0,0,0.18)">' + progresso + '%</div>'
-      + '<div style="font-size:10px;color:rgba(255,255,255,0.45);margin-bottom:16px">do curso quitado</div>'
-      + '<div style="display:flex;justify-content:space-between;gap:10px">'
-        + '<div style="background:#ffffff;border-radius:12px;padding:12px 8px;flex:1;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.06);transition:all 0.18s ease;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 18px rgba(0,0,0,0.10)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.06)\'" onmousedown="this.style.transform=\'scale(0.98)\'" onmouseup="this.style.transform=\'\'">'
-          + '<div style="font-size:10px;color:#9ca3af;margin-bottom:4px;font-weight:500;letter-spacing:0.4px;text-transform:uppercase">Pagos</div>'
-          + '<div style="font-size:22px;font-weight:800;color:#22c55e;letter-spacing:0.5px;line-height:1;text-shadow:0 2px 4px rgba(0,0,0,0.08)">' + totalPagos + '</div>'
-        + '</div>'
-        + '<div style="background:#ffffff;border-radius:12px;padding:12px 8px;flex:1;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.06);transition:all 0.18s ease;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 18px rgba(0,0,0,0.10)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.06)\'" onmousedown="this.style.transform=\'scale(0.98)\'" onmouseup="this.style.transform=\'\'">'
-          + '<div style="font-size:10px;color:#9ca3af;margin-bottom:4px;font-weight:500;letter-spacing:0.4px;text-transform:uppercase">Pendentes</div>'
-          + '<div style="font-size:22px;font-weight:800;color:#ef4444;letter-spacing:0.5px;line-height:1;text-shadow:0 2px 4px rgba(0,0,0,0.08)">' + totalPendentes + '</div>'
-        + '</div>'
-      + '</div>'
-      + (totalPendentes > 0 ? '<div style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:8px 10px;border-radius:8px;font-size:12px;margin-top:10px;font-weight:600;border:1px solid rgba(239,68,68,0.2)">Você tem ' + totalPendentes + ' pagamento(s) pendente(s)</div>' : '')
-      + '<div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,0.45);font-weight:500">Último pagamento: ' + (ultimoPagamentoData ? formatarData(ultimoPagamentoData) : '—') + '</div>'
-    + '</div>'
-    + '<div style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:10px">Histórico de Pagamentos</div>'
-    + '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">'
-      + cards
-    + '</div>'
-    + '<div style="margin-top:20px">'
-      + '<div style="font-size:12px;font-weight:700;margin-bottom:12px;color:#1e3a5f;text-transform:uppercase;letter-spacing:0.8px">💳 Histórico financeiro</div>'
-      + '<div id="timelinePagamentos"></div>'
-    + '</div>';
+  container.innerHTML = `
+    <style>
+      /* ── PAINEL FINANCEIRO BANCÁRIO ── */
+      .fin-hero {
+        background: ${statusHero.bg};
+        border-radius: 18px;
+        padding: 22px 20px 18px;
+        margin-bottom: 16px;
+        box-shadow: 0 8px 28px rgba(0,0,0,0.18);
+        position: relative;
+        overflow: hidden;
+      }
+      .fin-hero::before {
+        content: '';
+        position: absolute;
+        top: -40px; right: -40px;
+        width: 160px; height: 160px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 50%;
+        pointer-events: none;
+      }
+      .fin-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -50px; left: -30px;
+        width: 200px; height: 200px;
+        background: rgba(255,255,255,0.04);
+        border-radius: 50%;
+        pointer-events: none;
+      }
+      .fin-hero-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,255,255,0.14);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 99px;
+        padding: 4px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: 0.3px;
+        margin-bottom: 14px;
+      }
+      .fin-hero-dot {
+        width: 7px; height: 7px;
+        background: ${statusHero.dot};
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px rgba(255,255,255,0.25);
+        flex-shrink: 0;
+      }
+      .fin-hero-titulo {
+        font-size: 12px;
+        color: rgba(255,255,255,0.55);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .fin-hero-pct {
+        font-size: 42px;
+        font-weight: 800;
+        color: #fff;
+        line-height: 1;
+        letter-spacing: -1px;
+        margin-bottom: 3px;
+        font-family: 'Lora', serif;
+      }
+      .fin-hero-sub {
+        font-size: 12px;
+        color: rgba(255,255,255,0.5);
+        margin-bottom: 18px;
+        font-weight: 400;
+      }
+      .fin-hero-bar-wrap {
+        background: rgba(255,255,255,0.15);
+        border-radius: 99px;
+        height: 6px;
+        overflow: hidden;
+        margin-bottom: 6px;
+      }
+      .fin-hero-bar-fill {
+        height: 100%;
+        border-radius: 99px;
+        background: rgba(255,255,255,0.9);
+        transition: width 0.6s cubic-bezier(.4,0,.2,1);
+      }
+      .fin-hero-bar-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: rgba(255,255,255,0.45);
+        font-weight: 500;
+      }
+      .fin-hero-pendente-alerta {
+        margin-top: 14px;
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 10px;
+        padding: 9px 13px;
+        font-size: 12px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.9);
+        letter-spacing: 0.1px;
+      }
+      /* ── 3 CARDS DE RESUMO ── */
+      .fin-resumo {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      .fin-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 14px 10px;
+        text-align: center;
+        border: 1px solid #e8edf3;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .fin-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(0,0,0,0.09);
+      }
+      .fin-card:active { transform: scale(0.97); }
+      .fin-card-icon {
+        width: 32px; height: 32px;
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 8px;
+        font-size: 15px;
+      }
+      .fin-card-num {
+        font-size: 24px;
+        font-weight: 800;
+        font-family: 'Lora', serif;
+        line-height: 1;
+        margin-bottom: 4px;
+      }
+      .fin-card-lbl {
+        font-size: 9px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #9ca3af;
+      }
+      /* ── SEÇÃO TÍTULO ── */
+      .fin-section-title {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #94a3b8;
+        margin-bottom: 10px;
+        padding-left: 2px;
+      }
+      /* ── LISTA DE LIVROS ESTILO EXTRATO ── */
+      .fin-extrato {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #e8edf3;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+        overflow: hidden;
+        margin-bottom: 16px;
+      }
+      .fin-extrato-item {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 13px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.15s ease;
+        position: relative;
+      }
+      .fin-extrato-item:last-child { border-bottom: none; }
+      .fin-extrato-item:hover { background: #f8fafc; }
+      .fin-extrato-item.fin-item-atual {
+        background: #f0f6ff;
+        border-left: 3px solid #1e40af;
+      }
+      .fin-extrato-item.fin-item-futuro { opacity: 0.5; }
+      .fin-extrato-num {
+        width: 36px; height: 36px;
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+        flex-shrink: 0;
+        font-family: 'Inter', sans-serif;
+      }
+      .fin-extrato-info { flex: 1; min-width: 0; }
+      .fin-extrato-nome {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1e293b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.3;
+        margin-bottom: 2px;
+      }
+      .fin-extrato-meta {
+        font-size: 10px;
+        color: #94a3b8;
+        font-weight: 400;
+      }
+      .fin-extrato-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 3px;
+        flex-shrink: 0;
+      }
+      .fin-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 3px 9px;
+        border-radius: 99px;
+        letter-spacing: 0.2px;
+        white-space: nowrap;
+      }
+      .fin-badge-pago    { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+      .fin-badge-aguard  { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
+      .fin-badge-pend    { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+      .fin-badge-breve   { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+      .fin-badge-atual   {
+        font-size: 9px; font-weight: 800;
+        background: #1e40af; color: #fff;
+        border-radius: 4px; padding: 1px 6px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+      }
+      .fin-data-meta {
+        font-size: 10px;
+        color: #94a3b8;
+        font-weight: 500;
+      }
+      /* ── PROGRESSO FINANCEIRO ── */
+      .fin-progress-card {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e8edf3;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        padding: 16px 18px;
+        margin-bottom: 16px;
+      }
+      .fin-progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .fin-progress-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1e293b;
+      }
+      .fin-progress-pct {
+        font-size: 13px;
+        font-weight: 800;
+        color: #1e40af;
+      }
+      .fin-progress-bar {
+        background: #e8edf3;
+        border-radius: 99px;
+        height: 8px;
+        overflow: hidden;
+        margin-bottom: 8px;
+      }
+      .fin-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #1e40af, #3b82f6);
+        border-radius: 99px;
+        transition: width 0.7s cubic-bezier(.4,0,.2,1);
+      }
+      .fin-progress-sub {
+        font-size: 11px;
+        color: #94a3b8;
+        font-weight: 500;
+      }
+      /* ── HISTÓRICO ── */
+      .fin-historico {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #e8edf3;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+        overflow: hidden;
+      }
+      .fin-historico-header {
+        padding: 14px 16px 10px;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 11px;
+        font-weight: 700;
+        color: #1e293b;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+      }
+    </style>
+
+    <!-- HERO FINANCEIRO -->
+    <div class="fin-hero">
+      <div class="fin-hero-status">
+        <span class="fin-hero-dot"></span>
+        ${statusHero.label}
+      </div>
+      <div class="fin-hero-titulo">Situação Financeira</div>
+      <div class="fin-hero-pct">${progresso}<span style="font-size:22px;font-weight:600;opacity:0.7">%</span></div>
+      <div class="fin-hero-sub">do curso quitado</div>
+      <div class="fin-hero-bar-wrap">
+        <div class="fin-hero-bar-fill" style="width:${progresso}%"></div>
+      </div>
+      <div class="fin-hero-bar-label">
+        <span>${totalPagos} livro${totalPagos !== 1 ? 's' : ''} pago${totalPagos !== 1 ? 's' : ''}</span>
+        <span>${24 - totalPagos} restante${(24 - totalPagos) !== 1 ? 's' : ''}</span>
+      </div>
+      ${totalPendentes > 0
+        ? `<div class="fin-hero-pendente-alerta">${totalPendentes} pagamento${totalPendentes !== 1 ? 's' : ''} pendente${totalPendentes !== 1 ? 's' : ''} — regularize para continuar o curso</div>`
+        : ''}
+    </div>
+
+    <!-- 3 CARDS DE RESUMO -->
+    <div class="fin-resumo">
+      <div class="fin-card">
+        <div class="fin-card-icon" style="background:#dcfce7">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="fin-card-num" style="color:#15803d">${totalPagos}</div>
+        <div class="fin-card-lbl">Pagos</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-card-icon" style="background:#fee2e2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div class="fin-card-num" style="color:#b91c1c">${totalPendentes}</div>
+        <div class="fin-card-lbl">Pendentes</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-card-icon" style="background:#dbeafe">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1e40af" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="fin-card-num" style="color:#1e40af;font-size:${proximoNum ? '20px' : '24px'}">${proximoNum ? 'L' + proximoNum : '—'}</div>
+        <div class="fin-card-lbl">Próximo</div>
+      </div>
+    </div>
+
+    <!-- PROGRESSO FINANCEIRO -->
+    <div class="fin-progress-card">
+      <div class="fin-progress-header">
+        <span class="fin-progress-label">Progresso do curso</span>
+        <span class="fin-progress-pct">${progresso}%</span>
+      </div>
+      <div class="fin-progress-bar">
+        <div class="fin-progress-fill" style="width:${progresso}%"></div>
+      </div>
+      <div class="fin-progress-sub">${totalPagos} de 24 livros pagos${ultimoPagamentoData ? ' · Último: ' + formatarData(ultimoPagamentoData) : ''}</div>
+    </div>
+
+    <!-- LISTA DE LIVROS ESTILO EXTRATO -->
+    <div class="fin-section-title">Histórico de Livros</div>
+    <div class="fin-extrato">
+      ${cards}
+    </div>
+
+    <!-- HISTÓRICO FINANCEIRO -->
+    <div class="fin-section-title">Histórico Financeiro</div>
+    <div class="fin-historico">
+      <div class="fin-historico-header">Pagamentos registrados</div>
+      <div id="timelinePagamentos" style="padding:0 4px"></div>
+    </div>
+  `;
 
   const historico = window.livrosAluno
     .filter(function(l) { return l.pagou === true; })
@@ -3047,7 +3413,7 @@ function renderPagamentosAlunoViaLivros() {
   let timelineHTML = '';
 
   if (historico.length === 0) {
-    timelineHTML = '<div style="font-size:12px;color:#9ca3af;padding:10px 0;text-align:center">Nenhum pagamento registrado ainda.</div>';
+    timelineHTML = '<div style="font-size:13px;color:#94a3b8;padding:20px 16px;text-align:center;font-weight:500">Nenhum pagamento registrado ainda.</div>';
   }
 
   historico.forEach(function(livro, i) {
@@ -3056,13 +3422,18 @@ function renderPagamentosAlunoViaLivros() {
     const data = livro.data_pagamento || livro.created_at || null;
     const forma = livro.forma_pagamento || livro.metodo || '—';
     const isLast = i === historico.length - 1;
-    timelineHTML += '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;' + (isLast ? '' : 'border-bottom:1px solid #f0f0f0;') + '">'
-      + '<div style="width:8px;height:8px;background:#22c55e;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 3px rgba(34,197,94,0.15)"></div>'
-      + '<div style="flex:1;min-width:0">'
-        + '<div style="font-size:12px;font-weight:600;color:#1e3a5f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + nome + '</div>'
-        + '<div style="font-size:10px;color:#9ca3af;margin-top:1px;font-weight:500">' + forma + '</div>'
+    timelineHTML += '<div style="display:flex;align-items:center;gap:13px;padding:12px 16px;' + (isLast ? '' : 'border-bottom:1px solid #f1f5f9;') + 'transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">'
+      + '<div style="width:36px;height:36px;border-radius:10px;background:#dcfce7;border:1px solid #bbf7d0;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+        + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
       + '</div>'
-      + '<div style="font-size:10px;color:#9ca3af;font-weight:500;flex-shrink:0">' + (data ? formatarData(data) : '—') + '</div>'
+      + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:13px;font-weight:600;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px">' + nome + '</div>'
+        + '<div style="font-size:11px;color:#94a3b8;font-weight:400">' + forma + '</div>'
+      + '</div>'
+      + '<div style="flex-shrink:0;text-align:right">'
+        + '<div style="font-size:11px;color:#64748b;font-weight:600">' + (data ? formatarData(data) : '—') + '</div>'
+        + '<div style="font-size:10px;color:#bbf7d0;background:#15803d;border-radius:4px;padding:1px 5px;margin-top:2px;font-weight:700;letter-spacing:0.3px;display:inline-block">PAGO</div>'
+      + '</div>'
     + '</div>';
   });
 
