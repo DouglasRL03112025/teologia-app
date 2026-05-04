@@ -7213,55 +7213,272 @@ async function renderAlunoPresenca(){
 
   console.log('[Presença] Total:', total, '| Presenças:', presencas, '| Faltas:', faltas, '| %:', perc);
 
+  /* ══════════════════════════════════════════════════════════════════
+     RENDERIZAÇÃO GAMIFICADA — apenas visual, zero lógica alterada
+     Fontes de dados: lista (presencas), presencas, faltas, perc, total
+     ══════════════════════════════════════════════════════════════════ */
+
+  /* ── helpers locais ─────────────────────────────────────────────── */
+  // streak: dias consecutivos com presente===true, de trás pra frente
+  function _calcStreak(lst) {
+    var sorted = lst.filter(function(r){ return r.presente === true; })
+      .map(function(r){ return r.data; })
+      .sort();
+    if (!sorted.length) return 0;
+    // pegar datas únicas das aulas com presença e ver consecutividade
+    var streak = 1;
+    for (var i = sorted.length - 1; i > 0; i--) {
+      var d1 = new Date(sorted[i] + 'T12:00:00');
+      var d2 = new Date(sorted[i-1] + 'T12:00:00');
+      var diffDays = Math.round((d1 - d2) / 86400000);
+      // aulas podem ter intervalos de 7 dias (semanal) — streak quebra só se houver falta entre elas
+      var faltaEntre = lst.some(function(r){
+        return r.presente === false && r.data > sorted[i-1] && r.data < sorted[i];
+      });
+      if (!faltaEntre && diffDays <= 14) { streak++; } else { break; }
+    }
+    return streak;
+  }
+
+  // missão semanal: presenças nos últimos 7 dias
+  function _presUltimaSemana(lst) {
+    var limite = new Date(); limite.setDate(limite.getDate() - 7);
+    return lst.filter(function(r){
+      return r.presente === true && new Date(r.data + 'T12:00:00') >= limite;
+    }).length;
+  }
+
+  var streak       = _calcStreak(lista);
+  var presNaSemana = _presUltimaSemana(lista);
+  var metaSemana   = 1; // meta: 1 aula por semana
+  var progSemana   = Math.min(presNaSemana, metaSemana);
+  var isStrong     = streak >= 3;
+  var isOk         = perc >= 75;
+
+  /* ── CSS inline injetado uma única vez ─────────────────────────── */
+  var _cssPres = '<style>'
+    + '@keyframes _pFadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}'
+    + '@keyframes _pPulse{0%,100%{box-shadow:0 0 0 0 rgba(234,88,12,.35)}50%{box-shadow:0 0 0 8px rgba(234,88,12,0)}}'
+    + '@keyframes _pShine{0%,100%{left:-100%}50%{left:100%}}'
+    + '@keyframes _pBounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}60%{transform:translateY(-2px)}}'
+    + '.streak-box{border-radius:20px;padding:20px 22px;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;cursor:default;transition:all .22s cubic-bezier(.4,0,.2,1)}'
+    + '.streak-box:hover{transform:translateY(-2px)}'
+    + '.dia{width:100%;aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:default;transition:all .18s cubic-bezier(.4,0,.2,1);position:relative}'
+    + '.dia:hover{transform:scale(1.15);z-index:2}'
+    + '.dia-presente{background:#16a34a;color:#fff;box-shadow:0 2px 8px rgba(22,163,74,.35)}'
+    + '.dia-falta{background:#dc2626;color:#fff;box-shadow:0 2px 8px rgba(220,38,38,.25);opacity:.75}'
+    + '.dia-hoje{background:var(--azul);color:#fff;box-shadow:0 2px 10px rgba(26,58,92,.4);ring:2px solid #fff}'
+    + '.dia-futuro{background:#f3f4f6;color:#9ca3af;border:1px solid #e5e7eb}'
+    + '.dia-vazio{background:transparent}'
+    + '.missao-box{border-radius:16px;padding:16px 18px;border:1.5px solid #e5e7eb;background:#fff;transition:all .2s cubic-bezier(.4,0,.2,1)}'
+    + '.missao-box:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.09)}'
+    + '.badge-conquista{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:6px 14px;font-size:12px;font-weight:700;border:2px solid transparent;transition:all .2s cubic-bezier(.4,0,.2,1);cursor:default}'
+    + '.badge-conquista:hover{transform:translateY(-3px) scale(1.06)}'
+    + '.badge-conquista.earned{background:linear-gradient(135deg,#fef3c7,#fde68a);color:#78350f;border-color:#f59e0b;box-shadow:0 4px 12px rgba(245,158,11,.25)}'
+    + '.badge-conquista.locked{background:#f9fafb;color:#9ca3af;border-color:#e5e7eb;opacity:.6}'
+  + '</style>';
+
+  /* ── BLOCO RESUMO: streak + feedback ─────────────────────────────── */
   if (elResumo) {
-    elResumo.innerHTML =
-      '<div style="display:flex;gap:10px">'
-      + '<div style="flex:1;background:#f0faf4;border:1px solid #b2dfca;border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:8px">'
-      + '<span style="font-size:18px">📊</span>'
-      + '<div><div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Presenças</div>'
-      + '<div style="font-size:20px;font-weight:700;color:var(--vd);font-family:Lora,serif">' + presencas + '</div></div></div>'
-      + '<div style="flex:1;background:#fff0f0;border:1px solid #f5c6c6;border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:8px">'
-      + '<span style="font-size:18px">❌</span>'
-      + '<div><div style="font-size:11px;color:var(--cin);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Faltas</div>'
-      + '<div style="font-size:20px;font-weight:700;color:var(--vm);font-family:Lora,serif">' + faltas + '</div></div></div>'
+    var streakBg  = isStrong
+      ? 'linear-gradient(135deg,#7c2d12,#ea580c)'
+      : 'linear-gradient(135deg,#1a3a5c,#0f2540)';
+    var streakGlow = isStrong ? 'animation:_pPulse 2.5s ease-in-out infinite' : '';
+
+    elResumo.innerHTML = _cssPres
+
+      /* ── HERO STREAK ── */
+      + '<div class="streak-box" style="background:' + streakBg + ';margin-bottom:14px;opacity:0;animation:_pFadeUp .4s ease forwards;animation-delay:0s;' + streakGlow + '">'
+        + '<div style="font-size:42px;line-height:1;flex-shrink:0;animation:_pBounce 2s ease-in-out infinite">' + (isStrong ? '🔥' : '⚡') + '</div>'
+        + '<div style="flex:1">'
+          + '<div style="font-size:26px;font-weight:900;color:#fff;font-family:\'Lora\',serif;line-height:1;letter-spacing:-.5px">'
+            + streak + '<span style="font-size:14px;font-weight:500;opacity:.7;margin-left:4px">aula' + (streak !== 1 ? 's' : '') + ' seguidas</span>'
+          + '</div>'
+          + '<div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;font-weight:600">'
+            + (isStrong ? '🔥 Você está em sequência — continue assim!' : '⚡ Mantenha a sequência comparecendo!')
+          + '</div>'
+        + '</div>'
+        + '<div style="position:absolute;top:0;left:-60%;width:50%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.1),transparent);transform:skewX(-20deg);animation:_pShine 5s ease-in-out infinite"></div>'
+      + '</div>'
+
+      /* ── STATS 3 COLUNAS ── */
+      + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;opacity:0;animation:_pFadeUp .4s ease forwards;animation-delay:.05s">'
+
+        + '<div style="background:linear-gradient(160deg,#f0fdf4,#dcfce7);border:1.5px solid #a7f3c0;border-radius:16px;padding:16px 10px;text-align:center;cursor:default;transition:all .2s cubic-bezier(.4,0,.2,1)"'
+          + ' onmouseover="this.style.transform=\'translateY(-3px) scale(1.03)\';this.style.boxShadow=\'0 10px 22px rgba(22,163,74,.18)\'"'
+          + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'none\'"'
+          + ' onmousedown="this.style.transform=\'scale(0.96)\'"'
+          + ' onmouseup="this.style.transform=\'translateY(-3px)\'">'
+          + '<div style="font-size:20px;margin-bottom:4px">✅</div>'
+          + '<div style="font-size:22px;font-weight:800;color:#16a34a;font-family:\'Lora\',serif;line-height:1.1">' + presencas + '</div>'
+          + '<div style="font-size:10px;font-weight:700;color:#166534;opacity:.7;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Presenças</div>'
+        + '</div>'
+
+        + '<div style="background:linear-gradient(160deg,#fef2f2,#fee2e2);border:1.5px solid #fca5a5;border-radius:16px;padding:16px 10px;text-align:center;cursor:default;transition:all .2s cubic-bezier(.4,0,.2,1)"'
+          + ' onmouseover="this.style.transform=\'translateY(-3px) scale(1.03)\';this.style.boxShadow=\'0 10px 22px rgba(220,38,38,.15)\'"'
+          + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'none\'"'
+          + ' onmousedown="this.style.transform=\'scale(0.96)\'"'
+          + ' onmouseup="this.style.transform=\'translateY(-3px)\'">'
+          + '<div style="font-size:20px;margin-bottom:4px">❌</div>'
+          + '<div style="font-size:22px;font-weight:800;color:#dc2626;font-family:\'Lora\',serif;line-height:1.1">' + faltas + '</div>'
+          + '<div style="font-size:10px;font-weight:700;color:#991b1b;opacity:.7;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Faltas</div>'
+        + '</div>'
+
+        + '<div style="background:linear-gradient(160deg,#eff6ff,#dbeafe);border:1.5px solid #93c5fd;border-radius:16px;padding:16px 10px;text-align:center;cursor:default;transition:all .2s cubic-bezier(.4,0,.2,1)"'
+          + ' onmouseover="this.style.transform=\'translateY(-3px) scale(1.03)\';this.style.boxShadow=\'0 10px 22px rgba(59,130,246,.18)\'"'
+          + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'none\'"'
+          + ' onmousedown="this.style.transform=\'scale(0.96)\'"'
+          + ' onmouseup="this.style.transform=\'translateY(-3px)\'">'
+          + '<div style="font-size:20px;margin-bottom:4px">📊</div>'
+          + '<div style="font-size:22px;font-weight:800;color:var(--azul);font-family:\'Lora\',serif;line-height:1.1">' + perc + '%</div>'
+          + '<div style="font-size:10px;font-weight:700;color:#1e40af;opacity:.7;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Frequência</div>'
+        + '</div>'
+
+      + '</div>'
+
+      /* ── BARRA DE PROGRESSO ── */
+      + '<div style="margin-bottom:14px;opacity:0;animation:_pFadeUp .4s ease forwards;animation-delay:.08s">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">'
+          + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7">Frequência geral</div>'
+          + '<div style="font-size:11px;font-weight:700;color:' + (isOk ? '#16a34a' : '#dc2626') + '">'
+            + (isOk ? '🔥 Você está consistente' : '⚠ Atenção à frequência')
+          + '</div>'
+        + '</div>'
+        + '<div style="height:10px;background:#e5e7eb;border-radius:99px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.08)">'
+          + '<div style="height:100%;width:' + perc + '%;background:' + (isOk ? 'linear-gradient(90deg,#16a34a,#4ade80)' : 'linear-gradient(90deg,#dc2626,#f87171)') + ';border-radius:99px;transition:width .8s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden">'
+            + '<div style="position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);animation:_pShine 2.5s ease-in-out infinite"></div>'
+          + '</div>'
+        + '</div>'
+        + '<div style="display:flex;justify-content:space-between;margin-top:5px">'
+          + '<div style="font-size:10px;color:var(--cin);opacity:.5">' + perc + '% — meta: 75%</div>'
+          + '<div style="font-size:10px;color:var(--cin);opacity:.5">' + presencas + '/' + total + ' aulas</div>'
+        + '</div>'
       + '</div>';
   }
 
+  /* ── BLOCO STATS: missão semanal + conquistas ─────────────────────── */
   if (elStats) {
-    elStats.innerHTML = `
-      <div class="g3">
-        <div class="mc3"><div class="mc3n" style="color:var(--azul)">${total}</div><div class="mc3l">Aulas</div></div>
-        <div class="mc3"><div class="mc3n" style="color:var(--vd)">${presencas}</div><div class="mc3l">Presenças</div></div>
-        <div class="mc3"><div class="mc3n" style="color:var(--am)">${perc}%</div><div class="mc3l">Frequência</div></div>
-      </div>`;
+    var badges = [
+      { ic: '🌱', label: '1ª presença',  dias: 1,  earned: presencas >= 1  },
+      { ic: '🔥', label: '3 seguidas',   dias: 3,  earned: streak >= 3     },
+      { ic: '⚡', label: '7 seguidas',   dias: 7,  earned: streak >= 7     },
+      { ic: '🏅', label: '10 presenças', dias: 10, earned: presencas >= 10 },
+      { ic: '🏆', label: '20 presenças', dias: 20, earned: presencas >= 20 },
+      { ic: '💎', label: 'Frequência 75%', dias: 75, earned: perc >= 75    }
+    ];
+
+    elStats.innerHTML =
+      /* ── MISSÃO SEMANAL ── */
+      '<div class="missao-box" style="margin-bottom:14px;opacity:0;animation:_pFadeUp .4s ease forwards;animation-delay:.1s">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
+          + '<div>'
+            + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:3px">🎯 Missão semanal</div>'
+            + '<div style="font-size:14px;font-weight:700;color:var(--azul)">Comparecer à aula desta semana</div>'
+          + '</div>'
+          + '<div style="font-size:20px;font-weight:800;color:' + (progSemana >= metaSemana ? '#16a34a' : 'var(--azul)') + ';font-family:\'Lora\',serif;flex-shrink:0;margin-left:8px">'
+            + progSemana + '/' + metaSemana
+          + '</div>'
+        + '</div>'
+        /* mini barra */
+        + '<div style="height:8px;background:#e5e7eb;border-radius:99px;overflow:hidden">'
+          + '<div style="height:100%;width:' + Math.round((progSemana/metaSemana)*100) + '%;background:' + (progSemana >= metaSemana ? 'linear-gradient(90deg,#16a34a,#4ade80)' : 'linear-gradient(90deg,var(--azul),#3b82f6)') + ';border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1)"></div>'
+        + '</div>'
+        + (progSemana >= metaSemana
+          ? '<div style="font-size:12px;font-weight:600;color:#16a34a;margin-top:8px">✅ Missão concluída esta semana!</div>'
+          : '<div style="font-size:12px;color:var(--cin);opacity:.65;margin-top:8px">Falta ' + (metaSemana - progSemana) + ' presença para completar</div>'
+        )
+      + '</div>'
+
+      /* ── CALENDÁRIO ÚLTIMOS 28 DIAS ── */
+      + (function() {
+          var hoje28 = new Date(); hoje28.setHours(0,0,0,0);
+          var presMap = {};
+          lista.forEach(function(r){ presMap[r.data] = r.presente; });
+          var dias28 = [];
+          for (var d28 = 27; d28 >= 0; d28--) {
+            var dt = new Date(hoje28); dt.setDate(dt.getDate() - d28);
+            var k  = dt.toISOString().slice(0,10);
+            var st = presMap.hasOwnProperty(k) ? presMap[k] : null;
+            dias28.push({ k: k, st: st, n: dt.getDate() });
+          }
+          return '<div style="margin-bottom:14px;opacity:0;animation:_pFadeUp .4s ease forwards;animation-delay:.13s">'
+            + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:10px">📅 Últimos 28 dias</div>'
+            + '<div class="calendario" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px">'
+            + ['D','S','T','Q','Q','S','S'].map(function(l){
+                return '<div style="text-align:center;font-size:9px;font-weight:700;color:var(--cin);opacity:.5;padding-bottom:3px">' + l + '</div>';
+              }).join('')
+            + dias28.map(function(d28i) {
+                var cls, title;
+                var hojeK = hoje28.toISOString().slice(0,10);
+                if (d28i.k === hojeK) { cls = 'dia dia-hoje'; title = 'Hoje'; }
+                else if (d28i.st === true)  { cls = 'dia dia-presente'; title = 'Presente'; }
+                else if (d28i.st === false) { cls = 'dia dia-falta';    title = 'Falta'; }
+                else { cls = 'dia dia-futuro'; title = '–'; }
+                return '<div class="' + cls + '" title="' + title + '">' + d28i.n + '</div>';
+              }).join('')
+            + '</div>'
+          + '</div>';
+        })()
+
+      /* ── CONQUISTAS ── */
+      + '<div style="opacity:0;animation:_pFadeUp .4s ease forwards;animation-delay:.17s">'
+        + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:10px">🏆 Conquistas</div>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:8px">'
+        + badges.map(function(b, bi) {
+            return '<div class="badge-conquista ' + (b.earned ? 'earned' : 'locked') + '" style="opacity:0;animation:_pFadeUp .35s ease forwards;animation-delay:' + (0.19 + bi * 0.05) + 's"'
+              + (b.earned
+                ? ' onmouseover="this.style.transform=\'translateY(-4px) scale(1.08)\';this.style.boxShadow=\'0 8px 20px rgba(245,158,11,.3)\'"'
+                  + ' onmouseout="this.style.transform=\'scale(1)\';this.style.boxShadow=\'0 4px 12px rgba(245,158,11,.25)\'"'
+                  + ' onmousedown="this.style.transform=\'scale(0.95)\'"'
+                  + ' onmouseup="this.style.transform=\'translateY(-4px) scale(1.08)\'"'
+                : ' title="Continue para desbloquear"'
+              ) + '>'
+              + '<span style="font-size:16px">' + b.ic + '</span>'
+              + '<span>' + b.label + '</span>'
+              + (b.earned ? '' : '<span style="font-size:10px;opacity:.5;margin-left:2px">🔒</span>')
+            + '</div>';
+          }).join('')
+        + '</div>'
+      + '</div>';
   }
 
+  /* ── BLOCO HIST: timeline de registros ─────────────────────────────── */
   if (elHist) {
     if (lista.length === 0) {
-      elHist.innerHTML = '<p style="text-align:center;font-size:13px;color:var(--cin);opacity:.6;font-style:italic;padding:16px 0">Voc\u00ea ainda n\u00e3o possui registros de presen\u00e7a</p>';
+      elHist.innerHTML =
+        '<div style="text-align:center;padding:32px 0;opacity:0;animation:_pFadeUp .4s ease forwards">'
+          + '<div style="font-size:36px;margin-bottom:12px;opacity:.4">📋</div>'
+          + '<div style="font-size:14px;font-weight:600;color:var(--cin);opacity:.7">Nenhum registro ainda</div>'
+          + '<div style="font-size:12px;color:var(--cin);opacity:.5;margin-top:4px">Seu histórico de presenças aparecerá aqui</div>'
+        + '</div>';
       return;
     }
-    elHist.innerHTML = [...lista].reverse().map((r, i) => {
-      const d  = new Date(r.data + 'T12:00:00');
-      const stLabel = r.presente === true ? 'Presente' : r.presente === false ? 'Falta' : 'N\u00e3o registrado';
-      const badge = r.presente === true
-        ? 'background:#e8f7ee;color:#1f7a4c'
-        : r.presente === false
-          ? 'background:#fdeaea;color:#a83232'
-          : 'background:#f2f2f2;color:#666';
-      const delay = Math.min(i * 0.04, 0.4).toFixed(2);
-      return '<div style="border-radius:18px;padding:16px 18px;margin-bottom:10px;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.08);display:flex;justify-content:space-between;align-items:center;cursor:default;transition:transform .18s,box-shadow .18s;opacity:0;animation:_fadeUpSafe .35s ease forwards;animation-delay:' + delay + 's"'
-        + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 10px 24px rgba(0,0,0,.12)\'"'
-        + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 4px 14px rgba(0,0,0,.08)\'"'
-        + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
-        + ' onmouseup="this.style.transform=\'translateY(-3px)\'">'
-        + '<div>'
-        + '<div style="font-size:14px;font-weight:700;color:var(--azul);line-height:1.3">' + DS[d.getDay()] + ', ' + fmtD(d) + '</div>'
-        + '<div style="font-size:12px;opacity:.6;margin-top:2px">' + (r.livro || 'Aula') + '</div>'
-        + '</div>'
-        + '<span style="' + badge + ';border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;white-space:nowrap">' + stLabel + '</span>'
-        + '</div>';
-    }).join('');
+    elHist.innerHTML =
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cin);opacity:.7;margin-bottom:12px;opacity:0;animation:_pFadeUp .4s ease forwards;animation-delay:.22s">Histórico completo</div>'
+      + [...lista].reverse().map(function(r, i) {
+          var d  = new Date(r.data + 'T12:00:00');
+          var stLabel = r.presente === true ? 'Presente' : r.presente === false ? 'Falta' : 'Não registrado';
+          var isP  = r.presente === true;
+          var isF  = r.presente === false;
+          var badgeBg  = isP ? '#dcfce7' : isF ? '#fee2e2' : '#f3f4f6';
+          var badgeCor = isP ? '#166534' : isF ? '#991b1b' : '#6b7280';
+          var leftBar  = isP ? '#16a34a' : isF ? '#dc2626' : '#e5e7eb';
+          var delay    = Math.min(0.22 + i * 0.04, 0.55).toFixed(2);
+          return '<div style="border-radius:16px;padding:14px 16px;margin-bottom:9px;background:#fff;box-shadow:0 3px 12px rgba(0,0,0,.07);display:flex;justify-content:space-between;align-items:center;cursor:default;transition:all .2s cubic-bezier(.4,0,.2,1);opacity:0;animation:_pFadeUp .35s ease forwards;animation-delay:' + delay + 's;border-left:4px solid ' + leftBar + '"'
+            + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 10px 24px rgba(0,0,0,.11)\'"'
+            + ' onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 3px 12px rgba(0,0,0,.07)\'"'
+            + ' onmousedown="this.style.transform=\'scale(0.97)\'"'
+            + ' onmouseup="this.style.transform=\'translateY(-3px)\'">'
+            + '<div style="display:flex;align-items:center;gap:10px">'
+              + '<div style="font-size:18px;flex-shrink:0">' + (isP ? '✅' : isF ? '❌' : '⬜') + '</div>'
+              + '<div>'
+                + '<div style="font-size:14px;font-weight:700;color:var(--azul);line-height:1.3">' + DS[d.getDay()] + ', ' + fmtD(d) + '</div>'
+                + '<div style="font-size:11px;opacity:.55;margin-top:1px;color:var(--cin)">' + (r.livro || 'Aula') + '</div>'
+              + '</div>'
+            + '</div>'
+            + '<span style="background:' + badgeBg + ';color:' + badgeCor + ';border-radius:99px;padding:4px 12px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0">' + stLabel + '</span>'
+          + '</div>';
+        }).join('');
   }
 }
 
