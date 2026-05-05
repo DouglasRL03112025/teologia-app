@@ -47,7 +47,7 @@ main{padding:18px 16px 80px;max-width:620px;margin:0 auto}
 @keyframes _fadeUpAgenda{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes _slideLeftIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes _slideRightIn{from{transform:translateX(-40px);opacity:0}to{transform:translateX(0);opacity:1}}
-@keyframes pulseAtual{0%{box-shadow:0 0 0 3px rgba(30,58,95,0.10),0 4px 12px rgba(0,0,0,0.06)}50%{box-shadow:0 0 0 6px rgba(30,58,95,0.15),0 6px 16px rgba(0,0,0,0.08)}100%{box-shadow:0 0 0 3px rgba(30,58,95,0.10),0 4px 12px rgba(0,0,0,0.06)}}
+/* pulseAtual removido — hoje não deve competir com dias de aula */
 @keyframes shineBar{0%{left:-40%}100%{left:100%}}
 @keyframes glowAula{0%{box-shadow:0 6px 18px rgba(30,58,95,0.25)}50%{box-shadow:0 10px 28px rgba(59,130,246,0.35)}100%{box-shadow:0 6px 18px rgba(30,58,95,0.25)}}
 @keyframes shineAula{0%{left:-60%}100%{left:120%}}
@@ -1157,13 +1157,20 @@ select.inp{cursor:pointer}
 .cd.hd:hover{background:none;transform:none;box-shadow:none}
 .cd.vz{background:transparent;cursor:default}
 .cd.vz:hover{background:transparent;transform:none;box-shadow:none}
-.cd.cp{background:var(--vd)!important;color:#fff!important;font-weight:700!important;box-shadow:0 4px 10px rgba(45,122,74,.3)!important}
-.cd.cf{background:var(--vm)!important;color:#fff!important;font-weight:700!important;box-shadow:0 4px 10px rgba(184,50,50,.25)!important}
-.cd-aula{background:rgba(26,58,92,.08)!important;border:1px solid rgba(26,58,92,.25)!important;color:var(--azul)!important;font-weight:700!important}
-.cd-aula::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--azul);opacity:.75}
-.cd-hoje{background:var(--azul)!important;color:#fff!important;font-weight:700!important;box-shadow:0 6px 18px rgba(26,58,92,.4)!important;border:none!important}
-.cd-hoje-aula{background:var(--azul)!important;color:#fff!important;font-weight:700!important;box-shadow:0 0 0 2px #fff,0 8px 22px rgba(26,58,92,.5)!important;border:none!important}
-.cd-hoje-aula::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.9)}
+/* DIAS COM AULA — máximo destaque (PRIORIDADE 1) */
+.cd.cp{background:#15803d!important;color:#fff!important;font-weight:800!important;box-shadow:0 4px 14px rgba(21,128,61,.45)!important;border:1.5px solid #14532d!important}
+.cd.cf{background:#b91c1c!important;color:#fff!important;font-weight:800!important;box-shadow:0 4px 14px rgba(185,28,28,.4)!important;border:1.5px solid #7f1d1d!important}
+
+/* AULA FUTURA — destaque médio-baixo, tom âmbar suave */
+.cd-aula{background:#fef9c3!important;border:1.5px solid #fbbf24!important;color:#92400e!important;font-weight:700!important;box-shadow:0 2px 6px rgba(251,191,36,.2)!important}
+.cd-aula::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#d97706;opacity:.8}
+
+/* HOJE SEM AULA — discreto, não compete com dias de aula (PRIORIDADE 2) */
+.cd-hoje{background:#e8f0f8!important;color:#1a3a5c!important;font-weight:600!important;box-shadow:none!important;border:1.5px solid #93b4d4!important}
+
+/* HOJE COM AULA FUTURA — âmbar + borda azul sutil */
+.cd-hoje-aula{background:#fef9c3!important;color:#92400e!important;font-weight:700!important;box-shadow:none!important;border:2px solid #d97706!important}
+.cd-hoje-aula::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#d97706;opacity:.9}
 .cd-selected{border:2px solid var(--azul)!important;background:rgba(26,58,92,.12)!important;box-shadow:0 0 0 2px rgba(26,58,92,.15)!important;transform:scale(1.08)!important;color:var(--azul)!important;font-weight:700!important}
 
 /* ── AGENDA ── */
@@ -2346,9 +2353,9 @@ nav {
           <button class="dnb" onclick="agendaMudarMes(1)">›</button>
         </div>
         <div style="display:flex;gap:14px;font-size:14px;color:var(--txt);font-weight:500;margin-bottom:8px;flex-wrap:wrap">
-          <span><span style="display:inline-block;width:12px;height:12px;background:var(--vd);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Presente</span>
-          <span><span style="display:inline-block;width:12px;height:12px;background:var(--vm);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Falta</span>
-          <span><span style="display:inline-block;width:12px;height:12px;background:var(--dou);border-radius:3px;margin-right:4px;vertical-align:middle"></span>Aula futura</span>
+          <span><span style="display:inline-block;width:12px;height:12px;background:#15803d;border-radius:3px;margin-right:4px;vertical-align:middle;border:1px solid #14532d"></span>Presente</span>
+          <span><span style="display:inline-block;width:12px;height:12px;background:#b91c1c;border-radius:3px;margin-right:4px;vertical-align:middle;border:1px solid #7f1d1d"></span>Falta</span>
+          <span><span style="display:inline-block;width:12px;height:12px;background:#fef9c3;border-radius:3px;margin-right:4px;vertical-align:middle;border:1px solid #fbbf24"></span>Aula futura</span>
         </div>
         <div class="cal" id="al-agenda-cal"></div>
         <div id="al-agenda-dia-detalhe" style="margin-top:10px"></div>
