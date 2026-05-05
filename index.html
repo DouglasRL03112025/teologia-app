@@ -10026,7 +10026,7 @@ async function renderPainelProvas() {
   var estilos = {
     nao_fez:   {bg:'#f1f5f9',brd:'#e2e8f0',cor:'#64748b',label:'Não realizada'},
     feita:     {bg:'#fef3c7',brd:'#fcd34d',cor:'#92400e',label:'Aguard. correção'},
-    corrigida: {bg:'#dcfce7',brd:'#86efac',cor:'#15803d',label:'Corrigida'},
+    corrigida: {bg:'#dbeafe',brd:'#93c5fd',cor:'#1e40af',label:'Corrigida'},
     devolvida: {bg:'#dcfce7',brd:'#86efac',cor:'#15803d',label:'Devolvida'}
   };
 
@@ -10034,6 +10034,7 @@ async function renderPainelProvas() {
     ok:        { border:'#22c55e', bg:'#f0fdf4', icon:'✅' },
     atencao:   { border:'#f59e0b', bg:'#fffbeb', icon:'⏳' },
     pendente:  { border:'#e2e8f0', bg:'#f8fafc', icon:'📋' },
+    corrigida: { border:'#93c5fd', bg:'#dbeafe', icon:'🔵' },
     devolvida: { border:'#86efac', bg:'#dcfce7', icon:'📦' }
   };
 
@@ -10057,10 +10058,10 @@ async function renderPainelProvas() {
     var st = estilos[status];
 
     var cardKey;
-    if (r && r.devolvida)                      cardKey = 'devolvida';
-    else if (r && r.nota != null && r.nota >= 7) cardKey = 'ok';
-    else if (r && r.fez_prova)                 cardKey = 'atencao';
-    else                                        cardKey = 'pendente';
+    if (r && r.devolvida)        cardKey = 'devolvida';
+    else if (status === 'corrigida') cardKey = 'corrigida';
+    else if (r && r.fez_prova)   cardKey = 'atencao';
+    else                          cardKey = 'pendente';
     var ce = cardEstilos[cardKey];
 
     /* ── nota display — clicável se tiver rid ── */
