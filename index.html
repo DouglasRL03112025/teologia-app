@@ -8010,10 +8010,20 @@ async function renderAlunoPresenca(){
   const lista = await getPresencaAluno(alunoId);
   console.log('[Presença] Registros do aluno:', lista);
 
-  const total     = lista.length;
-  const presencas = lista.filter(r => r.presente === true).length;
-  const faltas    = lista.filter(r => r.presente === false).length;
+  // ── CÁLCULO DE FREQUÊNCIA A PARTIR DA PRIMEIRA AULA DO ALUNO ──
+  // Ordena por data crescente para garantir a ordem correta
+  const listaOrdenada = [...lista].sort((a, b) => a.data < b.data ? -1 : a.data > b.data ? 1 : 0);
+  // Encontra a primeira data em que o aluno tem registro (P ou F)
+  const primeiraAula = listaOrdenada.length > 0 ? listaOrdenada[0].data : null;
+  // Filtra apenas as aulas a partir da primeira — garante que aulas anteriores ao ingresso não contam
+  const listaDoAluno = primeiraAula
+    ? listaOrdenada.filter(r => r.data >= primeiraAula)
+    : listaOrdenada;
+  const total     = listaDoAluno.length;
+  const presencas = listaDoAluno.filter(r => r.presente === true).length;
+  const faltas    = listaDoAluno.filter(r => r.presente === false).length;
   const perc      = total > 0 ? Math.round((presencas / total) * 100) : 0;
+  // ── FIM DO AJUSTE ──
 
   console.log('[Presença] Total:', total, '| Presenças:', presencas, '| Faltas:', faltas, '| %:', perc);
 
