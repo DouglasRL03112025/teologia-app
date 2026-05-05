@@ -3109,18 +3109,17 @@ function renderLivrosAluno(_ignored) {
     </style>
 
     <!-- HERO DE PROGRESSO -->
-    <div class="tril-hero" style="background:${heroStatus.bg}">
-      <div class="tril-hero-badge">
-        <span class="tril-hero-dot" style="background:${heroStatus.dot}"></span>
-        ${heroStatus.label}
+    <div class="tril-hero" style="background:${todosPagos ? '#dcfce7' : '#fee2e2'};padding:14px 18px 14px;box-shadow:0 4px 16px rgba(0,0,0,0.08)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="tril-hero-titulo" style="color:${todosPagos ? '#166534' : '#991b1b'};margin-bottom:0;font-size:13px;font-weight:700;text-transform:none;letter-spacing:0">Sua jornada no curso</div>
+        <span style="font-size:11px;font-weight:700;color:${todosPagos ? '#15803d' : '#b91c1c'};background:${todosPagos ? '#bbf7d0' : '#fecaca'};border-radius:99px;padding:3px 10px;white-space:nowrap">${heroStatus.label}</span>
       </div>
-      <div class="tril-hero-titulo">Sua jornada no curso</div>
-      <div class="tril-hero-num">Livro ${livrosAtualNum}<span style="font-size:20px;font-weight:500;opacity:0.6"> / 24</span></div>
-      <div class="tril-hero-sub">Você está no livro ${livrosAtualNum} de 24</div>
-      <div class="tril-hero-bar-wrap">
-        <div class="tril-hero-bar-fill" style="width:${progresso}%"></div>
+      <div class="tril-hero-num" style="color:${todosPagos ? '#166534' : '#991b1b'};font-size:30px;margin-bottom:2px">Livro ${livrosAtualNum}<span style="font-size:16px;font-weight:500;opacity:0.6"> / 24</span></div>
+      <div class="tril-hero-sub" style="color:${todosPagos ? '#15803d' : '#b91c1c'};opacity:0.75;margin-bottom:12px">Você está no livro ${livrosAtualNum} de 24</div>
+      <div class="tril-hero-bar-wrap" style="background:${todosPagos ? 'rgba(22,101,52,0.18)' : 'rgba(153,27,27,0.15)'}">
+        <div class="tril-hero-bar-fill" style="width:${progresso}%;background:${todosPagos ? '#16a34a' : '#dc2626'}"></div>
       </div>
-      <div class="tril-hero-bar-labels">
+      <div class="tril-hero-bar-labels" style="color:${todosPagos ? '#166534' : '#991b1b'};opacity:0.7">
         <span>${totalPagos} livro${totalPagos !== 1 ? 's' : ''} pago${totalPagos !== 1 ? 's' : ''}</span>
         <span>${progresso}% do curso</span>
       </div>
@@ -3615,18 +3614,6 @@ ${proximoLivroNum
       </div>
     </div>`
 }
-
-<!-- ⑤ PROGRESSO GLOBAL -->
-<div class="pfin-progresso pfin-anim pfin-d5">
-  <div class="pfin-prog-header">
-    <span class="pfin-prog-lbl">Progresso financeiro</span>
-    <span class="pfin-prog-pct">${progresso}%</span>
-  </div>
-  <div class="pfin-prog-bar">
-    <div class="pfin-prog-fill" style="width:${progresso}%"></div>
-  </div>
-  <div class="pfin-prog-sub">${totalPagos} de 24 livros pagos${ultimoPagamentoData ? ' · Último pagamento: ' + formatarData(ultimoPagamentoData) : ''}</div>
-</div>
 
 <!-- ⑤ LISTA DE LIVROS EXTRATO -->
 <div class="pfin-sec-title pfin-anim pfin-d5">Histórico por livro</div>
