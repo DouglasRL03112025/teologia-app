@@ -3383,7 +3383,6 @@ function abrirModAluno(id){
   }
   abrirMod('mod-aluno');
 }
-function abrirAluno(id) { verPerfilAdmin(id); }
 function salvarAluno(){
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   const nome=document.getElementById('a-nome').value.trim().toUpperCase(); if(!nome){ toast('⚠ Digite o nome'); return; }
@@ -8092,6 +8091,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
 /* ════ PAINEL DE PROVAS ADMIN ════ */
 async function iniciarPainelProvas() {
   var sel = document.getElementById('provas-select-prova');
+  if (!sel) return;
   if (sel.options.length <= 1) {
     for (var i = 1; i <= 24; i++) {
       var opt = document.createElement('option');
