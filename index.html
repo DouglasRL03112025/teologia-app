@@ -798,6 +798,33 @@ nav {
 .ac.dest:active{transform:scale(.97);filter:brightness(.98)}
 .oculto-auth{display:none !important;}
 
+/* ── RASTREAMENTO ONLINE — visível só no admin ── */
+.online-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.online-dot.on  { background: #22c55e; box-shadow: 0 0 0 2px rgba(34,197,94,.25); animation: _pulseOnline 2s ease-in-out infinite; }
+.online-dot.off { background: #d1d5db; }
+@keyframes _pulseOnline {
+  0%,100% { box-shadow: 0 0 0 2px rgba(34,197,94,.25); }
+  50%     { box-shadow: 0 0 0 5px rgba(34,197,94,.08); }
+}
+.online-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+.online-tag.on  { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+.online-tag.off { background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; }
+
 /* ── ALERTAS ── */
 .al{border-radius:var(--r);padding:13px 15px;margin-bottom:10px;font-size:14px;display:flex;align-items:flex-start;gap:9px;line-height:1.5}
 .al.vm{background:var(--vm-c);color:var(--vm)}.al.am{background:var(--am-c);color:var(--am)}.al.vd{background:var(--vd-c);color:var(--vd)}
@@ -2755,6 +2782,27 @@ async function carregarAlunoLogado(authId) {
     irAluno('cadastro');
   }
   console.log('ALUNO LOGADO:', data);
+
+  /* ── RASTREAMENTO: marcar online ao logar ── */
+  try {
+    await supabaseClient.from('alunos').update({
+      ultimo_acesso: new Date().toISOString(),
+      online: true
+    }).eq('id', data.id);
+  } catch(e) { /* silencioso — não afeta o aluno */ }
+
+  /* ── RASTREAMENTO: heartbeat a cada 60s ── */
+  if (window._heartbeatInterval) clearInterval(window._heartbeatInterval);
+  window._heartbeatAlunoId = data.id;
+  window._heartbeatInterval = setInterval(async function() {
+    if (!window._heartbeatAlunoId) return;
+    try {
+      await supabaseClient.from('alunos').update({
+        ultimo_acesso: new Date().toISOString()
+      }).eq('id', window._heartbeatAlunoId);
+    } catch(e) { /* silencioso */ }
+  }, 60000);
+  /* ── FIM RASTREAMENTO ── */
 }
 /* ════ PROVAS: SINCRONIZAÇÃO AUTOMÁTICA COM LIVROS ════ */
 
@@ -4700,6 +4748,20 @@ async function loginAdmin() {
 // verificarAdmin() removido: acesso admin agora exclusivamente via loginAdmin() + Supabase Auth
 
 async function sair(){
+  /* ── RASTREAMENTO: marcar offline ao sair ── */
+  try {
+    if (window._heartbeatAlunoId) {
+      await supabaseClient.from('alunos').update({ online: false })
+        .eq('id', window._heartbeatAlunoId);
+    }
+  } catch(e) { /* silencioso */ }
+  if (window._heartbeatInterval) {
+    clearInterval(window._heartbeatInterval);
+    window._heartbeatInterval = null;
+  }
+  window._heartbeatAlunoId = null;
+  /* ── FIM RASTREAMENTO ── */
+
   // Encerrar sessão no Supabase Auth (fonte de verdade)
   await supabaseClient.auth.signOut().catch(e => console.warn('[Auth] Erro ao sair:', e));
 
@@ -4904,6 +4966,37 @@ async function renderDashAdmin(){
     <div class="mc vm" onclick="irAdmin('pagamentos');definirFiltroPagamento('pendentes')" style="cursor:pointer"><div class="mn">${pagamentosPendentes}</div><div class="ml">Pagamentos Pendentes</div></div>
     <div class="mc vd" onclick="irAdmin('pagamentos');definirFiltroPagamento('pagos')" style="cursor:pointer"><div class="mn">${pagamentosPagos}</div><div class="ml">Pagamentos Pagos</div></div>
     <div class="mc do" onclick="irAdmin('pagamentos')" style="cursor:pointer"><div class="mn">${livrosPendentes}</div><div class="ml">Livros Pendentes</div></div>`;
+
+  /* ── RASTREAMENTO: bloco "Online agora" no dashboard admin ── */
+  (async function() {
+    try {
+      var _onlineEl = document.getElementById('a-online-agora');
+      if (!_onlineEl) {
+        _onlineEl = document.createElement('div');
+        _onlineEl.id = 'a-online-agora';
+        _onlineEl.style.cssText = 'margin-top:12px;margin-bottom:4px';
+        var metricas = document.getElementById('a-metricas');
+        if (metricas && metricas.parentNode) {
+          metricas.parentNode.insertBefore(_onlineEl, metricas.nextSibling);
+        }
+      }
+      var { data: _trackAll } = await supabaseClient.from('alunos').select('id, nome, ultimo_acesso, online').eq('ativo', true);
+      var _agora = (_trackAll || []).filter(function(a){ return _isOnline(a); });
+      if (!_agora.length) {
+        _onlineEl.innerHTML = '<div style="display:flex;align-items:center;gap:7px;padding:9px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;font-size:12px;color:#94a3b8;font-weight:600"><span class="online-dot off"></span>Nenhum aluno online agora</div>';
+      } else {
+        _onlineEl.innerHTML = '<div style="padding:10px 14px;background:#f0fdf4;border-radius:10px;border:1px solid #86efac">'
+          + '<div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">'
+            + '<span class="online-dot on"></span>'
+            + '<span style="font-size:12px;font-weight:700;color:#15803d">' + _agora.length + ' aluno' + (_agora.length > 1 ? 's' : '') + ' online agora</span>'
+          + '</div>'
+          + '<div style="display:flex;flex-wrap:wrap;gap:5px">'
+          + _agora.map(function(a){ return '<span style="background:#dcfce7;color:#166534;border:1px solid #a7f3c0;border-radius:99px;padding:2px 9px;font-size:11px;font-weight:600">' + fmtNome(a.nome).split(' ')[0] + '</span>'; }).join('')
+          + '</div></div>';
+      }
+    } catch(e) { /* silencioso */ }
+  })();
+  /* ── FIM RASTREAMENTO ── */
 
   let alerts=[];
   // Alertas de faltas no mês
@@ -5273,6 +5366,25 @@ function admAplicarFiltro(status) {
   renderAlunosAdmin();
 }
 
+/* ── RASTREAMENTO: helper isOnline ──
+   Considera online se ultimo_acesso < 2 minutos atrás.
+   NÃO confia só no campo online (pode ficar desatualizado).
+   Invisível ao aluno — usado apenas no painel admin.
+── */
+function _isOnline(alunoData) {
+  if (!alunoData || !alunoData.ultimo_acesso) return false;
+  var diff = Date.now() - new Date(alunoData.ultimo_acesso).getTime();
+  return diff < 2 * 60 * 1000; // 2 minutos
+}
+function _onlineTag(alunoData) {
+  var on = _isOnline(alunoData);
+  return '<span class="online-tag ' + (on ? 'on' : 'off') + '">'
+    + '<span class="online-dot ' + (on ? 'on' : 'off') + '"></span>'
+    + (on ? 'Online' : 'Offline')
+    + '</span>';
+}
+/* ── FIM RASTREAMENTO ── */
+
 async function renderAlunosAdmin(){
   await carregarLivroAtualSistema();
   popularFiltroTurma();
@@ -5290,6 +5402,12 @@ async function renderAlunosAdmin(){
   // Buscar aluno_livros para badge correto
   const { data: alunoLivros } = await supabaseClient.from('aluno_livros').select('aluno_id, pagou, entregue, participou, livro_codigo').range(0, 9999);
   const alLivros = alunoLivros || [];
+
+  /* ── RASTREAMENTO: buscar ultimo_acesso de todos os alunos ── */
+  const { data: _trackingData } = await supabaseClient.from('alunos').select('id, ultimo_acesso, online');
+  const _trackingMap = {};
+  (_trackingData || []).forEach(function(r){ _trackingMap[r.id] = r; });
+  /* ── FIM RASTREAMENTO ── */
 
   const cm=chM(hj());
 
@@ -5418,6 +5536,7 @@ async function renderAlunosAdmin(){
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
         <span class="bdg ${bdgClass}">${bdgLabel}</span>
         ${riscoBadge}
+        ${_onlineTag(_trackingMap[a.id])}
       </div>
     </div>`;
   }
