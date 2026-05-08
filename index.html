@@ -1847,6 +1847,7 @@ async function carregarProvasAluno(alunoId) {
   }
   return data || [];
 }
+window.carregarProvasAluno = carregarProvasAluno;
 
 async function montarProvasComLivros(alunoId) {
   const provas = await carregarProvasAluno(alunoId);
