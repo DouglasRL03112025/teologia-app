@@ -2329,6 +2329,7 @@ async function carregarExibirProvasAdminPerfil(alunoId) {
       </div>`;
   }).join('');
 }
+window.carregarExibirProvasAdminPerfil = carregarExibirProvasAdminPerfil;
 
 async function toggleFezProva(id, valor) {
   if (!id) { toast('Dados inválidos.', 'erro'); return; }
