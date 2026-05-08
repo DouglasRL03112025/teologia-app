@@ -7026,18 +7026,18 @@ if(!D.aulas_log) { D.aulas_log={}; }
   async function inicializarApp() {
     // ── RESTAURAR SESSÃO VIA SUPABASE AUTH (fonte de verdade) ──
     try {
-      const { data: { session } } = await supabaseClient.auth.getSession();
+      const { data: { user } } = await supabaseClient.auth.getUser();
 
-      if (session && session.user) {
-        const email = session.user.email;
-        const isAdmin = session.user.id === '615ec79d-0cd3-48d9-a415-f5c9aa69d0b6';
+      if (user) {
+        const email = user.email;
+        const isAdmin = user.id === '615ec79d-0cd3-48d9-a415-f5c9aa69d0b6';
 
         if (isAdmin) {
           // Sessão admin válida → restaurar painel admin
           console.log('[Auth] Sessão admin restaurada via Supabase Auth:', email);
           window.isAdmin = true;
           localStorage.setItem('adminLogado', 'true'); // apoio de leitura rápida
-          usuAtual = { id: session.user.id, nome: email, isAdmin: true };
+          usuAtual = { id: user.id, nome: email, isAdmin: true };
           document.getElementById('pg-login').style.display = 'none';
           document.getElementById('pg-login-admin').style.display = 'none';
           document.getElementById('pg-admin').style.display = 'block';
@@ -7057,7 +7057,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
           await carregarNotasSupabase().catch(e => console.error('[Init] Erro notas:', e));
           await carregarPresencaSupabase().catch(e => console.error('[Init] Erro presenças:', e));
           salvar();
-          await carregarAlunoLogado(session.user.id);
+          await carregarAlunoLogado(user.id);
           return;
         }
       }
@@ -7222,8 +7222,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
   /* ════ PERSISTÊNCIA DE SESSÃO ════ */
 
   async function verificarSessao() {
-    const { data } = await supabaseClient.auth.getSession();
-    const user = data.session?.user;
+    const { data: { user } } = await supabaseClient.auth.getUser();
     if (user) {
       if (user.id === '615ec79d-0cd3-48d9-a415-f5c9aa69d0b6') {
         window.isAdmin = true;
