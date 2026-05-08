@@ -2361,6 +2361,9 @@ async function atualizarNota(id, valor) {
   if (error) console.error('[atualizarNota] Erro:', error);
   else toast(nota !== null ? `✏️ Nota ${nota.toFixed(1)} salva!` : 'Nota removida');
 }
+window.toggleFezProva = toggleFezProva;
+window.toggleDevolvida = toggleDevolvida;
+window.atualizarNota = atualizarNota;
 
 /* ════ FIM ADMIN: GERENCIAR PROVAS DO ALUNO ════ */
 
