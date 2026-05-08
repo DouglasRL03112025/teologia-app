@@ -7780,6 +7780,7 @@ async function iniciarPainelProvas() {
   document.getElementById('provas-resumo').style.display = 'none';
   document.getElementById('provas-lista').innerHTML = '';
 }
+window.iniciarPainelProvas = iniciarPainelProvas;
 
 async function renderPainelProvas() {
   var codigo = document.getElementById('provas-select-prova').value;
