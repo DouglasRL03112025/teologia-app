@@ -8033,6 +8033,7 @@ function filtrarProvas(tipo) {
   var ativo = document.querySelector('.provas-dash-card[data-filtro="' + tipo + '"]');
   if (ativo) ativo.classList.add('on');
 }
+window.filtrarProvas = filtrarProvas;
 /* ── FIM FILTRO PROVAS ── */
 
 /* ════ FIM PAINEL DE PROVAS ADMIN ════ */
