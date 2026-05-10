@@ -2385,6 +2385,7 @@ function fecharModalPagamento() {
   document.getElementById('modal-pagamento').style.display = 'none';
   _mpRegistroId = null;
 }
+window.fecharModalPagamento = fecharModalPagamento;
 
 async function confirmarPagamentoModal() {
   const btnConfirmar = document.querySelector('#modal-pagamento .btn.bp');
