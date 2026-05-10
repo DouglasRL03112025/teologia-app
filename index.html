@@ -4148,6 +4148,7 @@ let livroVisualAtual = null; // navegação de livros na tela de pagamentos (só
 let filtroStatusPagamento = 'todos'; // 'todos' | 'pagos' | 'pendentes'
 
 function mudarMes(d){ _mp.setMonth(_mp.getMonth()+d); renderPagAdmin(); }
+window.mudarMes = mudarMes;
 
 async function renderPagAdmin(){
   // ── INICIALIZAR LIVRO VISUAL (somente visualização, não altera o global) ──
