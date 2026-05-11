@@ -6748,6 +6748,7 @@ window.fecharModalPagamentoLote = fecharModalPagamentoLote;
       fecharModalPagamentoLote();
     });
   }
+window.confirmarPagamentoModalLote = confirmarPagamentoModalLote;
   /* ── FIM MODAL PAGAMENTO EM LOTE ── */
 
   async function admMarcarLotePago(dataManual, formaManual) {
@@ -6842,6 +6843,7 @@ window.admDesmarcarTodos = admDesmarcarTodos;
     await renderDashAdmin();
     admDesmarcarTodos();
   }
+window.admDesmarcarPagamentoLote = admDesmarcarPagamentoLote;
 
   /* ── FIM SELEÇÃO MÚLTIPLA ── */
 
@@ -6897,6 +6899,7 @@ window.admDesmarcarTodos = admDesmarcarTodos;
     }
     await renderAlunosAdmin();
   }
+window.desmarcarPagamentoAluno = desmarcarPagamentoAluno;
 
   async function desmarcarPagamentoAlunoSilent(alunoId) {
     const livroAtual = window.livroAtualSistema;
