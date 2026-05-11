@@ -4574,6 +4574,7 @@ let _painelLivro = null;   // id do livro selecionado ex: 'l1'
 let _painelProva = null;   // id da prova selecionada ex: 'p1'
 let _painelFiltro = 'todos'; // 'todos'|'pagos'|'pendentes'|'sem-nota'|'sem-prova'
 let _painelTravado = false;  // true enquanto uma ação está em curso — congela a ordenação
+let _salvandoNota = false;
 
 function renderMatAdmin(aba){
   // Compatibilidade: ignora aba, sempre renderiza o painel unificado
@@ -4815,9 +4816,11 @@ window.renderPainelMaterial = renderPainelMaterial;
 // Salva nota de um único aluno sem recarregar tudo
 async function _salvarNotaAluno(aid, pid) {
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
+  if (_salvandoNota) return;
+  _salvandoNota = true;
   _painelTravado = true;
   const el = document.getElementById('nt-' + aid);
-  if (!el) return;
+  if (!el) { _painelTravado = false; return; }
   const v = parseFloat(el.value);
   if (!D.notas[pid]) D.notas[pid] = {};
   if (!isNaN(v) && el.value !== '') {
@@ -4831,7 +4834,7 @@ async function _salvarNotaAluno(aid, pid) {
   salvar();
   toast('✓ Nota salva!');
   renderPainelMaterial();
-  setTimeout(() => { _painelTravado = false; renderPainelMaterial(); }, 500);
+  setTimeout(() => { _painelTravado = false; _salvandoNota = false; renderPainelMaterial(); }, 500);
 }
 window._salvarNotaAluno = _salvarNotaAluno;
 
@@ -4845,6 +4848,8 @@ function updChip(id,v){ const c=document.getElementById('chip-'+id); if(!c) retu
 window.updChip = updChip;
 async function salvarNotas(){
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
+  if (_salvandoNota) return;
+  _salvandoNota = true;
   const pid=document.getElementById('sel-prova').value; if(!pid) return;
   if(!D.notas[pid]) D.notas[pid]={};
   const ops=[];
@@ -4862,7 +4867,7 @@ async function salvarNotas(){
     }
   });
   await Promise.all(ops);
-  salvar(); toast('✓ Notas salvas!');
+  salvar(); toast('✓ Notas salvas!'); _salvandoNota = false;
 }
 window.salvarNotas = salvarNotas;
 
