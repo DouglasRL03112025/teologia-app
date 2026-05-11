@@ -4814,6 +4814,7 @@ async function _salvarNotaAluno(aid, pid) {
   renderPainelMaterial();
   setTimeout(() => { _painelTravado = false; renderPainelMaterial(); }, 500);
 }
+window._salvarNotaAluno = _salvarNotaAluno;
 
 // Compatibilidade: tgLivro e tgProva chamam renderPainelMaterial em vez das antigas funções de tab
 function renderLivrosAdmin(){ renderPainelMaterial(); }
