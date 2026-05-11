@@ -4441,7 +4441,6 @@ function tgLivro(lid,aid,v){
   salvar();
   const a = D.alunos.find(x => x.id === aid);
   toast(v ? `📚 Livro entregue a ${fmtNome(a.nome)}!` : 'Marcado como pendente');
-  renderPainelMaterial();
   setTimeout(() => { _painelTravado = false; renderPainelMaterial(); }, 500);
 }
 window.tgLivro = tgLivro;
