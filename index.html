@@ -4453,7 +4453,6 @@ function tgProva(pid,aid,v){
   salvar();
   const a = D.alunos.find(x => x.id === aid);
   toast(v ? `📝 Prova registrada para ${fmtNome(a.nome)}!` : 'Marcado como pendente');
-  renderPainelMaterial();
   setTimeout(() => { _painelTravado = false; renderPainelMaterial(); }, 500);
 }
 window.tgProva = tgProva;
