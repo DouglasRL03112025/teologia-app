@@ -652,6 +652,7 @@ function mostrarMensagem(texto, tipo) {
 }
 /* ── FIM SISTEMA VISUAL DE MENSAGENS ── */
 function fecharMod(id){ document.getElementById(id).classList.remove('on'); }
+window.fecharMod = fecharMod;
 function abrirMod(id){ document.getElementById(id).classList.add('on'); }
 
 /* ════ LOGIN ════ */
@@ -2708,11 +2709,13 @@ function abrirLoginAdmin() {
   document.getElementById('pg-login').style.display = 'none';
   document.getElementById('pg-login-admin').style.display = 'flex';
 }
+window.abrirLoginAdmin = abrirLoginAdmin;
 function voltarParaLoginAluno() {
   if (window.isAdmin === true) { return; }
   document.getElementById('pg-login-admin').style.display = 'none';
   document.getElementById('pg-login').style.display = 'flex';
 }
+window.voltarParaLoginAluno = voltarParaLoginAluno;
 async function loginAdmin() {
   const email = document.getElementById('admin-email')?.value;
   const senha = document.getElementById('admin-senha')?.value;
@@ -2816,6 +2819,7 @@ function irAdmin(t){
   if(t==='aulas') carregarAulas();
   if(t==='provas') iniciarPainelProvas();
 }
+window.irAdmin = irAdmin;
 
 /* ════ NAV ALUNO ════ */
 const TELAS_ALUNO=['cadastro','agenda','presenca','pagamentos','livros','notas'];
@@ -3391,6 +3395,7 @@ function abrirModAluno(id){
   }
   abrirMod('mod-aluno');
 }
+window.abrirModAluno = abrirModAluno;
 function salvarAluno(){
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   const nome=document.getElementById('a-nome').value.trim().toUpperCase(); if(!nome){ toast('⚠ Digite o nome'); return; }
@@ -3411,6 +3416,7 @@ function admAplicarFiltro(status) {
   window._filtroStatus = status;
   renderAlunosAdmin();
 }
+window.admAplicarFiltro = admAplicarFiltro;
 
 /* ── RASTREAMENTO: helper isOnline ──
    Considera online se ultimo_acesso < 2 minutos atrás.
@@ -3982,6 +3988,7 @@ function toggleModoFoco() {
   }
   renderAlunosAdmin();
 }
+window.toggleModoFoco = toggleModoFoco;
 /* ══════ FIM AUTOMAÇÃO INTELIGENTE ══════ */
 
 /* ════ RESUMO LIVROS DO ALUNO (Supabase) ════ */
@@ -4871,6 +4878,7 @@ function alunosFiltrados(){
 }
 
 async function renderRelAtual(){ await renderRelAdmin(_abaRelAtual); }
+window.renderRelAtual = renderRelAtual;
 
 async function abaRel(aba,btn){
   _abaRelAtual = aba;
@@ -4878,6 +4886,7 @@ async function abaRel(aba,btn){
   ['painel','geral','presenca','por-aula','financeiro','avaliacao'].forEach(a=>document.getElementById('rel-'+a).style.display=a===aba?'block':'none');
   await renderRelAdmin(aba);
 }
+window.abaRel = abaRel;
 
 /* ════ CACHE SUPABASE PARA RELATÓRIOS ════ */
 let _relCache = null; // { alunos, presencas, aulas } — recarregado a cada visita à tela
