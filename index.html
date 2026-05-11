@@ -4414,6 +4414,7 @@ function abaMat(aba,btn){
   // abaMat mantida por compatibilidade — abre o painel unificado
   renderPainelMaterial();
 }
+window.abaMat = abaMat;
 
 function tgLivro(lid,aid,v){
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
