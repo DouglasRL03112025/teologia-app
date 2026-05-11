@@ -3405,11 +3405,13 @@ function salvarAluno(){
   else D.alunos.push(a);
   salvar(); fecharMod('mod-aluno'); renderAlunosAdmin(); toast('✓ Aluno '+(eid?'atualizado':'cadastrado')+'!');
 }
+window.salvarAluno = salvarAluno;
 function delAluno(){
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   const id=document.getElementById('aid').value; if(!id||!confirm('Excluir este aluno?')) return;
   D.alunos=D.alunos.filter(a=>a.id!==id); salvar(); fecharMod('mod-aluno'); renderAlunosAdmin(); toast('Aluno removido.');
 }
+window.delAluno = delAluno;
 window._filtroStatus = window._filtroStatus || 'todos';
 
 function admAplicarFiltro(status) {
@@ -3640,6 +3642,7 @@ async function renderAlunosAdmin(){
   // ── AÇÕES RÁPIDAS NOS CARDS ──
   aplicarAcoesRapidas();
 }
+window.renderAlunosAdmin = renderAlunosAdmin;
 
 function aplicarDestaqueAlunos() {
   var cards = document.querySelectorAll('.grid-cards-alunos .ar');
@@ -4119,6 +4122,7 @@ function tgPres(id){
   document.getElementById('pr-'+id).className='pr '+n;
   document.getElementById('pc-'+id).textContent=n==='P'?'Presente':n==='F'?'Falta':'Tocar';
 }
+window.tgPres = tgPres;
 function salvarPres(){
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   // Salvar log da aula
@@ -4799,6 +4803,7 @@ function renderPainelMaterial() {
     </div>`;
   }).join('');
 }
+window.renderPainelMaterial = renderPainelMaterial;
 
 // Salva nota de um único aluno sem recarregar tudo
 async function _salvarNotaAluno(aid, pid) {
@@ -4830,6 +4835,7 @@ function renderNotasAdmin(){  renderPainelMaterial(); }
 
 /* ════ FIM PAINEL UNIFICADO ════ */
 function updChip(id,v){ const c=document.getElementById('chip-'+id); if(!c) return; const n=parseFloat(v); if(isNaN(n)||v===''||v===null){ c.textContent=''; c.className='nc'; return; } c.textContent=(n!==null&&n!==undefined)?Number(n).toFixed(1):''; c.className='nc '+(n>=7?'bv':n>=5?'ba':'br'); }
+window.updChip = updChip;
 async function salvarNotas(){
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   const pid=document.getElementById('sel-prova').value; if(!pid) return;
@@ -4851,6 +4857,7 @@ async function salvarNotas(){
   await Promise.all(ops);
   salvar(); toast('✓ Notas salvas!');
 }
+window.salvarNotas = salvarNotas;
 
 /* ════ RELATÓRIOS ADMIN ════ */
 let _abaRelAtual = 'geral';
@@ -5711,6 +5718,7 @@ function salvarFB(){
   if(!k||!p||!u){ toast('⚠ Preencha todos os campos'); return; }
   localStorage.setItem('fb_cfg',JSON.stringify({k,p,u})); toast('✓ Credenciais salvas!');
 }
+window.salvarFB = salvarFB;
 function apagarTudo(){ if(!confirm('APAGAR TODOS OS DADOS? Irreversível!')) return; D=ddp(); salvar(); location.reload(); }
 
 /* ════════════════════════════════════════════
@@ -6518,6 +6526,7 @@ function abrirModEditarAluno(){
   document.getElementById('ea-senha').value='';
   abrirMod('mod-editar-aluno');
 }
+window.abrirModEditarAluno = abrirModEditarAluno;
 function salvarEdicaoAluno(){
   const idx=D.alunos.findIndex(a=>a.id===usuAtual.id); if(idx<0) return;
   const tel=document.getElementById('ea-tel').value.replace(/\D/g,'');
@@ -6529,6 +6538,7 @@ function salvarEdicaoAluno(){
   usuAtual={...usuAtual,...D.alunos[idx]};
   salvar(); fecharMod('mod-editar-aluno'); renderAlunoCadastro().then(()=>toast('✓ Dados atualizados!'));
 }
+window.salvarEdicaoAluno = salvarEdicaoAluno;
 
 /* ════ FECHAR OVERLAYS ════ */
 document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('on'); }));
