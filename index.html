@@ -4402,6 +4402,7 @@ async function tgPagLivro(idRegistro, estaPago, alunoId, nomeAluno) {
     toast('Erro ao salvar. Tente novamente.', 'erro');
   }
 }
+window.tgPagLivro = tgPagLivro;
 
 /* Mantido para não quebrar chamadas legadas */
 async function tgPag(id){ await renderPagAdmin(); }
