@@ -2570,6 +2570,7 @@ async function carregarExibirLivrosAdminPerfil(alunoId) {
     `;
   }).join('');
 }
+window.carregarExibirLivrosAdminPerfil = carregarExibirLivrosAdminPerfil;
 
 /* ════ CONFIRMAR ENTREGA DE LIVRO (ADMIN) ════ */
 async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
@@ -2662,6 +2663,7 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
     if (btn) { btn.disabled = false; btn.textContent = textoOriginal; }
   }
 }
+window.confirmarEntregaLivro = confirmarEntregaLivro;
 /* ════ FIM CONFIRMAR ENTREGA DE LIVRO (ADMIN) ════ */
 
 /* ════ DESFAZER ENTREGA DE LIVRO (ADMIN) ════ */
@@ -2793,6 +2795,7 @@ async function sair(){
   if (_sairSenha) { _sairSenha.value=''; }
   console.log('[Auth] Sessão encerrada.');
 }
+window.sair = sair;
 
 /* ════ NAV ADMIN ════ */
 const TELAS_ADMIN=['inicio','alunos','perfil','presenca','pagamentos','material','relatorios','relatorio','config','aulas','provas'];
@@ -2910,6 +2913,7 @@ async function irAluno(t){
   clearTimeout(loadingTimer);
   if (loading) loading.classList.remove('on');
 }
+window.irAluno = irAluno;
 
 /* ── PAINEL ONLINE: helpers ── */
 function isOnline(ultimo) {
@@ -3260,6 +3264,7 @@ async function renderDashAdmin(){
   window._renderDashAdminTimer = setTimeout(renderDashAdmin, 60000);
   /* ── FIM AUTO UPDATE ── */
 }
+window.renderDashAdmin = renderDashAdmin;
 
 /* ════ ALERTAS AUTOMÁTICOS ADMIN ════ */
 function gerarAlertasAdmin(al, presencas, alunoLivros, provasAluno, livroAtual) {
@@ -4098,6 +4103,7 @@ async function verPerfilAdmin(id){
   carregarExibirProvasAdminPerfil(id);
   carregarExibirLivrosAdminPerfil(id);
 }
+window.verPerfilAdmin = verPerfilAdmin;
 
 /* ════ PRESENÇA ADMIN ════ */
 let _dp=new Date();
@@ -4505,6 +4511,7 @@ async function carregarLivrosEntSupabase() {
     console.log('[carregarLivrosEnt] D.livros_ent atualizado com UUIDs.');
   } catch(e) { console.error('[carregarLivrosEnt] Exceção:', e); }
 }
+window.carregarLivrosEntSupabase = carregarLivrosEntSupabase;
 
 async function carregarProvasEntSupabase() {
   try {
@@ -5683,6 +5690,7 @@ function exportarPDF(){
   setTimeout(()=>{ w.print(); }, 800);
   toast('📄 Abrindo PDF para impressão...');
 }
+window.exportarPDF = exportarPDF;
 
 /* ════ EXPORTAR CSV ════ */
 function exportarCSV(){
@@ -5707,6 +5715,7 @@ function exportarCSV(){
   link.href=url; link.download=`ibicamp-${cm}.csv`; link.click();
   toast('📊 CSV exportado! Abre no Excel.');
 }
+window.exportarCSV = exportarCSV;
 
 /* ════ CONFIG ════ */
 function initConfig(){
@@ -5720,6 +5729,7 @@ function salvarFB(){
 }
 window.salvarFB = salvarFB;
 function apagarTudo(){ if(!confirm('APAGAR TODOS OS DADOS? Irreversível!')) return; D=ddp(); salvar(); location.reload(); }
+window.apagarTudo = apagarTudo;
 
 /* ════════════════════════════════════════════
    ÁREA DO ALUNO — LEITURA APENAS
@@ -7198,6 +7208,7 @@ window.desmarcarPagamentoAluno = desmarcarPagamentoAluno;
     console.log('[CriarAuth]', resumo);
     toast(resumo);
   }
+window.criarUsuariosAuth = criarUsuariosAuth;
 
   /* ════ FIM TEMPORÁRIO: CRIAÇÃO ════ */
 
@@ -7257,6 +7268,7 @@ window.desmarcarPagamentoAluno = desmarcarPagamentoAluno;
 
     toast('Vinculacao concluida. Abra o console (F12) para ver os detalhes.', 'ok');
   }
+window.vincularAuthAlunos = vincularAuthAlunos;
 
   /* ════ FIM TEMPORARIO ════ */
 
@@ -7790,6 +7802,7 @@ window.admPresSalvar = admPresSalvar;
       listaDiv.innerHTML = '<div style="text-align:center;padding:24px;color:var(--vm)">❌ Erro inesperado</div>';
     }
   }
+window.admRelCarregar = admRelCarregar;
 
   /* ════ FIM MÓDULO ADMIN: RELATÓRIO POR ALUNO ════ */
 
