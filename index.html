@@ -4362,6 +4362,7 @@ function definirFiltroPagamento(tipo) {
     renderPagAdmin();
   }
 }
+window.definirFiltroPagamento = definirFiltroPagamento;
 
 /* Marcar/desmarcar pagamento de um livro individual em aluno_livros */
 async function tgPagLivro(idRegistro, estaPago, alunoId, nomeAluno) {
