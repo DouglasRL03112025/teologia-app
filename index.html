@@ -4833,7 +4833,6 @@ async function _salvarNotaAluno(aid, pid) {
   }
   salvar();
   toast('✓ Nota salva!');
-  renderPainelMaterial();
   setTimeout(() => { _painelTravado = false; _salvandoNota = false; renderPainelMaterial(); }, 500);
 }
 window._salvarNotaAluno = _salvarNotaAluno;
