@@ -4850,7 +4850,7 @@ async function salvarNotas(){
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   if (_salvandoNota) return;
   _salvandoNota = true;
-  const pid=document.getElementById('sel-prova').value; if(!pid) return;
+  const pid=document.getElementById('sel-prova').value; if(!pid){ _salvandoNota=false; return; }
   if(!D.notas[pid]) D.notas[pid]={};
   const ops=[];
   ativos().forEach(a=>{
