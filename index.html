@@ -4427,6 +4427,7 @@ function tgLivro(lid,aid,v){
   renderPainelMaterial();
   setTimeout(() => { _painelTravado = false; renderPainelMaterial(); }, 500);
 }
+window.tgLivro = tgLivro;
 
 function tgProva(pid,aid,v){
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
