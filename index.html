@@ -4130,6 +4130,7 @@ function tgPres(id){
 }
 window.tgPres = tgPres;
 function salvarPres(){
+  console.warn('[salvarPres] DESATIVADA — usar admPresSalvar()'); return;
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   // Salvar log da aula
   const mod=document.getElementById('sel-mod').value; const ai=document.getElementById('sel-aula').value;
