@@ -8322,6 +8322,8 @@ window._ocultarLoadingLogin = function() {
   }
   function _patchLoginAluno() {
     if (typeof window.loginAluno !== 'function') return;
+    if (window._loginAlunoPatcheado) return;
+    window._loginAlunoPatcheado = true;
     var orig = window.loginAluno;
     window.loginAluno = async function() {
       window._mostrarLoadingLogin();
@@ -8340,6 +8342,8 @@ window._ocultarLoadingLogin = function() {
 (function(){
   function _patchLoginAdmin() {
     if (typeof window.loginAdmin !== 'function') return;
+    if (window._loginAdminPatcheado) return;
+    window._loginAdminPatcheado = true;
     var orig = window.loginAdmin;
     window.loginAdmin = async function() {
       window._mostrarLoadingLogin();
