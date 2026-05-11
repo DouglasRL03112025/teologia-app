@@ -6687,6 +6687,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
     admAtualizarBarraLote();
     admAtualizarMaster();
   }
+window.admToggleMaster = admToggleMaster;
 
   /* MutationObserver: detecta cada vez que renderAlunosAdmin reescreve a lista */
   (function() {
@@ -6727,11 +6728,13 @@ if(!D.aulas_log) { D.aulas_log={}; }
     document.getElementById('mpl-data').value = new Date().toISOString().slice(0,10);
     document.getElementById('modal-pagamento-lote').style.display = 'flex';
   }
+window.abrirModalPagamentoLote = abrirModalPagamentoLote;
 
   function fecharModalPagamentoLote() {
     document.getElementById('modal-pagamento-lote').style.display = 'none';
     _mplSelecionados = [];
   }
+window.fecharModalPagamentoLote = fecharModalPagamentoLote;
 
   async function confirmarPagamentoModalLote() {
     const _bll = document.querySelector('#modal-pagamento-lote .btn.bp');
@@ -6795,6 +6798,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
     admLimparSelecao();
     toast('Seleção limpa');
   }
+window.admLimparSelecaoLote = admLimparSelecaoLote;
 
   function admSelecionarTodos(alunosIds) {
     if (!window._admSelecionados) return;
@@ -6809,6 +6813,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
     admAtualizarBarraLote();
     admAtualizarMaster();
   }
+window.admSelecionarTodos = admSelecionarTodos;
 
   function admDesmarcarTodos() {
     if (!window._admSelecionados) return;
@@ -6821,6 +6826,7 @@ if(!D.aulas_log) { D.aulas_log={}; }
     admAtualizarBarraLote();
     admAtualizarMaster();
   }
+window.admDesmarcarTodos = admDesmarcarTodos;
 
   async function admDesmarcarPagamentoLote() {
     if (!window._admSelecionados || window._admSelecionados.size === 0) {
