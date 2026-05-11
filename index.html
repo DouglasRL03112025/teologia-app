@@ -4835,11 +4835,6 @@ async function _salvarNotaAluno(aid, pid) {
 }
 window._salvarNotaAluno = _salvarNotaAluno;
 
-// Compatibilidade: tgLivro e tgProva chamam renderPainelMaterial em vez das antigas funções de tab
-function renderLivrosAdmin(){ renderPainelMaterial(); }
-function renderProvasAdmin(){ renderPainelMaterial(); }
-function renderNotasAdmin(){  renderPainelMaterial(); }
-
 /* ════ FIM PAINEL UNIFICADO ════ */
 function updChip(id,v){ const c=document.getElementById('chip-'+id); if(!c) return; const n=parseFloat(v); if(isNaN(n)||v===''||v===null){ c.textContent=''; c.className='nc'; return; } c.textContent=(n!==null&&n!==undefined)?Number(n).toFixed(1):''; c.className='nc '+(n>=7?'bv':n>=5?'ba':'br'); }
 window.updChip = updChip;
