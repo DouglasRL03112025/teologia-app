@@ -4823,7 +4823,7 @@ async function _salvarNotaAluno(aid, pid) {
   _salvandoNota = true;
   _painelTravado = true;
   const el = document.getElementById('nt-' + aid);
-  if (!el) { _painelTravado = false; return; }
+  if (!el) { _painelTravado = false; _salvandoNota = false; return; }
   const v = parseFloat(el.value);
   if (!D.notas[pid]) D.notas[pid] = {};
   if (!isNaN(v) && el.value !== '') {
