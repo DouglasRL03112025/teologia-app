@@ -4441,7 +4441,8 @@ function tgLivro(lid,aid,v){
   salvar();
   const a = D.alunos.find(x => x.id === aid);
   toast(v ? `📚 Livro entregue a ${fmtNome(a.nome)}!` : 'Marcado como pendente');
-  setTimeout(() => { _painelTravado = false; renderPainelMaterial(); }, 500);
+  clearTimeout(_timerLivro);
+  _timerLivro = setTimeout(() => { _painelTravado = false; renderPainelMaterial(); }, 500);
 }
 window.tgLivro = tgLivro;
 
@@ -4453,7 +4454,8 @@ function tgProva(pid,aid,v){
   salvar();
   const a = D.alunos.find(x => x.id === aid);
   toast(v ? `📝 Prova registrada para ${fmtNome(a.nome)}!` : 'Marcado como pendente');
-  setTimeout(() => { _painelTravado = false; renderPainelMaterial(); }, 500);
+  clearTimeout(_timerProva);
+  _timerProva = setTimeout(() => { _painelTravado = false; renderPainelMaterial(); }, 500);
 }
 window.tgProva = tgProva;
 
@@ -4573,6 +4575,9 @@ let _painelProva = null;   // id da prova selecionada ex: 'p1'
 let _painelFiltro = 'todos'; // 'todos'|'pagos'|'pendentes'|'sem-nota'|'sem-prova'
 let _painelTravado = false;  // true enquanto uma ação está em curso — congela a ordenação
 let _salvandoNota = false;
+let _timerLivro = null;
+let _timerProva = null;
+let _timerNota  = null;
 
 function renderMatAdmin(aba){
   // Compatibilidade: ignora aba, sempre renderiza o painel unificado
@@ -4831,7 +4836,8 @@ async function _salvarNotaAluno(aid, pid) {
   }
   salvar();
   toast('✓ Nota salva!');
-  setTimeout(() => { _painelTravado = false; _salvandoNota = false; renderPainelMaterial(); }, 500);
+  clearTimeout(_timerNota);
+  _timerNota = setTimeout(() => { _painelTravado = false; _salvandoNota = false; renderPainelMaterial(); }, 500);
 }
 window._salvarNotaAluno = _salvarNotaAluno;
 
