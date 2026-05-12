@@ -4506,6 +4506,27 @@ function tgLivro(lid,aid,v){
   salvar();
   const a = D.alunos.find(x => x.id === aid);
   toast(v ? `📚 Livro entregue a ${fmtNome(a.nome)}!` : 'Marcado como pendente');
+  // ── SYNC SUPABASE ─────────────────────────────────────────────────────────
+  // fire-and-forget: não bloqueia UX nem timer
+  // count:'exact' é o único meio confiável de detectar 0 rows afetadas no v2
+  (function(){
+    var livroCodigoSupabase = 'p' + lid.replace('l', '');
+    supabaseClient
+      .from('aluno_livros')
+      .update({ entregue: v }, { count: 'exact' })
+      .eq('aluno_id', aid)
+      .eq('livro_codigo', livroCodigoSupabase)
+      .then(function(res){
+        if (res.error) {
+          console.error('[tgLivro] Erro Supabase:', res.error, '| livro:', livroCodigoSupabase, '| aluno:', aid);
+        } else if (res.count === 0) {
+          console.warn('[tgLivro] REGISTRO NÃO ENCONTRADO em aluno_livros — Supabase NÃO atualizado.', '| livro:', livroCodigoSupabase, '| aluno:', aid, '| entregue:', v);
+        } else {
+          console.log('[tgLivro] Supabase sincronizado OK.', '| livro:', livroCodigoSupabase, '| aluno:', aid, '| entregue:', v, '| rows:', res.count);
+        }
+      });
+  })();
+  // ── FIM SYNC SUPABASE ──────────────────────────────────────────────────────
   clearTimeout(_timerLivro);
   _timerLivro = setTimeout(() => { _painelTravado = false; renderPainelMaterial(); }, 500);
 }
