@@ -4540,6 +4540,27 @@ function tgProva(pid,aid,v){
   salvar();
   const a = D.alunos.find(x => x.id === aid);
   toast(v ? `📝 Prova registrada para ${fmtNome(a.nome)}!` : 'Marcado como pendente');
+  // ── SYNC SUPABASE ─────────────────────────────────────────────────────────
+  // fire-and-forget: não bloqueia UX nem timer
+  // pid já é livro_codigo ('p1'…) — sem conversão necessária
+  // count:'exact' detecta 0 rows sem falso positivo silencioso
+  (function(){
+    supabaseClient
+      .from('provas_aluno')
+      .update({ fez_prova: v }, { count: 'exact' })
+      .eq('aluno_id', aid)
+      .eq('livro_codigo', pid)
+      .then(function(res){
+        if (res.error) {
+          console.error('[tgProva] Erro Supabase:', res.error, '| livro:', pid, '| aluno:', aid);
+        } else if (res.count === 0) {
+          console.warn('[tgProva] REGISTRO NÃO ENCONTRADO em provas_aluno — Supabase NÃO atualizado.', '| livro:', pid, '| aluno:', aid, '| fez_prova:', v);
+        } else {
+          console.log('[tgProva] Supabase sincronizado OK.', '| livro:', pid, '| aluno:', aid, '| fez_prova:', v, '| rows:', res.count);
+        }
+      });
+  })();
+  // ── FIM SYNC SUPABASE ──────────────────────────────────────────────────────
   clearTimeout(_timerProva);
   _timerProva = setTimeout(() => { _painelTravado = false; renderPainelMaterial(); }, 500);
 }
