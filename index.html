@@ -98,6 +98,7 @@
       <p class="sub" id="a-livro-atual" style="margin-bottom:4px">📖 Livro atual: <strong>não definido</strong></p>
       <p class="sub" id="a-data"></p>
       <div class="g4" id="a-metricas"></div>
+      <div class="sl">Material &amp; Provas</div>
       <div id="a-metricas-material"></div>
       <div class="sl">Ações rápidas</div>
       <div class="ga">
@@ -2813,6 +2814,7 @@ function irAdmin(t){
   const nb=NB_MAP[t]?document.getElementById(NB_MAP[t]):null; if(nb) nb.classList.add('on');
   window.scrollTo(0,0);
   if(t==='inicio') renderDashAdmin().catch(e=>console.error('[Dashboard]',e));
+  if(t==='inicio') renderMetricasMaterial();
   if(t==='alunos') renderAlunosAdmin().catch(e=>console.error('[Alunos]',e));
   if(t==='presenca') admPresCarregarAulas();
   if(t==='pagamentos') { livroVisualAtual = null; renderPagAdmin(); }
