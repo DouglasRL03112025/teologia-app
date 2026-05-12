@@ -3267,6 +3267,68 @@ async function renderDashAdmin(){
 }
 window.renderDashAdmin = renderDashAdmin;
 
+/* ════ E-4b: MÉTRICAS DE MATERIAL — SOMENTE LEITURA ════ */
+function renderMetricasMaterial() {
+  // Guard 1: D não inicializado ou sem alunos
+  if (!D || !Array.isArray(D.alunos)) return;
+  // Guard 2: container ausente no DOM
+  var el = document.getElementById('a-metricas-material');
+  if (!el) return;
+
+  var al      = ativos();
+  var _provas = D.provas     || {};
+  var _notas  = D.notas      || {};
+  var _livros = D.livros_ent || {};
+  var TLIV    = 24;
+
+  // ── Provas realizadas: alunos que fez_prova === true por prova ──
+  var provasRealizadas = 0;
+  Object.keys(_provas).forEach(function(pid) {
+    var bloco = _provas[pid] || {};
+    al.forEach(function(a) {
+      if (_buscarPorId(bloco, a.id) === true) provasRealizadas++;
+    });
+  });
+
+  // ── Provas aplicadas: blocos com ao menos um true ──
+  var provasAplicadas = Object.keys(_provas).filter(function(pid) {
+    var b = _provas[pid];
+    return b && Object.values(b).some(function(v) { return v === true; });
+  });
+  var provasPendentes = Math.max(0, provasAplicadas.length * al.length - provasRealizadas);
+
+  // ── Média geral: todos os valores numéricos de D.notas ──
+  var soma = 0, cnt = 0;
+  Object.values(_notas).forEach(function(bloco) {
+    Object.values(bloco || {}).forEach(function(n) {
+      var v = parseFloat(n);
+      if (!isNaN(v)) { soma += v; cnt++; }
+    });
+  });
+  var mediaStr = cnt > 0 ? (soma / cnt).toFixed(1) : '—';
+
+  // ── Progresso do curso: livros entregues / (alunos × 24) ──
+  var entregues = 0;
+  var totalPossivel = al.length * TLIV;
+  Array.from({ length: TLIV }, function(_, i) { return 'l' + (i + 1); }).forEach(function(lid) {
+    al.forEach(function(a) {
+      if (_buscarPorId(_livros[lid], a.id) === true) entregues++;
+    });
+  });
+  var progresso = totalPossivel > 0 ? Math.round(entregues / totalPossivel * 100) : 0;
+
+  // ── Render: reutiliza classes .g4 .mc .mn .ml existentes ──
+  el.innerHTML =
+    '<div class="g4">' +
+      '<div class="mc"><div class="mn">'  + provasRealizadas + '</div><div class="ml">Provas Realizadas</div></div>' +
+      '<div class="mc vm"><div class="mn">' + provasPendentes  + '</div><div class="ml">Provas Pendentes</div></div>' +
+      '<div class="mc vd"><div class="mn">' + mediaStr         + '</div><div class="ml">Média Geral</div></div>' +
+      '<div class="mc do"><div class="mn">' + progresso        + '%</div><div class="ml">Progresso do Curso</div></div>' +
+    '</div>';
+}
+window.renderMetricasMaterial = renderMetricasMaterial;
+/* ════ FIM E-4b ════ */
+
 /* ════ ALERTAS AUTOMÁTICOS ADMIN ════ */
 function gerarAlertasAdmin(al, presencas, alunoLivros, provasAluno, livroAtual) {
   const el = document.getElementById('a-alertas-avancados');
