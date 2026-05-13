@@ -2759,6 +2759,10 @@ async function loginAdmin() {
     document.getElementById('pg-admin').style.display = 'block';
     usuAtual = { id: user.id, nome: user.email, isAdmin: true };
     window.isAdmin = true;
+    await carregarAlunosSupabase();
+    await carregarLivrosEntSupabase();
+    await carregarProvasEntSupabase();
+    await carregarNotasAdminSupabase();
     await renderDashAdmin();
     localStorage.setItem('adminLogado', 'true'); // Persistência de sessão admin
     irAdmin('inicio');
@@ -4288,6 +4292,8 @@ async function verPerfilAdmin(id){
   const h=hj(); const cm=chM(h);
   let tp=0,tf=0;
   Object.values(D.presencas).forEach(v=>{ if(v[id]==='P') tp++; if(v[id]==='F') tf++; });
+  const mp=Object.keys(D.pagamentos).filter(m=>D.pagamentos[m][id]===true).length;
+  const pagA=(D.pagamentos[cm]||{})[id]===true;
   const dim=new Date(h.getFullYear(),h.getMonth()+1,0).getDate();
   const p1=new Date(h.getFullYear(),h.getMonth(),1).getDay();
   let cal=DS.map(d=>`<div class="cd hd">${d}</div>`).join('');
