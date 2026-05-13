@@ -8009,7 +8009,6 @@ window.admPresLimparTodos = admPresLimparTodos;
       if (valor === undefined) continue; // nunca tocado → não gravar
       if (valor === null) {
         // null = "sem marcação" → remover registro existente, se houver; senão skip
-        if (!admPresRegistros[aluno.id]) continue;
         try {
           const { error } = await supabaseClient.from('presenca')
             .delete()
@@ -8046,6 +8045,7 @@ window.admPresLimparTodos = admPresLimparTodos;
     try {
       for (const alunoId in admPresEstado) {
         const estado = admPresEstado[alunoId];
+        if (estado === null || estado === undefined) continue;
 
         await supabaseClient.from('logs_presenca').insert({
           aluno_id: alunoId,
