@@ -8007,6 +8007,19 @@ window.admPresLimparTodos = admPresLimparTodos;
     for (const aluno of admPresAlunos) {
       const valor = admPresEstado[aluno.id];
       if (valor === undefined) continue; // nunca tocado → não gravar
+      if (valor === null) {
+        // null = "sem marcação" → remover registro existente, se houver; senão skip
+        if (!admPresRegistros[aluno.id]) continue;
+        try {
+          const { error } = await supabaseClient.from('presenca')
+            .delete()
+            .eq('aluno_id', aluno.id)
+            .eq('data', dataSel);
+          if (error) { console.error('[PRES ADMIN] delete erro (null)', aluno.id, error); erros++; }
+          else { delete admPresRegistros[aluno.id]; }
+        } catch(e) { console.error('[PRES ADMIN] exceção delete (null)', aluno.id, e); erros++; }
+        continue;
+      }
       try {
         console.log('🔥 SALVANDO PRESENÇA:', { aluno_id: aluno.id, data: dataSel, presente: valor });
         const { error } = await supabaseClient.from('presenca')
