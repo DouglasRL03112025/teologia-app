@@ -5120,6 +5120,15 @@ async function _salvarNotaAluno(aid, pid) {
     const nota = Math.min(10, Math.max(0, v));
     D.notas[pid][aid] = nota;
     await sincronizarNotaSupabase(aid, pid, nota).catch(e => console.error('[Nota]', e));
+    // Escrita paralela em provas_aluno — congela divergência entre tabela notas e provas_aluno.nota
+    // UPDATE puro: sem INSERT, sem UPSERT, sem alterar fez_prova/devolvida
+    // 0 rows afetadas (aluno sem registro) é silencioso e seguro
+    await supabaseClient
+      .from('provas_aluno')
+      .update({ nota: nota, corrigida: true })
+      .eq('aluno_id', aid)
+      .eq('livro_codigo', pid)
+      .catch(function(e) { console.error('[Nota/provas_aluno]', e); });
   } else {
     delete D.notas[pid][aid];
     await removerNotaSupabase(aid, pid).catch(e => console.error('[Nota]', e));
