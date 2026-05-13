@@ -3468,12 +3468,112 @@ function abrirModAluno(id){
 window.abrirModAluno = abrirModAluno;
 function salvarAluno(){
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
-  const nome=document.getElementById('a-nome').value.trim().toUpperCase(); if(!nome){ toast('⚠ Digite o nome'); return; }
+
+  const nome=document.getElementById('a-nome').value.trim().toUpperCase();
+  if(!nome){ toast('⚠ Digite o nome'); return; }
+
   const eid=document.getElementById('aid').value;
-  const a={id:eid||Date.now().toString(),nome,tel:document.getElementById('a-tel').value.replace(/\D/g,''),email:document.getElementById('a-email').value.trim(),turma:document.getElementById('a-turma').value,valor:document.getElementById('a-valor').value,senha:document.getElementById('a-senha').value||'1234',ativo:true};
-  if(eid){ const i=D.alunos.findIndex(x=>x.id===eid); if(i>=0) D.alunos[i]={...D.alunos[i],...a}; }
-  else D.alunos.push(a);
-  salvar(); fecharMod('mod-aluno'); renderAlunosAdmin(); toast('✓ Aluno '+(eid?'atualizado':'cadastrado')+'!');
+
+  // ─────────────────────────────────────────────────────────
+  // FLUXO EDIÇÃO
+  // ─────────────────────────────────────────────────────────
+  if(eid){
+
+    const a={
+      id:eid,
+      nome,
+      tel:document.getElementById('a-tel').value.replace(/\D/g,''),
+      email:document.getElementById('a-email').value.trim(),
+      turma:document.getElementById('a-turma').value,
+      valor:document.getElementById('a-valor').value,
+      senha:document.getElementById('a-senha').value||'1234',
+      ativo:true
+    };
+
+    const i=D.alunos.findIndex(x=>x.id===eid);
+    if(i>=0) D.alunos[i]={...D.alunos[i],...a};
+
+    salvar();
+    fecharMod('mod-aluno');
+    renderAlunosAdmin();
+    toast('✓ Aluno atualizado!');
+
+    // [R-03] sync UPDATE Supabase (fire-and-forget)
+    supabaseClient
+      .from('alunos')
+      .update({
+        nome:a.nome,
+        telefone:a.tel,
+        email:a.email,
+        turma:a.turma,
+        valor:a.valor,
+        senha:a.senha,
+        ativo:a.ativo
+      })
+      .eq('id',eid)
+      .then(function(r){
+        if(r.error){
+          console.error('[salvarAluno] update error:', r.error);
+        }
+      });
+
+  } else {
+
+    // ─────────────────────────────────────────────────────────
+    // FLUXO NOVO ALUNO
+    // INSERT primeiro → UUID real primeiro
+    // ─────────────────────────────────────────────────────────
+
+    const tel=document.getElementById('a-tel').value.replace(/\D/g,'');
+    const email=document.getElementById('a-email').value.trim();
+    const turma=document.getElementById('a-turma').value;
+    const valor=document.getElementById('a-valor').value;
+    const senha=document.getElementById('a-senha').value||'1234';
+
+    fecharMod('mod-aluno');
+    toast('✓ Aluno cadastrado!');
+
+    // [R-03] INSERT Supabase → push/salvar/render só com UUID real
+    supabaseClient
+      .from('alunos')
+      .insert([{
+        nome,
+        telefone:tel,
+        email,
+        turma,
+        valor,
+        senha,
+        ativo:true
+      }])
+      .select()
+      .single()
+      .then(function(r){
+
+        if(r.error){
+          console.error('[salvarAluno] insert error:', r.error);
+          return;
+        }
+
+        var a={
+          id:r.data.id,
+          nome:r.data.nome,
+          tel:r.data.telefone || '',
+          email:r.data.email || '',
+          turma:r.data.turma || 'Turma Única',
+          valor:r.data.valor || '',
+          senha:r.data.senha || '1234',
+          ativo:r.data.ativo !== false
+        };
+
+        D.alunos.push(a);
+
+        salvar();
+
+        renderAlunosAdmin();
+
+      });
+
+  }
 }
 window.salvarAluno = salvarAluno;
 function delAluno(){
