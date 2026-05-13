@@ -2336,6 +2336,7 @@ async function carregarExibirProvasAdminPerfil(alunoId) {
 window.carregarExibirProvasAdminPerfil = carregarExibirProvasAdminPerfil;
 
 async function toggleFezProva(id, valor) {
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   if (!id) { toast('Dados inválidos.', 'erro'); return; }
   const { error } = await supabaseClient
     .from('provas_aluno')
@@ -2346,6 +2347,7 @@ async function toggleFezProva(id, valor) {
 }
 
 async function toggleDevolvida(id, valor) {
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   if (!id) { toast('Dados inválidos.', 'erro'); return; }
   const { error } = await supabaseClient
     .from('provas_aluno')
@@ -2356,6 +2358,7 @@ async function toggleDevolvida(id, valor) {
 }
 
 async function atualizarNota(id, valor) {
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   if (!id) { toast('Dados inválidos.', 'erro'); return; }
   const nota = valor !== '' && valor !== null && valor !== undefined ? parseFloat(valor) : null;
   if (nota !== null && (isNaN(nota) || nota < 0 || nota > 10)) { toast('Nota inválida. Use um valor entre 0 e 10.', 'erro'); return; }
@@ -8359,6 +8362,7 @@ async function renderPainelProvas() {
 window.renderPainelProvas = renderPainelProvas;
 
 async function provasMarcarFez(alunoId, codigo, novoValor) {
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   const btn = document.activeElement;
   return executarAcaoSegura(btn, async () => {
     var payload = novoValor === false
@@ -8373,6 +8377,7 @@ async function provasMarcarFez(alunoId, codigo, novoValor) {
 window.provasMarcarFez = provasMarcarFez;
 
 async function provasLancarNota(id) {
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   const btn = document.activeElement;
   return executarAcaoSegura(btn, async () => {
     var notaStr = prompt('Digite a nota:');
@@ -8393,6 +8398,7 @@ async function provasLancarNota(id) {
 window.provasLancarNota = provasLancarNota;
 
 async function provasMarcarDevolvida(id) {
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   const btn = document.activeElement;
   return executarAcaoSegura(btn, async () => {
     var { error } = await supabaseClient.from('provas_aluno')
