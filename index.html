@@ -8016,7 +8016,10 @@ window.admPresLimparTodos = admPresLimparTodos;
             .eq('aluno_id', aluno.id)
             .eq('data', dataSel);
           if (error) { console.error('[PRES ADMIN] delete erro (null)', aluno.id, error); erros++; }
-          else { delete admPresRegistros[aluno.id]; }
+          else {
+            delete admPresRegistros[aluno.id];
+            if (D.presencas[dataSel]) { delete D.presencas[dataSel][aluno.id]; }
+          }
         } catch(e) { console.error('[PRES ADMIN] exceção delete (null)', aluno.id, e); erros++; }
         continue;
       }
@@ -8032,7 +8035,9 @@ window.admPresLimparTodos = admPresLimparTodos;
           console.error('[PRES ADMIN] upsert erro', aluno.id, error);
           erros++;
         } else {
-          if (admPresRegistros[aluno.id]) admPresRegistros[aluno.id].presente = valor;
+          if (admPresRegistros[aluno.id]) { admPresRegistros[aluno.id].presente = valor; }
+          if (!D.presencas[dataSel]) { D.presencas[dataSel] = {}; }
+          D.presencas[dataSel][aluno.id] = valor === true ? 'P' : 'F';
         }
       } catch(e) { console.error('[PRES ADMIN] exceção', aluno.id, e); erros++; }
     }
@@ -8055,6 +8060,7 @@ window.admPresLimparTodos = admPresLimparTodos;
     }
 
     if (btn) { btn.disabled = false; btn.textContent = '💾 Salvar Presença'; }
+    salvar();
     toast(erros === 0 ? '✅ Presenças salvas com sucesso!' : '⚠️ Salvo com ' + erros + ' erro(s). Veja o console.');
   }
 window.admPresSalvar = admPresSalvar;
