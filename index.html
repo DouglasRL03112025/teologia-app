@@ -2340,7 +2340,7 @@ async function toggleFezProva(id, valor) {
   if (!id) { toast('Dados inválidos.', 'erro'); return; }
   const { error } = await supabaseClient
     .from('provas_aluno')
-    .update({ fez_prova: valor, corrigida: valor })
+    .update(valor ? { fez_prova: true, corrigida: true } : { fez_prova: false, corrigida: false, nota: null, devolvida: false })
     .eq('id', id);
   if (error) console.error('[toggleFezProva] Erro:', error);
   else toast(valor ? '✔ Prova marcada como realizada' : 'Prova desmarcada');
@@ -4733,7 +4733,7 @@ function tgProva(pid,aid,v){
   (function(){
     supabaseClient
       .from('provas_aluno')
-      .update({ fez_prova: v }, { count: 'exact' })
+      .update(v ? { fez_prova: true } : { fez_prova: false, nota: null, corrigida: false, devolvida: false }, { count: 'exact' })
       .eq('aluno_id', aid)
       .eq('livro_codigo', pid)
       .then(function(res){
@@ -8366,7 +8366,7 @@ async function provasMarcarFez(alunoId, codigo, novoValor) {
   const btn = document.activeElement;
   return executarAcaoSegura(btn, async () => {
     var payload = novoValor === false
-      ? { aluno_id:alunoId, livro_codigo:codigo, fez_prova:false, nota:null, devolvida:false }
+      ? { aluno_id:alunoId, livro_codigo:codigo, fez_prova:false, nota:null, devolvida:false, corrigida:false }
       : { aluno_id:alunoId, livro_codigo:codigo, fez_prova:true, corrigida:true, devolvida:false };
     var { error } = await supabaseClient.from('provas_aluno')
       .upsert(payload, { onConflict:'aluno_id,livro_codigo' });
