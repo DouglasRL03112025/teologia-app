@@ -4410,7 +4410,6 @@ function salvarPres(){
 
 /* ════ PAGAMENTOS ADMIN — fonte: aluno_livros (mesma da área do aluno) ════ */
 let _mp=new Date();         // mantido: usado pelo seletor de mês no HTML
-let _pagCache = [];         // mantido por compatibilidade
 let livroVisualAtual = null; // navegação de livros na tela de pagamentos (só visualização)
 let filtroStatusPagamento = 'todos'; // 'todos' | 'pagos' | 'pendentes'
 
@@ -4463,7 +4462,6 @@ async function renderPagAdmin(){
     const alunos     = (alunosRes.data     || []).filter(a => a.ativo !== false);
     const livros     = livrosRes.data      || [];
     const alunoLivros = alunoLivrosRes.data || [];
-    _pagCache = alunoLivros;
 
     // ── CÓDIGO DO LIVRO SELECIONADO NA NAVEGAÇÃO ──
     const codigoVisual = 'p' + livroVisualAtual;
@@ -4671,10 +4669,6 @@ async function tgPagLivro(idRegistro, estaPago, alunoId, nomeAluno) {
   }
 }
 window.tgPagLivro = tgPagLivro;
-
-/* Mantido para não quebrar chamadas legadas */
-async function tgPag(id){ await renderPagAdmin(); }
-window.tgPag = tgPag;
 
 /* ════ MATERIAL ADMIN ════ */
 function abaMat(aba,btn){
