@@ -3576,10 +3576,93 @@ function salvarAluno(){
   }
 }
 window.salvarAluno = salvarAluno;
-function delAluno(){
-  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
-  const id=document.getElementById('aid').value; if(!id||!confirm('Excluir este aluno?')) return;
-  D.alunos=D.alunos.filter(a=>a.id!==id); salvar(); fecharMod('mod-aluno'); renderAlunosAdmin(); toast('Aluno removido.');
+async function delAluno(){
+
+  if (!window.isAdmin) {
+    toast('Acesso restrito', 'erro');
+    return;
+  }
+
+  const id=document.getElementById('aid').value;
+
+  if(!id || !confirm('Excluir este aluno?')) return;
+
+  try {
+
+    // ─────────────────────────────────────────────────────────
+    // REMOVE DADOS FILHOS PRIMEIRO
+    // ─────────────────────────────────────────────────────────
+
+    const resultados = await Promise.all([
+
+      supabaseClient
+        .from('presenca')
+        .delete()
+        .eq('aluno_id', id),
+
+      supabaseClient
+        .from('notas')
+        .delete()
+        .eq('aluno_id', id),
+
+      supabaseClient
+        .from('provas_aluno')
+        .delete()
+        .eq('aluno_id', id),
+
+      supabaseClient
+        .from('aluno_livros')
+        .delete()
+        .eq('aluno_id', id)
+
+    ]);
+
+    // valida erros das tabelas filhas
+    for (const r of resultados) {
+      if (r.error) {
+        console.error('[delAluno] erro deletando dependências:', r.error);
+        toast('Erro ao remover dados do aluno.', 'erro');
+        return;
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // REMOVE REGISTRO PRINCIPAL
+    // ─────────────────────────────────────────────────────────
+
+    const rAluno = await supabaseClient
+      .from('alunos')
+      .delete()
+      .eq('id', id);
+
+    if (rAluno.error) {
+      console.error('[delAluno] erro deletando aluno:', rAluno.error);
+      toast('Erro ao remover aluno.', 'erro');
+      return;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // SOMENTE AGORA REMOVE LOCALMENTE
+    // ─────────────────────────────────────────────────────────
+
+    D.alunos = D.alunos.filter(a => a.id !== id);
+
+    salvar();
+
+    fecharMod('mod-aluno');
+
+    renderAlunosAdmin();
+
+    toast('Aluno removido.');
+
+  } catch (err) {
+
+    console.error('[delAluno] falha inesperada:', err);
+
+    toast('Erro inesperado ao remover aluno.', 'erro');
+
+  }
+
 }
 window.delAluno = delAluno;
 window._filtroStatus = window._filtroStatus || 'todos';
