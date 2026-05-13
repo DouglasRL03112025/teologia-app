@@ -5112,7 +5112,7 @@ window.renderPainelMaterial = renderPainelMaterial;
 // Salva nota de um único aluno sem recarregar tudo
 async function _salvarNotaAluno(aid, pid) {
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
-  if (_salvandoNota) return;
+  if (_salvandoNota) { toast('Aguarde o salvamento da nota anterior'); return; }
   _salvandoNota = true;
   _painelTravado = true;
   const el = document.getElementById('nt-' + aid);
