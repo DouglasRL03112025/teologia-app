@@ -4974,9 +4974,7 @@ function renderPainelMaterial() {
 
   function getStatusLivro(lid, aid) {
     const entregue = _buscarPorId(D.livros_ent?.[lid], aid) === true;
-    const pagou    = _buscarPorId(D.pagamentos?.[lid], aid) === true;
     if (entregue) return 'entregue';
-    if (pagou)    return 'pago';
     return 'pendente';
   }
 
