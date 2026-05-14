@@ -592,7 +592,7 @@ function carregarDB(){
       Object.keys(hist.presencas).forEach(function(d){ db.presencas[d] = db.presencas[d] || {}; Object.assign(db.presencas[d], hist.presencas[d]); });
       // [C-1] hist.notas legado desativado — D.notas é preenchido exclusivamente pelo Supabase (UUIDs). // Object.keys(hist.notas).forEach(function(p){ db.notas[p] = db.notas[p] || {}; Object.assign(db.notas[p], hist.notas[p]); });
       Object.keys(hist.livros_ent).forEach(function(l){ db.livros_ent[l] = db.livros_ent[l] || {}; Object.assign(db.livros_ent[l], hist.livros_ent[l]); });
-      Object.keys(hist.pagamentos).forEach(function(m){ db.pagamentos[m] = db.pagamentos[m] || {}; Object.assign(db.pagamentos[m], hist.pagamentos[m]); });
+      // [C-PAG] hist.pagamentos legado desativado — pagamentos migrados para aluno_livros/Supabase // Object.keys(hist.pagamentos).forEach(function(m){ db.pagamentos[m] = db.pagamentos[m] || {}; Object.assign(db.pagamentos[m], hist.pagamentos[m]); });
       Object.assign(db.aulas_log, hist.aulas_log);
       db.livros_curso = hist.livros_curso;
     }
@@ -4294,8 +4294,9 @@ async function verPerfilAdmin(id){
   const h=hj(); const cm=chM(h);
   let tp=0,tf=0;
   Object.values(D.presencas).forEach(v=>{ if(v[id]==='P') tp++; if(v[id]==='F') tf++; });
-  const mp=Object.keys(D.pagamentos).filter(m=>D.pagamentos[m][id]===true).length;
-  const pagA=(D.pagamentos[cm]||{})[id]===true;
+  // [C-PAG-2] legado D.pagamentos morto — pagamentos vêm de resumo/aluno_livros
+  // const mp=Object.keys(D.pagamentos).filter(m=>D.pagamentos[m][id]===true).length;
+  // const pagA=(D.pagamentos[cm]||{})[id]===true;
   const dim=new Date(h.getFullYear(),h.getMonth()+1,0).getDate();
   const p1=new Date(h.getFullYear(),h.getMonth(),1).getDay();
   let cal=DS.map(d=>`<div class="cd hd">${d}</div>`).join('');
