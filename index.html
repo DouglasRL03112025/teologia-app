@@ -2274,6 +2274,7 @@ async function renderProvasAluno() {
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
       + cards.replace(/opacity:0;animation:_qFadeUp/g, 'opacity:0;animation:_qFadeUp')
     + '</div>';
+  return dadosBanco || [];
 }
 
 /* ════ FIM SISTEMA DE PROVAS ════ */
@@ -2903,7 +2904,7 @@ async function irAluno(t){
       const provas = await carregarProvasAluno(usuAtual.id);
       console.log('Provas carregadas:', provas);
       if (provas && provas.length > 0) {
-        await renderProvasAluno();
+        window.provasAluno = await renderProvasAluno();
       } else {
         console.warn('SEM PROVAS NO BANCO');
         clearTimeout(loadingTimer);
