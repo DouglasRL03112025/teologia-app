@@ -2904,7 +2904,8 @@ async function irAluno(t){
       const provas = await carregarProvasAluno(usuAtual.id);
       console.log('Provas carregadas:', provas);
       if (provas && provas.length > 0) {
-        window.provasAluno = await renderProvasAluno();
+        var _fresh = await renderProvasAluno();
+        if (_fresh && _fresh.length > 0) window.provasAluno = _fresh;
       } else {
         console.warn('SEM PROVAS NO BANCO');
         clearTimeout(loadingTimer);
