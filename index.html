@@ -5422,11 +5422,11 @@ async function renderRelAdmin(aba){
 
     const alunoLivros = _relCache.alunoLivros || [];
     const livros      = _relCache.livros      || [];
+    const livroAtual  = window.livroAtualSistema;
 
-    const alunosEmDia = al.filter(a => {
-      const regs = alunoLivros.filter(r => r.aluno_id === a.id && r.participou !== false);
-      return regs.length > 0 && regs.every(r => r.pagou === true);
-    });
+    const alunosEmDia = livroAtual
+      ? al.filter(a => calcularStatusAluno(a.id, alunoLivros, livroAtual) === 'Em dia')
+      : [];
     const pagos = alunosEmDia.length;
 
     const rec = al.reduce((s, a) => {
@@ -5443,10 +5443,9 @@ async function renderRelAdmin(aba){
       const faltas = totalAulas - todasPresencas.filter(p => p.aluno_id === a.id && p.presente === true).length;
       if (faltas >= 3) criticos.push(`<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--brd)">⚠️ <strong>${fmtNome(a.nome)}</strong> — ${faltas} faltas</div>`);
     });
-    const pagPend = al.filter(a => {
-      const regs = alunoLivros.filter(r => r.aluno_id === a.id && r.participou !== false);
-      return regs.length > 0 && regs.some(r => !r.pagou);
-    });
+    const pagPend = livroAtual
+      ? al.filter(a => calcularStatusAluno(a.id, alunoLivros, livroAtual) === 'Pendente')
+      : [];
     if (pagPend.length) criticos.push(`<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--brd)">💰 ${pagPend.length} aluno${pagPend.length>1?'s':''} com pagamento pendente: ${pagPend.map(a=>fmtNome(a.nome).split(' ')[0]).join(', ')}</div>`);
     const todasProvasGeral = Object.keys(D.notas).filter(p => /^p\d+$/.test(p)).sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
     const semNota = todasProvasGeral.filter(p => Object.keys(D.notas[p]||{}).length === 0);
