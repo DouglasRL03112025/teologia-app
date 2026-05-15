@@ -5233,6 +5233,7 @@ async function _relCarregarDados() {
 }
 
 async function renderRelAdmin(aba){
+  await carregarLivroAtualSistema();
   popularFiltroTurma();
   const h=hj(); const cm=chM(h);
   const turmaLabel = document.getElementById('filtro-turma')?.value ? ` — ${document.getElementById('filtro-turma').value}` : '';
@@ -5276,8 +5277,7 @@ async function renderRelAdmin(aba){
         .slice(0, 10);
       var presA = ultimas10.filter(function(p){ return p.presente === true; }).length;
       var freq  = ultimas10.length > 0 ? Math.round(presA / ultimas10.length * 100) : 0;
-      var regsA = alunoLivrosP.filter(function(r){ return r.aluno_id === a.id; });
-      var inadimplente = regsA.some(function(r){ return r.pagou === false; });
+      var inadimplente = calcularStatusAluno(a.id, alunoLivrosP, window.livroAtualSistema) === 'Pendente';
       var provasA = provasP.filter(function(p){ return p.aluno_id === a.id; });
       var provaPendente = provasA.some(function(p){
         return (p.fez_prova === true && (p.nota === null || p.nota === undefined))
