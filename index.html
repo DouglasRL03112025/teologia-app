@@ -6006,7 +6006,19 @@ async function exportarCSV(){
   popularFiltroTurma();
   const h=hj(); const cm=chM(h);
   const al=alunosFiltrados();
-  const pk=Object.keys(D.presencas).filter(k=>k.startsWith(cm));
+  let _pres = (_relCache && _relCache.presencas) || null;
+  if (!_pres) {
+    const r = await supabaseClient.from('presenca').select('*');
+    if (r.error) { toast('⚠️ Erro ao buscar presenças para o CSV. Tente novamente.'); return; }
+    _pres = r.data || [];
+  }
+  let _aulasList = (_relCache && _relCache.aulas) || null;
+  if (!_aulasList) {
+    const rA = await supabaseClient.from('aulas').select('data, livro, descricao');
+    if (rA.error) { toast('⚠️ Erro ao buscar aulas para o CSV. Tente novamente.'); return; }
+    _aulasList = rA.data || [];
+  }
+  const totalAulasDoMes = _aulasList.filter(a => a.data && a.data.startsWith(cm)).length;
   let _alLivros = (_relCache && _relCache.alunoLivros) || null;
   if (!_alLivros) {
     const _resLivros = await supabaseClient.from('aluno_livros').select('aluno_id,pagou');
@@ -6016,8 +6028,10 @@ async function exportarCSV(){
   const todasProvasCSV = Object.keys(D.notas).filter(p => /^p\d+$/.test(p)).sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
   let csv='Nome,Turma,Telefone,Presencas,Faltas,Freq%,Pagamento,' + todasProvasCSV.map(p=>'P'+parseInt(p.slice(1))).join(',') + ',Media\n';
   al.forEach(a=>{
-    let p=0,f=0; pk.forEach(k=>{ if(D.presencas[k][a.id]==='P') p++; if(D.presencas[k][a.id]==='F') f++; });
-    const perc=pk.length>0?Math.round(p/pk.length*100):0;
+    const presDoMes = _pres.filter(p => p.aluno_id === a.id && p.data && p.data.startsWith(cm));
+    const p = presDoMes.filter(p => p.presente === true).length;
+    const f = presDoMes.filter(p => p.presente === false).length;
+    const perc=totalAulasDoMes>0?Math.round(p/totalAulasDoMes*100):0;
     const pago=_alLivros.some(r=>r.aluno_id===a.id&&r.pagou===true)?'Pago':'Pendente';
     const notas=todasProvasCSV.map(pi=>{ const n=(D.notas[pi]||{})[a.id]; return (n!==null&&n!==undefined)?Number(n).toFixed(1):''; });
     const ns=todasProvasCSV.map(pi=>(D.notas[pi]||{})[a.id]).filter(n=>n!==null&&n!==undefined);
