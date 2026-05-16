@@ -7997,6 +7997,7 @@ window.admPresLimparTodos = admPresLimparTodos;
     if (btn && btn.disabled) return;
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Salvando…'; }
 
+    try {
     const dataSel  = admPresAulaAtual.data;
     const livroSel = admPresAulaAtual.livro || null;
     let erros = 0;
@@ -8059,6 +8060,9 @@ window.admPresLimparTodos = admPresLimparTodos;
     if (btn) { btn.disabled = false; btn.textContent = '💾 Salvar Presença'; }
     salvar();
     toast(erros === 0 ? '✅ Presenças salvas com sucesso!' : '⚠️ Salvo com ' + erros + ' erro(s). Veja o console.');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '💾 Salvar Presença'; }
+    }
   }
 window.admPresSalvar = admPresSalvar;
 
