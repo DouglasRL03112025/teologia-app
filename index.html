@@ -4407,7 +4407,7 @@ function salvarPres(){
     } else if(status === 'F'){
       console.log('[salvarPres] ação: insert/update FALTA');
       sincronizarPresencaSupabase(a.id, ch, false);
-    } else {
+    } else if (status !== undefined) {
       console.log('[salvarPres] ação: delete (status vazio/null/undefined)');
       removerPresencaSupabase(a.id, ch);
     }
