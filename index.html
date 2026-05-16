@@ -4292,8 +4292,9 @@ async function verPerfilAdmin(id){
   irAdmin('perfil'); document.getElementById('nb-alunos').classList.add('on');
   const resumo = await carregarResumoLivrosAluno(id);
   const h=hj(); const cm=chM(h);
-  let tp=0,tf=0;
-  Object.values(D.presencas).forEach(v=>{ if(v[id]==='P') tp++; if(v[id]==='F') tf++; });
+  const _presAluno = await getPresencaAluno(id);
+  let tp = _presAluno.filter(r => r.presente === true).length;
+  let tf = _presAluno.filter(r => r.presente === false).length;
   // [C-PAG-2] legado D.pagamentos morto — pagamentos vêm de resumo/aluno_livros
   // const mp=Object.keys(D.pagamentos).filter(m=>D.pagamentos[m][id]===true).length;
   // const pagA=(D.pagamentos[cm]||{})[id]===true;
