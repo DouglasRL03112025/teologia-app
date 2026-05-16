@@ -4291,18 +4291,19 @@ async function verPerfilAdmin(id){
   window._adminPerfilAlunoId = id;
   irAdmin('perfil'); document.getElementById('nb-alunos').classList.add('on');
   const resumo = await carregarResumoLivrosAluno(id);
-  const h=hj(); const cm=chM(h);
+  // [CAL-DEAD] calendário não renderizado — ${cal} ausente do template
+  // const h=hj(); const cm=chM(h);
   const _presAluno = await getPresencaAluno(id);
   let tp = _presAluno.filter(r => r.presente === true).length;
   let tf = _presAluno.filter(r => r.presente === false).length;
   // [C-PAG-2] legado D.pagamentos morto — pagamentos vêm de resumo/aluno_livros
   // const mp=Object.keys(D.pagamentos).filter(m=>D.pagamentos[m][id]===true).length;
   // const pagA=(D.pagamentos[cm]||{})[id]===true;
-  const dim=new Date(h.getFullYear(),h.getMonth()+1,0).getDate();
-  const p1=new Date(h.getFullYear(),h.getMonth(),1).getDay();
-  let cal=DS.map(d=>`<div class="cd hd">${d}</div>`).join('');
-  for(let i=0;i<p1;i++) cal+='<div class="cd vz"></div>';
-  for(let d=1;d<=dim;d++){ const k=`${h.getFullYear()}-${(h.getMonth()+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`; const v=D.presencas[k]; const c=v&&v[id]==='P'?'cp':v&&v[id]==='F'?'cf':''; cal+=`<div class="cd ${c}">${d}</div>`; }
+  // const dim=new Date(h.getFullYear(),h.getMonth()+1,0).getDate();
+  // const p1=new Date(h.getFullYear(),h.getMonth(),1).getDay();
+  // let cal=DS.map(d=>`<div class="cd hd">${d}</div>`).join('');
+  // for(let i=0;i<p1;i++) cal+='<div class="cd vz"></div>';
+  // for(let d=1;d<=dim;d++){ const k=`${h.getFullYear()}-${(h.getMonth()+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`; const v=D.presencas[k]; const c=v&&v[id]==='P'?'cp':v&&v[id]==='F'?'cf':''; cal+=`<div class="cd ${c}">${d}</div>`; }
   const todasProvas = Object.keys(D.notas).filter(p => /^p\d+$/.test(p)).sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
 
   // ── LOG DE DIAGNÓSTICO — NÃO ALTERAR LÓGICA ──
