@@ -4359,59 +4359,12 @@ async function verPerfilAdmin(id){
 }
 window.verPerfilAdmin = verPerfilAdmin;
 
-/* ════ PRESENÇA ADMIN ════ */
-let _dp=new Date();
-function mudarData(d){ _dp.setDate(_dp.getDate()+d); renderPresAdmin(); }
-function renderPresAdmin(){
-  document.getElementById('a-data-pres').textContent=DS[_dp.getDay()]+', '+_dp.getDate()+' de '+M[_dp.getMonth()]+' de '+_dp.getFullYear();
-  const ch=chD(_dp); const pD=D.presencas[ch]||{}; const al=ativos();
-  if(!al.length){ document.getElementById('a-lista-pres').innerHTML='<div class="empty"><div class="empty-ic">👥</div><div class="empty-tx">Sem alunos.</div></div>'; return; }
-  document.getElementById('a-lista-pres').innerHTML=al.map(a=>{ const st=pD[a.id]||'';
-    return `<div class="pr ${st}" id="pr-${a.id}" onclick="tgPres('${a.id}')"><span class="prnm">${fmtNome(a.nome)}</span><span class="prch" id="pc-${a.id}">${st==='P'?'Presente':st==='F'?'Falta':'Tocar'}</span></div>`; }).join('');
-}
 function renderAulas(){
   const mod=document.getElementById('sel-mod').value; const sa=document.getElementById('sel-aula');
   sa.innerHTML='<option value="">— Selecione a aula —</option>';
   if(!mod) return;
   (AULAS_MOD[mod]||[]).forEach((a,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=(i+1)+'. '+a; sa.appendChild(o); });
 }
-function tgPres(id){
-  const ch=chD(_dp); if(!D.presencas[ch]) D.presencas[ch]={};
-  const c=D.presencas[ch][id]||''; const n=c===''?'P':c==='P'?'F':'';
-  if(n==='') delete D.presencas[ch][id]; else D.presencas[ch][id]=n;
-  document.getElementById('pr-'+id).className='pr '+n;
-  document.getElementById('pc-'+id).textContent=n==='P'?'Presente':n==='F'?'Falta':'Tocar';
-}
-window.tgPres = tgPres;
-function salvarPres(){
-  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
-  // Salvar log da aula
-  const mod=document.getElementById('sel-mod').value; const ai=document.getElementById('sel-aula').value;
-  if(mod && ai!==''){
-    const aulaName=(AULAS_MOD[mod]||[])[parseInt(ai)];
-    if(!D.aulas_log) D.aulas_log={};
-    D.aulas_log[chD(_dp)]={modulo:mod,aula:aulaName||''};
-  }
-  salvar();
-  // Salvar presença no Supabase
-  const ch=chD(_dp); const pD=D.presencas[ch]||{};
-  ativos().forEach(function(a){
-    const status = pD[a.id];
-    console.log('[salvarPres] alunoId:', a.id, '| data:', ch, '| status:', status);
-    if(status === 'P'){
-      console.log('[salvarPres] ação: insert/update PRESENTE');
-      sincronizarPresencaSupabase(a.id, ch, true);
-    } else if(status === 'F'){
-      console.log('[salvarPres] ação: insert/update FALTA');
-      sincronizarPresencaSupabase(a.id, ch, false);
-    } else if (status !== undefined) {
-      console.log('[salvarPres] ação: delete (status vazio/null/undefined)');
-      removerPresencaSupabase(a.id, ch);
-    }
-  });
-  toast('✓ Presenças salvas!');
-}
-
 /* ════ PAGAMENTOS ADMIN — fonte: aluno_livros (mesma da área do aluno) ════ */
 let _mp=new Date();         // mantido: usado pelo seletor de mês no HTML
 let livroVisualAtual = null; // navegação de livros na tela de pagamentos (só visualização)
