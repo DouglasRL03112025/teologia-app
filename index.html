@@ -5864,6 +5864,7 @@ async function renderRelAdmin(aba){
 
 /* ════ EXPORTAR PDF ════ */
 async function exportarPDF(){
+  await carregarLivroAtualSistema();
   popularFiltroTurma();
   const h=hj(); const cm=chM(h);
   const al=alunosFiltrados(); const tot=al.length;
@@ -5884,7 +5885,7 @@ async function exportarPDF(){
   }
   let _alLivros = (_relCache && _relCache.alunoLivros) || null;
   if (!_alLivros) {
-    const _resLivros = await supabaseClient.from('aluno_livros').select('aluno_id,pagou');
+    const _resLivros = await supabaseClient.from('aluno_livros').select('aluno_id,livro_codigo,pagou,entregue');
     if (_resLivros.error) { w.close(); toast('⚠️ Erro ao buscar pagamentos para o PDF. Tente novamente.'); return; }
     _alLivros = _resLivros.data || [];
   }
@@ -5897,7 +5898,10 @@ async function exportarPDF(){
     const p = presDoMes.filter(p => p.presente === true).length;
     const f = presDoMes.filter(p => p.presente === false).length;
     const perc=totalAulasMes>0?Math.round(p/totalAulasMes*100):0;
-    const pago=(_alLivros.some(r=>r.aluno_id===a.id&&r.pagou===true))?'<span style="color:#2d7a4a;font-weight:600">✓ Em dia</span>':'<span style="color:#b83232;font-weight:600">✗ Pendente</span>';
+    const statusFinanceiro = calcularStatusAluno(a.id, _alLivros, window.livroAtualSistema);
+    const pago = statusFinanceiro === 'Em dia' || statusFinanceiro === 'Aguardando'
+      ? '<span style="color:#2d7a4a;font-weight:600">✓ Em dia</span>'
+      : '<span style="color:#b83232;font-weight:600">✗ Pendente</span>';
     const notas=todasProvasPDF.map((pi)=>{ const n=(D.notas[pi]||{})[a.id]; const num=parseInt(pi.slice(1)); return `<span style="font-size:11px;background:${(n!==null&&n!==undefined)?(n>=7?'#e8f5ee':n>=5?'#fff8e6':'#fdeaea'):'#f5f4f0'};padding:2px 5px;border-radius:3px;margin-right:3px">P${num}: ${(n!==null&&n!==undefined)?Number(n).toFixed(1):'—'}</span>`; }).join('');
     return `<tr>
       <td style="padding:9px 8px;border-bottom:1px solid #e0ddd5;font-size:13px">${fmtNome(a.nome)}</td>
@@ -5915,8 +5919,8 @@ async function exportarPDF(){
     return `<tr><td style="padding:7px 8px;border-bottom:1px solid #e0ddd5;font-size:13px">${fmtD(d)}</td><td style="padding:7px 8px;border-bottom:1px solid #e0ddd5;font-size:13px">${entry.livro||'—'}</td><td style="padding:7px 8px;border-bottom:1px solid #e0ddd5;font-size:13px">${entry.descricao||'Aula'}</td><td style="padding:7px 8px;border-bottom:1px solid #e0ddd5;text-align:center;font-size:13px;color:#2d7a4a;font-weight:600">${pr}</td><td style="padding:7px 8px;border-bottom:1px solid #e0ddd5;text-align:center;font-size:13px;color:#b83232;font-weight:600">${ft}</td></tr>`;
   }).join('');
 
-  const pagos=al.filter(a=>(_alLivros.some(r=>r.aluno_id===a.id&&r.pagou===true))).length;
-  const rec=al.reduce((s,a)=>s+(_alLivros.some(r=>r.aluno_id===a.id&&r.pagou===true)?(parseFloat(a.valor)||0):0),0);
+  const pagos=al.filter(a=>{ const sf=calcularStatusAluno(a.id,_alLivros,window.livroAtualSistema); return sf==='Em dia'||sf==='Aguardando'; }).length;
+  const rec=al.reduce((s,a)=>{ const sf=calcularStatusAluno(a.id,_alLivros,window.livroAtualSistema); return s+(sf==='Em dia'||sf==='Aguardando'?(parseFloat(a.valor)||0):0); },0);
   let tp2=0; al.forEach(a=>{ tp2+=_pres.filter(p=>p.aluno_id===a.id&&p.data&&p.data.startsWith(cm)&&p.presente===true).length; });
   const mp2=totalAulasMes*tot; const pp2=mp2>0?Math.round(tp2/mp2*100):0;
 
