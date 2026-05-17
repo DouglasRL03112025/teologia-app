@@ -3820,6 +3820,10 @@ async function renderAlunosAdmin(){
       ? `<div class="mini muted">📚 ${_livrosAtrasados} livro${_livrosAtrasados > 1 ? 's' : ''} atrasado${_livrosAtrasados > 1 ? 's' : ''}</div>`
       : `<div class="mini muted">📚 sem atrasos</div>`;
     // ── FIM A3 ──
+    // ── A4: SCORE VISÍVEL (adição isolada — leitura pura via calcularScoreAluno) ──
+    const _scoreAluno = calcularScoreAluno(_extrairDadosScore(a, _dadosRisco));
+    const _scoreHTML = `<div class="mini muted">⭐ Score: ${_scoreAluno}</div>`;
+    // ── FIM A4 ──
     const regLivro = alLivros.find(r => r.aluno_id === a.id && String(r.livro_codigo) === 'p' + String(livroAtual));
     const jaEntregue = regLivro && regLivro.entregue === true ? 'true' : 'false';
     // ── BADGE DE RISCO (adição isolada — não altera lógica existente) ──
@@ -3859,6 +3863,7 @@ async function renderAlunosAdmin(){
         ${acaoHTML}
         ${_ultimaAulaHTML}
         ${_livrosAtrasadosHTML}
+        ${_scoreHTML}
         ${prevHTML}
         ${acaoBtn}
       </div>
