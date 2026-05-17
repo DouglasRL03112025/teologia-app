@@ -3739,8 +3739,6 @@ async function renderAlunosAdmin(){
 
   // ── CONTEXTO DE RISCO (dados já carregados, sem nova query) ──
   var _dadosRisco = {
-    presencas:   D.presencas ? Object.values(D.presencas).reduce(function(acc,aula){
-      Object.keys(aula).forEach(function(aid){ acc.push({ aluno_id: aid, presente: aula[aid]==='P' }); }); return acc; }, []) : [],
     alunoLivros: alLivros,
     provasAluno: [], // sem query extra — preenchido progressivamente
     livroAtual:  window.livroAtualSistema,
@@ -4033,9 +4031,8 @@ function calcularStatusAluno(alunoId, alLivros, livroAtual) {
 
 /* ════ RISCO AUTOMÁTICO DO ALUNO ════ */
 function calcularRiscoAluno(aluno, dados) {
-  // dados: { presencas, alunoLivros, provasAluno, livroAtual, presDoMes, datasUnicas }
+  // dados: { alunoLivros, provasAluno, livroAtual, presDoMes, datasUnicas }
   var id = aluno.id;
-  var presencas    = dados.presencas    || [];
   var alunoLivros  = dados.alunoLivros  || [];
   var provasAluno  = dados.provasAluno  || [];
   var livroAtual   = dados.livroAtual;
