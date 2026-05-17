@@ -4551,7 +4551,7 @@ async function renderPagAdmin(){
         <div class="pag-acoes">
           <span class="pag-badge ${bdgClasse}">${bdgIcon} ${bdgLabel}</span>
           ${registro && window.isAdmin ? `<button class="pag-btn-pagar ${pago ? 'btn-ja-pago' : 'btn-marcar-pago'} ripple-target"
-            onclick="tgPagLivro('${registro.id}', ${pago}, '${aluno.id}', '${(aluno.nome||'').replace(/'/g,"\'")}')">
+            onclick="tgPagLivro('${registro.id}', ${pago}, '${aluno.id}', '${(aluno.nome||'').replace(/'/g,"\'")}', this)">
             ${pago ? '✓ Pago' : '💳 Marcar pago'}
           </button>` : ''}
         </div>
@@ -4588,11 +4588,11 @@ function definirFiltroPagamento(tipo) {
 window.definirFiltroPagamento = definirFiltroPagamento;
 
 /* Marcar/desmarcar pagamento de um livro individual em aluno_livros */
-async function tgPagLivro(idRegistro, estaPago, alunoId, nomeAluno) {
+async function tgPagLivro(idRegistro, estaPago, alunoId, nomeAluno, btnEl) {
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   if (!idRegistro) { console.error('[PAG ADMIN] idRegistro inválido:', idRegistro); toast('Erro: registro não identificado', 'erro'); return; }
 
-  try {
+  return executarAcaoSegura(btnEl, async () => {
     // Verificar que o registro existe antes de atualizar
     const { data: registroExistente, error: erroVerif } = await supabaseClient
       .from('aluno_livros')
@@ -4620,10 +4620,7 @@ async function tgPagLivro(idRegistro, estaPago, alunoId, nomeAluno) {
       toast('Livro de ' + nomeAluno + ' marcado como pago!');
     }
     await renderPagAdmin();
-  } catch(e) {
-    console.error('[PAG ADMIN] Erro ao salvar:', e);
-    toast('Erro ao salvar. Tente novamente.', 'erro');
-  }
+  });
 }
 window.tgPagLivro = tgPagLivro;
 
