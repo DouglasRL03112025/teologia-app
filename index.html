@@ -8308,7 +8308,7 @@ async function renderPainelProvas() {
     if (rid)
       btns += '<button class="prova-btn prova-btn-nota" onclick="provasLancarNota(\'' + rid + '\', this)" title="Lançar ou editar nota">✏</button>';
     if (rid && !r.devolvida)
-      btns += '<button class="prova-btn" onclick="provasMarcarDevolvida(\'' + rid + '\')" title="Marcar como devolvida" style="background:#f0fdf4;border-color:#86efac;color:#15803d">📦</button>';
+      btns += '<button class="prova-btn" onclick="provasMarcarDevolvida(\'' + rid + '\', this)" title="Marcar como devolvida" style="background:#f0fdf4;border-color:#86efac;color:#15803d">📦</button>';
 
     /* ── mapeamento data-status para filtro ── */
     var dataStatus = status === 'nao_fez' ? 'nao-fez'
@@ -8383,9 +8383,9 @@ async function provasLancarNota(id, btnEl) {
 }
 window.provasLancarNota = provasLancarNota;
 
-async function provasMarcarDevolvida(id) {
+async function provasMarcarDevolvida(id, btnEl) {
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
-  const btn = document.activeElement;
+  const btn = btnEl || document.activeElement;
   return executarAcaoSegura(btn, async () => {
     var { error } = await supabaseClient.from('provas_aluno')
       .update({ devolvida:true, corrigida:true }).eq('id', id);
