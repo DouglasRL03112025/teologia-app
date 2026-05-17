@@ -7932,6 +7932,8 @@ window.admPresMarcarFalta = admPresMarcarFalta;
 
   /* ── Marcar todos presentes/faltantes — usa toggle original por aluno ── */
   function admPresMarcarTodos(presente) {
+    const s = document.getElementById('adm-pres-btn-salvar');
+    if (s && s.disabled) return;
     const alvo = presente === true ? true : false;
     admPresAlunos.forEach(function(aluno) {
       let guard = 0;
@@ -7945,6 +7947,8 @@ window.admPresMarcarTodos = admPresMarcarTodos;
 
   /* ── Limpar todos — usa toggle original por aluno até null ── */
   function admPresLimparTodos() {
+    const s = document.getElementById('adm-pres-btn-salvar');
+    if (s && s.disabled) return;
     admPresAlunos.forEach(function(aluno) {
       let guard = 0;
       while (admPresEstado[aluno.id] !== null && admPresEstado[aluno.id] !== undefined && guard < 4) {
