@@ -7889,6 +7889,8 @@ window.admPresCarregarPresenca = admPresCarregarPresenca;
 
   /* ── Toggle estado do aluno (sem salvar) — ORIGINAL INTACTO ── */
   function admPresToggle(alunoId) {
+    const s = document.getElementById('adm-pres-btn-salvar');
+    if (s && s.disabled) return;
     const v = admPresEstado[alunoId];
     // null → true → false → null
     admPresEstado[alunoId] = (v === null || v === undefined) ? true : v === true ? false : null;
@@ -7922,6 +7924,8 @@ window.admPresToggle = admPresToggle;
 
   /* ── Marcar falta diretamente (botão ✕) — usa toggle original até estado = false ── */
   function admPresMarcarFalta(alunoId) {
+    const s = document.getElementById('adm-pres-btn-salvar');
+    if (s && s.disabled) return;
     let guard = 0;
     while (admPresEstado[alunoId] !== false && guard < 4) {
       admPresToggle(alunoId);
