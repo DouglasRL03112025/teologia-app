@@ -3802,6 +3802,16 @@ async function renderAlunosAdmin(){
     const perc = _datasUnicas.length > 0
       ? Math.round(presAluno / _datasUnicas.length * 100)
       : null;
+    // ── A2: ÚLTIMA PRESENÇA (adição isolada — leitura pura de _presDoMes) ──
+    const _ultimaData = _presDoMes
+      .filter(p => p.aluno_id === a.id && p.presente === true)
+      .map(p => p.data)
+      .sort()
+      .pop();
+    const _ultimaAulaHTML = _ultimaData
+      ? `<div class="mini muted">Última aula: há ${Math.floor((Date.now() - new Date(_ultimaData + 'T12:00:00').getTime()) / 86400000)} dias</div>`
+      : `<div class="mini muted">Última aula: sem presença</div>`;
+    // ── FIM A2 ──
     const regLivro = alLivros.find(r => r.aluno_id === a.id && String(r.livro_codigo) === 'p' + String(livroAtual));
     const jaEntregue = regLivro && regLivro.entregue === true ? 'true' : 'false';
     // ── BADGE DE RISCO (adição isolada — não altera lógica existente) ──
@@ -3839,6 +3849,7 @@ async function renderAlunosAdmin(){
           ${perc !== null ? `<span>${perc}% freq.</span>` : ''}
         </div>
         ${acaoHTML}
+        ${_ultimaAulaHTML}
         ${prevHTML}
         ${acaoBtn}
       </div>
