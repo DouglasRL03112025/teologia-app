@@ -5961,6 +5961,7 @@ window.exportarPDF = exportarPDF;
 
 /* ════ EXPORTAR CSV ════ */
 async function exportarCSV(){
+  await carregarLivroAtualSistema();
   popularFiltroTurma();
   const h=hj(); const cm=chM(h);
   const al=alunosFiltrados();
@@ -5979,7 +5980,7 @@ async function exportarCSV(){
   const totalAulasDoMes = _aulasList.filter(a => a.data && a.data.startsWith(cm)).length;
   let _alLivros = (_relCache && _relCache.alunoLivros) || null;
   if (!_alLivros) {
-    const _resLivros = await supabaseClient.from('aluno_livros').select('aluno_id,pagou');
+    const _resLivros = await supabaseClient.from('aluno_livros').select('aluno_id,livro_codigo,pagou,entregue');
     if (_resLivros.error) { toast('⚠️ Erro ao buscar pagamentos para o CSV. Tente novamente.'); return; }
     _alLivros = _resLivros.data || [];
   }
@@ -5990,7 +5991,8 @@ async function exportarCSV(){
     const p = presDoMes.filter(p => p.presente === true).length;
     const f = presDoMes.filter(p => p.presente === false).length;
     const perc=totalAulasDoMes>0?Math.round(p/totalAulasDoMes*100):0;
-    const pago=_alLivros.some(r=>r.aluno_id===a.id&&r.pagou===true)?'Pago':'Pendente';
+    const statusFinanceiro = calcularStatusAluno(a.id, _alLivros, window.livroAtualSistema);
+    const pago = statusFinanceiro === 'Em dia' || statusFinanceiro === 'Aguardando' ? 'Pago' : 'Pendente';
     const notas=todasProvasCSV.map(pi=>{ const n=(D.notas[pi]||{})[a.id]; return (n!==null&&n!==undefined)?Number(n).toFixed(1):''; });
     const ns=todasProvasCSV.map(pi=>(D.notas[pi]||{})[a.id]).filter(n=>n!==null&&n!==undefined);
     const med=ns.length>0?(ns.reduce((x,y)=>x+y,0)/ns.length).toFixed(1):'';
