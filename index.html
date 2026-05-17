@@ -8302,9 +8302,9 @@ async function renderPainelProvas() {
     /* ── botões de ação ── */
     var btns = '';
     if (status === 'nao_fez')
-      btns += '<button class="prova-btn prova-btn-fez" onclick="provasMarcarFez(\'' + a.id + '\',\'' + codigo + '\', true)" title="Marcar que fez a prova">✔ Fez</button>';
+      btns += '<button class="prova-btn prova-btn-fez" onclick="provasMarcarFez(\'' + a.id + '\',\'' + codigo + '\', true, this)" title="Marcar que fez a prova">✔ Fez</button>';
     else
-      btns += '<button class="prova-btn prova-btn-unfez" onclick="provasMarcarFez(\'' + a.id + '\',\'' + codigo + '\', false)" title="Desmarcar presença">✖</button>';
+      btns += '<button class="prova-btn prova-btn-unfez" onclick="provasMarcarFez(\'' + a.id + '\',\'' + codigo + '\', false, this)" title="Desmarcar presença">✖</button>';
     if (rid)
       btns += '<button class="prova-btn prova-btn-nota" onclick="provasLancarNota(\'' + rid + '\', this)" title="Lançar ou editar nota">✏</button>';
     if (rid && !r.devolvida)
@@ -8347,9 +8347,9 @@ async function renderPainelProvas() {
 }
 window.renderPainelProvas = renderPainelProvas;
 
-async function provasMarcarFez(alunoId, codigo, novoValor) {
+async function provasMarcarFez(alunoId, codigo, novoValor, btnEl) {
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
-  const btn = document.activeElement;
+  const btn = btnEl || document.activeElement;
   return executarAcaoSegura(btn, async () => {
     var payload = novoValor === false
       ? { aluno_id:alunoId, livro_codigo:codigo, fez_prova:false, nota:null, devolvida:false, corrigida:false }
