@@ -8281,12 +8281,12 @@ async function renderPainelProvas() {
     var notaCor = notaValor != null
       ? (notaValor >= 7 ? '#15803d' : notaValor >= 5 ? '#92400e' : '#b83232')
       : '#d1d5db';
-    var notaOnclick = rid ? ' onclick="provasLancarNota(\'' + rid + '\')" title="Clique para editar nota"' : '';
+    var notaOnclick = rid ? ' onclick="provasLancarNota(\'' + rid + '\', this)" title="Clique para editar nota"' : '';
     var notaDisplay = notaValor != null
-      ? '<div class="prova-nota-clicavel"'+notaOnclick+'>'
+      ? '<button type="button" class="prova-nota-clicavel"'+notaOnclick+'>'
           +'<div style="font-size:26px;font-weight:800;font-family:\'Lora\',serif;color:'+notaCor+';line-height:1">'+notaValor+'</div>'
           +'<div style="font-size:10px;color:#9ca3af;margin-top:1px">'+(rid ? '✏ toque p/ editar' : 'nota')+'</div>'
-        +'</div>'
+        +'</button>'
       : '<div style="font-size:22px;color:#d1d5db;line-height:1;padding:4px 0">—</div>'
         +'<div style="font-size:10px;color:#d1d5db;margin-top:1px">sem nota</div>';
 
@@ -8306,7 +8306,7 @@ async function renderPainelProvas() {
     else
       btns += '<button class="prova-btn prova-btn-unfez" onclick="provasMarcarFez(\'' + a.id + '\',\'' + codigo + '\', false)" title="Desmarcar presença">✖</button>';
     if (rid)
-      btns += '<button class="prova-btn prova-btn-nota" onclick="provasLancarNota(\'' + rid + '\')" title="Lançar ou editar nota">✏</button>';
+      btns += '<button class="prova-btn prova-btn-nota" onclick="provasLancarNota(\'' + rid + '\', this)" title="Lançar ou editar nota">✏</button>';
     if (rid && !r.devolvida)
       btns += '<button class="prova-btn" onclick="provasMarcarDevolvida(\'' + rid + '\')" title="Marcar como devolvida" style="background:#f0fdf4;border-color:#86efac;color:#15803d">📦</button>';
 
@@ -8362,9 +8362,9 @@ async function provasMarcarFez(alunoId, codigo, novoValor) {
 }
 window.provasMarcarFez = provasMarcarFez;
 
-async function provasLancarNota(id) {
+async function provasLancarNota(id, btnEl) {
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
-  const btn = document.activeElement;
+  const btn = btnEl || document.activeElement;
   return executarAcaoSegura(btn, async () => {
     var notaStr = prompt('Digite a nota:');
     if (notaStr === null) return;
