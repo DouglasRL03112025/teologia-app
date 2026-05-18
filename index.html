@@ -8239,9 +8239,9 @@ async function renderPainelProvas() {
                : notasArr.length && parseFloat(mediaStr) >= 5 ? '#92400e' : '#b83232';
 
   var coresRes = [
-    {label:'Total',     val:tots.total,     bg:'#e8f0f8', brd:'#bfdbfe', cor:'#1a3a5c'},
+    {label:'Total',     val:tots.total,     bg:'#f4f7fb', brd:'#dde6f0', cor:'#8ca3bb'},
     {label:'Não fez',   val:tots.nao_fez,   bg:'#f1f5f9', brd:'#e2e8f0', cor:'#64748b'},
-    {label:'Realizada', val:tots.feita,     bg:'#fef3c7', brd:'#fcd34d', cor:'#92400e'},
+    {label:'Realizada', val:tots.feita,     bg:'#fff7ed', brd:'#fb923c', cor:'#7c2d12'},
     {label:'Corrigida', val:tots.corrigida, bg:'#dbeafe', brd:'#93c5fd', cor:'#1e40af'},
     {label:'Devolvida', val:tots.devolvida, bg:'#dcfce7', brd:'#86efac', cor:'#15803d'}
   ];
@@ -8436,6 +8436,13 @@ async function provasMarcarDevolvida(id, btnEl) {
   });
 }
 window.provasMarcarDevolvida = provasMarcarDevolvida;
+/* ── CSS ESTADO ATIVO — PROVAS DASH ── */
+(function(){
+  var s = document.createElement('style');
+  s.textContent = '.provas-dash-card.on{outline:2px solid currentColor;transform:translateY(-1px);}';
+  document.head.appendChild(s);
+})();
+
 /* ── FILTRO DOM PURO — TELA DE PROVAS ── */
 function filtrarProvas(tipo) {
   // Mostra/oculta cards por data-status
