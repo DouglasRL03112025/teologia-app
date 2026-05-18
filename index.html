@@ -3859,7 +3859,7 @@ async function renderAlunosAdmin(){
         <div class="an aluno-nome">${fmtNome(a.nome) || 'Sem nome'}</div>
         <div class="as2 aluno-info">
           <span>Turma ${a.turma || 'Única'}</span>
-          ${a.tel ? `<span>${fmtTel(a.tel)}</span>` : ''}
+          ${a.tel ? `<span><a href="https://wa.me/55${a.tel.replace(/\D/g,'')}" target="_blank">${fmtTel(a.tel)}</a></span>` : ''}
           ${perc !== null ? `<span>${perc}% freq.</span>` : ''}
         </div>
         ${acaoHTML}
@@ -4343,7 +4343,7 @@ async function verPerfilAdmin(id){
   const notasH=todasProvas.map((p,i)=>{ const n=(D.notas[p]||{})[id]; const num=parseInt(p.slice(1)); if(n===null||n===undefined) return `<div class="sl2"><span class="slb">Prova ${num}</span><span class="bdg ba">Pendente</span></div>`; return `<div class="sl2"><span class="slb">Prova ${num}</span><span class="bdg ${n>=7?'bv':n>=5?'ba':'br'}">${Number(n).toFixed(1)}</span></div>`; }).join('')||'<p style="font-size:14px;color:var(--cin)">Sem notas</p>';
   const livH=D.livros_curso.map(l=>`<div class="sl2"><span class="slb">${l.nome}</span><span class="bdg ${(D.livros_ent[l.id]||{})[id]?'bv':'br'}">${(D.livros_ent[l.id]||{})[id]?'✓ Recebido':'Pendente'}</span></div>`).join('');
   document.getElementById('a-perfil-conteudo').innerHTML=`
-    <div class="ph"><div class="pav">${ini(a.nome)}</div><div class="pn">${fmtNome(a.nome)}</div><div class="pt">${a.turma||'Turma Única'}${a.tel?' · '+fmtTel(a.tel):''}</div></div>
+    <div class="ph"><div class="pav">${ini(a.nome)}</div><div class="pn">${fmtNome(a.nome)}</div><div class="pt">${a.turma||'Turma Única'}${a.tel?` · <a href="https://wa.me/55${a.tel.replace(/\D/g,'')}" target="_blank">${fmtTel(a.tel)}</a>`:''}</div></div>
     <div class="resumo-aluno">
       <div class="resumo-item ${resumo && resumo.progresso >= 80 ? 'vd' : resumo && resumo.progresso >= 40 ? 'am' : ''}">
         <span>📚 Progresso</span>
