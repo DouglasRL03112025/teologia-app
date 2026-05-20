@@ -8190,7 +8190,7 @@ async function iniciarPainelProvas() {
     for (var i = 1; i <= 24; i++) {
       var opt = document.createElement('option');
       opt.value = 'p' + i;
-      opt.textContent = 'P' + i + ' — Prova ' + i;
+      opt.textContent = 'P' + i + ' — ' + LIVROS_CURSO[i - 1];
       sel.appendChild(opt);
     }
   }
@@ -8399,12 +8399,7 @@ async function provasMarcarFez(alunoId, codigo, novoValor, btnEl) {
     var { error } = await supabaseClient.from('provas_aluno')
       .upsert(payload, { onConflict:'aluno_id,livro_codigo' });
     if (error) { toast('Erro: '+error.message); return; }
-    var _sy = window.scrollY;
-    renderPainelProvas().then(function(){
-      requestAnimationFrame(function(){
-        window.scrollTo(0, _sy);
-      });
-    });
+    renderPainelProvas();
   });
 }
 window.provasMarcarFez = provasMarcarFez;
@@ -8425,12 +8420,7 @@ async function provasLancarNota(id, btnEl) {
     var { error } = await supabaseClient.from('provas_aluno')
       .update({ nota:nota, fez_prova:true, corrigida:true }).eq('id', id);
     if (error) { toast('Erro: '+error.message); return; }
-    var _sy = window.scrollY;
-    renderPainelProvas().then(function(){
-      requestAnimationFrame(function(){
-        window.scrollTo(0, _sy);
-      });
-    });
+    renderPainelProvas();
   });
 }
 window.provasLancarNota = provasLancarNota;
@@ -8442,12 +8432,7 @@ async function provasMarcarDevolvida(id, btnEl) {
     var { error } = await supabaseClient.from('provas_aluno')
       .update({ devolvida:true, corrigida:true }).eq('id', id);
     if (error) { toast('Erro: '+error.message); return; }
-    var _sy = window.scrollY;
-    renderPainelProvas().then(function(){
-      requestAnimationFrame(function(){
-        window.scrollTo(0, _sy);
-      });
-    });
+    renderPainelProvas();
   });
 }
 window.provasMarcarDevolvida = provasMarcarDevolvida;
