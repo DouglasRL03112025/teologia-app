@@ -4348,7 +4348,6 @@ async function verPerfilAdmin(id){
   const livH=D.livros_curso.map(l=>`<div class="sl2"><span class="slb">${l.nome}</span><span class="bdg ${(D.livros_ent[l.id]||{})[id]?'bv':'br'}">${(D.livros_ent[l.id]||{})[id]?'✓ Recebido':'Pendente'}</span></div>`).join('');
   document.getElementById('a-perfil-conteudo').innerHTML=`
     <div class="ph"><div class="pav">${ini(a.nome)}</div><div class="pn">${fmtNome(a.nome)}</div><div class="pt">${a.turma||'Turma Única'}${a.tel?` · <a href="https://wa.me/${a.tel.replace(/\D/g,'').startsWith('55') ? a.tel.replace(/\D/g,'') : '55' + a.tel.replace(/\D/g,'')}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${fmtTel(a.tel)}</a>`:''}</div></div>
-    ${(()=>{ const _al=[]; if(resumo && resumo.status==='Pendente') _al.push('<div style="background:#fff3cd;border-left:4px solid #f0ad4e;border-radius:6px;padding:10px 14px;margin-bottom:6px;font-size:13px;font-weight:600;color:#856404">💰 Pagamento pendente</div>'); if(resumo && resumo.status==='Aguardando') _al.push('<div style="background:#d1ecf1;border-left:4px solid #17a2b8;border-radius:6px;padding:10px 14px;margin-bottom:6px;font-size:13px;font-weight:600;color:#0c5460">📦 Livro pago, aguardando entrega</div>'); if((tp+tf)>0 && tp/(tp+tf)<0.60) _al.push('<div style="background:#f8d7da;border-left:4px solid #dc3545;border-radius:6px;padding:10px 14px;margin-bottom:6px;font-size:13px;font-weight:600;color:#721c24">⚠️ Frequência crítica</div>'); else if((tp+tf)>0 && tp/(tp+tf)>=0.60 && tp/(tp+tf)<0.75) _al.push('<div style="background:#fff3cd;border-left:4px solid #f0ad4e;border-radius:6px;padding:10px 14px;margin-bottom:6px;font-size:13px;font-weight:600;color:#856404">📊 Frequência abaixo do ideal</div>'); if((tp+tf)===0 && resumo && resumo.pagos>0) _al.push('<div style="background:#f8d7da;border-left:4px solid #dc3545;border-radius:6px;padding:10px 14px;margin-bottom:6px;font-size:13px;font-weight:600;color:#721c24">⚠️ Nenhuma presença registrada</div>'); return _al.length ? '<div style="margin:12px 0 4px">'+_al.join('')+'</div>' : ''; })()}
     <div class="resumo-aluno">
       <div class="resumo-item ${resumo && resumo.progresso >= 80 ? 'vd' : resumo && resumo.progresso >= 40 ? 'am' : ''}">
         <span>📚 Progresso</span>
@@ -7884,7 +7883,7 @@ window.admPresCarregarPresenca = admPresCarregarPresenca;
       const p = (nome || '').trim().split(' ').filter(Boolean);
       if (!p.length) return '—';
       if (p.length === 1) return p[0];
-      return p[0] + ' ' + p[p.length - 1];
+      return p[0] + ' ' + p[1];
     }
 
     // botões de ações em massa
@@ -8335,7 +8334,7 @@ async function renderPainelProvas() {
 
     /* ── nome abreviado ── */
     var partes = a.nome.trim().split(' ');
-    var nomeExib = partes.length > 1 ? partes[0]+' '+partes[partes.length-1] : partes[0];
+    var nomeExib = partes.length > 1 ? partes[0]+' '+partes[1] : partes[0];
 
     /* ── badge devolvida (substitui botão de ação) ── */
     var badgeDev = (rid && r && r.devolvida)
