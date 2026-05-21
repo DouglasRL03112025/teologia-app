@@ -4347,15 +4347,6 @@ async function verPerfilAdmin(id){
         <strong>${tp+tf>0 ? Math.round(tp/(tp+tf)*100)+'% ('+tp+'P / '+tf+'F)' : '—'}</strong>
       </div>
     </div>
-    ${resumo ? `
-    <div class="card" style="margin-bottom:14px">
-      <div class="card-t">📚 Livros do Curso</div>
-      <div class="sl2"><span class="slb">Situação</span><span class="bdg ${resumo.status === 'Em dia' ? 'bv' : 'br'}">${resumo.status}</span></div>
-      <div class="sl2"><span class="slb">Livros pagos</span><span class="slv">${resumo.pagos} / ${resumo.totalCurso}</span></div>
-      <div class="sl2"><span class="slb">Pendentes</span><span class="slv" style="color:var(--vm)">${resumo.pendentes}</span></div>
-      <div class="sl2"><span class="slb">Progresso</span><span class="slv">${resumo.progresso}%</span></div>
-      <div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--cin);margin-bottom:6px"><span>Progresso geral</span><span style="font-weight:600;color:var(--azul)">${resumo.progresso}% (${resumo.pagos}/${resumo.totalCurso})</span></div><div class="ba2"><div class="bf vd" style="width:${resumo.progresso}%"></div></div></div>
-    </div>` : ''}
     <div class="card"><div class="card-t">📚 Livros do Aluno (Supabase)</div><div id="admin-livros-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
     <div style="display:none"><div id="admin-provas-aluno"></div></div>
     <button class="btn bs ripple-target" onclick="abrirModAluno('${id}')">✏️ Editar dados</button>
