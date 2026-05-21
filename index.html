@@ -4346,6 +4346,12 @@ async function verPerfilAdmin(id){
         <span>📊 Frequência</span>
         <strong>${tp+tf>0 ? Math.round(tp/(tp+tf)*100)+'% ('+tp+'P / '+tf+'F)' : '—'}</strong>
       </div>
+      <div class="resumo-item">
+        <span>📖 Livro atual</span>
+        <strong>${window.livroAtualSistema
+          ? window.livroAtualSistema + ' – ' + (LIVROS_CURSO[window.livroAtualSistema - 1] || '')
+          : '—'}</strong>
+      </div>
     </div>
     <div class="card"><div class="card-t">📚 Situação por livro</div><div id="admin-livros-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
     <div style="display:none"><div id="admin-provas-aluno"></div></div>
