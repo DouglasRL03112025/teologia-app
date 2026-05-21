@@ -4295,12 +4295,6 @@ async function carregarResumoLivrosAluno(alunoId) {
 
   // Status: usa a mesma fonte de verdade da lista
   const livroAtual = window.livroAtualSistema;
-  console.log('PERFIL', {
-    alunoId,
-    livroAtual: window.livroAtualSistema,
-    totalRegistros: data.length,
-    data
-  });
   const status = calcularStatusAluno(alunoId, data, livroAtual);
 
   return { pagos, pendentes, progresso, totalCurso, status };
@@ -4329,23 +4323,6 @@ async function verPerfilAdmin(id){
   // for(let d=1;d<=dim;d++){ const k=`${h.getFullYear()}-${(h.getMonth()+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`; const v=D.presencas[k]; const c=v&&v[id]==='P'?'cp':v&&v[id]==='F'?'cf':''; cal+=`<div class="cd ${c}">${d}</div>`; }
   const todasProvas = Object.keys(D.notas).filter(p => /^p\d+$/.test(p)).sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
 
-  // ── LOG DE DIAGNÓSTICO — NÃO ALTERAR LÓGICA ──
-  console.log('PERFIL', {
-    aluno: a.nome,
-    aid: id,
-    tipo_aid: typeof id,
-    livros_curso_ids: D.livros_curso.map(l => ({ id: l.id, tipo: typeof l.id })),
-    chaves_livros_ent: Object.keys(D.livros_ent),
-    exemplo_chave_livro: D.livros_curso[0]?.id,
-    livro_l1_existe: D.livros_ent?.['l1'],
-    livro_l1_valor_aluno: D.livros_ent?.['l1']?.[id],
-    provas_disponiveis: todasProvas,
-    chaves_provas_p1: D.provas?.['p1'] ? Object.keys(D.provas['p1']).slice(0,3) : 'vazio',
-    prova_p1_valor_aluno: D.provas?.['p1']?.[id],
-    nota_p1_valor_aluno: D.notas?.['p1']?.[id],
-  });
-  const notasH=todasProvas.map((p,i)=>{ const n=(D.notas[p]||{})[id]; const num=parseInt(p.slice(1)); if(n===null||n===undefined) return `<div class="sl2"><span class="slb">Prova ${num}</span><span class="bdg ba">Pendente</span></div>`; return `<div class="sl2"><span class="slb">Prova ${num}</span><span class="bdg ${n>=7?'bv':n>=5?'ba':'br'}">${Number(n).toFixed(1)}</span></div>`; }).join('')||'<p style="font-size:14px;color:var(--cin)">Sem notas</p>';
-  const livH=D.livros_curso.map(l=>`<div class="sl2"><span class="slb">${l.nome}</span><span class="bdg ${(D.livros_ent[l.id]||{})[id]?'bv':'br'}">${(D.livros_ent[l.id]||{})[id]?'✓ Recebido':'Pendente'}</span></div>`).join('');
   document.getElementById('a-perfil-conteudo').innerHTML=`
     <div class="ph"><div class="pav">${ini(a.nome)}</div><div class="pn">${fmtNome(a.nome)}</div><div class="pt">${a.turma||'Turma Única'}${a.tel?` · <a href="https://wa.me/${a.tel.replace(/\D/g,'').startsWith('55') ? a.tel.replace(/\D/g,'') : '55' + a.tel.replace(/\D/g,'')}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${fmtTel(a.tel)}</a>`:''}</div></div>
     <div class="resumo-aluno">
