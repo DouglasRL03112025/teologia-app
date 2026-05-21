@@ -4186,7 +4186,7 @@ async function carregarResumoLivrosAluno(alunoId) {
   await carregarLivroAtualSistema();
   const { data, error } = await supabaseClient
     .from('aluno_livros')
-    .select('aluno_id, pagou, participou, livro_codigo')
+    .select('aluno_id, pagou, participou, livro_codigo, entregue')
     .eq('aluno_id', alunoId);
   if (error) {
     console.error('Erro ao carregar resumo:', error);
