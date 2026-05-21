@@ -7156,7 +7156,9 @@ window.admDesmarcarPagamentoLote = admDesmarcarPagamentoLote;
   async function desmarcarPagamentoAluno(alunoId) {
     const livroAtual = window.livroAtualSistema;
     if (!livroAtual) { toast('Livro atual não definido'); return; }
-    if (!confirm('Desmarcar pagamento do Livro ' + livroAtual + '?')) return;
+    const nomeL = LIVROS_CURSO[livroAtual - 1] || ('Livro ' + livroAtual);
+    const nomeA = D.alunos.find(x => x.id === alunoId)?.nome || alunoId;
+    if (!confirm('Desmarcar pagamento do Livro ' + livroAtual + ': ' + nomeL + '\nAluno: ' + fmtNome(nomeA) + '\n\n⚠️ Também desmarca a entrega.')) return;
 
     // Busca o id exato do registro na tabela aluno_livros
     const { data: registros, error: erroConsulta } = await supabaseClient
