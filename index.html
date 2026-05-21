@@ -4344,7 +4344,6 @@ async function verPerfilAdmin(id){
       </div>
     </div>
     <div class="card"><div class="card-t">📚 Situação por livro</div><div id="admin-livros-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
-    <div style="display:none"><div id="admin-provas-aluno"></div></div>
     <button class="btn bs ripple-target" onclick="abrirModAluno('${id}')">✏️ Editar dados</button>
     <button class="btn bd ripple-target" style="margin-top:8px;width:100%;display:block" onclick="desmarcarPagamentoAluno('${id}')">↩️ Desmarcar pagamento — Livro ${window.livroAtualSistema || '?'}: ${LIVROS_CURSO[(window.livroAtualSistema||1)-1] || 'livro atual'}</button>`;
   carregarExibirLivrosAdminPerfil(id);
