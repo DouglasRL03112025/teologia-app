@@ -4526,8 +4526,23 @@ function abaMat(aba,btn){
 }
 window.abaMat = abaMat;
 
-function tgLivro(lid,aid,v){
+async function tgLivro(lid,aid,v){
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
+  // ── GUARDA: impede entrega sem pagamento ──────────────────────────────────
+  if (v === true) {
+    var livroCodigoGuarda = 'p' + lid.replace('l', '');
+    var { data: regPag } = await supabaseClient
+      .from('aluno_livros')
+      .select('pagou')
+      .eq('aluno_id', aid)
+      .eq('livro_codigo', livroCodigoGuarda)
+      .single();
+    if (!regPag || regPag.pagou !== true) {
+      toast('Não é possível entregar antes do pagamento.', 'erro');
+      return;
+    }
+  }
+  // ── FIM GUARDA ────────────────────────────────────────────────────────────
   _painelTravado = true;
   if (!D.livros_ent[lid]) D.livros_ent[lid] = {};
   D.livros_ent[lid][aid] = v;
