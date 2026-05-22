@@ -7603,6 +7603,7 @@ window.salvarAula = salvarAula;
 window.editarAula = editarAula;
 
   async function excluirAula(id) {
+    if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
     if (!confirm('Deseja excluir esta aula? Esta ação é irreversível.')) return;
     try {
       const { data: aula, error: erroAula } = await supabaseClient
