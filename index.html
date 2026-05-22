@@ -8055,6 +8055,7 @@ window.admRelCarregar = admRelCarregar;
 
   /* ════ DEFINIR LIVRO ATUAL (override manual) ════ */
   async function definirLivroAtual() {
+    if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
     const valor = prompt("Digite o número do livro atual (1 a 24):");
     if (!valor) return;
     const numero = parseInt(valor);
