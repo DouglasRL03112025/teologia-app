@@ -7056,6 +7056,8 @@ window.admSelecionarTodos = admSelecionarTodos;
 window.admDesmarcarTodos = admDesmarcarTodos;
 
   async function admDesmarcarPagamentoLote() {
+    if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
+
     if (!window._admSelecionados || window._admSelecionados.size === 0) {
       toast('Nenhum aluno selecionado', 'erro');
       return;
