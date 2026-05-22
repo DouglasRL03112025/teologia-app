@@ -3335,13 +3335,14 @@ function gerarAlertasAdmin(al, presencas, alunoLivros, provasAluno, livroAtual) 
   var html = '<div style="margin-top:12px">';
   html += '<div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--azul);margin-bottom:10px">🔎 Alertas Automáticos</div>';
 
+  var dest = { financeiro:'pagamentos', provas:'provas', freq:'presenca', consec:'presenca' };
   ['freq','consec','financeiro','provas'].forEach(function(k) {
     var g = grupos[k];
     if (!g.itens.length) return;
     temAlerta = true;
     var corBorda = g.cor === 'vm' ? 'var(--vm)' : '#f97316';
     html += '<div style="margin-bottom:12px">';
-    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:' + (g.cor === 'vm' ? 'var(--vm)' : '#c2410c') + ';margin-bottom:6px">' + g.label + ' <span style="background:' + corBorda + ';color:#fff;border-radius:10px;padding:1px 7px;font-size:10px">' + g.itens.length + '</span></div>';
+    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:' + (g.cor === 'vm' ? 'var(--vm)' : '#c2410c') + ';margin-bottom:6px">' + g.label + ' <span style="background:' + corBorda + ';color:#fff;border-radius:10px;padding:1px 7px;font-size:10px">' + g.itens.length + '</span><button class="ac ripple-target" onclick="irAdmin(\'' + dest[k] + '\')" style="font-size:11px;padding:3px 8px;margin-left:8px">→ Ver</button></div>';
     g.itens.forEach(function(txt) {
       html += '<div style="background:#fff;border-radius:8px;padding:9px 12px;margin-bottom:5px;border:1px solid var(--brd);border-left:4px solid ' + corBorda + ';font-size:13px;line-height:1.4">' + txt + '</div>';
     });
