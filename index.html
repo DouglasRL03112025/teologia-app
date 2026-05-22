@@ -6447,6 +6447,77 @@ async function getPresencaAluno(alunoId) {
 
 /* ════ FIM FONTE ÚNICA ════ */
 
+async function renderAlunoAgenda() {
+  const elDash    = document.getElementById('al-agenda-dashboard');
+  const elFuturas = document.getElementById('al-agenda-futuras');
+  const elLista   = document.getElementById('al-agenda-lista');
+  const elCal     = document.getElementById('al-agenda-cal');
+  const elMes     = document.getElementById('al-agenda-cal-mes');
+  const elDetalhe = document.getElementById('al-agenda-dia-detalhe');
+
+  if (elDash)    elDash.innerHTML    = '';
+  if (elFuturas) elFuturas.innerHTML = '';
+  if (elLista)   elLista.innerHTML   = '';
+  if (elDetalhe) elDetalhe.innerHTML = '';
+  if (elCal)     elCal.innerHTML     = '';
+  if (elMes)     elMes.textContent   = '';
+
+  try {
+    if (!usuAtual || !usuAtual.id) return;
+
+    const { data: presencas } = await supabaseClient
+      .from('presenca')
+      .select('data, presente')
+      .eq('aluno_id', usuAtual.id)
+      .order('data', { ascending: false });
+
+    const registros = presencas || [];
+    const agora = new Date();
+    const mesNome = agora.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    if (elMes) elMes.textContent = mesNome.charAt(0).toUpperCase() + mesNome.slice(1);
+
+    if (!registros.length) {
+      if (elLista) elLista.innerHTML = '<div class="card"><p class="sub" style="text-align:center;padding:16px">Nenhum registro de aula encontrado.</p></div>';
+      return;
+    }
+
+    const presentes  = registros.filter(function(r){ return r.presente === true; }).length;
+    const faltas     = registros.filter(function(r){ return r.presente === false; }).length;
+    const total      = registros.length;
+    const pct        = total > 0 ? Math.round(presentes / total * 100) : 0;
+    const corPct     = pct >= 75 ? '#15803d' : pct >= 50 ? '#b45309' : '#b91c1c';
+
+    if (elDash) elDash.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px">'
+      + '<div class="mc" style="flex:1;min-width:80px;text-align:center"><div class="mn" style="color:' + corPct + '">' + pct + '%</div><div class="ml">Frequência</div></div>'
+      + '<div class="mc" style="flex:1;min-width:80px;text-align:center"><div class="mn" style="color:#15803d">' + presentes + '</div><div class="ml">Presenças</div></div>'
+      + '<div class="mc" style="flex:1;min-width:80px;text-align:center"><div class="mn" style="color:#b91c1c">' + faltas + '</div><div class="ml">Faltas</div></div>'
+      + '</div>';
+
+    var listaHtml = '<div style="display:flex;flex-direction:column;gap:8px">';
+    registros.slice(0, 20).forEach(function(r) {
+      var dataFmt = r.data ? new Date(r.data + 'T12:00:00').toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'short' }) : r.data;
+      var cor     = r.presente ? '#15803d' : '#b91c1c';
+      var bg      = r.presente ? '#f0fdf4' : '#fef2f2';
+      var brd     = r.presente ? '#86efac' : '#fecaca';
+      var ic      = r.presente ? '✅' : '❌';
+      listaHtml += '<div style="background:' + bg + ';border:1px solid ' + brd + ';border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">'
+        + '<span style="font-size:13px;font-weight:500;color:var(--txt)">' + dataFmt + '</span>'
+        + '<span style="font-size:13px;font-weight:700;color:' + cor + '">' + ic + ' ' + (r.presente ? 'Presente' : 'Falta') + '</span>'
+        + '</div>';
+    });
+    listaHtml += '</div>';
+    if (elLista) elLista.innerHTML = listaHtml;
+
+  } catch(e) {
+    console.error('[renderAlunoAgenda]', e);
+    if (elLista) elLista.innerHTML = '<div class="card"><p class="sub" style="text-align:center;padding:16px">Erro ao carregar agenda.</p></div>';
+  }
+}
+
+window.agendaMudarMes = function() {};
+window.renderAlunoAgenda = renderAlunoAgenda;
+
 async function renderAlunoPresenca(){
   console.log('[Presença] usuAtual:', usuAtual);
 
