@@ -6979,6 +6979,13 @@ window.confirmarPagamentoModalLote = confirmarPagamentoModalLote;
     let erros = 0;
     for (const alunoId of ids) {
       try {
+        const { data: regExistente } = await supabaseClient
+          .from('aluno_livros')
+          .select('pagou')
+          .eq('aluno_id', alunoId)
+          .eq('livro_codigo', 'p' + livroAtual)
+          .maybeSingle();
+        if (regExistente && regExistente.pagou === true) continue;
         const { error } = await supabaseClient
           .from('aluno_livros')
           .upsert({
