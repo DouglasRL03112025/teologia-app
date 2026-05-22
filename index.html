@@ -7076,6 +7076,7 @@ window.admDesmarcarPagamentoLote = admDesmarcarPagamentoLote;
 
   /* ════ DESMARCAR PAGAMENTO — LIVRO ATUAL ════ */
   async function desmarcarPagamentoAluno(alunoId) {
+    if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
     const livroAtual = window.livroAtualSistema;
     if (!livroAtual) { toast('Livro atual não definido'); return; }
     const nomeL = LIVROS_CURSO[livroAtual - 1] || ('Livro ' + livroAtual);
