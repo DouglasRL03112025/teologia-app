@@ -6950,6 +6950,7 @@ window.abrirModalPagamentoLote = abrirModalPagamentoLote;
 window.fecharModalPagamentoLote = fecharModalPagamentoLote;
 
   async function confirmarPagamentoModalLote() {
+    if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
     const _bll = document.querySelector('#modal-pagamento-lote .btn.bp');
     return executarAcaoSegura(_bll, async () => {
       const data = document.getElementById('mpl-data').value;
