@@ -2910,7 +2910,7 @@ async function renderDashAdmin(){
   const totalAlunos = tot;
   const pagamentosPendentes = dadosLivroAtual.filter(r => r.pagou === false).length;
   const pagamentosPagos     = dadosLivroAtual.filter(r => r.pagou === true).length;
-  const livrosPendentes     = dadosLivroAtual.filter(r => r.entregue !== true).length;
+  const livrosPendentes     = dadosLivroAtual.filter(r => r.pagou === true && r.entregue !== true).length;
 
   document.getElementById('a-metricas').innerHTML=`
     <div class="mc" onclick="irAdmin('alunos')" style="cursor:pointer"><div class="mn">${totalAlunos}</div><div class="ml">Alunos</div></div>
