@@ -6977,6 +6977,7 @@ window.confirmarPagamentoModalLote = confirmarPagamentoModalLote;
     if (!['pix','dinheiro'].includes(forma)) { toast('Forma de pagamento inválida'); return; }
 
     let erros = 0;
+    let pulados = 0;
     for (const alunoId of ids) {
       try {
         const { data: regExistente } = await supabaseClient
@@ -6985,7 +6986,10 @@ window.confirmarPagamentoModalLote = confirmarPagamentoModalLote;
           .eq('aluno_id', alunoId)
           .eq('livro_codigo', 'p' + livroAtual)
           .maybeSingle();
-        if (regExistente && regExistente.pagou === true) continue;
+        if (regExistente && regExistente.pagou === true) {
+          pulados++;
+          continue;
+        }
         const { error } = await supabaseClient
           .from('aluno_livros')
           .upsert({
@@ -7006,7 +7010,9 @@ window.confirmarPagamentoModalLote = confirmarPagamentoModalLote;
       await renderPagamentosAlunoViaLivros();
     }
     toast(erros === 0
-      ? `✅ ${ids.length} aluno(s) marcado(s) como pago!`
+      ? pulados > 0
+        ? `✅ ${ids.length - pulados} marcado(s). ${pulados} já estavam pagos (ignorados).`
+        : `✅ ${ids.length} aluno(s) marcado(s) como pago!`
       : `⚠️ Concluído com ${erros} erro(s). Veja o console.`
     );
     renderAlunosAdmin();
