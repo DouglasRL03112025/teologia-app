@@ -2831,6 +2831,143 @@ async function irAluno(t){
 }
 window.irAluno = irAluno;
 
+/* ════ AGENDA ALUNO ════ */
+async function renderAlunoAgenda() {
+  const cal      = document.getElementById('al-agenda-cal');
+  const detalhe  = document.getElementById('al-agenda-dia-detalhe');
+  const futuras  = document.getElementById('al-agenda-futuras');
+  const lista    = document.getElementById('al-agenda-lista');
+  const mesLabel = document.getElementById('al-agenda-cal-mes');
+
+  // Garante que os containers existem antes de prosseguir
+  if (!cal) return;
+
+  const hoje = new Date();
+  if (window._agendaMes == null) window._agendaMes = hoje.getMonth();
+  if (window._agendaAno == null) window._agendaAno  = hoje.getFullYear();
+
+  // ── Coleta presenças a partir de window.livrosAluno (data_aula ou created_at) ──
+  const livros = Array.isArray(window.livrosAluno) ? window.livrosAluno : [];
+
+  // Mapeia datas com presença: { 'YYYY-MM-DD': 'presente'|'falta' }
+  const marcas = {};
+  livros.forEach(function(l) {
+    const raw = l.data_aula || l.created_at || null;
+    if (!raw) return;
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return;
+    const chave = d.toISOString().slice(0, 10);
+    marcas[chave] = (l.presenca === false || l.presenca === 'falta') ? 'falta' : 'presente';
+  });
+
+  // ── Renderiza calendário do mês atual ──
+  const ano = window._agendaAno;
+  const mes = window._agendaMes;
+  const nomeMes = new Date(ano, mes, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  if (mesLabel) mesLabel.textContent = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
+
+  const primeiroDia = new Date(ano, mes, 1).getDay(); // 0=dom
+  const totalDias   = new Date(ano, mes + 1, 0).getDate();
+  const hojeChave   = hoje.toISOString().slice(0, 10);
+
+  let html = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">';
+  ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].forEach(function(d) {
+    html += '<div style="font-size:11px;font-weight:600;color:var(--cin);padding:4px 0">' + d + '</div>';
+  });
+  for (let i = 0; i < primeiroDia; i++) {
+    html += '<div></div>';
+  }
+  for (let d = 1; d <= totalDias; d++) {
+    const chave = ano + '-' + String(mes + 1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    const marca = marcas[chave];
+    let bg = 'transparent', cor = 'var(--txt)', brd = '1px solid transparent';
+    if (chave === hojeChave)       { brd = '2px solid var(--azul)'; }
+    if (marca === 'presente')      { bg = '#15803d'; cor = '#fff'; }
+    else if (marca === 'falta')    { bg = '#b91c1c'; cor = '#fff'; }
+    else if (chave > hojeChave)    { bg = '#fef9c3'; brd = '1px solid #fbbf24'; cor = '#92400e'; }
+    html += '<div onclick="agendaVerDia(\'' + chave + '\')" style="cursor:pointer;border-radius:8px;padding:5px 2px;font-size:13px;background:' + bg + ';color:' + cor + ';border:' + brd + '">' + d + '</div>';
+  }
+  html += '</div>';
+  cal.innerHTML = html;
+
+  // ── Próximas aulas (datas futuras com marcação) ──
+  const proximas = Object.keys(marcas)
+    .filter(function(c) { return c >= hojeChave && marcas[c] !== 'falta'; })
+    .sort();
+  if (futuras) {
+    if (proximas.length > 0) {
+      let fh = '<div style="font-size:13px;font-weight:600;color:var(--azul);margin-bottom:8px">📅 Próximas aulas</div>';
+      proximas.slice(0, 5).forEach(function(c) {
+        const dt = new Date(c + 'T12:00:00').toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'short' });
+        fh += '<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--brd)">' + dt + '</div>';
+      });
+      futuras.innerHTML = '<div class="card" style="padding:14px">' + fh + '</div>';
+    } else {
+      futuras.innerHTML = '';
+    }
+  }
+
+  // ── Lista geral de aulas registradas ──
+  if (lista) {
+    const todas = Object.keys(marcas).sort().reverse();
+    if (todas.length === 0) {
+      lista.innerHTML = '<div class="card"><p class="sub" style="text-align:center;padding:18px 0">Nenhuma aula registrada ainda.</p></div>';
+    } else {
+      let lh = '<div style="font-size:13px;font-weight:600;color:var(--azul);margin-bottom:10px">Histórico de aulas</div>';
+      todas.forEach(function(c) {
+        const dt   = new Date(c + 'T12:00:00').toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
+        const tipo = marcas[c];
+        const cor2 = tipo === 'presente' ? '#15803d' : '#b91c1c';
+        const label = tipo === 'presente' ? 'Presente' : 'Falta';
+        lh += '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--brd)">'
+            + '<span style="font-size:13px">' + dt + '</span>'
+            + '<span style="font-size:12px;font-weight:600;color:' + cor2 + '">' + label + '</span>'
+            + '</div>';
+      });
+      lista.innerHTML = '<div class="card" style="padding:14px">' + lh + '</div>';
+    }
+  }
+
+  if (detalhe) detalhe.innerHTML = '';
+}
+
+function agendaVerDia(chave) {
+  const detalhe = document.getElementById('al-agenda-dia-detalhe');
+  if (!detalhe) return;
+  const livros = Array.isArray(window.livrosAluno) ? window.livrosAluno : [];
+  const aulas = livros.filter(function(l) {
+    const raw = l.data_aula || l.created_at || null;
+    if (!raw) return false;
+    return new Date(raw).toISOString().slice(0, 10) === chave;
+  });
+  const dt = new Date(chave + 'T12:00:00').toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+  let html = '<div style="padding:12px;background:var(--bg2,#f8fafc);border-radius:12px;margin-top:8px">'
+           + '<div style="font-weight:600;margin-bottom:6px">' + dt + '</div>';
+  if (aulas.length === 0) {
+    html += '<p style="font-size:13px;color:var(--cin)">Sem registros para este dia.</p>';
+  } else {
+    aulas.forEach(function(l) {
+      const p = (l.presenca === false || l.presenca === 'falta') ? '❌ Falta' : '✅ Presente';
+      const livNum = l.livro_codigo ? l.livro_codigo.replace('p','Livro ') : '—';
+      html += '<div style="font-size:13px;padding:4px 0">' + livNum + ' — ' + p + '</div>';
+    });
+  }
+  html += '</div>';
+  detalhe.innerHTML = html;
+}
+
+function agendaMudarMes(delta) {
+  if (window._agendaMes == null) { window._agendaMes = new Date().getMonth(); window._agendaAno = new Date().getFullYear(); }
+  window._agendaMes += delta;
+  if (window._agendaMes > 11) { window._agendaMes = 0;  window._agendaAno++; }
+  if (window._agendaMes < 0)  { window._agendaMes = 11; window._agendaAno--; }
+  renderAlunoAgenda();
+}
+window.renderAlunoAgenda = renderAlunoAgenda;
+window.agendaVerDia      = agendaVerDia;
+window.agendaMudarMes    = agendaMudarMes;
+/* ════ FIM AGENDA ALUNO ════ */
+
 /* ── PAINEL ONLINE: helpers ── */
 function isOnline(ultimo) {
   if (!ultimo) return false;
