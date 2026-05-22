@@ -7916,6 +7916,7 @@ window.admPresLimparTodos = admPresLimparTodos;
 
   /* ── Salvar: upsert com onConflict (aluno_id, data) ── */
   async function admPresSalvar() {
+    if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
     // ── VALIDAÇÕES DE BLINDAGEM ── (não alterar nada abaixo desta seção)
     if (!admPresAulaAtual) { toast('Selecione uma aula antes de salvar.', 'erro'); return; }
     if (!admPresAulaAtual.data) { toast('A aula selecionada não possui data válida.', 'erro'); return; }
