@@ -2297,6 +2297,7 @@ function fecharModalPagamento() {
 window.fecharModalPagamento = fecharModalPagamento;
 
 async function confirmarPagamentoModal() {
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   const btnConfirmar = document.querySelector('#modal-pagamento .btn.bp');
   return executarAcaoSegura(btnConfirmar, async () => {
     const data = document.getElementById('mp-data').value;
