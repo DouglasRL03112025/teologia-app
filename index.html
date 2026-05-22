@@ -7548,6 +7548,7 @@ window.vincularAuthAlunos = vincularAuthAlunos;
   }
 
   async function salvarAula() {
+    if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
     const id = document.getElementById('adm-aula-id').value.trim();
     const dataInput = document.getElementById('adm-aula-data').value.trim();
     const horaInput = document.getElementById('adm-aula-hora').value.trim();
