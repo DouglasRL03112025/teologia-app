@@ -2580,6 +2580,7 @@ window.confirmarEntregaLivro = confirmarEntregaLivro;
 
 /* ════ DESFAZER ENTREGA DE LIVRO (ADMIN) ════ */
 async function desfazerEntregaLivro(alunoId, livroCodigo) {
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   if (!confirm('Deseja desfazer a entrega deste livro?')) return;
 
   // ── PROTEÇÃO DE ESTADO INVÁLIDO (apenas log) ──
