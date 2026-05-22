@@ -4503,7 +4503,7 @@ async function tgPagLivro(idRegistro, estaPago, alunoId, nomeAluno, btnEl) {
 
     if (estaPago) {
       const { error } = await supabaseClient.from('aluno_livros')
-        .update({ pagou: false, data_pagamento: null, forma_pagamento: null })
+        .update({ pagou: false, entregue: false, data_pagamento: null, forma_pagamento: null })
         .eq('id', idRegistro);
       if (error) throw error;
       toast('Pagamento de ' + nomeAluno + ' revertido');
