@@ -4069,7 +4069,7 @@ function aplicarAcoesRapidas() {
     // ── Eventos seguros: apenas captura e loga, SEM alterar dados ──
     acoes.querySelector('.btn-pagar').onclick = function(e) {
       e.stopPropagation();
-      handleAcao('pagamento', acoes.dataset.alunoId);
+      handleAcao('pagamento', acoes.dataset.alunoId, this);
     };
     acoes.querySelector('.btn-entregar').onclick = function(e) {
       e.stopPropagation();
@@ -4094,9 +4094,12 @@ async function handleAcao(tipo, alunoId, btnEl) {
   console.log('LIVRO:', livroAtual);
 
   if (tipo === 'pagamento') {
+    if (btnEl && btnEl.disabled) return;
+    if (btnEl) btnEl.disabled = true;
     const livroAtual = window.livroAtualSistema;
     if (!livroAtual) {
       toast('Livro atual não definido');
+      if (btnEl) btnEl.disabled = false;
       return;
     }
 
@@ -4113,12 +4116,14 @@ async function handleAcao(tipo, alunoId, btnEl) {
     if (error || !data) {
       console.error(error);
       toast('Registro do livro não encontrado');
+      if (btnEl) btnEl.disabled = false;
       return;
     }
 
     const idRegistro = data.id;
 
     abrirModalPagamento(idRegistro);
+    if (btnEl) btnEl.disabled = false;
     return;
   }
 
