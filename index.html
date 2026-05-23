@@ -2524,7 +2524,24 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
       : 'p' + livroCodigo;
     console.log('[EntregaLivro] codigoFinal (usado no update):', codigoFinal);
 
-    if (!confirm('Confirmar entrega do livro ' + codigoFinal + ' para este aluno?')) return;
+    if (!btn.__confirmEntrega) {
+      btn.__confirmEntrega = true;
+      btn.__txtOld = btn.innerHTML;
+      btn.innerHTML = '✓ Confirmar';
+      btn.style.background = 'var(--vm)';
+      btn.disabled = false;
+      btn.__timerConfirm = setTimeout(function() {
+        btn.__confirmEntrega = false;
+        btn.innerHTML = btn.__txtOld;
+        btn.style.background = '';
+        btn.disabled = false;
+      }, 5000);
+      return;
+    }
+    clearTimeout(btn.__timerConfirm);
+    btn.__confirmEntrega = false;
+    btn.innerHTML = btn.__txtOld;
+    btn.style.background = '';
 
     // Verificar se o registro existe antes de tentar o update
     const { data: registros, error: erroSelect } = await supabaseClient
