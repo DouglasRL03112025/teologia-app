@@ -3501,7 +3501,10 @@ function gerarAlertasAdmin(al, presencas, alunoLivros, provasAluno, livroAtual) 
     if (!g.itens.length) return;
     temAlerta = true;
     var corBorda = g.cor === 'vm' ? 'var(--vm)' : '#f97316';
-    html += '<div style="margin-bottom:12px">';
+    var wrapperStyle = (k === 'consec' && g.itens.length > 0)
+      ? 'margin-bottom:12px;background:var(--vm-c);border-radius:var(--r);padding:8px 10px;'
+      : 'margin-bottom:12px;';
+    html += '<div style="' + wrapperStyle + '">';
     html += '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:' + (g.cor === 'vm' ? 'var(--vm)' : '#c2410c') + ';margin-bottom:6px"><span>' + g.label + '</span><span style="background:' + corBorda + ';color:#fff;border-radius:10px;padding:1px 7px;font-size:10px">' + g.itens.length + '</span><button class="ac ripple-target" onclick="irAdmin(\'' + dest[k] + '\')" style="font-size:11px;padding:3px 8px;margin-left:8px">→ Ver</button></div>';
     g.itens.forEach(function(txt) {
       html += '<div style="background:#fff;border-radius:8px;padding:9px 12px;margin-bottom:5px;border:1px solid var(--brd);border-left:4px solid ' + corBorda + ';font-size:13px;line-height:1.4">' + txt + '</div>';
