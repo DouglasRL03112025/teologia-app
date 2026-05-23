@@ -7326,6 +7326,11 @@ window.admDesmarcarPagamentoLote = admDesmarcarPagamentoLote;
 window.desmarcarPagamentoAluno = desmarcarPagamentoAluno;
 
   async function desmarcarPagamentoAlunoSilent(alunoId) {
+    if (!window.isAdmin) {
+      toast('Acesso restrito', 'erro');
+      return;
+    }
+
     const livroAtual = window.livroAtualSistema;
     if (!livroAtual) {
       console.warn('[LOTE DESMARCAR] livroAtual não definido para aluno', alunoId);
