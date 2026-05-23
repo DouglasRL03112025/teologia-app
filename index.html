@@ -4045,7 +4045,7 @@ function aplicarAcoesRapidas() {
     };
     acoes.querySelector('.btn-entregar').onclick = function(e) {
       e.stopPropagation();
-      handleAcao('entrega', acoes.dataset.alunoId);
+      handleAcao('entrega', acoes.dataset.alunoId, this);
     };
     acoes.querySelector('.btn-presenca').onclick = function(e) {
       e.stopPropagation();
@@ -4057,7 +4057,7 @@ function aplicarAcoesRapidas() {
 }
 
 // ── Função segura: captura contexto e executa ação correspondente ──
-async function handleAcao(tipo, alunoId) {
+async function handleAcao(tipo, alunoId, btnEl) {
   var livroAtual = window.livroAtualSistema || null;
 
   console.log('══ AÇÃO RÁPIDA ══');
@@ -4115,8 +4115,7 @@ async function handleAcao(tipo, alunoId) {
     if (entregue) {
       await desfazerEntregaLivro(alunoId, codigoLivro);
     } else {
-      const btnFake = document.createElement('button');
-      await confirmarEntregaLivro(alunoId, codigoLivro, btnFake);
+      await confirmarEntregaLivro(alunoId, codigoLivro, btnEl || document.createElement('button'));
     }
 
     return;
