@@ -3332,7 +3332,7 @@ async function renderDashAdmin(){
         + '<span onclick="irAdmin(\'pagamentos\')" title="' + _pillPagPend + ' pagamentos pendentes" style="' + _ps + 'background:#fff8f0;border-color:#f97316;color:#c2410c">💰 ' + _pillPagPend + '</span>'
         + '<span onclick="irAdmin(\'pagamentos\')" title="' + _pillEntPend + ' aguardando entrega" style="' + _ps + 'background:#f0f9ff;border-color:#38bdf8;color:#0369a1">📦 ' + _pillEntPend + '</span>'
         + '<span onclick="irAdmin(\'provas\')"    title="' + _pillProvaSN + ' sem nota · ' + _pillProvND + ' aguardando devolução" style="' + _ps + 'background:#fefce8;border-color:#facc15;color:#854d0e">📝 ' + (_pillProvaSN + _pillProvND) + '</span>'
-        + '<span onclick="irAdmin(\'presenca\')"  style="' + _ps + 'background:#fdf2f8;border-color:#e879f9;color:#86198f">📊 ' + _pillFalta + '</span>';
+        + '<span onclick="irAdmin(\'presenca\')" title="' + _pillFalta + ' alunos com 2+ faltas no mês" style="' + _ps + 'background:#fdf2f8;border-color:#e879f9;color:#86198f">📊 ' + _pillFalta + '</span>';
       el.innerHTML = '<span style="margin-right:6px">' + txt + '</span>' + _pills;
       el.classList.toggle('critico', isCritico);
     })();
