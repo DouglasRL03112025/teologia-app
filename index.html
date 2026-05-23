@@ -2899,9 +2899,9 @@ async function renderAlunoAgenda() {
   const primeiroDia = new Date(ano, mes, 1).getDay();
   const totalDias   = new Date(ano, mes + 1, 0).getDate();
 
-  let html = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">';
+  let html = '<div style="display:grid;grid-template-columns:repeat(7,36px);gap:6px;justify-content:center;align-items:center;margin:0 auto;">';
   ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].forEach(function(d) {
-    html += '<div style="font-size:11px;font-weight:600;color:var(--cin);padding:4px 0">' + d + '</div>';
+    html += '<div style="font-size:11px;font-weight:600;color:var(--cin);padding:4px 0;text-align:center">' + d + '</div>';
   });
   for (let i = 0; i < primeiroDia; i++) { html += '<div></div>'; }
   for (let d = 1; d <= totalDias; d++) {
@@ -2921,7 +2921,7 @@ async function renderAlunoAgenda() {
         else                     { bg = '#e5e7eb'; cor = 'var(--txt)'; } // sem registro
       }
     }
-    html += '<div onclick="agendaVerDia(\'' + chave + '\')" style="cursor:pointer;border-radius:8px;padding:5px 2px;font-size:13px;background:' + bg + ';color:' + cor + ';border:' + brd + '">' + d + '</div>';
+    html += '<div onclick="agendaVerDia(\'' + chave + '\')" style="cursor:pointer;border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:13px;background:' + bg + ';color:' + cor + ';border:' + brd + '">' + d + '</div>';
   }
   html += '</div>';
   cal.innerHTML = html;
@@ -2943,26 +2943,8 @@ async function renderAlunoAgenda() {
     }
   }
 
-  // ── Histórico de aulas passadas ──
-  if (lista) {
-    const passadas = aulas.filter(function(a) { return a.data && a.data < hojeChave; }).reverse();
-    if (passadas.length === 0) {
-      lista.innerHTML = '<div class="card"><p class="sub" style="text-align:center;padding:18px 0">Nenhuma aula registrada ainda.</p></div>';
-    } else {
-      let lh = '<div style="font-size:13px;font-weight:600;color:var(--azul);margin-bottom:10px">Histórico de aulas</div>';
-      passadas.forEach(function(a) {
-        const dt    = new Date(a.data + 'T12:00:00').toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
-        const pres  = presMap[a.data];
-        const cor2  = pres === true ? '#15803d' : pres === false ? '#b91c1c' : 'var(--cin)';
-        const label = pres === true ? 'Presente' : pres === false ? 'Falta' : 'Sem registro';
-        lh += '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--brd)">'
-            + '<span style="font-size:13px">' + dt + (a.livro ? ' · ' + a.livro : '') + '</span>'
-            + '<span style="font-size:12px;font-weight:600;color:' + cor2 + '">' + label + '</span>'
-            + '</div>';
-      });
-      lista.innerHTML = '<div class="card" style="padding:14px">' + lh + '</div>';
-    }
-  }
+  // ── Histórico fica na tela Presença — limpar lista ──
+  if (lista) lista.innerHTML = '';
 
   if (detalhe) detalhe.innerHTML = '';
 }
