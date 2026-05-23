@@ -2525,6 +2525,17 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
     console.log('[EntregaLivro] codigoFinal (usado no update):', codigoFinal);
 
     if (!btn.__confirmEntrega) {
+      // ── MA19: desarmar qualquer outro botão de entrega que esteja armado ──
+      document.querySelectorAll('button').forEach(function(b) {
+        if (b !== btn && b.__confirmEntrega === true) {
+          clearTimeout(b.__timerConfirm);
+          b.__confirmEntrega = false;
+          b.innerHTML = b.__txtOld;
+          b.style.background = '';
+          b.disabled = false;
+        }
+      });
+      // ── FIM MA19 ──
       btn.__confirmEntrega = true;
       btn.__txtOld = btn.innerHTML;
       btn.innerHTML = '✓ Confirmar';
