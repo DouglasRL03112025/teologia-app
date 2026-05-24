@@ -5208,6 +5208,7 @@ async function _salvarNotaAluno(aid, pid) {
   toast('✓ Nota salva!');
   clearTimeout(_timerNota);
   _timerNota = setTimeout(() => { _painelTravado = false; _salvandoNota = false; renderPainelMaterial(); }, 500);
+  if (window._adminPerfilAlunoId) verPerfilAdmin(window._adminPerfilAlunoId);
 }
 window._salvarNotaAluno = _salvarNotaAluno;
 
@@ -5236,6 +5237,7 @@ async function salvarNotas(){
   });
   await Promise.all(ops);
   salvar(); toast('✓ Notas salvas!'); _salvandoNota = false;
+  if (window._adminPerfilAlunoId) verPerfilAdmin(window._adminPerfilAlunoId);
 }
 window.salvarNotas = salvarNotas;
 
@@ -8399,6 +8401,7 @@ async function provasMarcarFez(alunoId, codigo, novoValor, btnEl) {
       .upsert(payload, { onConflict:'aluno_id,livro_codigo' });
     if (error) { toast('Erro: '+error.message); return; }
     renderPainelProvas();
+    if (window._adminPerfilAlunoId) verPerfilAdmin(window._adminPerfilAlunoId);
   });
 }
 window.provasMarcarFez = provasMarcarFez;
@@ -8420,6 +8423,7 @@ async function provasLancarNota(id, btnEl) {
       .update({ nota:nota, fez_prova:true, corrigida:true }).eq('id', id);
     if (error) { toast('Erro: '+error.message); return; }
     renderPainelProvas();
+    if (window._adminPerfilAlunoId) verPerfilAdmin(window._adminPerfilAlunoId);
   });
 }
 window.provasLancarNota = provasLancarNota;
@@ -8432,6 +8436,7 @@ async function provasMarcarDevolvida(id, btnEl) {
       .update({ devolvida:true, corrigida:true }).eq('id', id);
     if (error) { toast('Erro: '+error.message); return; }
     renderPainelProvas();
+    if (window._adminPerfilAlunoId) verPerfilAdmin(window._adminPerfilAlunoId);
   });
 }
 window.provasMarcarDevolvida = provasMarcarDevolvida;
