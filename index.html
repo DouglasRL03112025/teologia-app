@@ -8171,6 +8171,8 @@ window.admRelCarregar = admRelCarregar;
     toast("Livro atual definido com sucesso!", 'ok');
     // Atualiza estado global
     window.livroAtualSistema = numero;
+    const elLivroAluno = document.getElementById('livro-atual-aluno');
+    if (elLivroAluno) elLivroAluno.innerHTML = '📖 Livro atual: <strong>Livro ' + numero + '</strong>';
     // Re-render das telas (sem reload)
     try {
       if (typeof renderDashAdmin === 'function') { renderDashAdmin(); }
