@@ -4717,7 +4717,7 @@ async function tgPagLivro(idRegistro, estaPago, alunoId, nomeAluno, btnEl) {
       toast('Pagamento de ' + nomeAluno + ' revertido');
     } else {
       const { error } = await supabaseClient.from('aluno_livros')
-        .update({ pagou: true, forma_pagamento: 'admin', data_pagamento: new Date().toISOString() })
+        .update({ pagou: true, forma_pagamento: 'dinheiro', data_pagamento: new Date().toISOString() })
         .eq('id', idRegistro);
       if (error) throw error;
       toast('Livro de ' + nomeAluno + ' marcado como pago!');
