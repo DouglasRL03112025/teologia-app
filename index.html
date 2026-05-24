@@ -3085,8 +3085,12 @@ async function renderDashAdmin(){
 
   // ── MÉTRICAS DO DASHBOARD ADMIN ──
   const codigoLivroAtual = 'p' + livroAtual;
+  const idsAtivos = new Set(al.map(a => a.id));
   const dadosLivroAtual = livroAtual
-    ? alunoLivros.filter(r => r.livro_codigo === codigoLivroAtual)
+    ? alunoLivros.filter(r =>
+        r.livro_codigo === codigoLivroAtual &&
+        idsAtivos.has(r.aluno_id)
+      )
     : [];
   const totalAlunos = tot;
   const pagamentosPendentes = dadosLivroAtual.filter(r => r.pagou === false).length;
@@ -3233,6 +3237,7 @@ async function renderDashAdmin(){
     let totalDinheiroFinanceiro = 0;
 
     alunoLivros.forEach(r => {
+      if (!idsAtivos.has(r.aluno_id)) return;
       if (r.livro_codigo !== codigoAtualFinanceiro) return;
       if (r.pagou !== true) return;
       totalPagosFinanceiro++;
