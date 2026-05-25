@@ -4730,6 +4730,7 @@ async function tgPagLivro(idRegistro, estaPago, alunoId, nomeAluno, btnEl) {
       toast('Livro de ' + nomeAluno + ' marcado como pago!');
     }
     await renderPagAdmin();
+    if (window._adminPerfilAlunoId) verPerfilAdmin(window._adminPerfilAlunoId);
   });
 }
 window.tgPagLivro = tgPagLivro;
