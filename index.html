@@ -7237,6 +7237,7 @@ window.confirmarPagamentoModalLote = confirmarPagamentoModalLote;
     );
     renderAlunosAdmin();
     await renderDashAdmin();
+    if (window._adminPerfilAlunoId) verPerfilAdmin(window._adminPerfilAlunoId);
   }
 
   function admLimparSelecaoLote() {
