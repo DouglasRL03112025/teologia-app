@@ -2374,6 +2374,8 @@ async function marcarLivroComoPago(idRegistro, dataManual, formaManual) {
   if (container && window._adminPerfilAlunoId) {
     await carregarExibirLivrosAdminPerfil(window._adminPerfilAlunoId);
   }
+  if (typeof renderPagAdmin === 'function') renderPagAdmin();
+  if (typeof renderDashAdmin === 'function') renderDashAdmin();
 }
 
 async function carregarExibirLivrosAdminPerfil(alunoId) {
