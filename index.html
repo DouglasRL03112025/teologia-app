@@ -153,6 +153,7 @@
           <button class="btn-lote ripple-target" onclick="admDesmarcarTodos()">☐ Desmarcar todos</button>
           <button class="btn-lote ripple-target" onclick="abrirModalPagamentoLote()">✅ Marcar como pago</button>
           <button class="btn-lote ripple-target" onclick="admDesmarcarPagamentoLote()">❌ Desmarcar pagamento</button>
+          <button class="btn-lote ripple-target" onclick="admConfirmarEntregaLote()">📦 Confirmar entrega</button>
           <button class="btn-lote cancel ripple-target" onclick="admLimparSelecaoLote()">✕ Limpar seleção</button>
         </div>
       </div>
@@ -7293,6 +7294,69 @@ window.admDesmarcarTodos = admDesmarcarTodos;
     if (window._adminPerfilAlunoId) verPerfilAdmin(window._adminPerfilAlunoId);
   }
 window.admDesmarcarPagamentoLote = admDesmarcarPagamentoLote;
+
+  /* ── PEÇA 1: CONFIRMAR ENTREGA SILENCIOSA (MA35.2) ── */
+  async function confirmarEntregaLivroSilent(alunoId) {
+    const livroAtual = window.livroAtualSistema;
+    if (!livroAtual) {
+      console.warn('[LOTE ENTREGA] livroAtualSistema não definido para aluno', alunoId);
+      return false;
+    }
+    const codigoLivro = 'p' + livroAtual;
+    const { data: reg, error: erroConsulta } = await supabaseClient
+      .from('aluno_livros')
+      .select('id, pagou, entregue')
+      .eq('aluno_id', alunoId)
+      .eq('livro_codigo', codigoLivro)
+      .single();
+    if (erroConsulta || !reg) {
+      console.warn('[LOTE ENTREGA] Registro não encontrado:', alunoId, codigoLivro);
+      return false;
+    }
+    if (reg.entregue === true) return false; /* já entregue — pular */
+    const { error: erroUpdate } = await supabaseClient
+      .from('aluno_livros')
+      .update({ entregue: true, pagou: true })
+      .eq('id', reg.id);
+    if (erroUpdate) {
+      console.error('[LOTE ENTREGA] Erro ao confirmar entrega:', alunoId, erroUpdate);
+      return false;
+    }
+    return true;
+  }
+
+  /* ── PEÇA 2: CONFIRMAR ENTREGA EM LOTE (MA35.2) ── */
+  async function admConfirmarEntregaLote() {
+    if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
+    if (!window._admSelecionados || window._admSelecionados.size === 0) {
+      toast('Nenhum aluno selecionado', 'erro'); return;
+    }
+    if (!window.livroAtualSistema) {
+      toast('Livro atual do sistema não definido', 'erro'); return;
+    }
+    if (!confirm('Confirmar entrega do livro atual para os alunos selecionados?')) return;
+    let confirmados = 0;
+    let pulados = 0;
+    let erros = 0;
+    for (const alunoId of window._admSelecionados) {
+      const resultado = await confirmarEntregaLivroSilent(alunoId);
+      if (resultado === true) confirmados++;
+      else if (resultado === false) pulados++;
+      else erros++;
+    }
+    toast(erros === 0
+      ? pulados > 0
+        ? `📦 ${confirmados} entregue(s). ${pulados} já entregues ou sem registro (ignorados).`
+        : `📦 ${confirmados} entrega(s) confirmada(s)!`
+      : `⚠️ Concluído com ${erros} erro(s). Veja o console.`
+    , erros === 0 ? 'ok' : undefined);
+    await renderAlunosAdmin();
+    await renderDashAdmin();
+    admDesmarcarTodos();
+    if (window._adminPerfilAlunoId) verPerfilAdmin(window._adminPerfilAlunoId);
+  }
+  window.admConfirmarEntregaLote = admConfirmarEntregaLote;
+  /* ── FIM MA35.2 ── */
 
   /* ── FIM SELEÇÃO MÚLTIPLA ── */
 
