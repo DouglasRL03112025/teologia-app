@@ -9,6 +9,10 @@
 <style>
 /* MA37-B1 — Barra lote: flex-wrap mobile */
 #adm-barra-lote-acoes{flex-wrap:wrap;}
+/* MA37-B2 — Barra lote: hierarquia visual */
+.btn-lote.positive{color:var(--vd);border-color:var(--vd-c);background:var(--vd-c);}
+.btn-lote.destructive{color:var(--vm);border-color:var(--vm-c);background:var(--vm-c);}
+.btn-lote.cancel{color:var(--cin);border-color:var(--brd);background:transparent;}
 /* MA37-A — Nav admin pill ativo */
 .nb{
   transition:color .18s ease,background .18s ease;
@@ -170,9 +174,9 @@
         <div id="adm-barra-lote-acoes">
           <button class="btn-lote ripple-target" onclick="admSelecionarTodos(Array.from(document.querySelectorAll('#lista-alunos-admin .ar[data-aluno-id]')).map(c=>c.getAttribute('data-aluno-id')))">☑ Selecionar todos</button>
           <button class="btn-lote ripple-target" onclick="admDesmarcarTodos()">☐ Desmarcar todos</button>
-          <button class="btn-lote ripple-target" onclick="abrirModalPagamentoLote()">✅ Marcar como pago</button>
-          <button class="btn-lote ripple-target" onclick="admDesmarcarPagamentoLote()">❌ Desmarcar pagamento</button>
-          <button class="btn-lote ripple-target" onclick="admConfirmarEntregaLote()">📦 Confirmar entrega</button>
+          <button class="btn-lote positive ripple-target" onclick="abrirModalPagamentoLote()">✅ Marcar como pago</button>
+          <button class="btn-lote destructive ripple-target" onclick="admDesmarcarPagamentoLote()">❌ Desmarcar pagamento</button>
+          <button class="btn-lote positive ripple-target" onclick="admConfirmarEntregaLote()">📦 Confirmar entrega</button>
           <button class="btn-lote cancel ripple-target" onclick="admLimparSelecaoLote()">✕ Limpar seleção</button>
         </div>
       </div>
