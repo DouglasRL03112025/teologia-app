@@ -7875,6 +7875,7 @@ window.admPresFiltrarPor = admPresFiltrarPor;
         sel.appendChild(opt);
       });
       admPresResetUI();
+      if (data.length > 0) { sel.selectedIndex = 1; await admPresCarregarPresenca(); }
     } catch(e) { console.error('[PRES ADMIN] Exceção carregarAulas:', e); }
   }
 
