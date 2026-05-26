@@ -8232,24 +8232,57 @@ window.admRelCarregar = admRelCarregar;
   /* ════ DEFINIR LIVRO ATUAL (override manual) ════ */
   async function definirLivroAtual() {
     if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
-    const valor = prompt("Digite o número do livro atual (1 a 24):");
-    if (!valor) return;
-    const numero = parseInt(valor);
-    if (isNaN(numero) || numero < 1 || numero > 24) { toast("Número inválido"); return; }
-    const { error } = await supabaseClient
-      .from('config_sistema')
-      .upsert({ id: 1, livro_atual_override: numero });
-    if (error) { toast("Erro ao salvar", 'erro'); return; }
-    toast("Livro atual definido com sucesso!", 'ok');
-    // Atualiza estado global
-    window.livroAtualSistema = numero;
-    const elLivroAluno = document.getElementById('livro-atual-aluno');
-    if (elLivroAluno) elLivroAluno.innerHTML = '📖 Livro atual: <strong>Livro ' + numero + '</strong>';
-    // Re-render das telas (sem reload)
-    try {
-      if (typeof renderDashAdmin === 'function') { renderDashAdmin(); }
-      if (typeof renderPagAdmin === 'function') { renderPagAdmin(); }
-    } catch(e) { console.warn('Erro ao re-renderizar telas:', e); }
+
+    // ── MODAL SELEÇÃO DE LIVRO (substitui prompt) ──
+    var _modalExistente = document.getElementById('_modal-livro-atual');
+    if (_modalExistente) _modalExistente.remove();
+
+    var _opts = '';
+    for (var _i = 1; _i <= 24; _i++) {
+      var _sel = (window.livroAtualSistema && _i === window.livroAtualSistema) ? ' selected' : '';
+      _opts += '<option value="' + _i + '"' + _sel + '>Livro ' + _i + '</option>';
+    }
+
+    var _modal = document.createElement('div');
+    _modal.id = '_modal-livro-atual';
+    _modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center';
+    _modal.innerHTML = '<div style="background:#fff;border-radius:14px;padding:28px 24px;width:min(320px,90vw);box-shadow:0 8px 40px rgba(0,0,0,.18);font-family:Inter,sans-serif">'
+      + '<div style="font-size:17px;font-weight:700;color:#1e293b;margin-bottom:18px">📖 Definir livro atual</div>'
+      + '<label style="font-size:13px;font-weight:600;color:#475569;display:block;margin-bottom:6px">Livro atual</label>'
+      + '<select id="_sel-livro-atual" style="width:100%;padding:10px 12px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:15px;font-family:Inter,sans-serif;color:#1e293b;background:#f8fafc;margin-bottom:20px">' + _opts + '</select>'
+      + '<div style="display:flex;gap:10px">'
+      + '<button id="_btn-livro-cancelar" style="flex:1;padding:11px;border:1.5px solid #cbd5e1;border-radius:8px;background:#fff;font-size:14px;font-weight:600;font-family:Inter,sans-serif;color:#64748b;cursor:pointer">Cancelar</button>'
+      + '<button id="_btn-livro-confirmar" style="flex:1;padding:11px;border:none;border-radius:8px;background:#2563eb;font-size:14px;font-weight:600;font-family:Inter,sans-serif;color:#fff;cursor:pointer">Confirmar</button>'
+      + '</div>'
+      + '</div>';
+    document.body.appendChild(_modal);
+
+    document.getElementById('_btn-livro-cancelar').onclick = function() { _modal.remove(); };
+    _modal.addEventListener('click', function(e) { if (e.target === _modal) _modal.remove(); });
+
+    document.getElementById('_btn-livro-confirmar').onclick = async function() {
+      var valor = document.getElementById('_sel-livro-atual').value;
+      _modal.remove();
+
+      // ── MESMO PARSE E MESMA VALIDAÇÃO DE ANTES ──
+      const numero = parseInt(valor);
+      if (isNaN(numero) || numero < 1 || numero > 24) { toast("Número inválido"); return; }
+      const { error } = await supabaseClient
+        .from('config_sistema')
+        .upsert({ id: 1, livro_atual_override: numero });
+      if (error) { toast("Erro ao salvar", 'erro'); return; }
+      toast("Livro atual definido com sucesso!", 'ok');
+      // Atualiza estado global
+      window.livroAtualSistema = numero;
+      const elLivroAluno = document.getElementById('livro-atual-aluno');
+      if (elLivroAluno) elLivroAluno.innerHTML = '📖 Livro atual: <strong>Livro ' + numero + '</strong>';
+      // Re-render das telas (sem reload)
+      try {
+        if (typeof renderDashAdmin === 'function') { renderDashAdmin(); }
+        if (typeof renderPagAdmin === 'function') { renderPagAdmin(); }
+      } catch(e) { console.warn('Erro ao re-renderizar telas:', e); }
+    };
+    // ── FIM MODAL ──
   }
 window.definirLivroAtual = definirLivroAtual;
 
