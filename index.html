@@ -8300,6 +8300,16 @@ async function iniciarPainelProvas() {
   }
   document.getElementById('provas-resumo').style.display = 'none';
   document.getElementById('provas-lista').innerHTML = '';
+
+  await carregarLivroAtualSistema();
+
+  if (window.livroAtualSistema) {
+    var codigo = 'p' + window.livroAtualSistema;
+    if (sel.querySelector('option[value="' + codigo + '"]')) {
+      sel.value = codigo;
+      await renderPainelProvas();
+    }
+  }
 }
 window.iniciarPainelProvas = iniciarPainelProvas;
 
