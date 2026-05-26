@@ -6,6 +6,23 @@
 <title>Teologia IBICAMP</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<style>
+/* MA37-A — Nav admin pill ativo */
+.nb{
+  transition:color .18s ease,background .18s ease;
+  border-radius:10px;
+}
+.nb:hover:not(.on){
+  background:var(--azul-c);
+  color:var(--azul);
+}
+.nb.on{
+  background:var(--azul);
+  color:#fff;
+  font-weight:600;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+</style>
 <body>
 
 <!-- ══════════════════════════════════════════
