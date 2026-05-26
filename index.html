@@ -8452,7 +8452,10 @@ async function renderPainelProvas() {
     else
       btns += '<button class="prova-btn prova-btn-unfez" onclick="provasMarcarFez(\'' + a.id + '\',\'' + codigo + '\', false, this)" title="Desmarcar presença">✖</button>';
     if (rid)
-      btns += '<button class="prova-btn prova-btn-nota" onclick="provasLancarNota(\'' + rid + '\', this)" title="Lançar ou editar nota">✏</button>';
+      btns += '<input type="number" id="prova-nota-' + rid + '" min="0" max="10" step="0.1" placeholder="nota"'
+            + (notaValor != null ? ' value="' + notaValor + '"' : '')
+            + ' style="width:54px;padding:4px 5px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;font-family:\'Inter\',sans-serif;text-align:center;background:#fff">'
+            + '<button class="prova-btn prova-btn-nota" onclick="provasLancarNota(\'' + rid + '\', this)" title="Salvar nota">💾</button>';
     if (rid && !r.devolvida)
       btns += '<button class="prova-btn" onclick="provasMarcarDevolvida(\'' + rid + '\', this)" title="Marcar como devolvida" style="background:#f0fdf4;border-color:#86efac;color:#15803d">📦</button>';
 
@@ -8513,9 +8516,10 @@ async function provasLancarNota(id, btnEl) {
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
   const btn = btnEl || document.activeElement;
   return executarAcaoSegura(btn, async () => {
-    var notaStr = prompt('Digite a nota:');
-    if (notaStr === null) return;
-    var nota = parseFloat(notaStr.replace(',','.'));
+    var inputEl = document.getElementById('prova-nota-' + id);
+    var notaStr = inputEl ? inputEl.value : '';
+    if (notaStr === '' || notaStr === null) { toast('Nota inválida.', 'erro'); return; }
+    var nota = parseFloat(String(notaStr).replace(',','.'));
     if (isNaN(nota)) { toast('Nota inválida.', 'erro'); return; }
     var valor = Number(nota);
     if (isNaN(valor) || valor < 0 || valor > 10) {
