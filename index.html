@@ -20,6 +20,10 @@
 #adm-barra-lote-acoes{display:flex;gap:6px;}
 /* MA37-C — Filtros admin: wrap mobile + gap */
 .filtros-admin{flex-wrap:wrap;gap:6px;}
+/* MA37-D4 — Botões operacionais perfil admin */
+.btn-perfil-acao{padding:6px 13px;border:none;border-radius:99px;color:#fff;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.btn-perfil-acao.pagar{background:var(--vd);}
+.btn-perfil-acao.entregar{background:var(--am);}
 /* MA37-A — Nav admin pill ativo */
 .nb{
   transition:color .18s ease,background .18s ease;
@@ -2476,36 +2480,12 @@ async function carregarExibirLivrosAdminPerfil(alunoId) {
         </div>
         ${!pago && !naoParticipou && window.isAdmin ? `<button
           onclick="abrirModalPagamento('${item.id}')"
-          style="
-            padding:6px 13px;
-            border:none;
-            border-radius:99px;
-            background:var(--vd);
-            color:#fff;
-            font-size:12px;
-            font-weight:600;
-            font-family:inherit;
-            cursor:pointer;
-            white-space:nowrap;
-            flex-shrink:0;
-          ">
+          class="btn-perfil-acao pagar">
           ✓ Marcar como pago
         </button>` : ''}
         ${pago && item.entregue !== true && !naoParticipou && window.isAdmin ? `<button
           onclick="confirmarEntregaLivro('${alunoId}', '${item.livro_codigo}', this)"
-          style="
-            padding:6px 13px;
-            border:none;
-            border-radius:99px;
-            background:var(--am);
-            color:#fff;
-            font-size:12px;
-            font-weight:600;
-            font-family:inherit;
-            cursor:pointer;
-            white-space:nowrap;
-            flex-shrink:0;
-          ">
+          class="btn-perfil-acao entregar">
           📦 Confirmar entrega
         </button>` : ''}
       </div>
