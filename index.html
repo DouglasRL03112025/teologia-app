@@ -2017,16 +2017,6 @@ async function renderProvasAluno() {
       linhaStatus = '<div style="font-size:11.5px;font-weight:700;color:' + s.cor + ';background:rgba(0,0,0,0.05);border-radius:6px;padding:4px 9px;display:inline-block;margin-top:5px;">❌ NÃO REALIZADA</div>';
     } else if (status === 'feita') {
       linhaStatus = '<div style="font-size:11.5px;font-weight:700;color:' + s.cor + ';background:rgba(0,0,0,0.05);border-radius:6px;padding:4px 9px;display:inline-block;margin-top:5px;">Aguardando correção</div>';
-    } else if (status === 'corrigida') {
-      var notaNum  = Number(nota);
-      var corNota  = notaNum >= 7 ? '#155724' : notaNum >= 5 ? '#856404' : '#721c24';
-      linhaStatus  = '<div style="font-size:13px;font-weight:700;color:' + corNota + ';margin-top:5px;">📊 NOTA: ' + notaNum.toFixed(1) + '</div>'
-                   + '<div style="font-size:11.5px;font-weight:700;color:' + s.cor + ';background:rgba(0,0,0,0.05);border-radius:6px;padding:3px 9px;display:inline-block;margin-top:3px;">Corrigida</div>';
-    } else if (status === 'devolvida') {
-      var notaNum  = Number(nota);
-      var corNota  = notaNum >= 7 ? '#155724' : notaNum >= 5 ? '#856404' : '#721c24';
-      linhaStatus  = '<div style="font-size:13px;font-weight:700;color:' + corNota + ';margin-top:5px;">📊 NOTA: ' + notaNum.toFixed(1) + '</div>'
-                   + '<div style="font-size:11.5px;font-weight:700;color:' + s.cor + ';background:rgba(0,0,0,0.05);border-radius:6px;padding:3px 9px;display:inline-block;margin-top:3px;">Devolvida</div>';
     }
 
     var textoLivro =
