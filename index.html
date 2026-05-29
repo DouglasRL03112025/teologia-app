@@ -260,11 +260,7 @@
     <!-- PAGAMENTOS ADMIN -->
     <div class="tela" id="a-pagamentos">
       <div class="tit">Pagamentos</div>
-      <div class="dn">
-        <button class="dnb" onclick="mudarMes(-1)">‹</button>
-        <span class="dnt" id="a-mes-pag"></span>
-        <button class="dnb" onclick="mudarMes(1)">›</button>
-      </div>
+      <div id="a-mes-pag"></div>
       <div id="a-lista-pag"></div>
     </div>
 
@@ -4464,12 +4460,9 @@ function renderAulas(){
   (AULAS_MOD[mod]||[]).forEach((a,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=(i+1)+'. '+a; sa.appendChild(o); });
 }
 /* ════ PAGAMENTOS ADMIN — fonte: aluno_livros (mesma da área do aluno) ════ */
-let _mp=new Date();         // mantido: usado pelo seletor de mês no HTML
 let livroVisualAtual = null; // navegação de livros na tela de pagamentos (só visualização)
 let filtroStatusPagamento = 'todos'; // 'todos' | 'pagos' | 'pendentes'
 
-function mudarMes(d){ _mp.setMonth(_mp.getMonth()+d); renderPagAdmin(); }
-window.mudarMes = mudarMes;
 
 async function renderPagAdmin(){
   // ── INICIALIZAR LIVRO VISUAL (somente visualização, não altera o global) ──
