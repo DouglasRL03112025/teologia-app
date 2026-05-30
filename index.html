@@ -715,31 +715,31 @@ async function fazerLogin(){
   const senha = _fldSenha ? _fldSenha.value.trim() : '';
 
   console.log('=== INÍCIO DO LOGIN ===');
-  console.log('TEL DIGITADO:', telRaw);
+
 
   if(!tel){ toast('⚠ Digite seu telefone'); return; }
   if(!senha){ toast('⚠ Digite sua senha'); return; }
 
   const aluno = D.alunos.find(function(a){
-    console.log('TEL ALUNO:', a.tel);
-    console.log('TEL NORMALIZADO:', normalizarTelefone(a.tel));
+
+
     return a.ativo !== false && telefonesBatem(tel, a.tel);
   });
 
   if(!aluno){
-    console.log('Aluno NÃO encontrado para o telefone:', tel);
+
     toast('⚠ Telefone não encontrado');
     return;
   }
 
-  console.log('Aluno encontrado:', aluno.nome);
+
 
   const senhaEsperada = aluno.senha || normalizarTelefone(aluno.tel).slice(-4);
-  console.log('SENHA ESPERADA:', senhaEsperada, '| SENHA DIGITADA:', senha);
+
 
   if(senha !== senhaEsperada){ toast('⚠ Senha incorreta'); return; }
 
-  console.log('Login APROVADO para:', aluno.nome);
+
 
   usuAtual = aluno;
   document.getElementById('pg-login').style.display='none';
@@ -792,7 +792,7 @@ async function carregarAlunoLogado(authId) {
   data.telefone = data.telefone || '';
   window.alunoLogado = data;
   usuAtual = data;
-  console.log('Criando provas para aluno:', usuAtual.id);
+
   // await criarProvasParaAluno(usuAtual.id);
   // Identificação de admin via email (default false, true só se bater exatamente)
   window.isAdmin = (data.email === 'admin@ibicamp.com');
@@ -815,7 +815,7 @@ async function carregarAlunoLogado(authId) {
   if (typeof irAluno === 'function') {
     irAluno('cadastro');
   }
-  console.log('ALUNO LOGADO:', data);
+
 
   /* ── RASTREAMENTO: marcar online ao logar ── */
   try {
@@ -891,7 +891,7 @@ async function carregarLivrosAluno(alunoId) {
     .eq('aluno_id', alunoId);
 
   // AÇÃO 3: Log obrigatório do resultado bruto
-  console.log('alunoLivros:', alunoLivros);
+
 
   if (error1) {
     console.error('[Livros] Erro ao buscar aluno_livros:', error1);
@@ -907,7 +907,7 @@ async function carregarLivrosAluno(alunoId) {
     .from('livros')
     .select('*');
 
-  console.log('DADOS livros (todos):', livrosBase);
+
 
   if (error2) {
     console.error('[Livros] Erro ao buscar livros:', error2);
@@ -938,7 +938,7 @@ async function carregarLivrosAluno(alunoId) {
 
   // AÇÃO 2: Resultado completo armazenado em window.livrosAluno
   window.livrosAluno = data;
-  console.log('RESULTADO FINAL livrosAluno:', window.livrosAluno);
+
   console.log('[Livros] Carregados:', data.length, 'registros de aluno_livros');
 
   // Busca livro atual definido pelo admin em config_sistema.livro_atual_override
@@ -1864,15 +1864,15 @@ async function carregarProvasAluno(alunoId) {
     .from('provas_aluno')
     .select('*')
     .eq('aluno_id', alunoId);
-  console.log('[carregarProvasAluno] Resposta Supabase — data:', data, '| error:', error);
+
   if (error) {
     console.error('[Provas] Erro ao carregar provas:', error);
     return [];
   }
   console.log('[carregarProvasAluno] Total de registros:', (data || []).length);
   if (data && data.length > 0) {
-    console.log('[carregarProvasAluno] Exemplo (primeiro registro):', data[0]);
-    console.log('[carregarProvasAluno] Valores de fez_prova:', data.map(p => p.fez_prova));
+
+
   } else {
     console.warn('[carregarProvasAluno] NENHUM registro encontrado em provas_aluno para aluno_id:', alunoId);
   }
@@ -1970,7 +1970,7 @@ async function renderProvasAluno() {
     } else if (livro.entregue === true) {
       statusLivro = 'entregue';         /* entregue */
     }
-    console.log('[Livro]', codigo, '| statusLivro:', statusLivro, '| dados:', livro);
+
     var nota     = registro ? registro.nota : undefined;
     var temNota   = nota !== null && nota !== undefined;
     var fezProva  = registro && registro.fez_prova === true;
@@ -3029,7 +3029,7 @@ async function renderDashAdmin(){
   const tot = al.length;
   const presencas = resPres.data || [];
   const alunoLivros = resAlunoLivros.data || [];
-  console.log('[DEBUG LIVROS]', alunoLivros.slice(0, 10));
+
 
   // Frequência do mês atual (baseada em registros de presença)
   const presDoMes = presencas.filter(p => p.data && p.data.startsWith(cm));
@@ -5187,7 +5187,7 @@ async function salvarNotas(){
   ativos().forEach(a=>{
     const el=document.getElementById('nt-'+a.id); if(!el) return;
     const v=parseFloat(el.value);
-    console.log('ID DO ALUNO:', a.id);
+
     if(!isNaN(v)&&el.value!==''){
       const nota=Math.min(10,Math.max(0,v));
       D.notas[pid][a.id]=nota;
@@ -6614,7 +6614,7 @@ async function getPresencaAluno(alunoId) {
 /* ════ FIM FONTE ÚNICA ════ */
 
 async function renderAlunoPresenca(){
-  console.log('[Presença] usuAtual:', usuAtual);
+
 
   if (!usuAtual || !usuAtual.id) {
     console.warn('[Presença] usuAtual ou usuAtual.id ausente — abortando.');
@@ -6632,7 +6632,7 @@ async function renderAlunoPresenca(){
   if (elHist)   elHist.innerHTML   = '';
 
   const lista = await getPresencaAluno(alunoId);
-  console.log('[Presença] Registros do aluno:', lista);
+
 
   // ── CÁLCULO DE FREQUÊNCIA A PARTIR DA PRIMEIRA AULA DO ALUNO ──
   // Ordena por data crescente para garantir a ordem correta
@@ -7438,7 +7438,7 @@ window.desmarcarPagamentoAluno = desmarcarPagamentoAluno;
     if (error) {
       console.error('Erro ao conectar com o Supabase:', error);
     } else {
-      console.log('Conexão com Supabase OK. Dados recebidos:', data);
+
     }
   }
 
@@ -7462,7 +7462,7 @@ window.desmarcarPagamentoAluno = desmarcarPagamentoAluno;
       };
     });
     console.log('[carregarAlunosSupabase] Alunos carregados:', D.alunos.length);
-    D.alunos.forEach(function(a) { console.log('ID DO ALUNO:', a.id); });
+
   }
 
   async function carregarNotasSupabase() {
@@ -7570,7 +7570,7 @@ window.desmarcarPagamentoAluno = desmarcarPagamentoAluno;
           return;
         } else {
           // Sessão de aluno válida → restaurar painel aluno
-          console.log('[Auth] Sessão aluno restaurada via Supabase Auth:', email);
+
           window.isAdmin = false;
           localStorage.removeItem('adminLogado');
           await carregarAlunosSupabase().catch(e => console.error('[Init] Erro alunos:', e));
@@ -7602,7 +7602,7 @@ window.desmarcarPagamentoAluno = desmarcarPagamentoAluno;
     const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
 
     if (!signInError && signInData.session) {
-      console.log('[Auth] Login aluno autenticado no Supabase Auth. Tipo: aluno | Email:', email);
+
       return signInData.session;
     }
 
