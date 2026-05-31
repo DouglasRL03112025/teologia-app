@@ -882,7 +882,7 @@ async function carregarLivrosAluno(alunoId) {
   if (!usuAtual || !usuAtual.id) return;
   if (!alunoId) alunoId = usuAtual.id;
 
-  console.log('ID DO USUÁRIO:', usuAtual?.id);
+  console.log('[carregarLivrosAluno] Iniciando para aluno autenticado.');
 
   // AÇÃO 1: Busca TODOS os registros de aluno_livros — sem limit, sem filtro por ativo, sem filtro por ordem
   const { data: alunoLivros, error: error1 } = await supabaseClient
@@ -1855,7 +1855,7 @@ function atualizarDashboardAluno() {
 /* ════ SISTEMA DE PROVAS VINCULADO AOS LIVROS ════ */
 
 async function carregarProvasAluno(alunoId) {
-  console.log('[carregarProvasAluno] Iniciando. alunoId:', alunoId);
+  console.log('[carregarProvasAluno] Iniciando.');
   if (!alunoId) {
     console.warn('[carregarProvasAluno] alunoId esta vazio ou undefined! Abortando.');
     return [];
@@ -2671,7 +2671,7 @@ async function loginAdmin() {
       await supabaseClient.auth.signOut();
       return;
     }
-    console.log('Admin autenticado:', user.email);
+    console.log('Admin autenticado com sucesso.');
     // MOSTRAR TELA ADMIN
     document.getElementById('pg-login-admin').style.display = 'none';
     document.getElementById('pg-admin').style.display = 'block';
@@ -2788,9 +2788,9 @@ async function irAluno(t){
   if(t==='agenda') {
     window._agendaMes = null;
     await carregarLivrosAluno();
-    console.log('[irAluno/agenda] Carregando provas para usuAtual.id:', usuAtual?.id);
+    console.log('[irAluno/agenda] Carregando provas do aluno autenticado.');
     window.provasAluno = await carregarProvasAluno(usuAtual.id);
-    console.log('[irAluno/agenda] window.provasAluno apos carregamento:', window.provasAluno);
+    console.log('[irAluno/agenda] Provas carregadas:', (window.provasAluno || []).length, 'registros.');
     await renderAlunoAgenda();
     atualizarDashboardAluno();
   }
@@ -2811,7 +2811,7 @@ async function irAluno(t){
     await carregarLivrosAluno(usuAtual.id);
 
     // ACAO 1: Log imediatamente antes da renderizacao
-    console.log('RENDER DATA:', window.livrosAluno);
+    console.log('[irAluno/livros] Iniciando render.', (window.livrosAluno || []).length, 'registros.');
 
     // ACAO 3: usar window.livrosAluno explicitamente
     await renderLivrosAluno(window.livrosAluno);
@@ -2819,7 +2819,7 @@ async function irAluno(t){
   if(t==='notas') {
     try {
       const provas = await carregarProvasAluno(usuAtual.id);
-      console.log('Provas carregadas:', provas);
+      console.log('[irAluno/notas] Provas carregadas:', (provas || []).length, 'registros.');
       if (provas && provas.length > 0) {
         var _fresh = await renderProvasAluno();
         if (_fresh && _fresh.length > 0) window.provasAluno = _fresh;
@@ -4080,7 +4080,7 @@ async function handleAcao(tipo, alunoId, btnEl) {
 
   console.log('══ AÇÃO RÁPIDA ══');
   console.log('AÇÃO :', tipo);
-  console.log('ALUNO:', alunoId);
+  console.log('ALUNO: [id omitido]');
   console.log('LIVRO:', livroAtual);
 
   if (tipo === 'pagamento') {
@@ -4739,7 +4739,7 @@ async function tgLivro(lid,aid,v){
         } else if (res.count === 0) {
           console.warn('[tgLivro] REGISTRO NÃO ENCONTRADO em aluno_livros — Supabase NÃO atualizado.', '| livro:', livroCodigoSupabase, '| aluno:', aid, '| entregue:', v);
         } else {
-          console.log('[tgLivro] Supabase sincronizado OK.', '| livro:', livroCodigoSupabase, '| aluno:', aid, '| entregue:', v, '| rows:', res.count);
+          console.log('[tgLivro] Supabase sincronizado OK.', '| livro:', livroCodigoSupabase, '| entregue:', v, '| rows:', res.count);
         }
       });
   })();
@@ -4773,7 +4773,7 @@ function tgProva(pid,aid,v){
         } else if (res.count === 0) {
           console.warn('[tgProva] REGISTRO NÃO ENCONTRADO em provas_aluno — Supabase NÃO atualizado.', '| livro:', pid, '| aluno:', aid, '| fez_prova:', v);
         } else {
-          console.log('[tgProva] Supabase sincronizado OK.', '| livro:', pid, '| aluno:', aid, '| fez_prova:', v, '| rows:', res.count);
+          console.log('[tgProva] Supabase sincronizado OK.', '| livro:', pid, '| fez_prova:', v, '| rows:', res.count);
         }
       });
   })();
@@ -6622,7 +6622,7 @@ async function renderAlunoPresenca(){
   }
 
   const alunoId = usuAtual.id;
-  console.log('[Presença] alunoId:', alunoId);
+  console.log('[Presença] alunoId: OK');
 
   const elResumo = document.getElementById('al-pres-resumo');
   const elStats  = document.getElementById('al-pres-stats');
@@ -7554,7 +7554,7 @@ window.desmarcarPagamentoAluno = desmarcarPagamentoAluno;
 
         if (isAdmin) {
           // Sessão admin válida → restaurar painel admin
-          console.log('[Auth] Sessão admin restaurada via Supabase Auth:', email);
+          console.log('[Auth] Sessão admin restaurada via Supabase Auth.');
           window.isAdmin = true;
           localStorage.setItem('adminLogado', 'true'); // apoio de leitura rápida
           usuAtual = { id: user.id, nome: email, isAdmin: true };
@@ -7619,7 +7619,7 @@ window.desmarcarPagamentoAluno = desmarcarPagamentoAluno;
     }
     const email = session.user.email;
     const tipo = email === 'admin@ibicamp.com' ? 'admin' : 'aluno';
-    console.log('[Auth] Sessão ativa. Tipo:', tipo, '| Email:', email);
+    console.log('[Auth] Sessão ativa. Tipo:', tipo);
     return { session, tipo, email };
   }
 
@@ -8086,7 +8086,7 @@ window.admPresLimparTodos = admPresLimparTodos;
         continue;
       }
       try {
-        console.log('🔥 SALVANDO PRESENÇA:', { aluno_id: aluno.id, data: dataSel, presente: valor });
+        console.log('🔥 SALVANDO PRESENÇA:', { data: dataSel, presente: valor });
         const { error } = await supabaseClient.from('presenca')
           .upsert(
             { aluno_id: aluno.id, data: dataSel, presente: valor },
