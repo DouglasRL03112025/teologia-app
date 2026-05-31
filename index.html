@@ -2500,7 +2500,6 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
   try {
     // Log para diagnóstico
     console.log('[EntregaLivro] Iniciando confirmação de entrega');
-    console.log('[EntregaLivro] alunoId:', alunoId);
     console.log('[EntregaLivro] livroCodigo:', livroCodigo);
 
     // Garantia: livroCodigo deve estar no formato "pN" (ex: "p7")
@@ -2552,7 +2551,7 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
       return;
     }
 
-    console.log('[EntregaLivro] Registros encontrados:', registros);
+    console.log('[EntregaLivro] Registros encontrados:', (registros || []).length);
 
     if (!registros || registros.length === 0) {
       console.error('[EntregaLivro] Nenhum registro encontrado para alunoId=' + alunoId + ' e livro_codigo=' + codigoFinal);
@@ -2755,7 +2754,6 @@ window.irAdmin = irAdmin;
 /* ════ NAV ALUNO ════ */
 const TELAS_ALUNO=['cadastro','agenda','presenca','pagamentos','livros','notas'];
 async function irAluno(t){
-  console.log('🚀 irAluno chamado com:', t);
   // ── LOADING: timer elegante — só aparece se demorar > 120ms ──
   const loading = document.getElementById('al-loading');
   let loadingTimer = null;
@@ -3064,7 +3062,7 @@ async function renderDashAdmin(){
   const pagos = alunosUnicos.length;
   const pend = tot - pagos;
   console.log("LIVRO ATUAL:", livroAtual);
-  console.log("TIPO livro_codigo:", alunoLivros.slice(0,5));
+  console.log("TIPO livro_codigo (amostras):", alunoLivros.slice(0,3).map(r => r.livro_codigo));
   const elLivro = document.getElementById('a-livro-atual');
   if (elLivro) elLivro.innerHTML = '📖 Livro atual: <strong>' + (livroAtual ? 'Livro ' + livroAtual : 'não definido') + '</strong>';
 
@@ -3143,12 +3141,6 @@ async function renderDashAdmin(){
   const pendNomes = al.filter(a => {
     const codigoAtual = 'p' + livroAtual;
     const atual = alunoLivros.find(r => r.aluno_id === a.id && r.livro_codigo === codigoAtual);
-    console.log('[DEBUG ATUAL]', {
-      aluno: a.nome,
-      livroAtual: livroAtual,
-      codigoEsperado: 'p' + livroAtual,
-      encontrado: atual ? atual.livro_codigo : null
-    });
     return atual && atual.pagou === false;
   });
   if(pendNomes.length > 0) alerts.push(`<div class="al am"><span>💰</span><span><strong>${pendNomes.length} aluno${pendNomes.length>1?'s':''}</strong> com pagamento pendente</span></div>`);
@@ -3548,7 +3540,7 @@ async function carregarLivroAtualSistema() {
       .eq('id', 1)
       .single();
 
-    console.log('CONFIG_SISTEMA', { data, error });
+    if (error) { console.warn('[CONFIG_SISTEMA] Erro ao carregar:', error?.message || error); }
 
     if (!error && data) {
       window.livroAtualSistema = data.livro_atual_override || null;
@@ -4819,11 +4811,6 @@ async function carregarLivrosEntSupabase() {
       const numero = String(codigo || '').replace(/[^\d]/g, '');
       if (!numero) return; // ignora registros sem número válido
       const lid = 'l' + numero;
-      console.log('LIVRO LOAD', {
-        raw: item.livro_codigo,
-        convertido: lid,
-        aluno: item.aluno_id
-      });
       if (!novo[lid]) novo[lid] = {};
       novo[lid][item.aluno_id] = item.entregue === true;
     });
@@ -5054,16 +5041,12 @@ function renderPainelMaterial() {
 
     // ── LOG DE DIAGNÓSTICO — NÃO ALTERAR LÓGICA ──
     console.log('PAINEL', {
-      aluno: a.nome,
-      aid: a.id,
       lid_usado: lid,
       pid_usado: pid,
-      livro: D.livros_ent?.[lid]?.[a.id],
-      prova: D.provas?.[pid]?.[a.id],
-      nota: D.notas?.[pid]?.[a.id],
       tipo_aid: typeof a.id,
-      chaves_livros_ent: D.livros_ent?.[lid] ? Object.keys(D.livros_ent[lid]).slice(0,3) : 'vazio',
-      chaves_provas: D.provas?.[pid] ? Object.keys(D.provas[pid]).slice(0,3) : 'vazio',
+      livro_encontrado: D.livros_ent?.[lid]?.[a.id] !== undefined,
+      prova_encontrada: D.provas?.[pid]?.[a.id] !== undefined,
+      nota_encontrada: D.notas?.[pid]?.[a.id] !== undefined,
     });
 
     const entregue = _buscarPorId(D.livros_ent[lid], a.id) === true;
