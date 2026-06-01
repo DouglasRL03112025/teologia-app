@@ -3580,6 +3580,10 @@ function salvarAluno(){
   // ─────────────────────────────────────────────────────────
   if(eid){
 
+    // MA39-B: preservar ativo atual do aluno existente (não forçar true)
+    const _alunoExistente = D.alunos.find(x=>x.id===eid);
+    const _ativoAtual = _alunoExistente ? (_alunoExistente.ativo !== false) : true;
+
     const a={
       id:eid,
       nome,
@@ -3588,7 +3592,7 @@ function salvarAluno(){
       turma:document.getElementById('a-turma').value,
       valor:document.getElementById('a-valor').value,
       senha:document.getElementById('a-senha').value||'1234',
-      ativo:true
+      ativo:_ativoAtual
     };
 
     const i=D.alunos.findIndex(x=>x.id===eid);
@@ -4407,8 +4411,15 @@ async function verPerfilAdmin(id){
   let tf = _presAluno.filter(r => r.presente === false).length;
   const todasProvas = Object.keys(D.notas).filter(p => /^p\d+$/.test(p)).sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
 
+  // MA39-B: badge inativo e botao inativar/reativar
+  const _aInativo = a.ativo === false;
+  const _badgeInativo = _aInativo ? ' <span style="display:inline-block;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;border-radius:99px;font-size:11px;font-weight:700;padding:1px 9px;vertical-align:middle;letter-spacing:0.3px">Inativo</span>' : '';
+  const _btnAtivoLabel = _aInativo ? '&#x2705; Reativar aluno' : '&#x1F6AB; Inativar aluno';
+  const _btnAtivoStyle = _aInativo ? 'background:var(--vd)' : 'background:#dc2626';
+  const _novoStatusAtivo = !_aInativo;
+
   document.getElementById('a-perfil-conteudo').innerHTML=`
-    <div class="ph"><div class="pav">${ini(a.nome)}</div><div class="pn">${fmtNome(a.nome)}</div><div class="pt">${a.turma||'Turma Única'}${a.tel?` · <a href="https://wa.me/${a.tel.replace(/\D/g,'').startsWith('55') ? a.tel.replace(/\D/g,'') : '55' + a.tel.replace(/\D/g,'')}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${fmtTel(a.tel)}</a>`:''}</div></div>
+    <div class="ph"><div class="pav">${ini(a.nome)}</div><div class="pn">${fmtNome(a.nome)}${_badgeInativo}</div><div class="pt">${a.turma||'Turma Única'}${a.tel?` · <a href="https://wa.me/${a.tel.replace(/\D/g,'').startsWith('55') ? a.tel.replace(/\D/g,'') : '55' + a.tel.replace(/\D/g,'')}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${fmtTel(a.tel)}</a>`:''}</div></div>
     <div class="resumo-aluno">
       <div class="resumo-item ${resumo && resumo.progresso >= 80 ? 'vd' : resumo && resumo.progresso >= 40 ? 'am' : ''}">
         <span>📚 Progresso</span>
@@ -4439,10 +4450,37 @@ async function verPerfilAdmin(id){
     </div>
     <div class="card"><div class="card-t">📚 Situação por livro</div><div id="admin-livros-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
     <button class="btn bs ripple-target" onclick="abrirModAluno('${id}')">✏️ Editar dados</button>
-    <button class="btn bd ripple-target" style="margin-top:16px;width:100%;display:block" onclick="desmarcarPagamentoAluno('${id}')">↩️ Desmarcar pagamento</button>`;
+    <button class="btn bd ripple-target" style="margin-top:16px;width:100%;display:block" onclick="desmarcarPagamentoAluno('${id}')">↩️ Desmarcar pagamento</button>
+    <button class="btn ripple-target" style="margin-top:10px;width:100%;display:block;color:#fff;border:none;${_btnAtivoStyle}" onclick="alternarAlunoAtivo('${id}',${_novoStatusAtivo})">${_btnAtivoLabel}</button>`;
   carregarExibirLivrosAdminPerfil(id);
 }
 window.verPerfilAdmin = verPerfilAdmin;
+
+/* MA39-B — alternarAlunoAtivo: inativa ou reativa aluno sem apagar dados */
+async function alternarAlunoAtivo(alunoId, novoStatus){
+  const aluno = D.alunos.find(x => x.id === alunoId);
+  if (!aluno) { toast('Aluno não encontrado', 'erro'); return; }
+  const acao = novoStatus === false ? 'INATIVAR' : 'REATIVAR';
+  const confirma = confirm(acao + ' aluno "' + aluno.nome + '"?\n\nO histórico será preservado. Esta ação pode ser desfeita.');
+  if (!confirma) return;
+  const { error } = await supabaseClient
+    .from('alunos')
+    .update({ ativo: novoStatus })
+    .eq('id', alunoId);
+  if (error) {
+    console.error('[alternarAlunoAtivo] erro:', error);
+    toast('Erro ao ' + (novoStatus ? 'reativar' : 'inativar') + ' aluno', 'erro');
+    return;
+  }
+  // atualiza objeto local
+  const idx = D.alunos.findIndex(x => x.id === alunoId);
+  if (idx >= 0) D.alunos[idx].ativo = novoStatus;
+  salvar();
+  toast(novoStatus ? '✓ Aluno reativado!' : '✓ Aluno inativado!');
+  // recarrega o perfil para refletir novo estado
+  verPerfilAdmin(alunoId);
+}
+window.alternarAlunoAtivo = alternarAlunoAtivo;
 
 function renderAulas(){
   const mod=document.getElementById('sel-mod').value; const sa=document.getElementById('sel-aula');
