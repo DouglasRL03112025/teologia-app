@@ -4416,7 +4416,7 @@ async function verPerfilAdmin(id){
   const _badgeInativo = _aInativo ? ' <span style="display:inline-block;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;border-radius:99px;font-size:11px;font-weight:700;padding:1px 9px;vertical-align:middle;letter-spacing:0.3px">Inativo</span>' : '';
   const _btnAtivoLabel = _aInativo ? '&#x2705; Reativar aluno' : '&#x1F6AB; Inativar aluno';
   const _btnAtivoStyle = _aInativo ? 'background:var(--vd)' : 'background:#dc2626';
-  const _novoStatusAtivo = !_aInativo;
+  const _novoStatusAtivo = _aInativo;
 
   document.getElementById('a-perfil-conteudo').innerHTML=`
     <div class="ph"><div class="pav">${ini(a.nome)}</div><div class="pn">${fmtNome(a.nome)}${_badgeInativo}</div><div class="pt">${a.turma||'Turma Única'}${a.tel?` · <a href="https://wa.me/${a.tel.replace(/\D/g,'').startsWith('55') ? a.tel.replace(/\D/g,'') : '55' + a.tel.replace(/\D/g,'')}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${fmtTel(a.tel)}</a>`:''}</div></div>
