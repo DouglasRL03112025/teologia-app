@@ -4463,16 +4463,29 @@ async function alternarAlunoAtivo(alunoId, novoStatus){
   const acao = novoStatus === false ? 'INATIVAR' : 'REATIVAR';
   const confirma = confirm(acao + ' aluno "' + aluno.nome + '"?\n\nO histórico será preservado. Esta ação pode ser desfeita.');
   if (!confirma) return;
-  const { error } = await supabaseClient
+  /* MA39-D2 — update com retorno para confirmar persistência real */
+  const { data: updData, error } = await supabaseClient
     .from('alunos')
     .update({ ativo: novoStatus })
-    .eq('id', alunoId);
+    .eq('id', alunoId)
+    .select('id, ativo');
+  /* Validação 1: erro de banco */
   if (error) {
-    console.error('[alternarAlunoAtivo] erro:', error);
+    console.error('[alternarAlunoAtivo] erro Supabase:', error.code, error.message);
     toast('Erro ao ' + (novoStatus ? 'reativar' : 'inativar') + ' aluno', 'erro');
     return;
   }
-  // atualiza objeto local
+  /* Validação 2: nenhuma linha retornada */
+  if (!updData || updData.length === 0) {
+    toast('Erro: aluno não encontrado no banco', 'erro');
+    return;
+  }
+  /* Validação 3: banco não confirmou o status esperado */
+  if (updData[0].ativo !== novoStatus) {
+    toast('Erro: status não foi confirmado no banco', 'erro');
+    return;
+  }
+  /* Só atualiza local após confirmação real do Supabase */
   const idx = D.alunos.findIndex(x => x.id === alunoId);
   if (idx >= 0) D.alunos[idx].ativo = novoStatus;
   salvar();
