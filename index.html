@@ -2542,13 +2542,12 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
     // A validação inicial (antes de 'Processando...') já confirmou existência,
     // pagou=true e entregue=false para este aluno_id e livro_codigo.
 
-    // Executar o update — MA39-E3: .select('id') adicionado para confirmar persistência
-    const { data: linhasAfetadas, error: erroUpdate } = await supabaseClient
+    // Executar o update — MA39-E5: sem .select() em chain (return=minimal, padrão do sistema)
+    const { error: erroUpdate } = await supabaseClient
       .from('aluno_livros')
       .update({ entregue: true, pagou: true })
       .eq('aluno_id', alunoId)
-      .eq('livro_codigo', codigoFinal)
-      .select('id');
+      .eq('livro_codigo', codigoFinal);
 
     if (erroUpdate) {
       console.error('[EntregaLivro] Erro ao confirmar entrega:', erroUpdate);
@@ -2556,8 +2555,16 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
       return;
     }
 
-    if (!linhasAfetadas || linhasAfetadas.length === 0) {
-      console.error('[EntregaLivro] Update não afetou nenhuma linha — alunoId=' + alunoId + ' livro_codigo=' + codigoFinal);
+    // MA39-E5: SELECT separado para confirmar persistência real no banco
+    const { data: confirmacao, error: erroConfirmacao } = await supabaseClient
+      .from('aluno_livros')
+      .select('entregue')
+      .eq('aluno_id', alunoId)
+      .eq('livro_codigo', codigoFinal)
+      .single();
+
+    if (erroConfirmacao || !confirmacao || confirmacao.entregue !== true) {
+      console.error('[EntregaLivro] Entrega não confirmada no banco:', erroConfirmacao);
       toast('Entrega não confirmada no banco', 'erro');
       return;
     }
