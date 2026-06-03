@@ -5278,7 +5278,7 @@ async function _relCarregarDados() {
   if (resAlunoLivros.error) { console.error('[REL] Erro aluno_livros:', resAlunoLivros.error); }
   if (resLivros.error)      { console.error('[REL] Erro livros:', resLivros.error); }
   _relCache = {
-    alunos:      resAlunos.data     || [],
+    alunos:      (resAlunos.data || []).filter(a => a.ativo !== false),
     presencas:   resPres.data       || [],
     aulas:       (resAulas.data     || []).map(a => ({ ...a, livro: a.livro || 'Sem livro' })),
     alunoLivros: resAlunoLivros.data || [],
@@ -7896,7 +7896,7 @@ window.admPresFiltrarPor = admPresFiltrarPor;
 
       if (resAlunos.error) { console.error('[PRES ADMIN] Erro alunos:', resAlunos.error); return; }
 
-      admPresAlunos = resAlunos.data || [];
+      admPresAlunos = (resAlunos.data || []).filter(a => a.ativo !== false);
       admPresEstado = {}; admPresRegistros = {};
 
       // Mapear registros existentes
@@ -8172,7 +8172,7 @@ window.admPresSalvar = admPresSalvar;
       if (resPres.error)   { console.error('[REL ALUNO] Erro presenças:', resPres.error); }
       if (resAulas.error)  { console.error('[REL ALUNO] Erro aulas:', resAulas.error); }
 
-      const alunos   = resAlunos.data || [];
+      const alunos   = (resAlunos.data || []).filter(a => a.ativo !== false);
       const presencas = resPres.data  || [];
       const aulas     = resAulas.data || [];
 
