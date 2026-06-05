@@ -2543,13 +2543,11 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
     // pagou=true e entregue=false para este aluno_id e livro_codigo.
 
     // Executar o update — MA39-E5: sem .select() em chain (return=minimal, padrão do sistema)
-    console.log('[EntregaLivro][D7] antes do update'); // D7-1
     const { error: erroUpdate } = await supabaseClient
       .from('aluno_livros')
       .update({ entregue: true, pagou: true })
       .eq('aluno_id', alunoId)
       .eq('livro_codigo', codigoFinal);
-    console.log('[EntregaLivro][D7] depois do update', { temErro: !!erroUpdate }); // D7-2
 
     if (erroUpdate) {
       console.error('[EntregaLivro] Erro ao confirmar entrega:', erroUpdate);
@@ -2558,17 +2556,12 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
     }
 
     // MA39-E5: SELECT separado para confirmar persistência real no banco
-    console.log('[EntregaLivro][D7] antes da confirmacao'); // D7-3
     const { data: confirmacao, error: erroConfirmacao } = await supabaseClient
       .from('aluno_livros')
       .select('entregue')
       .eq('aluno_id', alunoId)
       .eq('livro_codigo', codigoFinal)
       .single();
-    console.log('[EntregaLivro][D7] depois da confirmacao', { // D7-4
-      temErro: !!erroConfirmacao,
-      confirmado: confirmacao && confirmacao.entregue === true
-    });
 
     if (erroConfirmacao || !confirmacao || confirmacao.entregue !== true) {
       console.error('[EntregaLivro] Entrega não confirmada no banco:', erroConfirmacao);
@@ -2580,16 +2573,11 @@ async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
     toast('📦 Entrega confirmada com sucesso!', 'ok');
 
     // Recarregar lista de livros do aluno e atualizar dashboard/alertas
-    console.log('[EntregaLivro][D7] antes recarregar perfil'); // D7-5
     await carregarExibirLivrosAdminPerfil(alunoId);
-    console.log('[EntregaLivro][D7] depois recarregar perfil'); // D7-6
-    console.log('[EntregaLivro][D7] antes renderDashAdmin'); // D7-7
     await renderDashAdmin();
-    console.log('[EntregaLivro][D7] depois renderDashAdmin'); // D7-8
   } catch(e) {
-    console.error('[EntregaLivro][D7] catch:', e && e.message ? e.message : e); // D7-9
+    console.error('[EntregaLivro] Exceção:', e);
   } finally {
-    console.log('[EntregaLivro][D7] finally'); // D7-10
     if (btn) { btn.disabled = false; btn.textContent = textoOriginal; }
   }
 }
@@ -4123,29 +4111,9 @@ async function handleAcao(tipo, alunoId, btnEl) {
   }
 
   if (tipo === 'entrega') {
-    const livroAtual = window.livroAtualSistema;
-    if (!livroAtual) {
-      toast('Livro atual não definido');
-      return;
-    }
-
-    const codigoLivro = 'p' + livroAtual;
-
-    // localizar o card do aluno
-    const card = document.querySelector(`.ar[data-aluno-id="${alunoId}"]`);
-    if (!card) {
-      toast('Card do aluno não encontrado');
-      return;
-    }
-
-    const entregue = card.dataset.entregue === 'true';
-
-    if (entregue) {
-      await desfazerEntregaLivro(alunoId, codigoLivro);
-    } else {
-      await confirmarEntregaLivro(alunoId, codigoLivro, btnEl || document.createElement('button'));
-    }
-
+    // MA39-E9: ação rápida abre o perfil — entrega confirmada pelo botão do perfil detalhado
+    toast('Abra o perfil e confirme a entrega no livro.');
+    verPerfilAdmin(alunoId);
     return;
   }
 
