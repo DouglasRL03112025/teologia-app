@@ -7265,7 +7265,19 @@ window.admDesmarcarTodos = admDesmarcarTodos;
 window.admDesmarcarPagamentoLote = admDesmarcarPagamentoLote;
 
   /* ── PEÇA 1: CONFIRMAR ENTREGA SILENCIOSA (MA35.2) ── */
+  /* MA39-F2: patch de segurança — verifica inativo e pagou antes de entregar */
   async function confirmarEntregaLivroSilent(alunoId) {
+    /* MA39-F2 R1: verificar se o aluno existe em D.alunos */
+    const aluno = (D.alunos || []).find(function(a) { return a.id === alunoId; });
+    if (!aluno) {
+      console.warn('[LOTE ENTREGA] Aluno não encontrado em D.alunos:', alunoId);
+      return false;
+    }
+    /* MA39-F2 R2: bloquear aluno inativo */
+    if (aluno.ativo === false) {
+      console.warn('[LOTE ENTREGA] Aluno inativo — ignorado:', alunoId);
+      return false;
+    }
     const livroAtual = window.livroAtualSistema;
     if (!livroAtual) {
       console.warn('[LOTE ENTREGA] livroAtualSistema não definido para aluno', alunoId);
@@ -7283,9 +7295,15 @@ window.admDesmarcarPagamentoLote = admDesmarcarPagamentoLote;
       return false;
     }
     if (reg.entregue === true) return false; /* já entregue — pular */
+    /* MA39-F2 R6: bloquear entrega sem pagamento confirmado */
+    if (reg.pagou !== true) {
+      console.warn('[LOTE ENTREGA] Pagamento não confirmado — ignorado:', alunoId, codigoLivro);
+      return false;
+    }
+    /* MA39-F2 R7: update somente entregue — NÃO alterar pagou */
     const { error: erroUpdate } = await supabaseClient
       .from('aluno_livros')
-      .update({ entregue: true, pagou: true })
+      .update({ entregue: true })
       .eq('id', reg.id);
     if (erroUpdate) {
       console.error('[LOTE ENTREGA] Erro ao confirmar entrega:', alunoId, erroUpdate);
@@ -7293,6 +7311,7 @@ window.admDesmarcarPagamentoLote = admDesmarcarPagamentoLote;
     }
     return true;
   }
+  /* ── FIM MA39-F2 ── */
 
   /* ── PEÇA 2: CONFIRMAR ENTREGA EM LOTE (MA35.2) ── */
   async function admConfirmarEntregaLote() {
