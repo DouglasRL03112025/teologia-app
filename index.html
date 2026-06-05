@@ -2466,6 +2466,105 @@ async function carregarExibirLivrosAdminPerfil(alunoId) {
 }
 window.carregarExibirLivrosAdminPerfil = carregarExibirLivrosAdminPerfil;
 
+/* ════ MA40-B — PAGAMENTO ADIANTADO (ADMIN PERFIL) ════ */
+
+function abrirModalPagAdiantado(alunoId) {
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
+  window._pagAdiantadoAlunoId = alunoId;
+  /* preenche data atual como padrão */
+  const hoje = new Date().toISOString().slice(0, 10);
+  document.getElementById('pad-data').value = hoje;
+  document.getElementById('pad-livro').value = '1';
+  document.getElementById('pad-forma').value = 'pix';
+  document.getElementById('modal-pag-adiantado').style.display = 'flex';
+}
+window.abrirModalPagAdiantado = abrirModalPagAdiantado;
+
+function fecharModalPagAdiantado() {
+  document.getElementById('modal-pag-adiantado').style.display = 'none';
+  window._pagAdiantadoAlunoId = null;
+}
+window.fecharModalPagAdiantado = fecharModalPagAdiantado;
+
+async function confirmarPagAdiantado() {
+  if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
+  const alunoId = window._pagAdiantadoAlunoId;
+  if (!alunoId) { toast('Aluno não identificado', 'erro'); return; }
+
+  const numLivro = parseInt(document.getElementById('pad-livro').value);
+  if (!numLivro || numLivro < 1 || numLivro > 24) { toast('Livro inválido', 'erro'); return; }
+  const livroCodigo = 'p' + numLivro;
+
+  const data = document.getElementById('pad-data').value;
+  if (!data) { toast('Data inválida', 'erro'); return; }
+
+  const forma = document.getElementById('pad-forma').value || 'pix';
+
+  const btnConfirmar = document.querySelector('#modal-pag-adiantado .btn.bp');
+  if (btnConfirmar) { btnConfirmar.disabled = true; btnConfirmar.textContent = 'Aguarde...'; }
+
+  try {
+    /* MA40-B R5/R6: verificar se já existe registro e se já está pago */
+    const { data: regExistente, error: erroConsulta } = await supabaseClient
+      .from('aluno_livros')
+      .select('id, pagou, entregue')
+      .eq('aluno_id', alunoId)
+      .eq('livro_codigo', livroCodigo)
+      .maybeSingle();
+
+    if (erroConsulta) {
+      console.error('[PAG ADIANTADO] Erro ao consultar registro:', erroConsulta);
+      toast('Erro ao verificar registro no banco', 'erro');
+      return;
+    }
+
+    /* MA40-B R6: bloquear sobrescrita de pagamento já confirmado */
+    if (regExistente && regExistente.pagou === true) {
+      toast('Este livro já está pago para este aluno', 'erro');
+      return;
+    }
+
+    /* MA40-B R7: upsert seguro — NÃO inclui entregue no payload para não alterar estado existente */
+    const payload = {
+      aluno_id:        alunoId,
+      livro_codigo:    livroCodigo,
+      pagou:           true,
+      data_pagamento:  data,
+      forma_pagamento: forma
+    };
+
+    const { error: erroUpsert } = await supabaseClient
+      .from('aluno_livros')
+      .upsert(payload, { onConflict: ['aluno_id', 'livro_codigo'] });
+
+    if (erroUpsert) {
+      console.error('[PAG ADIANTADO] Erro ao gravar pagamento:', erroUpsert);
+      toast('Erro ao registrar pagamento', 'erro');
+      return;
+    }
+
+    /* Log de auditoria — mesmo padrão de marcarLivroComoPago */
+    var { error: erroLog } = await supabaseClient
+      .from('logs_pagamentos')
+      .insert([{ aluno_id: alunoId, livro_codigo: livroCodigo, acao: 'pagamento_adiantado' }]);
+    if (erroLog) { console.error('[PAG ADIANTADO] Erro ao registrar log:', erroLog); }
+
+    fecharModalPagAdiantado();
+    toast('💳 Pagamento adiantado registrado com sucesso!', 'ok');
+    await carregarExibirLivrosAdminPerfil(alunoId);
+    if (typeof renderDashAdmin === 'function') renderDashAdmin();
+
+  } catch(e) {
+    console.error('[PAG ADIANTADO] Exceção:', e);
+    toast('Erro inesperado ao registrar pagamento', 'erro');
+  } finally {
+    if (btnConfirmar) { btnConfirmar.disabled = false; btnConfirmar.textContent = 'Confirmar'; }
+  }
+}
+window.confirmarPagAdiantado = confirmarPagAdiantado;
+
+/* ════ FIM MA40-B ════ */
+
 /* ════ CONFIRMAR ENTREGA DE LIVRO (ADMIN) ════ */
 async function confirmarEntregaLivro(alunoId, livroCodigo, btnEl) {
   if (!window.isAdmin) { toast('Acesso restrito', 'erro'); return; }
@@ -4426,6 +4525,8 @@ async function verPerfilAdmin(id){
       </div>
     </div>
     <div class="card"><div class="card-t">📚 Situação por livro</div><div id="admin-livros-aluno"><div style="font-size:13px;color:var(--cin);padding:8px 0">Carregando...</div></div></div>
+    <!-- MA40-B: botão pagamento adiantado -->
+    <button class="btn ripple-target" style="margin-top:10px;width:100%;display:block;background:var(--azul);color:#fff;border:none" onclick="abrirModalPagAdiantado('${id}')">💳 Registrar pagamento adiantado</button>
     <button class="btn bs ripple-target" onclick="abrirModAluno('${id}')">✏️ Editar dados</button>
     <button class="btn bd ripple-target" style="margin-top:16px;width:100%;display:block" onclick="desmarcarPagamentoAluno('${id}')">↩️ Desmarcar pagamento</button>
     <button class="btn ripple-target" style="margin-top:10px;width:100%;display:block;color:#fff;border:none;${_btnAtivoStyle}" onclick="alternarAlunoAtivo('${id}',${_novoStatusAtivo})">${_btnAtivoLabel}</button>`;
@@ -8589,6 +8690,36 @@ window.filtrarProvas = filtrarProvas;
     <div style="display:flex;gap:10px">
       <button onclick="confirmarPagamentoModal()" class="btn bp ripple-target" style="flex:1;padding:12px">Confirmar</button>
       <button onclick="fecharModalPagamento()" class="btn bs ripple-target" style="flex:1;padding:12px;margin-top:0">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL PAGAMENTO ADIANTADO (MA40-B) ── -->
+<div id="modal-pag-adiantado" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;padding:24px 20px;border-radius:var(--rl);width:320px;box-shadow:var(--sh);font-family:'Inter',sans-serif">
+    <div style="font-family:'Lora',serif;font-size:18px;font-weight:700;color:var(--azul);margin-bottom:4px">Pagamento adiantado</div>
+    <div style="font-size:12px;color:var(--cin);margin-bottom:16px">Registra pagamento de qualquer livro para este aluno, sem alterar o livro atual do sistema.</div>
+    <label style="display:block;font-size:13px;font-weight:500;color:var(--txt);margin-bottom:5px">Livro</label>
+    <select id="pad-livro" class="inp" style="width:100%;margin-bottom:12px">
+      <option value="1">Livro 1</option><option value="2">Livro 2</option><option value="3">Livro 3</option>
+      <option value="4">Livro 4</option><option value="5">Livro 5</option><option value="6">Livro 6</option>
+      <option value="7">Livro 7</option><option value="8">Livro 8</option><option value="9">Livro 9</option>
+      <option value="10">Livro 10</option><option value="11">Livro 11</option><option value="12">Livro 12</option>
+      <option value="13">Livro 13</option><option value="14">Livro 14</option><option value="15">Livro 15</option>
+      <option value="16">Livro 16</option><option value="17">Livro 17</option><option value="18">Livro 18</option>
+      <option value="19">Livro 19</option><option value="20">Livro 20</option><option value="21">Livro 21</option>
+      <option value="22">Livro 22</option><option value="23">Livro 23</option><option value="24">Livro 24</option>
+    </select>
+    <label style="display:block;font-size:13px;font-weight:500;color:var(--txt);margin-bottom:5px">Forma de pagamento</label>
+    <select id="pad-forma" class="inp" style="width:100%;margin-bottom:12px">
+      <option value="pix">Pix</option>
+      <option value="dinheiro">Dinheiro</option>
+    </select>
+    <label style="display:block;font-size:13px;font-weight:500;color:var(--txt);margin-bottom:5px">Data do pagamento</label>
+    <input type="date" id="pad-data" class="inp" style="width:100%;margin-bottom:20px">
+    <div style="display:flex;gap:10px">
+      <button onclick="confirmarPagAdiantado()" class="btn bp ripple-target" style="flex:1;padding:12px">Confirmar</button>
+      <button onclick="fecharModalPagAdiantado()" class="btn bs ripple-target" style="flex:1;padding:12px;margin-top:0">Cancelar</button>
     </div>
   </div>
 </div>
